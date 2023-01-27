@@ -1,0 +1,118 @@
+.badge-shadow{
+    box-shadow: 3px 5px 5px #00000036;
+    border-radius: 1px 30px;
+}
+
+.login-page, .register-page{
+    background: url(/be-assets/img/kunduzyazilim-auth.jpg) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    align-items: unset !important;
+    margin-left:10%;
+}
+
+.navbar-kun-cms {
+    background-color: #3d9970;
+}
+
+.card-prz:not(.card-outline) > .card-header {
+    background-color: #3d9970;
+}
+
+.card-prz:not(.card-outline) > .card-header,
+.card-prz:not(.card-outline) > .card-header a {
+    color: #fff;
+}
+
+.card-prz:not(.card-outline) > .card-header a.active {
+    color: #1f2d3d;
+}
+
+.card-prz.card-outline {
+    border-top: 3px solid #3d9970;
+}
+
+.card-prz.card-outline-tabs > .card-header a:hover {
+    border-top: 3px solid #dee2e6;
+}
+
+.card-prz.card-outline-tabs > .card-header a.active {
+    border-top: 3px solid #3d9970;
+}
+
+.bg-prz .btn-tool,
+.bg-gradient-prz .btn-tool,
+.card-prz:not(.card-outline) .btn-tool {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.bg-prz .btn-tool:hover,
+.bg-gradient-prz .btn-tool:hover,
+.card-prz:not(.card-outline) .btn-tool:hover {
+    color: #fff;
+}
+
+.error-page{
+    width: 750px !important;
+}
+
+[class*=sidebar-light-] .nav-flat .nav-item .nav-treeview>.nav-item>.nav-link.active{
+    border-color: #519a71 !important;
+}
+
+.nav-flat.nav-sidebar>.nav-item .nav-treeview .nav-item>.nav-link, .nav-flat.nav-sidebar>.nav-item>.nav-treeview .nav-item>.nav-link
+{
+    border-left:.4rem solid !important;
+}
+
+.nav-pills .nav-link:not(.active):hover{
+    color: #519a71 !important;
+}
+
+.register-container {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    justify-content: center;
+}
+
+.tags-look .tagify__dropdown__item{
+    display: inline-block;
+    border-radius: 3px;
+    padding: .3em .5em;
+    border: 1px solid #CCC;
+    background: #F3F3F3;
+    margin: .2em;
+    font-size: .85em;
+    color: black;
+    transition: 0s;
+}
+
+.tags-look .tagify__dropdown__item--active{
+    color: black;
+}
+
+.tags-look .tagify__dropdown__item:hover{
+    background: lightyellow;
+    border-color: gold;
+}
+
+.elfinder{
+    z-index:1050 !important;
+}
+
+.dd-handle{
+    height:60px !important;
+    padding:10px 10px !important;
+}
+
+.dd-item>button{
+    margin:15px 0 !important;
+}
+
+.dd-handle span{
+    font-size:1.2em !important;
+}
