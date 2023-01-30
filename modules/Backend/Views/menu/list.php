@@ -2,17 +2,17 @@
 <?= empty($pages) ? '<strong>'.lang('Backend.notFindinMenuPages').'</strong>':''?>
 <form class="list-group" id="addCheckedPages">
     <?php foreach ($pages as $page): ?>
-        <div class="list-group-item" id="page-<?= $page->_id ?>">
+        <div class="list-group-item" id="page-<?= $page->id ?>">
             <div class="row d-flex justify-content-between align-items-center">
                 <div class="col-xs-8">
                     <label class="ml-3">
                         <input class="form-check-input me-1" type="checkbox" name="pageChecked[]"
-                               value="<?= $page->_id ?>">
+                               value="<?= $page->id ?>">
                         <?= $page->title ?>
                     </label>
                 </div>
                 <div class="col-xs-4">
-                    <button class="btn btn-success addPages" type="button" onclick="addPages('<?= $page->_id ?>')">
+                    <button class="btn btn-success addPages" type="button" onclick="addPages('<?= $page->id ?>')">
                         <?=lang('Backend.add')?>
                     </button>
                 </div>
@@ -31,17 +31,17 @@
 <?= empty($blogs) ? '<strong>'.lang('Backend.notFindinMenuBlogs').'</strong>':''?>
 <form class="list-group" id="addCheckedBlog">
     <?php foreach ($blogs as $blog): ?>
-        <div class="list-group-item" id="blog-<?= $blog->_id ?>">
+        <div class="list-group-item" id="blog-<?= $blog->id ?>">
             <div class="row d-flex justify-content-between align-items-center">
                 <div class="col-xs-8">
                     <label class="ml-3">
                         <input class="form-check-input me-1" type="checkbox" name="pageChecked[]"
-                               value="<?= $blog->_id ?>">
+                               value="<?= $blog->id ?>">
                         <?= $blog->title ?>
                     </label>
                 </div>
                 <div class="col-xs-4">
-                    <button class="btn btn-success" type="button" onclick="addBlog('<?= $blog->_id ?>')">
+                    <button class="btn btn-success" type="button" onclick="addBlog('<?= $blog->id ?>')">
                         <?=lang('Backend.add')?>
                     </button>
                 </div>

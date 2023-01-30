@@ -144,10 +144,8 @@ class Blog extends BaseController
 
     public function delete($id = null)
     {
-        if ($this->commonModel->deleteMany('tags_pivot', ['piv_id' => new ObjectId($id), 'tagType' => 'blogs'])) {
-            if ($this->commonModel->deleteOne('blog', ['_id' => new ObjectId($id)]) === true) return redirect()->route('blogs', [1])->with('message', 'blog silindi.');
+            if ($this->commonModel->remove('blog', ['id' =>$id,'tagType'=>'blogs']) === true) return redirect()->route('blogs', [1])->with('message', 'blog silindi.');
             else return redirect()->back()->withInput()->with('error', 'Blog Silinemedi.');
-        } else return redirect()->back()->withInput()->with('error', 'Blog Silinemedi.');
     }
 
     public function commentList()

@@ -58,9 +58,9 @@
                                     echo $category->pivot->title;
                                 endif; ?></td>
                             <td>
-                                <a href="<?= route_to('categoryUpdate', $category->_id) ?>"
+                                <a href="<?= route_to('categoryUpdate', $category->id) ?>"
                                    class="btn btn-outline-info btn-sm"><?=lang('Backend.update')?></a>
-                                <a href="<?= route_to('categoryDelete', $category->_id) ?>"
+                                <a href="<?= route_to('categoryDelete', $category->id) ?>"
                                    class="btn btn-outline-danger btn-sm"><?=lang('Backend.delete')?></a>
                             </td>
                         </tr>

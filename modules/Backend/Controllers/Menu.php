@@ -18,9 +18,9 @@ class Menu extends BaseController
      */
     public function index()
     {
-        $this->defData=array_merge($this->defData,['pages' => $this->commonModel->getList('pages', ['inMenu' => false, 'isActive' => true]),
-            'blogs' => $this->commonModel->getList('blog', ['inMenu' => false, 'isActive' => true]),
-            'nestable2' => $this->commonModel->getList('menu',[],['sort'=>['queue'=>1]])]);
+        $this->defData=array_merge($this->defData,['pages' => $this->commonModel->lists('pages','*', ['inMenu' => false, 'isActive' => true]),
+            'blogs' => $this->commonModel->lists('blog','*', ['inMenu' => false, 'isActive' => true]),
+            'nestable2' => $this->commonModel->lists('menu','*',[],'queue ASC')]);
         return view('Modules\Backend\Views\menu\menu', $this->defData);
     }
 

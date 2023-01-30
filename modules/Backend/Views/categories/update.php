@@ -49,7 +49,7 @@
         </div>
         <div class="card-body">
             <?= view('Modules\Auth\Views\_message_block') ?>
-            <form action="<?= route_to('categoryUpdate',$infos->_id) ?>" class="form-row" method="post">
+            <form action="<?= route_to('categoryUpdate',$infos->id) ?>" class="form-row" method="post">
                 <?= csrf_field() ?>
                 <div class="col-md-8">
                     <div class="form-group">
@@ -62,51 +62,50 @@
                     </div>
                     <div class="form-group">
                         <label for=""><?=lang('Backend.seoDescription')?></label>
-                        <textarea name="description" class="form-control" rows="10"><?=$infos->seo->description?></textarea>
+                        <textarea name="description" class="form-control" rows="10"><?=(!empty($infos->seo->description))?$infos->seo->description:''?></textarea>
                     </div>
                 </div>
                 <div class="col-md-4 row">
                     <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
                         <label class="btn btn-outline-secondary">
                             <input type="radio" name="isActive" id="option1"
-                                   autocomplete="off" <?= ($infos->isActive === false) ? 'checked' : '' ?>
+                                   autocomplete="off" <?= ((bool)$infos->isActive === false) ? 'checked' : '' ?>
                                    value="0"> <?=lang('Backend.draft')?>
                         </label>
                         <label class="btn btn-outline-secondary active">
                             <input type="radio" name="isActive" id="option2"
-                                   autocomplete="off" <?= ($infos->isActive === true) ? 'checked' : '' ?> value="1">
+                                   autocomplete="off" <?= ((bool)$infos->isActive === true) ? 'checked' : '' ?> value="1">
                             <?=lang('Backend.publish')?>
                         </label>
                     </div>
-                </div>
                     <div class="col-md-12 form-group">
                         <label for=""><?=lang('Backend.parentCategory')?></label>
                         <select name="parent" id="" class="form-control select2bs4" data-placeholder="Select a Category">
                             <option value=""><?=lang('Backend.select')?></option>
                             <?php foreach ($categories as $category) :?>
-                                <option value="<?=$category->_id?>" <?=(!empty($infos->parent) && $infos->parent==$category->_id)?'selected':''?>><?=$category->title?></option>
+                                <option value="<?=$category->id?>" <?=(!empty($infos->parent) && $infos->parent==$category->id)?'selected':''?>><?=$category->title?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?=lang('Backend.parentCategory')?></label>
-                        <img src="<?=$infos->seo->coverImage?>" alt="" class="pageimg img-fluid">
+                        <label for=""><?=lang('Backend.coverImage')?></label>
+                        <img src="<?=(!empty($infos->seo->coverImage))?$infos->seo->coverImage:''?>" alt="" class="pageimg img-fluid">
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?=lang('Backend.parentCategory')?></label>
+                        <label for=""><?=lang('Backend.coverImgURL')?></label>
                         <input type="text" name="pageimg" class="form-control pageimg-input"
-                               placeholder="Görsel URL" value="<?=$infos->seo->coverImage?>">
+                               placeholder="<?=lang('Backend.coverImgURL')?>" value="<?=(!empty($infos->seo->coverImage))?$infos->seo->coverImage:''?>">
                     </div>
                     <div class="col-md-12 row form-group">
                         <div class="col-sm-6">
-                            <label for=""><?=lang('Backend.parentCategory')?></label>
+                            <label for=""><?=lang('Backend.coverImgWith')?></label>
                             <input type="number" name="pageIMGWidth" class="form-control" id="pageIMGWidth"
-                                   readonly value="<?=$infos->seo->IMGWidth?>">
+                                   readonly value="<?=(!empty($infos->seo->IMGWidth))?$infos->seo->IMGWidth:''?>">
                         </div>
                         <div class="col-sm-6">
-                            <label for=""><?=lang('Backend.parentCategory')?></label>
+                            <label for=""><?=lang('Backend.coverImgHeight')?></label>
                             <input type="number" name="pageIMGHeight" class="form-control" id="pageIMGHeight"
-                                   readonly value="<?=$infos->seo->IMGHeight?>">
+                                   readonly value="<?=(!empty($infos->seo->IMGHeight))?$infos->seo->IMGHeight:''?>">
                         </div>
                     </div>
                     <div class="col-md-12 form-group">
@@ -114,7 +113,7 @@
                     </div>
                     <div class="col-md-12 form-group">
                         <label for=""><?=lang('Backend.seoKeywords')?></label>
-                        <textarea name="keywords" class="keywords" placeholder="write some tags"><?=!empty($infos->seo->keywords)?json_encode($infos->seo->keywords):''?></textarea>
+                        <textarea name="keywords" class="keywords" placeholder="write some tags"><?=!empty($infos->seo->keywords)?$infos->seo->keywords:''?></textarea>
                     </div>
                 </div>
                 <div class="form-group col-md-12">

@@ -81,7 +81,7 @@
                         <select name="parent" id="" class="form-control select2bs4" data-placeholder="Select a Category">
                             <option value=""><?=lang('Backend.select')?></option>
                             <?php foreach ($categories as $category) :?>
-                            <option value="<?=$category->_id?>"><?=$category->title?></option>
+                            <option value="<?=$category->id?>"><?=$category->title?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>

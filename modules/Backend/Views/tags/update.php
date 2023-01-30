@@ -40,7 +40,7 @@
         </div>
         <div class="card-body">
             <?= view('Modules\Auth\Views\_message_block') ?>
-            <form action="<?= route_to('tagUpdate',$infos->_id) ?>" method="post" class="form-row">
+            <form action="<?= route_to('tagUpdate',$infos->id) ?>" method="post" class="form-row">
                 <?= csrf_field() ?>
                 <div class="form-group col-md-12">
                     <label for=""><?=lang('Backend.title')?></label>

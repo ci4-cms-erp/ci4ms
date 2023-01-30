@@ -56,9 +56,9 @@
                         <tr>
                             <td><?= $tag->tag ?></td>
                             <td>
-                                <a href="<?= route_to('tagUpdate', $tag->_id) ?>"
+                                <a href="<?= route_to('tagUpdate', $tag->id) ?>"
                                    class="btn btn-outline-info btn-sm"><?=lang('Backend.update')?></a>
-                                <a href="<?= route_to('tagDelete', $tag->_id) ?>"
+                                <a href="<?= route_to('tagDelete', $tag->id) ?>"
                                    class="btn btn-outline-danger btn-sm"><?=lang('Backend.delete')?></a>
                             </td>
                         </tr>
