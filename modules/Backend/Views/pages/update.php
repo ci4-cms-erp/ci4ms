@@ -43,7 +43,7 @@
         </div>
         <div class="card-body">
             <?= view('Modules\Auth\Views\_message_block') ?>
-            <form action="<?= route_to('pageUpdate',$pageInfo->_id) ?>" class="form-row" method="post">
+            <form action="<?= route_to('pageUpdate',$pageInfo->id) ?>" class="form-row" method="post">
                 <?= csrf_field() ?>
                 <div class="col-md-8 form-group row">
                     <div class="form-group col-md-12">
@@ -63,11 +63,11 @@
                 <div class="col-md-4 form-group row">
                     <div class="form-group col-md-12">
                         <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
-                        <label class="btn btn-outline-secondary" <?=($pageInfo->isActive===false)?'active':''?>>
-                            <input type="radio" name="isActive" id="option1" autocomplete="off" value="0" <?=($pageInfo->isActive===false)?'checked':''?>> Taslak
+                        <label class="btn btn-outline-secondary" <?=((bool)$pageInfo->isActive===false)?'active':''?>>
+                            <input type="radio" name="isActive" id="option1" autocomplete="off" value="0" <?=((bool)$pageInfo->isActive===false)?'checked':''?>> Taslak
                         </label>
-                            <label class="btn btn-outline-secondary <?=($pageInfo->isActive===true)?'active':''?>">
-                                <input type="radio" name="isActive" id="option2" autocomplete="off" <?=($pageInfo->isActive===true)?'checked':''?> value="1"> Yayında
+                            <label class="btn btn-outline-secondary <?=((bool)$pageInfo->isActive===true)?'active':''?>">
+                                <input type="radio" name="isActive" id="option2" autocomplete="off" <?=((bool)$pageInfo->isActive===true)?'checked':''?> value="1"> Yayında
                             </label>
                         </div>
                     </div>

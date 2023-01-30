@@ -6,9 +6,11 @@ use Modules\Backend\Config\Auth;
 use CodeIgniter\Controller;
 use Modules\Backend\Config\BackendConfig;
 use Modules\Backend\Models\UserscrudModel;
+use CodeIgniter\API\ResponseTrait;
 
 class BaseController extends Controller
 {
+    use ResponseTrait;
     public $logged_in_user;
     public $commonModel;
     public $perms;
@@ -55,15 +57,13 @@ class BaseController extends Controller
             }
             $uri=substr($uri,1);
         }
-        else
-            $uri=$this->request->uri->getSegment(1);
+        else $uri=$this->request->uri->getSegment(1);
         $router = service('router');
         $navigation=$this->commonModel->lists('auth_permissions_pages','*', ['inNavigation' => true, 'isBackoffice'=>true],'pageSort');
         $nav=[];
         foreach ($navigation as $item) {
-            $result=$this->authLib->has_perm($item->id,'');
-            if($result===true)
-                $nav[]=$item;
+            $result=$this->authLib->has_perm($item->id);
+            if($result===true) $nav[]=$item;
         }
         $settings = $this->commonModel->selectOne('settings');
         $this->config->mailConfig=['protocol' => $settings->mailProtocol,
@@ -76,8 +76,7 @@ class BaseController extends Controller
             'wordWrap' => 'true',
             'TLS'=>$settings->mailTLS,
             'newline' => "\r\n"];
-        if($settings->mailProtocol==='smtp')
-            $this->config->mailConfig['SMTPCrypto']='PHPMailer::ENCRYPTION_STARTTLS';
+        if($settings->mailProtocol==='smtp') $this->config->mailConfig['SMTPCrypto']='PHPMailer::ENCRYPTION_STARTTLS';
 
         $templates=directory_map(ROOTPATH.'public/templates');
         foreach($templates as $key=>$template){

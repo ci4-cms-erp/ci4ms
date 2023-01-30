@@ -39,7 +39,7 @@ ob_start();
 include($_SERVER['DOCUMENT_ROOT'].'/index.php');
 ob_end_clean();
 $ci4ms=new \Modules\Backend\Libraries\AuthLibrary();
-$commonModel=new \ci4mongodblibrary\Models\CommonModel();
+$commonModel=new \ci4commonModel\Models\CommonModel();
 if(!$ci4ms->check()) throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
 // ===============================================
 
@@ -151,7 +151,7 @@ function access($attr, $path, $data, $volume, $isDir, $relpath) {
 // Documentation for connector options:
 // https://github.com/Studio-42/elFinder/wiki/Connector-configuration-options
 var_dump(dirname($_SERVER['PHP_SELF']));
-$allowedFiles=$commonModel->getOne('settings',[],['allowedFiles']);
+$allowedFiles=$commonModel->selectOne('settings',[],'allowedFiles');
 $opts = array(
 	// 'debug' => true,
 	'roots' => array(

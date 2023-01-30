@@ -1,35 +1,14 @@
 <?php namespace Modules\Backend\Models;
 
-use ci4mongodblibrary\Libraries\Mongo;
-use Config\MongoConfig;
+use CodeIgniter\Model;
 
-class CategoriesModel
+class CategoriesModel extends Model
 {
-    protected $table;
-    protected $m;
-    protected $databaseGroup = 'default';
-    protected $mongoConfig;
-
-    public function __construct()
-    {
-        $this->m = new Mongo($this->databaseGroup);
-        $this->mongoConfig = new MongoConfig();
-        $this->table='categories';
-    }
+    protected $table='categories';
 
     public function list(int $limit,int $skip){
-        return $this->m->aggregate($this->table,[
-            [
-                '$lookup' => [
-                    'from' => $this->mongoConfig->dbInfo[$this->databaseGroup]->prefix . $this->table,
-                    'localField' => 'parent',
-                    'foreignField' => '_id',
-                    'as' => 'pivot'
-                ]
-            ],
-            ['$unwind' => ['path' => '$pivot', 'preserveNullAndEmptyArrays' => true]],
-            ['$limit'=>$limit],
-            ['$skip'=>$skip]
-        ])->toArray();
+        $builder=$this->db->table($this->table);
+        $builder->join($this->table,$this->table.'.parent='.$this->table.'.id','left')->limit($limit,$skip);
+        return $builder->get()->getResult();
     }
 }

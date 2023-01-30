@@ -58,13 +58,13 @@ Authenticated Users
                             <td><?= $blog->title ?></td>
                             <td>
                                 <input type="checkbox" name="my-checkbox"
-                                       class="bswitch" <?= ($blog->isActive === true) ? 'checked' : '' ?>
-                                       data-id="<?= $blog->_id ?>" data-off-color="danger" data-on-color="success">
+                                       class="bswitch" <?= ((bool)$blog->isActive === true) ? 'checked' : '' ?>
+                                       data-id="<?= $blog->id ?>" data-off-color="danger" data-on-color="success">
                             </td>
                             <td>
-                                <a href="<?= route_to('blogUpdate', $blog->_id) ?>"
+                                <a href="<?= route_to('blogUpdate', $blog->id) ?>"
                                    class="btn btn-outline-info btn-sm"><?=lang('Backend.update')?></a>
-                                <a href="<?= route_to('blogDelete', $blog->_id) ?>"
+                                <a href="<?= route_to('blogDelete', $blog->id) ?>"
                                    class="btn btn-outline-danger btn-sm"><?=lang('Backend.delete')?></a>
                             </td>
                         </tr>

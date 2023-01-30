@@ -213,7 +213,7 @@ class UserController extends BaseController
         if ($this->request->getPost('password')) $data['password_hash'] = $this->authLib->setPassword($this->request->getPost('password'));
 
         if ($user->email != $data['email']) {
-            if ($this->commonModel->isHave('users',['id!=' => $user->_id, 'email' => $this->request->getPost('email')]) === 1) return redirect()->back()->withInput()->with('error', 'Daha önce bu mail adresi başka bir kullanıcı tarafından alınmıştır lütfen bilgilerinizi kontrol ediniz.');
+            if ($this->commonModel->isHave('users',['id!=' => $user->id, 'email' => $this->request->getPost('email')]) === 1) return redirect()->back()->withInput()->with('error', 'Daha önce bu mail adresi başka bir kullanıcı tarafından alınmıştır lütfen bilgilerinizi kontrol ediniz.');
 
             $data['activate_hash'] = $this->authLib->generateActivateHash();
             $data['status'] = 'deactive';
@@ -231,7 +231,7 @@ class UserController extends BaseController
                 if ($mailResult === true) return redirect()->route('officeWorker', [1])->with('message', 'Üyelik oluşturuldu. Aktiflik maili gönderildi.');
                 else return redirect()->back()->withInput()->with('error', $mailResult);
             }
-        } else $result = $this->commonModel->edit('users', $data,['_id' =>session()->get('logged_in')]);
+        } else $result = $this->commonModel->edit('users', $data,['id' =>session()->get('logged_in')]);
 
         if ((bool)$result == false) return redirect()->back()->withInput()->with('error', 'Profil Güncellenemedi.');
         else return redirect()->back()->withInput()->with('message', 'Profil Güncellendi.');

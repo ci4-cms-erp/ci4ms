@@ -20,29 +20,29 @@ class AJAX extends BaseController
     {
         if ($this->request->isAJAX()) {
             if (!empty($this->request->getPost('type'))) {
-                if ($this->commonModel->isHave([], 'tags') === 1) {
-                    $data = ['pivot.tagType' => $this->request->getPost('type')];
+                if ($this->commonModel->isHave('tags', []) === 1) {
+                    $data = ['tags_pivot.tagType' => $this->request->getPost('type')];
                     if (!empty($this->request->getPost('piv_id')))
-                        $data['pivot.piv_id'] = $this->request->getPost('piv_id');
+                        $data['tags_pivot.piv_id'] = $this->request->getPost('piv_id');
                     $result = $this->model->limitTags_ajax($data);
                     if (empty($result)) {
                         $result = null;
-                        foreach ($this->commonModel->getList('tags', [], ['limit' => 10, 'sort' => ['_id' => -1]]) as $item) {
+                        foreach ($this->commonModel->lists('tags', '*', [], 'id DESC', 10) as $item) {
                             $result[] = ['id' => (string)$item->_id, 'value' => $item->tag];
                         }
                         return $this->response->setJSON($result);
                     }
                     $edited = [];
                     foreach ($result as $item) {
-                        $edited[] = ['id' => (string)$item->_id->id, 'value' => $item->_id->value];
+                        $edited[] = ['id' => (string)$item->id, 'value' => $item->tag];
                     }
                     unset($result);
                     return $this->response->setJSON($edited);
                 } else return $this->response->setJSON([]);
             }
             $result = null;
-            foreach ($this->commonModel->getList('tags', [], ['limit' => 10, 'sort' => ['_id' => -1]]) as $item) {
-                $result[] = ['id' => (string)$item->_id, 'value' => $item->tag];
+            foreach ($this->commonModel->lists('tags', '*', [], 'id DESC', 10) as $item) {
+                $result[] = ['id' => (string)$item->id, 'value' => $item->tag];
             }
             return $this->response->setJSON($result);
         } else return redirect('403');
@@ -62,11 +62,11 @@ class AJAX extends BaseController
             if ($this->validate($valData) == false) return redirect('403');
 
             $max_url_increment = 10000;
-            if ($this->commonModel->get_where(['seflink' => seflink($this->request->getPost('makeSeflink'))], $this->request->getPost('where')) === 0) return $this->response->setJSON(['seflink' => seflink($this->request->getPost('makeSeflink'))]);
+            if ($this->commonModel->isHave($this->request->getPost('where'), ['seflink' => seflink($this->request->getPost('makeSeflink'))]) === 0) return $this->respond(['seflink' => seflink($this->request->getPost('makeSeflink'))], 200);
             else {
                 for ($i = 1; $i <= $max_url_increment; $i++) {
                     $new_link = seflink($this->request->getPost('makeSeflink')) . '-' . $i;
-                    if ($this->commonModel->get_where(['seflink' => $new_link], $this->request->getPost('where')) === 0) return $this->response->setJSON(['seflink' => $new_link]);
+                    if ($this->commonModel->isHave($this->request->getPost('where'), ['seflink' => $new_link]) === 0) return $this->respond(['seflink' => $new_link], 200);
                 }
             }
         } else return redirect('403');
@@ -86,10 +86,10 @@ class AJAX extends BaseController
 
             if ($this->validate($valData) == false) return redirect('403');
 
-            if($this->commonModel->updateOne($this->request->getPost('where'), ['_id' => new ObjectId($this->request->getPost('id'))], ['isActive' => (bool)$this->request->getPost('isActive')]))
-                return $this->response->setJSON(['result'=>true]);
+            if ($this->commonModel->edit($this->request->getPost('where'), ['isActive' => (bool)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
+                return $this->respond(['result' => true], 200);
             else
-                return $this->response->setJSON(['result'=>false]);
+                return $this->fail(['result' => false]);
         } else redirect('403');
     }
 
@@ -102,10 +102,10 @@ class AJAX extends BaseController
             ]);
 
             if ($this->validate($valData) == false) return redirect('403');
-            if($this->commonModel->updateOne('settings', ['_id' => new ObjectId($this->request->getPost('id'))], ['maintenanceMode' => (bool)$this->request->getPost('isActive')]))
-                return $this->response->setJSON(['result'=>true]);
+            if ($this->commonModel->updateOne('settings', ['_id' => new ObjectId($this->request->getPost('id'))], ['maintenanceMode' => (bool)$this->request->getPost('isActive')]))
+                return $this->response->setJSON(['result' => true]);
             else
-                return $this->response->setJSON(['result'=>false]);
+                return $this->response->setJSON(['result' => false]);
         } else redirect('403');
     }
 }

@@ -83,7 +83,7 @@
                         <select name="author" class="form-control" required>
                             <option value=""><?=lang('Backend.select')?></option>
                             <?php foreach($authors as $author): ?>
-                            <option value="<?=$author->_id?>" <?=$author->_id==$logged_in_user->_id?'selected':''?>><?=$author->firstname.' '.$author->sirname?></option>
+                            <option value="<?=$author->id?>" <?=$author->id==$logged_in_user->id?'selected':''?>><?=$author->firstname.' '.$author->sirname?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -100,7 +100,7 @@
                         <label for=""><?=lang('Backend.categories')?></label>
                         <select name="categories[]" id="" class="form-control select2bs4" multiple="multiple" data-placeholder="Select categories">
                             <?php foreach($categories as $category): ?>
-                            <option value="<?=$category->_id?>"><?=$category->title?></option>
+                            <option value="<?=$category->id?>"><?=$category->title?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>

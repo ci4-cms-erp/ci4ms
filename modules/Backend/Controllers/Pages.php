@@ -5,7 +5,6 @@ namespace Modules\Backend\Controllers;
 use JasonGrimes\Paginator;
 use Modules\Backend\Libraries\CommonTagsLibrary;
 use Modules\Backend\Models\AjaxModel;
-use MongoDB\BSON\ObjectId;
 
 class Pages extends BaseController
 {
@@ -28,7 +27,7 @@ class Pages extends BaseController
         $paginator->setMaxPagesToShow(5);
         $this->defData['paginator'] = $paginator;
         $bpk = ($this->request->uri->getSegment(3, 1) - 1) * $itemsPerPage;
-        $this->defData['pages'] = $this->commonModel->getList('pages', [], ['limit' => $itemsPerPage, 'skip' => $bpk]);
+        $this->defData['pages'] = $this->commonModel->lists('pages', '*', [], 'id ASC', $itemsPerPage, $bpk);
         return view('Modules\Backend\Views\pages\list', $this->defData);
     }
 
@@ -54,7 +53,7 @@ class Pages extends BaseController
         if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => 'Seo Anahtar Kelimeleri', 'rules' => 'required'];
 
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        if ($this->commonModel->get_where(['seflink' => $this->request->getPost('seflink')], 'categories') === 1) return redirect()->back()->withInput()->with('error', 'Sayfa seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
+        if ($this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', 'Sayfa seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
 
         $data = ['title' => $this->request->getPost('title'),
             'content' => $this->request->getPost('content'),
@@ -70,13 +69,18 @@ class Pages extends BaseController
         }
         if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
         if (!empty($this->request->getPost('keywords'))) $data['seo']['keywords'] = json_decode($this->request->getPost('keywords'));
-        if ($this->commonModel->createOne('pages', $data)) return redirect()->route('pages', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı sayfa Oluşturuldu.');
+        $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
+        if ($this->commonModel->create('pages', $data)) return redirect()->route('pages', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı sayfa Oluşturuldu.');
         else return redirect()->back()->withInput()->with('error', 'Sayfa oluşturulamadı.');
     }
 
     public function update($id)
     {
-        $this->defData['pageInfo'] = $this->commonModel->getOne('pages', ['_id' => new ObjectId($id)]);
+        $this->defData['pageInfo'] = $this->commonModel->selectOne('pages', ['id' => $id]);
+        if (!empty($this->defData['pageInfo']->seo)) {
+            $this->defData['pageInfo']->seo = json_decode($this->defData['pageInfo']->seo);
+            if (!empty($this->defData['pageInfo']->seo->keywords)) $this->defData['pageInfo']->seo->keywords = $this->defData['pageInfo']->seo->keywords;
+        }
         return view('Modules\Backend\Views\pages\update', $this->defData);
     }
 
@@ -97,8 +101,8 @@ class Pages extends BaseController
         if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => 'Seo Anahtar Kelimeleri', 'rules' => 'required'];
 
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        $info = $this->commonModel->getOne('pages', ['_id' => new ObjectId($id)]);
-        if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->get_where(['seflink' => $this->request->getPost('seflink')], 'categories') === 1) return redirect()->back()->withInput()->with('error', 'Sayfa seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
+        $info = $this->commonModel->selectOne('pages', ['id' => $id]);
+        if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave(['seflink' => $this->request->getPost('seflink')], 'categories') === 1) return redirect()->back()->withInput()->with('error', 'Sayfa seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
         $data = ['title' => $this->request->getPost('title'),
             'content' => $this->request->getPost('content'),
             'isActive' => (bool)$this->request->getPost('isActive'),
@@ -113,13 +117,15 @@ class Pages extends BaseController
 
         if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
         if (!empty($this->request->getPost('keywords'))) $data['seo']['keywords'] = json_decode($this->request->getPost('keywords'));
-        if ($this->commonModel->updateOne('pages', ['_id' => new ObjectId($id)], $data)) return redirect()->route('pages', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı sayfa güncellendi.');
+        $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
+        if ($this->commonModel->edit('pages', $data, ['id' => $id])) return redirect()->route('pages', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı sayfa güncellendi.');
         else return redirect()->back()->withInput()->with('error', 'Sayfa oluşturulamadı.');
     }
 
     public function delete_post($id)
     {
-        if ($this->commonModel->deleteOne('pages', ['_id' => new ObjectId($id)]) === true) return redirect()->route('pages', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı sayfa silindi.');
+        $pageName = $this->commonModel->selectOne('pages', ['id' => $id]);
+        if ($this->commonModel->remove('pages', ['id' => $id]) === true) return redirect()->route('pages', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı sayfa silindi.');
         else return redirect()->back()->withInput()->with('error', 'Sayfa Silinemedi.');
     }
 }

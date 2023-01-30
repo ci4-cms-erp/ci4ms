@@ -133,13 +133,12 @@ class AuthLibrary
         Events::trigger('logout', $user);
     }
 
-    public function has_perm(string $module, string $method): bool
+    public function has_perm(string $module, string $method=''): bool
     {
         if ($method == 'error_403') return true;
 
         $userInfo = $this->commonModel->selectOne($this->config->userTable, ['id' => session()->get($this->config->logged_in)], 'id,group_id');
         $userInfo->auth_users_permissions=$this->commonModel->lists('auth_users_permissions','*',['user_id'=>$userInfo->id]);
-
         $module = str_replace('\\', '-', $module);
         $where=['className' => $module, 'methodName' => $method];
 
@@ -147,15 +146,12 @@ class AuthLibrary
 
         $classID = $this->commonModel->selectOne('auth_permissions_pages', $where, 'id,typeOfPermissions');
         $perms = $this->commonModel->selectOne('auth_groups', ['id' => $userInfo->group_id]);
-        $perms->auth_groups_permissions=$this->commonModel->lists('auth_groups_permissions','*',['group_id'=>$perms->id]);
-        $permissions = $perms->auth_groups_permissions;
-
+        $permissions = $this->commonModel->lists('auth_groups_permissions','*',['group_id'=>$perms->id]);
         $allPerms = [];
-        if (!empty($userInfo->auth_users_permissions)) {//kullanıcıya atanmış izinler
+        if (!empty($permissions)) {//kullanıcıya atanmış izinler
             $userPerms = $userInfo->auth_users_permissions;
             $allPerms = array_merge($permissions, $userPerms);
         } else $allPerms = $permissions;
-
         if (!empty($classID)) {
             $perms = [];
             foreach ($allPerms as $allPerm) {

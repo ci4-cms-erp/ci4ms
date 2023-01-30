@@ -48,12 +48,12 @@
                     <tr class="row">
                         <td class="col-md-9"><?=$page->title?></td>
                         <td class="col-md-1">
-                            <input type="checkbox" name="my-checkbox" class="bswitch" <?=($page->isActive===true)?'checked':''?> data-id="<?=$page->_id?>" data-off-color="danger" data-on-color="success">
+                            <input type="checkbox" name="my-checkbox" class="bswitch" <?=((bool)$page->isActive===true)?'checked':''?> data-id="<?=$page->id?>" data-off-color="danger" data-on-color="success">
                         </td>
                         <td class="col-md-2">
-                            <a href="<?= route_to('pageUpdate', $page->_id) ?>"
+                            <a href="<?= route_to('pageUpdate', $page->id) ?>"
                                class="btn btn-outline-info btn-sm"><?=lang('Backend.update')?></a>
-                            <a href="<?= route_to('pageDelete', $page->_id) ?>"
+                            <a href="<?= route_to('pageDelete', $page->id) ?>"
                                class="btn btn-outline-danger btn-sm"><?=lang('Backend.delete')?></a>
                         </td>
                     </tr>
