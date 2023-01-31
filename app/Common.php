@@ -189,20 +189,24 @@ if (!function_exists('navigationWidget')) {
         foreach ($menus as $menu) {
             if ($menu->parent == $parent) {
                 echo '<li class="nav-item ';
-                if (isset($menu->hasChildren) && $menu->hasChildren === true) {
+                if ((bool)$menu->hasChildren === true) {
                     echo "dropdown";
                     $class.=' dropdown-toggle';
                 }
-                echo '"><a class="'.$class.'" href="'.site_url($menu->seflink).'"';
-                if (isset($menu->hasChildren) && $menu->hasChildren === true)
+                echo '"><a class="'.$class.'" href="';
+                if($menu->urlType=='url')
+                    echo $menu->seflink;
+                else site_url($menu->seflink);
+                echo '"';
+                if ((bool)$menu->hasChildren === true)
                     echo ' role="button" data-bs-toggle="dropdown" aria-expanded="false"';
                 echo '>'.$menu->title.'</a>';
-                if (isset($menu->hasChildren) && $menu->hasChildren === true) {
+                if ((bool)$menu->hasChildren === true) {
                     echo '<ul class="dropdown-menu">';
                     $class='dropdown-item';
                 }
                 navigationWidget($menus, $menu->id,$class);
-                if (isset($menu->hasChildren) && $menu->hasChildren === true)
+                if ((bool)$menu->hasChildren === true)
                     echo '</ul>';
                 echo '</li>';
             }

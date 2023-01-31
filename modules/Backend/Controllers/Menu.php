@@ -2,8 +2,6 @@
 
 namespace Modules\Backend\Controllers;
 
-use MongoDB\BSON\ObjectId;
-
 class Menu extends BaseController
 {
     public function __construct()
@@ -11,102 +9,98 @@ class Menu extends BaseController
         helper('Modules\Backend\Helpers\ci4ms');
     }
 
-    /**
-     * Return an array of resource objects, themselves in array format
-     *
-     * @return mixed
-     */
     public function index()
     {
-        $this->defData=array_merge($this->defData,['pages' => $this->commonModel->lists('pages','*', ['inMenu' => false, 'isActive' => true]),
-            'blogs' => $this->commonModel->lists('blog','*', ['inMenu' => false, 'isActive' => true]),
-            'nestable2' => $this->commonModel->lists('menu','*',[],'queue ASC')]);
+        $this->defData = array_merge($this->defData, ['pages' => $this->commonModel->lists('pages', '*', ['inMenu' => false, 'isActive' => true]),
+            'blogs' => $this->commonModel->lists('blog', '*', ['inMenu' => false, 'isActive' => true]),
+            'nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
         return view('Modules\Backend\Views\menu\menu', $this->defData);
     }
 
     public function create()
     {
         if ($this->request->isAJAX()) {
-            $pMax = $this->commonModel->getOne('menu', ['parent' => null], ['sort' => ['_id' => -1]]);
+            $pMax = $this->commonModel->selectOne('menu', ['parent' => null], '*', 'queue DESC');
             if ($this->request->getPost('type') == 'url') {
-                $data = ['queue'=>$pMax->queue+1,'urlType' => $this->request->getPost('type'),
-                    'pages_id'=>new ObjectId(null), 'seflink' => $this->request->getPost('URL'),
-                    'parent'=>null, 'title' => $this->request->getPost('URLname'),
+                $data = ['queue' => $pMax->queue + 1, 'urlType' => $this->request->getPost('type'),
+                    'pages_id' => null, 'seflink' => $this->request->getPost('URL'),
+                    'parent' => null, 'title' => $this->request->getPost('URLname'),
                     'target' => $this->request->getPost('target')];
             } else {
-                $added = $this->commonModel->getOne($this->request->getPost('where'),
-                    ['_id' => new ObjectId($this->request->getPost('id'))]);
-                if (empty($pMax))
-                    $pMax = (object)['queue' => 0];
-
+                $added = $this->commonModel->selectOne($this->request->getPost('where'), ['id' => $this->request->getPost('id')]);
+                $type = 'pages';
+                if (empty($pMax)) $pMax = (object)['queue' => 0];
                 if ($this->request->getPost('where') == 'pages') $seflink = $added->seflink;
-                if ($this->request->getPost('where') == 'blog') $seflink = 'blog/' . $added->seflink;
+                if ($this->request->getPost('where') == 'blog') {
+                    $seflink = 'blog/' . $added->seflink;
+                    $type = 'blogs';
+                }
 
-                $data = ['pages_id' => new ObjectId($added->_id),
+                $data = ['pages_id' => $added->id,
                     'parent' => null, 'queue' => $pMax->queue + 1,
-                    'urlType' => $this->request->getPost('where'),
-                    'title' => $added->title, 'seflink' => $seflink, 'target' => null];
-                $this->commonModel->updateOne($this->request->getPost('where'),
-                    ['_id' => new ObjectId($added->_id)], ['inMenu' => true]);
+                    'urlType' => $type,
+                    'title' => $added->title, 'seflink' => $seflink];
+                $this->commonModel->edit($this->request->getPost('where'), ['inMenu' => true], ['id' => $added->id]);
             }
-            if ($this->commonModel->createOne('menu', $data)) {
-                return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->getList('menu',[],['sort'=>['queue'=>1]])]);
-            }
-        } else return redirect()->route('403');
+            if ($this->commonModel->create('menu', $data))
+                return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
+        } else $this->respond('403', 403);
     }
 
     public function addMultipleMenu()
     {
         if ($this->request->isAJAX()) {
             foreach ($this->request->getPost('pageChecked') as $item) {
-                $pMax = $this->commonModel->getOne('menu', ['parent' => null], ['sort' => ['_id' => -1]]);
-                if (empty($pMax))
-                    $pMax = (object)['queue' => 0];
+                $pMax = $this->commonModel->selectOne('menu', ['parent' => null], '*', 'id DESC');
+                if (empty($pMax)) $pMax = (object)['queue' => 0];
 
-                $d = $this->commonModel->getOne($this->request->getPost('where'), ['_id' => new ObjectId($item)]);
+                $d = $this->commonModel->selectOne($this->request->getPost('where'), ['id' => $item]);
 
                 if ($this->request->getPost('type') == 'pages') $seflink = $d->seflink;
                 if ($this->request->getPost('type') == 'blogs') $seflink = 'blog/' . $d->seflink;
 
-                $data = ['pages_id' => new ObjectId($item), 'parent' => null,
+                $data = ['pages_id' => $item, 'parent' => null,
                     'queue' => $pMax->queue + 1, 'urlType' => $this->request->getPost('type'),
                     'title' => $d->title, 'seflink' => $seflink, 'target' => null];
 
-                $this->commonModel->updateOne($this->request->getPost('where'), ['_id' => new ObjectId($item)], ['inMenu' => true]);
-                $this->commonModel->createOne('menu', $data);
+                $this->commonModel->edit($this->request->getPost('where'), ['inMenu' => true], ['id' => $item]);
+                $this->commonModel->create('menu', $data);
             }
-            return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->getList('menu',[],['sort'=>['queue'=>1]])]);
-        } else return redirect()->route('403');
+            return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
+        } else return $this->respond('403', 403);
     }
 
     public function delete_ajax()
     {
         if ($this->request->isAJAX()) {
-            $getData=$this->commonModel->getOne('menu',['pages_id' => new ObjectId($this->request->getPost('id')), 'urlType' => $this->request->getPost('type')]);
-            if($this->commonModel->get_where(['parent'=>new ObjectId($getData->parent)],'menu')===0)
-                $this->commonModel->updateOne('menu',['pages_id' => new ObjectId($getData->parent), 'urlType' => $this->request->getPost('type')],['hasChildren' => false]);
-            if ($this->commonModel->updateMany('menu', ['parent' => $this->request->getPost('id')], ['parent' => null]) && $this->commonModel->deleteOne('menu', ['pages_id' => new ObjectId($this->request->getPost('id')), 'urlType' => $this->request->getPost('type')])) {
-                if ($this->request->getPost('type') == 'pages')
-                    $this->commonModel->updateOne('pages', ['_id' => new ObjectId($this->request->getPost('id'))], ['inMenu' => false]);
-                if ($this->request->getPost('type') == 'blog')
-                    $this->commonModel->updateOne('blog', ['_id' => new ObjectId($this->request->getPost('id'))], ['inMenu' => false]);
-                return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->getList('menu',[],['sort'=>['queue'=>1]])]);
+            $type='pages';
+            if($this->request->getPost('type')=='blogs') $type='blog';
+            $getData = $this->commonModel->selectone('menu', ['id' => $this->request->getPost('id'), 'urlType' => $this->request->getPost('type')]);
+            if($this->commonModel->isHave('menu',['parent'=>$getData->id])===1){
+                $reQ=$this->commonModel->lists('menu','*',['parent'=>$getData->id]);
+                $bigQ=$this->commonModel->selectOne('menu',['parent'=>null,'id!='=>$getData->id],'*','queue DESC');
+                foreach ($reQ as $item) {
+                    $this->commonModel->edit('menu',['queue'=>$bigQ->queue+1],['id'=>$item->id]);
+                }
             }
-        } else return redirect()->route('403');
+            $this->commonModel->remove('menu',['id'=>$getData->id]);
+            if(!empty($getData->parent) && $this->commonModel->isHave('menu',['parent'=>(int)$getData->parent])===0) $this->commonModel->edit('menu',['hasChildren'=>false],['id'=>$getData->parent]);
+            $this->commonModel->edit($type,['inMenu'=>0],['id'=>$getData->pages_id]);
+            return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
+        } else return $this->respond('403', 403);
     }
 
     private function queue($menu, $parent = null)
     {
         $i = 1;
         foreach ($menu as $d) {
-            $data=['queue' => $i, 'parent' => $parent];
-            if (array_key_exists("children", $d)===true) {
-                $this->commonModel->updateOne('menu', ['pages_id' => new ObjectId($d['id'])], ['hasChildren'=>true]);
+            $data = ['queue' => $i, 'parent' => $parent];
+            if (array_key_exists("children", $d) === true) {
+                $this->commonModel->edit('menu', ['hasChildren' => true], ['id' => $d['id']]);
                 $this->queue($d['children'], $d['id']);
-            }
-            else $data['hasChildren'] = false;
+            } else $data['hasChildren'] = false;
 
-            $this->commonModel->updateOne('menu',['pages_id'=>new ObjectId($d['id'])], $data);
+            $this->commonModel->edit('menu', $data, ['id' => $d['id']]);
             $i++;
         }
     }
@@ -114,16 +108,16 @@ class Menu extends BaseController
     public function queue_ajax()
     {
         if ($this->request->isAJAX()) {
-            $this->queue($this->request->getPost('queue'), null);
-            return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->getList('menu',[],['sort'=>['queue'=>1]])]);
-        } else return redirect()->route('403');
+            $this->queue($this->request->getPost('queue'));
+            return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
+        } else $this->respond('403', 403);
     }
 
     public function listURLs()
     {
-        $this->defData=array_merge($this->defData,['pages' => $this->commonModel->getList('pages', ['inMenu' => false, 'isActive' => true]),
-            'blogs' => $this->commonModel->getList('blog', ['inMenu' => false, 'isActive' => true]),
-            'nestable2' => $this->commonModel->getList('menu',[],['sort'=>['queue'=>1]])]);
+        $this->defData = array_merge($this->defData, ['pages' => $this->commonModel->lists('pages', '*', ['inMenu' => false, 'isActive' => true]),
+            'blogs' => $this->commonModel->lists('blog', '*', ['inMenu' => false, 'isActive' => true]),
+            'nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
         return view('Modules\Backend\Views\menu\list', $this->defData);
     }
 }

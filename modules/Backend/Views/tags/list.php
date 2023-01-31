@@ -109,6 +109,7 @@
                 </div>
                 <div class="modal-body">
                     <form action="<?= route_to('tagCreate') ?>" method="post" class="form-row">
+                        <?= csrf_field() ?>
                         <div class="form-group col-md-12">
                             <label for=""><?=lang('Backend.title')?></label>
                             <input type="text" name="title" class="form-control ptitle" placeholder="Etiket Başlığı"

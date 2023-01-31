@@ -48,10 +48,14 @@ class Filters extends BaseConfig
                 'backend/menu/queueMenuAjax',
                 'backend/tagify',
                 'backend/checkSeflink',
-                'backend/blogs/tags/create',// TODO: normalde csrf burada sorun olmamalı. düzene sok !!
                 'backend/isActive',
                 'backend/maintenance',
-                'backend/blogs/comments/commentResponse'
+                'backend/blogs/comments/commentResponse',
+                'backend/menu/createMenu',
+                'backend/menu/menuList',
+                'backend/menu/deleteMenuAjax',
+                'backend/menu/queueMenuAjax',
+                'backend/menu/addMultipleMenu',
             ]],
             // 'invalidchars',
         ],

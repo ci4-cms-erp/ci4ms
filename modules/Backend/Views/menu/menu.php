@@ -127,7 +127,6 @@
 
     function saveMenu() {
         $.post('<?=route_to('queueMenuAjax')?>', {
-            "<?=csrf_token()?>": "<?=csrf_hash()?>",
             "queue": $('.dd').nestable('serialize')
         }).done(function (data){
             $('.dd').nestable('destroy');
@@ -138,7 +137,6 @@
 
     function addPages(id) {
         $.post('<?=route_to('createMenu')?>', {
-            "<?=csrf_token()?>": "<?=csrf_hash()?>",
             "id": id, 'where': 'pages'
         }).done(function (data) {
             $('.dd').nestable('destroy');
@@ -155,7 +153,6 @@
 
     function addCheckedPages() {
         var formData=$('#addCheckedPages').serializeArray();
-        formData.push({name: "<?=csrf_token()?>", value: "<?=csrf_hash()?>"});
         formData.push({name:"where",value:"pages"});
         formData.push({name:"type",value:"pages"});
         $.post('<?=route_to('addMultipleMenu')?>', formData).done(function (data) {
@@ -172,7 +169,6 @@
 
     function addBlog(id) {
         $.post('<?=route_to('createMenu')?>', {
-            "<?=csrf_token()?>": "<?=csrf_hash()?>",
             "id": id, 'where': 'blog'
         }).done(function (data) {
             $('.dd').nestable('destroy');
@@ -189,7 +185,6 @@
 
     function addCheckedBlog() {
         var formData=$('#addCheckedBlog').serializeArray();
-        formData.push({name: "<?=csrf_token()?>", value: "<?=csrf_hash()?>"});
         formData.push({name:"where",value:"blog"});
         formData.push({name:"type",value:"blogs"});
         $.post('<?=route_to('addMultipleMenu')?>', formData).done(function (data) {
@@ -206,7 +201,6 @@
 
     function addURL() {
         var formData=$('#addUrls').serializeArray();
-        formData.push({name: "<?=csrf_token()?>", value: "<?=csrf_hash()?>"});
         formData.push({name:"type",value:"url"});
         $.post('<?=route_to('createMenu')?>', formData).done(function (data) {
             $('.dd').nestable('destroy');
@@ -222,7 +216,7 @@
 
     function removeFromMenu(id, type) {
         $.post('<?=route_to('deleteMenuAjax')?>', {
-            "<?=csrf_token()?>": "<?=csrf_hash()?>", "id": id, "type": type
+            "id": id, "type": type
         }).done(function (data) {
             $('.dd').nestable('destroy');
             $('.dd').html(data);
