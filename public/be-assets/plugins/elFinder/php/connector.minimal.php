@@ -150,8 +150,8 @@ function access($attr, $path, $data, $volume, $isDir, $relpath) {
 
 // Documentation for connector options:
 // https://github.com/Studio-42/elFinder/wiki/Connector-configuration-options
-var_dump(dirname($_SERVER['PHP_SELF']));
 $allowedFiles=$commonModel->selectOne('settings',[],'allowedFiles');
+$allowedFiles->allowedFiles=json_decode($allowedFiles->allowedFiles);
 $opts = array(
 	// 'debug' => true,
 	'roots' => array(
