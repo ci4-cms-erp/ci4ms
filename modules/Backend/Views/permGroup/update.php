@@ -38,21 +38,21 @@
 
         <div class="card-body">
             <?= view('Modules\Auth\Views\_message_block') ?>
-            <form action="<?= route_to('group_update',$group_perms->_id) ?>" method="post" class="form-row">
+            <form action="<?= route_to('group_update',$group_name->id) ?>" method="post" class="form-row">
                 <?= csrf_field() ?>
                 <div class="col-md-6">
                     <label for=""><?=lang('Backend.permGroupName')?></label>
-                    <input type="text" class="form-control" value="<?= $group_perms->name ?>" name="groupName" required>
+                    <input type="text" class="form-control" value="<?= $group_name->name ?>" name="groupName" required>
                 </div>
                 <div class="col-md-6">
                     <label for="">Seflink</label>
-                    <input type="text" class="form-control" value="<?= $group_perms->seflink ?>" name="seflink"
+                    <input type="text" class="form-control" value="<?= $group_name->seflink ?>" name="seflink"
                            required>
                 </div>
                 <div class="col-md-12">
                     <label for=""><?=lang('Backend.content')?></label>
                     <textarea name="description" cols="30" rows="10"
-                              class="form-control" required><?= $group_perms->description ?></textarea>
+                              class="form-control" required><?= $group_name->description ?></textarea>
                 </div>
                 <div class="col-md-12 mt-3">
                     <div class="table-responsive">
@@ -67,17 +67,13 @@
                             <tbody>
                             <?php foreach ($pages as $page):
                                 $c=null; $r=null; $u=null; $d=null;
-                                if(!empty($group_perms->auth_groups_permissions)):
-                                foreach ($group_perms->auth_groups_permissions as $perms):
-                                    if ($perms->page_id == $page->_id):
-                                        if($perms->create_r == true)
-                                            $c='checked';
-                                        if($perms->read_r == true)
-                                            $r='checked';
-                                        if($perms->update_r == true)
-                                            $u='checked';
-                                        if($perms->delete_r == true)
-                                            $d='checked';
+                                if(!empty($perms)):
+                                foreach ($perms as $perm):
+                                    if ((int)$perm->page_id === (int)$page->id):
+                                        if((bool)$perm->create_r === true) $c='checked';
+                                        if((bool)$perm->read_r === true) $r='checked';
+                                        if((bool)$perm->update_r === true) $u='checked';
+                                        if((bool)$perm->delete_r === true) $d='checked';
                                     endif;
                                 endforeach;
                                 endif; ?>
@@ -88,22 +84,22 @@
                                                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
                                                     <label class="btn btn-outline-secondary">
                                                         <input type="checkbox"
-                                                               name="perms[<?= (string)$page->_id ?>][c]" <?= $c ?>>
+                                                               name="perms[<?= (string)$page->id ?>][c]" <?= $c ?>>
                                                         Create
                                                     </label>
                                                     <label class="btn btn-outline-secondary">
                                                         <input type="checkbox"
-                                                               name="perms[<?= (string)$page->_id ?>][r]" <?= $r ?>>
+                                                               name="perms[<?= (string)$page->id ?>][r]" <?= $r ?>>
                                                         Read
                                                     </label>
                                                     <label class="btn btn-outline-secondary">
                                                         <input type="checkbox"
-                                                               name="perms[<?= (string)$page->_id ?>][u]" <?= $u ?>>
+                                                               name="perms[<?= (string)$page->id ?>][u]" <?= $u ?>>
                                                         Update
                                                     </label>
                                                     <label class="btn btn-outline-secondary">
                                                         <input type="checkbox"
-                                                               name="perms[<?= (string)$page->_id ?>][d]" <?= $d ?>>
+                                                               name="perms[<?= (string)$page->id ?>][d]" <?= $d ?>>
                                                         Delete
                                                     </label>
                                                 </div>
@@ -114,7 +110,6 @@
                         </table>
                     </div>
                 </div>
-
                 <div class="col-md-12">
                     <button class="btn btn-success float-right"><?=lang('Backend.update')?></button>
                 </div>
@@ -123,7 +118,6 @@
         <!-- /.card-body -->
     </div>
     <!-- /.card -->
-
 </section>
 <!-- /.content -->
 <?= $this->endSection() ?>

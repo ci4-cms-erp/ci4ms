@@ -71,16 +71,16 @@
                                     <td>
                                         <div class="btn-group btn-group-toggle" data-toggle="buttons">
                                             <label class="btn btn-outline-secondary">
-                                                <input type="checkbox" name="perms[<?=(string)$page->_id?>][c]"> Create
+                                                <input type="checkbox" name="perms[<?=(string)$page->id?>][c]"> Create
                                             </label>
                                             <label class="btn btn-outline-secondary">
-                                                <input type="checkbox" name="perms[<?=(string)$page->_id?>][r]"> Read
+                                                <input type="checkbox" name="perms[<?=(string)$page->id?>][r]"> Read
                                             </label>
                                             <label class="btn btn-outline-secondary">
-                                                <input type="checkbox" name="perms[<?=(string)$page->_id?>][u]"> Update
+                                                <input type="checkbox" name="perms[<?=(string)$page->id?>][u]"> Update
                                             </label>
                                             <label class="btn btn-outline-secondary">
-                                                <input type="checkbox" name="perms[<?=(string)$page->_id?>][d]"> Delete
+                                                <input type="checkbox" name="perms[<?=(string)$page->id?>][d]"> Delete
                                             </label>
                                         </div>
                                     </td>

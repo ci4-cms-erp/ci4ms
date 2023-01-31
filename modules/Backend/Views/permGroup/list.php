@@ -52,7 +52,7 @@
                                 <td><?= $group->name ?></td>
                                 <td>
                                     <!--TODO: Silme adımı için yetkiye sahip olanların yetkisinin değiştirilmesi istenilecek-->
-                                    <a href="<?=route_to('group_update',$group->_id)?>" class="btn btn-outline-info btn-sm"><?=lang('Backend.update')?></a>
+                                    <a href="<?=route_to('group_update',$group->id)?>" class="btn btn-outline-info btn-sm"><?=lang('Backend.update')?></a>
                                 </td>
                             </tr>
                         <?php //endif;
@@ -108,14 +108,10 @@
 
                     var a = this.angle(this.cv)  // Angle
                         ,
-                        sa = this.startAngle          // Previous start angle
-                        ,
-                        sat = this.startAngle         // Start angle
-                        ,
-                        ea                            // Previous end angle
-                        ,
-                        eat = sat + a                 // End angle
-                        ,
+                        sa = this.startAngle,          // Previous start angle
+                        sat = this.startAngle,         // Start angle
+                        ea,                            // Previous end angle
+                        eat = sat + a,                 // End angle
                         r = true
 
                     this.g.lineWidth = this.lineWidth
