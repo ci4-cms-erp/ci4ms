@@ -160,9 +160,9 @@ class Blog extends BaseController
             if (empty($data['search']['value'])) unset($data['search']);
             unset($data['columns'], $data['order']);
             $searchData = ['isApproved' => true];
-            if (!empty($data['search']['value'])) $searchData['comFullName'] = new Regex($data['search']['value'], 'i');
-            if ($data['length'] > 0) $results = $this->commonModel->getList('comments', $searchData, ['limit' => (int)$data['length'], 'skip' => (int)$data['start']]);
-            else $results = $this->commonModel->getList('comments', $searchData);
+            if (!empty($data['search']['value'])) $searchData['comFullName'] = $data['search']['value'];
+            if ($data['length'] > 0) $results = $this->commonModel->lists('comments','*', [],'id ASC', $data['length'],(int)$data['start'],$searchData);
+            else $results = $this->commonModel->lists('comments', $searchData);
             $c = ((int)$data['start'] > 0) ? (int)$data['start'] + 1 : 1;
             $data = [
                 'draw' => intval($data['draw']),
@@ -170,15 +170,15 @@ class Blog extends BaseController
                 "iTotalDisplayRecords" => $this->commonModel->count('comments', $searchData),
             ];
             foreach ($results as $result) {
-                $id = (string)$result->_id;
+                $id = (string)$result->id;
                 $data['aaData'][] = ['id' => $c,
                     'com_name_surname' => $result->comFullName,
                     'email' => $result->comEmail,
                     'created_at' => $result->created_at,
                     'status' => ($result->isApproved == true) ? 'Approved' : 'Not approved',
-                    'process' => '<a href="' . route_to('blogUpdate', $result->_id) . '"
+                    'process' => '<a href="' . route_to('blogUpdate', $result->id) . '"
                                    class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>
-                                <a href="' . route_to('blogDelete', $result->_id) . '"
+                                <a href="' . route_to('blogDelete', $result->id) . '"
                                    class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>'];
                 $c++;
             }

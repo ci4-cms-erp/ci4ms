@@ -87,7 +87,7 @@
 <script>
     var table = $("#example1").DataTable({
         responsive: true, lengthChange: false, autoWidth: false,
-        buttons: ["pageLength", "excel", "pdf", "print"],
+        buttons: ["pageLength"],
         processing: true, pageLength: 10, serverSide: true,
         ordering: false, "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
         ajax: {
@@ -99,6 +99,7 @@
             {data: 'com_name_surname'},
             {data: 'email'},
             {data:'created_at'},
+            {data:'status'},
             {data:'process'}
         ],
         initComplete: function () {
