@@ -93,6 +93,10 @@ class BaseController extends Controller
             'title'=>$this->commonModel->selectOne('auth_permissions_pages', ['className' => str_replace('\\', '-',$router->controllerName()), 'methodName' => $router->methodName()], 'pagename'),
             'uri' => $uri,
             'settings'=>$settings];
+        $this->defData['settings']->templateInfos=json_decode($this->defData['settings']->templateInfos);
+        $this->defData['settings']->templateInfos=(object)$this->defData['settings']->templateInfos;
+        $this->defData['settings']->socialNetwork=json_decode($this->defData['settings']->socialNetwork);
+        $this->defData['settings']->socialNetwork=(object)$this->defData['settings']->socialNetwork;
         if(count($templates)>=1) $this->defData['templates']=$templates;
     }
 }

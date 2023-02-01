@@ -1,9 +1,6 @@
 <?php namespace Modules\Backend\Controllers;
 
-use Config\App;
 use Config\Mimes;
-use Config\Paths;
-use MongoDB\BSON\ObjectId;
 
 class Settings extends BaseController
 {
@@ -13,8 +10,8 @@ class Settings extends BaseController
     public function index()
     {
         $this->defData['request'] = $this->request;
-        $blacklists = $this->commonModel->getOne('login_rules', ['type' => 'blacklist']);
-        $whitelists = $this->commonModel->getOne('login_rules', ['type' => 'whitelist']);
+        $blacklists = $this->commonModel->selectOne('login_rules', ['type' => 'blacklist']);
+        $whitelists = $this->commonModel->selectOne('login_rules', ['type' => 'whitelist']);
 
         if (!empty($blacklists)) {
             $blacklistRange = implode(', ', (array)$blacklists->range);

@@ -100,12 +100,11 @@ class AJAX extends BaseController
                 'id' => ['label' => 'id', 'rules' => 'required'],
                 'isActive' => ['label' => 'isActive', 'rules' => 'required']
             ]);
-
             if ($this->validate($valData) == false) return redirect('403');
-            if ($this->commonModel->updateOne('settings', ['_id' => new ObjectId($this->request->getPost('id'))], ['maintenanceMode' => (bool)$this->request->getPost('isActive')]))
-                return $this->response->setJSON(['result' => true]);
+            if ($this->commonModel->edit('settings', ['maintenanceMode' => (bool)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
+                return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
             else
-                return $this->response->setJSON(['result' => false]);
+                return $this->fail(['pr' => false]);
         } else redirect('403');
     }
 }

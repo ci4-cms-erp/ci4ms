@@ -39,8 +39,7 @@ class Home extends BaseController
 
     public function maintenanceMode()
     {
-        $this->defData['settings'] = $this->commonModel->getOne('settings');
-        if ($this->defData['settings']->maintenanceMode === false) return redirect()->route('/');
+        if ((bool)$this->defData['settings']->maintenanceMode === false) return redirect()->route('/');
         return view('maintenance', $this->defData);
     }
 

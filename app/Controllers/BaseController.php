@@ -70,6 +70,8 @@ abstract class BaseController extends Controller
             'settings'=>$this->commonModel->selectOne('settings')];
         $this->defData['settings']->templateInfos=json_decode($this->defData['settings']->templateInfos);
         $this->defData['settings']->templateInfos=(object)$this->defData['settings']->templateInfos;
+        $this->defData['settings']->socialNetwork=json_decode($this->defData['settings']->socialNetwork);
+        $this->defData['settings']->socialNetwork=(object)$this->defData['settings']->socialNetwork;
         $this->defData['schema']=new Schema(
             new Thing('Organization', [
                 'url'          => site_url(),

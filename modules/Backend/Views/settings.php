@@ -126,7 +126,7 @@
                             </form>
                             <div class="w-100">
                                 <label><?=lang('Backend.maintenanceMode')?></label>
-                                <input type="checkbox" name="my-checkbox" class="bswitch" <?=($settings->maintenanceMode===true)?'checked':''?> data-id="<?=$settings->_id?>" data-off-color="danger" data-on-color="success">
+                                <input type="checkbox" name="my-checkbox" class="bswitch" <?=((bool)$settings->maintenanceMode===true)?'checked':''?> data-id="<?=$settings->id?>" data-off-color="danger" data-on-color="success">
                             </div>
                         </div>
                         <div class="tab-pane fade" id="vert-tabs-templates" role="tabpanel"
@@ -450,13 +450,15 @@
             isActive=0;
 
         $.post('<?=route_to('maintenance')?>',
-            {"<?=csrf_token()?>": "<?=csrf_hash()?>",
+            {
                 "id":id,
                 'isActive':isActive},'json').done(function (data) {
             if (data.result === true) {
-                Swal.fire('Bakım Aşaması Sasyfası Aktif edildi.', '', 'success');
-            } else {
-                Swal.fire('Bakım Aşaması Sasyfası Aktif edilemedi.', '', 'erroe')
+                Swal.fire('Bakım Aşaması Sayfası yayına alındı.', '', 'success');
+            }
+            else Swal.fire('Bakım Aşaması Sayfası devre dışı bırakıldı.', '', 'success');
+            if(data.pr === false) {
+                Swal.fire('Bakım Aşaması Sayfası Aktif edilemedi.', '', 'erroe')
             }
         });
     });

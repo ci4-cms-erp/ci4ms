@@ -27,7 +27,7 @@ class Ci4ms implements FilterInterface
     {
         $commonModel = new CommonModel();
         $settings=$commonModel->selectOne('settings');
-        if($settings->maintenanceMode===true) return redirect()->route('maintenance-mode');
+        if((bool)$settings->maintenanceMode===true) return redirect()->route('maintenance-mode');
     }
 
     /**
