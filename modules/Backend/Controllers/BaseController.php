@@ -97,6 +97,8 @@ class BaseController extends Controller
         $this->defData['settings']->templateInfos=(object)$this->defData['settings']->templateInfos;
         $this->defData['settings']->socialNetwork=json_decode($this->defData['settings']->socialNetwork);
         $this->defData['settings']->socialNetwork=(object)$this->defData['settings']->socialNetwork;
+        $this->defData['settings']->allowedFiles=json_decode($this->defData['settings']->allowedFiles);
+        $this->defData['settings']->allowedFiles=(object)$this->defData['settings']->allowedFiles;
         if(count($templates)>=1) $this->defData['templates']=$templates;
     }
 }

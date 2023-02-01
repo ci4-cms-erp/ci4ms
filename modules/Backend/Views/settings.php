@@ -322,7 +322,7 @@
                                     <div class="col-md-12 form-group">
                                         <label for=""><?=lang('Backend.lockedSettings')?></label>
                                         <input type="checkbox" name="lockedIsActive"
-                                            <?= (!empty($settings->lockedIsActive) && $settings->lockedIsActive === true) ? 'checked' : '' ?>>
+                                            <?= (!empty($settings->lockedIsActive) && (bool)$settings->lockedIsActive === true) ? 'checked' : '' ?>>
                                     </div>
 
                                     <div class="col-md-12 form-group">

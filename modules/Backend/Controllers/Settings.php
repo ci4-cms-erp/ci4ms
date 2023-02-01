@@ -66,8 +66,8 @@ class Settings extends BaseController
         if (!empty($this->request->getPost('cMap'))) $data['map_iframe'] = $this->request->getPost('cMap');
         if (!empty($this->request->getPost('cLogo'))) $data['logo'] = $this->request->getPost('cLogo');
 
-        $settings = $this->commonModel->getOne('settings');
-        if ($this->commonModel->updateOne('settings', ['_id' => new ObjectId($settings->_id)], $data)) return redirect()->back()->with('message', 'Şirket Bilgileri Güncellendi.');
+        $settings = $this->commonModel->selectOne('settings');
+        if ($this->commonModel->edit('settings', $data, ['id' => $settings->id])) return redirect()->back()->with('message', 'Şirket Bilgileri Güncellendi.');
         else return redirect()->back()->withInput()->with('error', 'Şirket Bilgileri Güncellenemedi.');
     }
 
@@ -100,8 +100,8 @@ class Settings extends BaseController
         if (!empty($error)) return redirect()->back()->withInput()->with('errors', $error);
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
-        $settings = $this->commonModel->getOne('settings');
-        $result = $this->commonModel->updateOne('settings', ['_id' => new ObjectId($settings->_id)], ['socialNetwork' => $socialNetwork]);
+        $settings = $this->commonModel->selectOne('settings');
+        $result = $this->commonModel->edit('settings', ['socialNetwork' => json_encode($socialNetwork,JSON_UNESCAPED_UNICODE)], ['id' => $settings->id]);
 
         if ((bool)$result === false) return redirect()->back()->withInput()->with('error', 'Şirket Sosyal Medya Bilgileri Güncellenemedi.');
         else return redirect()->back()->with('message', 'Şirket Sosyal Medya Bilgileri Güncellendi.');
@@ -119,8 +119,7 @@ class Settings extends BaseController
             'mPwd' => ['label' => 'Mail Şifresi', 'rules' => 'required']
         ];
 
-        if ($this->validate($valData) == false)
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
         $data = ['mailServer' => $this->request->getPost('mServer'),
             'mailPort' => $this->request->getPost('mPort'),
@@ -128,14 +127,11 @@ class Settings extends BaseController
             'mailPassword' => $this->request->getPost('mPwd'),
             'mailProtocol' => $this->request->getPost('mProtocol'),
             'mailTLS' => false];
-        if ($this->request->getPost('mTls'))
-            $data['mailTLS'] = true;
-        $settings = $this->commonModel->getOne('settings');
-        $result = $this->commonModel->updateOne('settings', ['_id' => new ObjectId($settings->_id)], $data);
-        if ((bool)$result === false)
-            return redirect()->back()->withInput()->with('error', 'Şirket Sosyal Medya Bilgileri Güncellenemedi.');
-        else
-            return redirect()->back()->with('message', 'Şirket Sosyal Medya Bilgileri Güncellendi.');
+        if ($this->request->getPost('mTls')) $data['mailTLS'] = true;
+        $settings = $this->commonModel->selectOne('settings');
+        $result = $this->commonModel->edit('settings', $data, ['id' => $settings->id]);
+        if ((bool)$result === false) return redirect()->back()->withInput()->with('error', 'Mail Bilgileri Güncellenemedi.');
+        else return redirect()->back()->with('message', 'Mail Bilgileri Güncellendi.');
     }
 
     /**
@@ -152,16 +148,8 @@ class Settings extends BaseController
             'whitelistRange' => ['label' => 'Güvenilir IP Aralığını', 'rules' => 'max_length[1000]'],
             'whitelistLine' => ['label' => 'Güvenilir Tekil Ip', 'rules' => 'max_length[1000]'],
         ];
-        $blackListRange = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('blackListRange'))));
-        $blacklistLine = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('blacklistLine'))));
-        $blacklistUsername = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('blacklistUsername'))));
-        $whitelistRange = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('whitelistRange'))));
-        $whitelistLine = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('whitelistLine'))));
-        $whitelistUsername = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('whitelistUsername'))));
 
-        if ($this->validate($valData) == false)
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-
+        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $data = [
             'lockedRecord' => $this->request->getPost('lockedRecord'),
             'lockedMin' => $this->request->getPost('lockedMin'),
@@ -170,27 +158,35 @@ class Settings extends BaseController
             'lockedUserNotification' => ($this->request->getPost('lockedUserNotification') == 'on') ? true : false,
             'lockedAdminNotification' => ($this->request->getPost('lockedAdminNotification') == 'on') ? true : false,
         ];
-        $settings = $this->commonModel->getOne('settings');
-        $result = $this->commonModel->updateOne('settings', ['_id' => new ObjectId($settings->_id)], $data);
-        $blacklist_data = array(
-            'username' => $blacklistUsername,
-            'range' => $blackListRange,
-            'line' => $blacklistLine,
-        );
-        $login_rules = $this->commonModel->getOne('login_rules', ['type' => 'blacklist']);
-        $result = $this->commonModel->updateOne('login_rules', ['_id' => new ObjectId($login_rules->_id)], $blacklist_data);
-        $whitelist = array(
-            'username' => $whitelistUsername,
-            'range' => $whitelistRange,
-            'line' => $whitelistLine,
-        );
-        $login_rules = $this->commonModel->getOne('login_rules', ['type' => 'whitelist']);
-        $result = $this->commonModel->updateOne('login_rules', ['_id' => new ObjectId($login_rules->_id)], $whitelist);
+        $settings = $this->commonModel->selectOne('settings');
+        $result = $this->commonModel->edit('settings', $data, ['id' => $settings->id]);
 
-        if ((bool)$result === false)
-            return redirect()->back()->withInput()->with('error', 'Giriş Ayarları Bilgileri Güncellenemedi.');
-        else
-            return redirect()->back()->with('message', 'Giriş Ayarları Bilgileri Güncellendi.');
+        if($this->request->getPost('blackListRange')) {
+            $blackListRange = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('blackListRange'))));
+            $blacklistLine = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('blacklistLine'))));
+            $blacklistUsername = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('blacklistUsername'))));
+            $blacklist_data = array(
+                'username' => $blacklistUsername,
+                'range' => $blackListRange,
+                'line' => $blacklistLine,
+            );
+            $login_rules = $this->commonModel->selectOne('login_rules', ['type' => 'blacklist']);
+            $result = $this->commonModel->edit('login_rules', $blacklist_data, ['id' => $login_rules->id]);
+        }
+        if($this->request->getPost('whitelistRange')) {
+            $whitelistRange = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('whitelistRange'))));
+            $whitelistLine = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('whitelistLine'))));
+            $whitelistUsername = clearFilter(explode(',', preg_replace('/\s+/', '', $this->request->getPost('whitelistUsername'))));
+            $whitelist = array(
+                'username' => $whitelistUsername,
+                'range' => $whitelistRange,
+                'line' => $whitelistLine,
+            );
+            $login_rules = $this->commonModel->selectOne('login_rules', ['type' => 'whitelist']);
+            $result = $this->commonModel->edit('login_rules', $whitelist, ['id' => $login_rules->id]);
+        }
+        if ((bool)$result === false) return redirect()->back()->withInput()->with('error', 'Giriş Ayarları Bilgileri Güncellenemedi.');
+        else return redirect()->back()->with('message', 'Giriş Ayarları Bilgileri Güncellendi.');
     }
 
     /**
@@ -219,7 +215,7 @@ class Settings extends BaseController
         ]);
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $data = explode(',', $this->request->getPost('allowedFiles'));
-        if ($this->commonModel->updateOne('settings', [], ['allowedFiles' => $data])) return redirect()->back()->with('message', 'Dosya Türleri Güncellendi.');
+        if ($this->commonModel->edit('settings',['allowedFiles' => json_encode($data,JSON_UNESCAPED_UNICODE)], ['id'=>1])) return redirect()->back()->with('message', 'Dosya Türleri Güncellendi.');
         else return redirect()->back()->withInput()->with('error', 'Dosya Türleri Güncellenemedi.');
     }
 
