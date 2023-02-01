@@ -235,7 +235,7 @@ class Settings extends BaseController
         $valData = (['settings' => ['label' => 'widgets', 'rules' => 'required']]);
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $data = array_merge((array)$this->defData['settings']->templateInfos, $this->request->getPost('settings'));
-        if ($this->commonModel->updateMany('settings', [], ['templateInfos' => $data])) return redirect()->back()->with('success', 'Tema Ayarları kayıt edildi.');
+        if ($this->commonModel->edit('settings', ['templateInfos' => json_encode($data,JSON_UNESCAPED_UNICODE)], ['id'=>1])) return redirect()->back()->with('success', 'Tema Ayarları kayıt edildi.');
         else return redirect()->back()->with('error', 'Tema Ayarları kayıt edilemedi');
     }
 }
