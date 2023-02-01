@@ -153,8 +153,7 @@ class AuthController extends BaseController
 
         if (!$this->validate($rules)) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
-        $user = $this->commonModel->getOne('users', ['email' => $this->request->getPost('email'), 'reset_hash' => $token]);
-
+        $user = $this->commonModel->selectOne('users', ['email' => $this->request->getPost('email'), 'reset_hash' => $token]);
         if (is_null($user)) return redirect()->back()->with('error', lang('Auth.forgotNoUser'));
 
         // Reset token still valid?

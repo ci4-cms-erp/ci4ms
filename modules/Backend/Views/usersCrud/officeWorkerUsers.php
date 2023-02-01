@@ -63,12 +63,12 @@
                                                 class="fas fa-user-slash"></i> <?=lang('Backend.blackList')?>
                                     </button>
                                 <?php endif; ?>
-                                <button class="btn btn-outline-dark btn-sm <?php
+                                <button class="btn btn-outline-dark btn-sm fpwd <?php
                                 if(!empty($userList->reset_expires)) {
                                     $time = $timeClass::parse($userList->reset_expires);
                                     if (time() < $time->getTimestamp())
                                         echo 'disabled';
-                                    }?>" id="fpwd" data-uid="<?= $userList->id ?>"><?=lang('Backend.resetPassword')?></button>
+                                    }?>" data-uid="<?= $userList->id ?>"><?=lang('Backend.resetPassword')?></button>
                                 <a href="<?= route_to('user_perms', $userList->id) ?>"
                                    class="btn btn-outline-primary btn-sm">
                                     <i class="fas fa-sitemap"></i> <?=lang('Backend.spacialAuth')?>
@@ -221,10 +221,9 @@
         }, 'json');
     });
 
-    $('#fpwd').on('click',function (){
-        $('#fpwd').addClass('disabled');
-        $('#fpwd').addClass('disabled');
-       $.post("<?=route_to('forceResetPassword')?>", {uid:$(this).data('uid'),<?=csrf_token()?>:"<?=csrf_hash()?>"}, function (data){
+    $('.fpwd').on('click',function (){
+        $(this).addClass('disabled');
+       $.post("<?=route_to('forceResetPassword')?>", {uid:$(this).data('uid')}, function (data){
             if (data.result == true) {
                 Toast.fire({icon: data.error.type, title: data.error.message}).then(function () {
                     location.reload();

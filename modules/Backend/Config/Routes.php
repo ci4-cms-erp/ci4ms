@@ -20,7 +20,7 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
     $routes->get('forgot', 'Auth\AuthController::forgotPassword', ['filter' => 'backendAuthFilter', 'as' => 'forgot']);
     $routes->post('forgot', 'Auth\AuthController::attemptForgot', ['filter' => 'backendAuthFilter']);
     $routes->get('reset-password/(:any)', 'Auth\AuthController::resetPassword/$1', ['filter' => 'backendAuthFilter', 'as' => 'reset-password']);
-    $routes->post('reset-password/(:any)', 'Auth\AuthController::attemptReset/$1', ['filter' => 'backendAfterLoginFilter']);
+    $routes->post('reset-password/(:any)', 'Auth\AuthController::attemptReset/$1', ['filter' => 'backendAuthFilter']);
 
     $routes->get('/', 'Backend::index', ['filter' => 'backendAfterLoginFilter']);
 
@@ -32,7 +32,7 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->get('update_user/(:any)', 'UserController::update_user/$1', ['filter' => 'backendAfterLoginFilter', 'as' => 'update_user']);
         $routes->post('update_user/(:any)', 'UserController::update_user_post/$1', ['filter' => 'backendAfterLoginFilter']);
         $routes->get('user_del/(:any)', 'UserController::user_del/$1', ['filter' => 'backendAfterLoginFilter', 'as' => 'user_del']);
-        $routes->post('blackList', 'UserController::ajax_blackList_post', ['filter' => 'backendAfterLoginFilter']);
+        $routes->post('blackList', 'UserController::ajax_blackList_post', ['as'=>'blackList','filter' => 'backendAfterLoginFilter']);
         $routes->post('removeFromBlacklist', 'UserController::ajax_remove_from_blackList_post', ['filter' => 'backendAfterLoginFilter']);
         $routes->post('forceResetPassword', 'UserController::ajax_force_reset_password', ['filter' => 'backendAfterLoginFilter','as'=>'forceResetPassword']);
         $routes->get('user_perms/(:any)', 'PermgroupController::user_perms/$1', ['filter' => 'backendAfterLoginFilter', 'as' => 'user_perms']);

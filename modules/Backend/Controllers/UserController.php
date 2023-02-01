@@ -244,18 +244,15 @@ class UserController extends BaseController
     {
         if ($this->request->isAJAX()) {
             $valData = (['note' => ['label' => 'Note', 'rules' => 'required'], 'uid' => ['label' => 'Kullanıcı id', 'rules' => 'required']]);
-
             if ($this->validate($valData) == false) return $this->validator->getErrors();
-
             $result = [];
-
             if ($this->commonModel->isHave('black_list_users',['blacked_id' => $this->request->getPost('uid')]) === 0) $bid = $this->commonModel->create('black_list_users', ['blacked_id' => $this->request->getPost('uid'), 'who_blacklisted' => session()->get('logged_in'), 'notes' => $this->request->getPost('note'), 'created_at' => new Time('now')]);
             else $result = ['result' => true, 'error' => ['type' => 'warning', 'message' => 'üyelik karalisteye daha önce eklendi.']];
 
             if (!empty($bid) && $this->commonModel->edit('users', ['status' => 'banned', 'statusMessage' => $this->request->getPost('note')],['id' => $this->request->getPost('uid')])) $result = ['result' => true, 'error' => ['type' => 'success', 'message' => 'üyelik karalisteye eklendi.']];
             else $result = ['result' => true, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteye eklenemedi.']];
 
-            return $this->response->setJSON($result);
+            return $this->respond($result,200);
         }
     }
 
