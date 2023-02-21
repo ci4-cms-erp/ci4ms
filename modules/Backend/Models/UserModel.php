@@ -62,11 +62,11 @@ class UserModel extends Model
     {
         $expires = new \DateTime($expires);
 
-        return $this->m->insertOne('auth_tokens', [
-            'user_id' => new ObjectId($userID),
+        return $this->db->table('auth_tokens')->insert([
+            'user_id' => $userID,
             'selector' => $selector,
             'hashedValidator' => hash('sha256',$validator),
-            'expires' => $expires->format('Y-m-d H:i:s'),
+            'expires' => $expires->format('Y-m-d H:i:s')
         ]);
     }
 
@@ -77,7 +77,7 @@ class UserModel extends Model
     {
         $config = new Auth();
         if (!$config->allowRemembering) return;
-        $this->m->options(['expires' =>['$lte'=> date('Y-m-d H:i:s')]])->deleteOne('auth_tokens');
+        $this->db->table('auth_tokens')->delete(['expires<='=>date('Y-m-d H:i:s')]);
     }
 
     /**
@@ -87,7 +87,7 @@ class UserModel extends Model
      */
     public function updateRememberValidator(string $selector, string $validator)
     {
-        return $this->m->where(['selector' => $selector])->findOneAndUpdate('auth_tokens', ['hashedValidator' => hash('sha256', $validator)]);
+        return $this->db->table('auth_tokens')->update(['hashedValidator' => hash('sha256', $validator)],['selector' => $selector]);
     }
 
     /**

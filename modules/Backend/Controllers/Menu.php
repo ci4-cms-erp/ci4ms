@@ -4,11 +4,6 @@ namespace Modules\Backend\Controllers;
 
 class Menu extends BaseController
 {
-    public function __construct()
-    {
-        helper('Modules\Backend\Helpers\ci4ms');
-    }
-
     public function index()
     {
         $this->defData = array_merge($this->defData, ['pages' => $this->commonModel->lists('pages', '*', ['inMenu' => false, 'isActive' => true]),

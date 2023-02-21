@@ -14,6 +14,7 @@ class UserController extends BaseController
      * @var UserscrudModel
      */
     protected $userModel;
+    protected $yandexMail;
 
     /**
      *

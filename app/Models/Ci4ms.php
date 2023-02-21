@@ -9,7 +9,7 @@ class Ci4ms extends Model
         $builder=$this->db->table('tags_pivot');
         $builder->select($select)->join('blog','blog.id=tags_pivot.piv_id','left')->join('tags','tags.id=tags_pivot.tag_id','left');
         if (!empty($credentials)) $builder->where($credentials);
-        return $builder->limit($limit,$skip)->get()->getResult();
+        return $builder->limit($limit,$skip)->orderBy('created_at DESC')->groupBy('blog.id')->get()->getResult();
     }
 
     public function categoryList(array $credentials,int $limit,int $skip)

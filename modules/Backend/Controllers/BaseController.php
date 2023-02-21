@@ -25,7 +25,7 @@ class BaseController extends Controller
      *
      * @var array
      */
-    protected $helpers = ['text','filesystem','html'];
+    protected $helpers = ['text','filesystem','html','Modules\Backend\Helpers\ci4ms'];
 
     /**
      * Constructor.

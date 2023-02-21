@@ -29,18 +29,6 @@
                 <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
             </li>
         </ul>
-
-        <!-- SEARCH FORM -->
-        <form class="form-inline ml-3">
-            <div class="input-group input-group-sm">
-                <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
-                <div class="input-group-append">
-                    <button class="btn btn-navbar" type="submit">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
-        </form>
     </nav>
     <!-- /.navbar -->
 
@@ -92,8 +80,7 @@
                                 <li class="nav-item <?= (!empty($p) && $p->parent_pk == $nav->id) ? 'menu-is-opening menu-open' : '' ?>">
                                     <a href="<?php
                                     $u = explode('/', $nav->sefLink);
-                                    if (empty($u[1]))
-                                        echo route_to($u[0]);
+                                    if (empty($u[1])) echo route_to($u[0]);
                                     else
                                         echo route_to($u[0], $u[1]); ?>"
                                        class="nav-link <?php if(!empty($p)){ if($nav->sefLink == $uri || $p->parent_pk == $nav->id) echo 'active'; else echo '';} ?>">

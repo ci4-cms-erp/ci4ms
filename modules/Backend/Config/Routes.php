@@ -119,6 +119,24 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         });
     });
 
+    $routes->group('summary',function($routes){
+       $routes->get('/','Summary::index',['as'=>'summary','filter'=>'backendAfterLoginFilter']);
+       $routes->post('summary_render','Summary::summary_render',['as'=>'summary_render','filter'=>'backendAfterLoginFilter']);
+       $routes->get('websites/(:num)','Summary::websites/$1',['as'=>'websites','filter'=>'backendAfterLoginFilter']);
+       $routes->get('website_create','Summary::website_create',['as'=>'website_create','filter'=>'backendAfterLoginFilter']);
+       $routes->post('website_create_post','Summary::website_create_post',['as'=>'website_create_post','filter'=>'backendAfterLoginFilter']);
+       $routes->get('website_edit/(:num)','Summary::website_edit/$1',['as'=>'website_edit','filter'=>'backendAfterLoginFilter']);
+       $routes->post('website_edit_post/(:num)','Summary::website_edit_post/$1',['as'=>'website_edit_post','filter'=>'backendAfterLoginFilter']);
+       $routes->get('website_delete/(:num)','Summary::website_delete/$1',['as'=>'website_delete','filter'=>'backendAfterLoginFilter']);
+       $routes->get('methods/(:num)','Summary::methods/$1',['as'=>'summary','filter'=>'backendAfterLoginFilter']);
+       $routes->get('method_create','Summary::method_create',['as'=>'summary','filter'=>'backendAfterLoginFilter']);
+       $routes->post('method_create_post','Summary::method_create_post',['as'=>'summary','filter'=>'backendAfterLoginFilter']);
+       $routes->get('method_update/(:num)','Summary::method_update/$1',['as'=>'summary','filter'=>'backendAfterLoginFilter']);
+       $routes->post('method_update_post/(:num)','Summary::method_update_post/$1',['as'=>'summary','filter'=>'backendAfterLoginFilter']);
+       $routes->get('method_delete/(:num)','Summary::method_delete/$1',['as'=>'summary','filter'=>'backendAfterLoginFilter']);
+       $routes->post('upload_excel','Summary::upload_excel',['as'=>'summary','filter'=>'backendAfterLoginFilter']);
+    });
+
     // Other Pages
     $routes->post('tagify', 'AJAX::limitTags_ajax', ['as' => 'tagify', 'filter' => 'backendAfterLoginFilter']);
     $routes->post('checkSeflink', 'AJAX::autoLookSeflinks', ['as' => 'checkSeflink', 'filter' => 'backendAfterLoginFilter']);

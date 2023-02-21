@@ -18,8 +18,8 @@ class UserscrudModel extends Model
     public function loggedUser(int $limit, string $select = '*', array $credentials = [])
     {
         $builder = $this->db->table($this->table);
-        $builder->select($select);
-        $builder->join('auth_groups', 'auth_groups.id=users.group_id', 'left');
+        $builder->select($select)
+            ->join('auth_groups', 'auth_groups.id=users.group_id', 'left');
         if (!empty($credentials)) $builder->where($credentials);
         if ($limit > 0) $builder->limit($limit);
         return $builder->get()->getResult();

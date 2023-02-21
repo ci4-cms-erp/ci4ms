@@ -194,20 +194,17 @@ if (!function_exists('navigationWidget')) {
                     $class.=' dropdown-toggle';
                 }
                 echo '"><a class="'.$class.'" href="';
-                if($menu->urlType=='url')
-                    echo $menu->seflink;
-                else site_url($menu->seflink);
+                if($menu->urlType==='url') echo $menu->seflink;
+                else echo site_url($menu->seflink);
                 echo '"';
-                if ((bool)$menu->hasChildren === true)
-                    echo ' role="button" data-bs-toggle="dropdown" aria-expanded="false"';
+                if ((bool)$menu->hasChildren === true) echo ' role="button" data-bs-toggle="dropdown" aria-expanded="false"';
                 echo '>'.$menu->title.'</a>';
                 if ((bool)$menu->hasChildren === true) {
                     echo '<ul class="dropdown-menu">';
                     $class='dropdown-item';
                 }
                 navigationWidget($menus, $menu->id,$class);
-                if ((bool)$menu->hasChildren === true)
-                    echo '</ul>';
+                if ((bool)$menu->hasChildren === true) echo '</ul>';
                 echo '</li>';
             }
         }

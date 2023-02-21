@@ -182,6 +182,7 @@ class Blog extends BaseController
                                    class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>'];
                 $c++;
             }
+            _printr($data);
             if (!empty($data)) return $this->respond($data, 200);
             else return $this->respond(['message' => 'Not Found data'], 204);
         }

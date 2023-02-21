@@ -56,6 +56,7 @@ class Filters extends BaseConfig
                 'backend/menu/deleteMenuAjax',
                 'backend/menu/queueMenuAjax',
                 'backend/menu/addMultipleMenu',
+                'backend/summary/summary_render'
             ]],
             // 'invalidchars',
         ],
@@ -72,6 +73,10 @@ class Filters extends BaseConfig
      *
      * Example:
      * 'post' => ['foo', 'bar']
+     *
+     *
+     *
+     *
      *
      * If you use this, you should disable auto-routing because auto-routing
      * permits any HTTP method to access a controller. Accessing the controller

@@ -1,7 +1,6 @@
 <?php namespace Modules\Backend\Models;
 
 use CodeIgniter\Model;
-use ci4commonmodel\Models\CommonModel;
 
 class AjaxModel extends Model
 {
@@ -11,6 +10,7 @@ class AjaxModel extends Model
         if (!empty($credentials)) $builder->where($credentials);
         $builder->join('tags_pivot', 'tags_pivot.tag_id=tags.id', 'left');
         if ($limit >= 0 || $skip >= 0) $builder->limit($limit, $skip);
+        $builder->groupBy('tags.id');
         return $builder->get()->getResult();
     }
 }

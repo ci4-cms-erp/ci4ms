@@ -36,3 +36,10 @@ if (!function_exists('menu')) {
         }
     }
 }
+
+if(!function_exists('format_number')){
+    function format_number($n = '')
+    {
+        return ($n === '') ? '' : number_format((float)$n, 2, '.', ',');
+    }
+}
