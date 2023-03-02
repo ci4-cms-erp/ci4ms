@@ -26,7 +26,7 @@ class AuthLibrary
         $this->user = null;
         $this->config->userTable = 'users';
         $this->ipAddress = Services::request()->getIPAddress();
-        $this->now = Time::createFromFormat('Y-m-d H:i:s',new Time('now'),'Europe/Istanbul');
+        $this->now = Time::createFromFormat('Y-m-d H:i:s', new Time('now'), 'Europe/Istanbul');
 
     }
 
@@ -40,17 +40,17 @@ class AuthLibrary
         $groupSefLink = $this->commonModel->selectOne('auth_groups', ['id' => $this->user->group_id], 'seflink');
 
 
-        $where_or = ['username' => $user->email , 'ip_address' => $this->ipAddress];
-        $set_data = ['islocked' => false] ;
-        $this->userModel->updateManyOr('locked',['islocked' => true],$set_data,'*',$where_or);
-
-        session()->set('redirect_url', $groupSefLink->seflink);
+        $where_or = ['username' => $user->email, 'ip_address' => $this->ipAddress];
+        $set_data = ['islocked' => false];
+        $this->userModel->updateManyOr('locked', ['islocked' => true], $set_data, '*', $where_or);
 
         $this->recordLoginAttempt($this->user->email, true);
         // Regenerate the session ID to help protect against session fixation
         if (ENVIRONMENT !== 'testing') session()->regenerate();
 
-        session()->set($this->config->logged_in, $this->user->id);
+        session()->set(['redirect_url' => $groupSefLink->seflink,
+            $this->config->logged_in => $this->user->id,
+            'group_id' => $this->user->group_id]);
 
         Services::response()->noCache();
 
@@ -96,9 +96,11 @@ class AuthLibrary
     {
         if ($userID = session($this->config->logged_in)) {
             // Store our current user object
-            $this->user = $this->commonModel->selectOne($this->config->userTable,['id' => $userID]);
-            $groupSefLink = $this->commonModel->selectOne('auth_groups',['id' => $this->user->group_id], 'seflink');
-            session()->set('redirect_url', $groupSefLink->seflink);
+            if (session()->get('redirect_url') == null) {
+                $this->user = $this->commonModel->selectOne($this->config->userTable, ['id' => $userID]);
+                $groupSefLink = $this->commonModel->selectOne('auth_groups', ['id' => $this->user->group_id], 'seflink');
+                session()->set('redirect_url', $groupSefLink->seflink);
+            }
             return true;
         }
 
@@ -109,9 +111,9 @@ class AuthLibrary
     {
         $appConfig = new App();
         $response = Services::response();
-        $response->deleteCookie($this->config->rememberCookie, $appConfig->cookieDomain,$appConfig->cookiePath,$appConfig->cookiePrefix);
+        $response->deleteCookie($this->config->rememberCookie, $appConfig->cookieDomain, $appConfig->cookiePath, $appConfig->cookiePrefix);
         $oid = session($this->config->logged_in);
-        if ($userID = $oid) $this->user = $this->commonModel->selectOne($this->config->userTable,['id' => (object)$userID]);
+        if ($userID = $oid) $this->user = $this->commonModel->selectOne($this->config->userTable, ['id' => $userID]);
 
         $user = $this->user;
 
@@ -127,67 +129,22 @@ class AuthLibrary
         session()->regenerate(true);
 
         // Take care of any remember me functionality
-        $this->commonModel->remove('auth_tokens',['user_id'=>$user->id]);
+        $this->commonModel->remove('auth_tokens', ['user_id' => $user->id]);
 
         // trigger logout event
         Events::trigger('logout', $user);
-    }
-
-    public function has_perm(string $module, string $method=''): bool
-    {
-        if ($method == 'error_403') return true;
-
-        $userInfo = $this->commonModel->selectOne($this->config->userTable, ['id' => session()->get($this->config->logged_in)], 'id,group_id');
-        $userInfo->auth_users_permissions=$this->commonModel->lists('auth_users_permissions','*',['user_id'=>$userInfo->id]);
-        $module = str_replace('\\', '-', $module);
-        $where=['className' => $module, 'methodName' => $method];
-
-        if(empty($method)) $where=['id'=>$module];
-
-        $classID = $this->commonModel->selectOne('auth_permissions_pages', $where, 'id,typeOfPermissions');
-        $perms = $this->commonModel->selectOne('auth_groups', ['id' => $userInfo->group_id]);
-        $permissions = $this->commonModel->lists('auth_groups_permissions','*',['group_id'=>$perms->id]);
-        $allPerms = [];
-        if (!empty($permissions)) {//kullanıcıya atanmış izinler
-            $userPerms = $userInfo->auth_users_permissions;
-            $allPerms = array_merge($permissions, $userPerms);
-        } else $allPerms = $permissions;
-        if (!empty($classID)) {
-            $perms = [];
-            foreach ($allPerms as $allPerm) {
-                if ((int)$allPerm->page_id === (int)$classID->id) $perms[] = $allPerm;
-            }
-
-            $allPerms = [];
-            $c = 0;
-
-            foreach ($perms as $key => $perm) {
-                if ($key > 0) $c = $key - 1;
-                if ((bool)$perm->create_r === true && $perms[$c]->create_r === $perm->create_r) $allPerms[0]['create_r'] = true;
-                if ((bool)$perm->read_r === true && $perms[$c]->read_r === $perm->read_r) $allPerms[0]['read_r'] = true;
-                if ((bool)$perm->update_r === true && $perms[$c]->update_r === $perm->update_r) $allPerms[0]['update_r'] = true;
-                if ((bool)$perm->delete_r === true && $perms[$c]->delete_r === $perm->delete_r) $allPerms[0]['delete_r'] = true;
-            }
-
-            if (empty($allPerms)) return false;
-            $typeOfPerms = json_decode($classID->typeOfPermissions);
-            $typeOfPerms=(array)$typeOfPerms;
-            $intersect = array_intersect($typeOfPerms, $allPerms[0]);
-            if (!empty($intersect)) return true;
-            else return false;
-        } else return false;
     }
 
     public function attempt(array $credentials, bool $remember = null): bool
     {
 
         $this->user = $this->validate($credentials, true);
-        $falseLogin = $this->commonModel->selectOne('auth_logins',['ip_address' => $this->ipAddress],'*', 'id DESC');
-        $settings = $this->commonModel->selectOne('settings', [/* where */],'*', 'lockedMin,lockedTry');
+        $falseLogin = $this->commonModel->selectOne('auth_logins', ['ip_address' => $this->ipAddress], '*', 'id DESC');
+        $settings = $this->commonModel->selectOne('settings', [/* where */], '*', 'lockedMin,lockedTry');
 
         // Kalan deneme hakkı hesaplanıyor.
-        if ($falseLogin && $falseLogin->isSuccess === false ){
-            if ($falseLogin->counter &&  ((int)$falseLogin->counter + 1 )  >= (int)$settings->lockedTry ) $falseCounter = -1;
+        if ($falseLogin && $falseLogin->isSuccess === false) {
+            if ($falseLogin->counter && ((int)$falseLogin->counter + 1) >= (int)$settings->lockedTry) $falseCounter = -1;
             else $falseCounter = $falseLogin->counter;
         } else $falseCounter = null;
 
@@ -226,7 +183,8 @@ class AuthLibrary
         return $this->login($this->user, $remember);
     }
 
-    protected function recordLoginAttempt(string $email, bool $success, int $falseCounter = null){
+    protected function recordLoginAttempt(string $email, bool $success, int $falseCounter = null)
+    {
         $ipAddress = Services::request()->getIPAddress();
         $user_agent = Services::request()->getUserAgent();
 
@@ -247,7 +205,7 @@ class AuthLibrary
             'isSuccess' => $success,
             'user_agent' => $agent,
             'session_id' => session_id(),
-            'counter' => ($success === false  ) ? $falseCounter+1 : null,
+            'counter' => ($success === false) ? $falseCounter + 1 : null,
         ]);
     }
 
@@ -266,7 +224,7 @@ class AuthLibrary
         if (!in_array(key($credentials), $this->config->validFields)) throw AuthException::forInvalidFields(key($credentials));
 
         // Can we find a user with those credentials?
-        $user = $this->commonModel->selectOne($this->config->userTable,$credentials);
+        $user = $this->commonModel->selectOne($this->config->userTable, $credentials);
 
         if (!$user) {
             $this->error = lang('Auth.badAttempt');
@@ -291,7 +249,7 @@ class AuthLibrary
         // logged in.
         if (password_needs_rehash($user->password_hash, $this->config->hashAlgorithm)) {
             $user->password_hash = $password;
-            $this->commonModel->edit('users',$user,['id' => $user->id]);
+            $this->commonModel->edit('users', $user, ['id' => $user->id]);
         }
 
         return $returnUser ? $user : true;
@@ -299,13 +257,13 @@ class AuthLibrary
 
     public function isBanned($pk): bool
     {
-        $userStatus = $this->commonModel->selectOne($this->config->userTable,['id' => $pk], 'status');
+        $userStatus = $this->commonModel->selectOne($this->config->userTable, ['id' => $pk], 'status');
         return isset($userStatus->status) && $userStatus->status === 'banned';
     }
 
     public function isActivated($pk): bool
     {
-        $userStatus = $this->commonModel->selectOne($this->config->userTable,['id' => $pk], 'status');
+        $userStatus = $this->commonModel->selectOne($this->config->userTable, ['id' => $pk], 'status');
         return isset($userStatus->status) && $userStatus->status == 'active';
     }
 
@@ -327,13 +285,13 @@ class AuthLibrary
         [$selector, $validator] = explode(':', $remember);
         $validator = hash('sha256', $validator);
 
-        $token = $this->commonModel->selectOne('auth_tokens',['selector' => $selector]);
+        $token = $this->commonModel->selectOne('auth_tokens', ['selector' => $selector]);
 
         if (empty($token)) return false;
         if (!hash_equals($token->hashedValidator, $validator)) return false;
 
         // Yay! We were remembered!
-        $user = $this->commonModel->selectOne($this->config->userTable, ['id' =>$token->user_id]);
+        $user = $this->commonModel->selectOne($this->config->userTable, ['id' => $token->user_id]);
 
         if (empty($user)) return false;
 
@@ -347,7 +305,7 @@ class AuthLibrary
 
     public function refreshRemember(string $userID, string $selector)
     {
-        $existing = $this->commonModel->selectOne('auth_tokens',['selector'=>$selector]);
+        $existing = $this->commonModel->selectOne('auth_tokens', ['selector' => $selector]);
 
         // No matching record? Shouldn't happen, but remember the user now.
         if (empty($existing)) return $this->rememberUser($userID);
@@ -410,11 +368,12 @@ class AuthLibrary
     }
 
     /* if return is true user blocked else login active */
-    public function isBlockedAttempt ($username) : bool {
+    public function isBlockedAttempt($username): bool
+    {
         $settings = $this->commonModel->selectOne('settings');
-        if($settings->lockedIsActive){
+        if ($settings->lockedIsActive) {
             $whitelist = $this->commonModel->selectOne('login_rules', ['type' => 'whitelist']);
-            if ($whitelist){
+            if ($whitelist) {
                 foreach ($whitelist->username as $locked_username)
                     if ($locked_username === $username) return false;
 
@@ -422,7 +381,7 @@ class AuthLibrary
                     if ($line === $this->ipAddress) return false;
 
                 foreach ($whitelist->range as $range)
-                    if ($this->ipRangeControl($range,$this->ipAddress))  return false;
+                    if ($this->ipRangeControl($range, $this->ipAddress)) return false;
             }
 
             $blacklist = $this->commonModel->selectOne('login_rules', ['type' => 'blacklist']);
@@ -434,7 +393,7 @@ class AuthLibrary
                     if ($line === $this->ipAddress) return true;
 
                 foreach ($blacklist->range as $range)
-                    if ($this->ipRangeControl($range,$this->ipAddress))  return true;
+                    if ($this->ipRangeControl($range, $this->ipAddress)) return true;
             }
 
             $where = ['islocked' => true];
@@ -444,35 +403,35 @@ class AuthLibrary
             if (!$countLocked) $countLockedValue = 0;
             else $countLockedValue = $countLocked->counter;
 
-            if ((int)$settings->lockedRecord <= $countLockedValue){
-                $this->commonModel->edit('locked', ['id' => $countLocked->id],['counter' => 0]);
+            if ((int)$settings->lockedRecord <= $countLockedValue) {
+                $this->commonModel->edit('locked', ['id' => $countLocked->id], ['counter' => 0]);
                 return false;
             }
 
-            $where = ['islocked' => true,'expiry_date' => ['$gte' => $this->now->toDateTimeString()]];
+            $where = ['islocked' => true, 'expiry_date' => ['$gte' => $this->now->toDateTimeString()]];
             $where_or = ['username' => $username, 'ip_address' => $this->ipAddress];
-            $lockedNow = $this->userModel->countOr('locked',$where,$where_or);
-            if ($lockedNow !== 0){
-                $this->error = "Hesabınız saat : <b>".Time::createFromFormat('Y-m-d H:i:s', new Time($countLocked->expiry_date),'Europe/Istanbul')->toLocalizedString('d-MMMM hh:mm z')."</b> tariğine kadar bloklanmıştır.";
+            $lockedNow = $this->userModel->countOr('locked', $where, $where_or);
+            if ($lockedNow !== 0) {
+                $this->error = "Hesabınız saat : <b>" . Time::createFromFormat('Y-m-d H:i:s', new Time($countLocked->expiry_date), 'Europe/Istanbul')->toLocalizedString('d-MMMM hh:mm z') . "</b> tariğine kadar bloklanmıştır.";
                 return true;
             }
 
-            $loginAttempts = $this->userModel->getOneOr('auth_logins', ['isSuccess' => false], 'id DESC','id,counter',$where_or);
+            $loginAttempts = $this->userModel->getOneOr('auth_logins', ['isSuccess' => false], 'id DESC', 'id,counter', $where_or);
 
-            if( $loginAttempts && isset($loginAttempts->counter) && ($loginAttempts->counter+1)  >= (int)$settings->lockedTry ){
-                if (( $countLockedValue + 1 ) < ((int)$settings->lockedRecord))
+            if ($loginAttempts && isset($loginAttempts->counter) && ($loginAttempts->counter + 1) >= (int)$settings->lockedTry) {
+                if (($countLockedValue + 1) < ((int)$settings->lockedRecord))
                     $expiry_date = Time::createFromFormat('Y-m-d H:i:s', $this->now->addMinutes((int)$settings->lockedMin));
                 else {
-                    $countLockedValue = - 1 ;
-                    $expiry_date = Time::createFromFormat('Y-m-d H:i:s',$this->now->addMinutes(1440)); // 24 hours ago
+                    $countLockedValue = -1;
+                    $expiry_date = Time::createFromFormat('Y-m-d H:i:s', $this->now->addMinutes(1440)); // 24 hours ago
                 }
 
-                $this->commonModel->create('locked',[
+                $this->commonModel->create('locked', [
                     'type' => null,
                     'ip_address' => $this->ipAddress,
                     'username' => $username,
                     'isLocked' => true,
-                    'counter' => ($countLockedValue+1),
+                    'counter' => ($countLockedValue + 1),
                     'locked_at' => $this->now->toDateTimeString(),
                     'expiry_date' => $expiry_date->toDateTimeString(),
                 ]);
@@ -482,9 +441,10 @@ class AuthLibrary
         } else return false;
     }
 
-    public function ipRangeControl($range, $ipAddress) :bool {
-        $parseRange = explode('-',$range);
-        if( $this->ipFormatContol($ipAddress, $parseRange[0],$parseRange[1]) && // ipler aynı formattalar mı ?
+    public function ipRangeControl($range, $ipAddress): bool
+    {
+        $parseRange = explode('-', $range);
+        if ($this->ipFormatContol($ipAddress, $parseRange[0], $parseRange[1]) && // ipler aynı formattalar mı ?
             $this->ip2long_vX($ipAddress) >= $this->ip2long_vX($parseRange[0]) &&
             $this->ip2long_vX($ipAddress) <= $this->ip2long_vX($parseRange[1]))
             return true;
@@ -494,20 +454,21 @@ class AuthLibrary
 
     /* if all ip's same format is true else false */
     /** TODO range iplerdein sadece birinin formatına bakılması yeterli */
-    public function ipFormatContol($ipAddress, $rangeStart, $rangeEnd) : bool
+    public function ipFormatContol($ipAddress, $rangeStart, $rangeEnd): bool
     {
-        $ips = array ('ipAddress' => $ipAddress,'rangeStart' => $rangeStart,'rangeEnd' => $rangeEnd);
+        $ips = array('ipAddress' => $ipAddress, 'rangeStart' => $rangeStart, 'rangeEnd' => $rangeEnd);
         foreach ($ips as $ip) {
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) $ipsFormat [] = 'ip4' ;
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) $ipsFormat [] = 'ip4';
             if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) $ipsFormat [] = 'ip6';
         }
         /* All array value are same value ? */
-        if (count(array_unique($ipsFormat)) === 1 ) return true;
+        if (count(array_unique($ipsFormat)) === 1) return true;
         else return false;
     }
 
     /* ip address type convert to integer. */
-    public function ip2long_vX($ip) {
+    public function ip2long_vX($ip)
+    {
         $ip_n = inet_pton($ip);
         $bin = '';
         for ($bit = strlen($ip_n) - 1; $bit >= 0; $bit--) {
@@ -524,10 +485,27 @@ class AuthLibrary
         } else trigger_error('GMP or BCMATH extension not installed!', E_USER_ERROR);
     }
 
-    public function remainingEntryCalculation() {
-        $falseLogin = $this->commonModel->selectOne('auth_logins',['ip_address' => $this->ipAddress],'*','id DESC');
+    public function remainingEntryCalculation()
+    {
+        $falseLogin = $this->commonModel->selectOne('auth_logins', ['ip_address' => $this->ipAddress], '*', 'id DESC');
         $settings = $this->commonModel->selectOne('settings', [/* where */], 'lockedMin,lockedIsActive,lockedTry');
-        if ($falseLogin) return (int)$settings->lockedTry - (int)$falseLogin->counter - 1 ;
-        else return (int)$settings->lockedTry - 1 ;
+        if ($falseLogin) return (int)$settings->lockedTry - (int)$falseLogin->counter - 1;
+        else return (int)$settings->lockedTry - 1;
+    }
+
+    public function has_perm(string $module, string $method = ''): bool
+    {
+        if ($method == 'error_403') return true;
+        $cache=(array)$this->userModel->getPermissionsForUser(session()->get($this->config->logged_in), session()->get('group_id'));
+        if(empty($cache)) return false;
+        $searchValues = [str_replace('\\', '-', $module), $method];
+        $perms = array_filter($cache, function ($item) use ($searchValues) {
+            return $item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1];
+        });
+        $perms = reset($perms);
+        $typeOfPermissions = (array)json_decode($perms['typeOfPermissions']);
+        $intersect = array_intersect_assoc($typeOfPermissions, $perms);
+        if(!empty($intersect)) return true;
+        else return false;
     }
 }

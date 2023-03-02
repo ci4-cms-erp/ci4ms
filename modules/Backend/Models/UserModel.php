@@ -10,12 +10,28 @@ class UserModel extends Model
     /**
      * @var string
      */
-    protected $table='users';
+    protected $table = 'users';
 
     /**
      * @var bool
      */
     protected $useTimestamps = true;
+
+    public function getPermissionsForUser(int $userId, int $groupId): object
+    {
+        if (cache("{$userId}_permissions") !== null) return (object)cache("{$userId}_permissions");
+        $combined = $this->db->table('auth_groups_permissions')
+            ->select('auth_permissions_pages.id,auth_permissions_pages.className,auth_permissions_pages.methodName,auth_permissions_pages.typeOfPermissions,auth_groups_permissions.create_r,auth_groups_permissions.read_r,auth_groups_permissions.update_r,auth_groups_permissions.delete_r')
+            ->join('auth_permissions_pages', 'auth_permissions_pages.id=auth_groups_permissions.page_id')
+            ->where(['group_id' => $groupId]);
+        $union = $this->db->table('auth_users_permissions')
+            ->select('auth_permissions_pages.id,auth_permissions_pages.className,auth_permissions_pages.methodName,auth_permissions_pages.typeOfPermissions,auth_users_permissions.create_r,auth_users_permissions.read_r,auth_users_permissions.update_r,auth_users_permissions.delete_r')
+            ->join('auth_permissions_pages', 'auth_permissions_pages.id=auth_users_permissions.page_id')
+            ->where('auth_users_permissions.user_id', $userId);
+        $combined = $combined->unionAll($union)->get()->getResultArray();
+        cache()->save("{$userId}_permissions", $combined, 300);
+        return (object)cache("{$userId}_permissions");
+    }
 
     /**
      * @param string $email
@@ -46,7 +62,7 @@ class UserModel extends Model
             'isSuccess' => $success,
             'user_agent' => $agent,
             'session_id' => session_id(),
-            'counter' => ($success === false  ) ? $falseCounter+1 : null,
+            'counter' => ($success === false) ? $falseCounter + 1 : null,
         ]);
     }
 
@@ -65,7 +81,7 @@ class UserModel extends Model
         return $this->db->table('auth_tokens')->insert([
             'user_id' => $userID,
             'selector' => $selector,
-            'hashedValidator' => hash('sha256',$validator),
+            'hashedValidator' => hash('sha256', $validator),
             'expires' => $expires->format('Y-m-d H:i:s')
         ]);
     }
@@ -77,7 +93,7 @@ class UserModel extends Model
     {
         $config = new Auth();
         if (!$config->allowRemembering) return;
-        $this->db->table('auth_tokens')->delete(['expires<='=>date('Y-m-d H:i:s')]);
+        $this->db->table('auth_tokens')->delete(['expires<=' => date('Y-m-d H:i:s')]);
     }
 
     /**
@@ -87,7 +103,7 @@ class UserModel extends Model
      */
     public function updateRememberValidator(string $selector, string $validator)
     {
-        return $this->db->table('auth_tokens')->update(['hashedValidator' => hash('sha256', $validator)],['selector' => $selector]);
+        return $this->db->table('auth_tokens')->update(['hashedValidator' => hash('sha256', $validator)], ['selector' => $selector]);
     }
 
     /**
@@ -99,7 +115,7 @@ class UserModel extends Model
      * @param array $select
      * @return mixed
      * @throws \Exception
-     *
+     * TODO: builder ile kod düzeltilecek.
      */
     public function getListOr(string $collection, array $where = [], array $options = [], array $select = [], array $or = [])
     {
@@ -114,9 +130,9 @@ class UserModel extends Model
      * @return mixed
      * @throws \Exception
      */
-    public function countOr(string $collection, array $where,  array $or = [])
+    public function countOr(string $collection, array $where, array $or = [])
     {
-        $builder=$this->db->table($collection);
+        $builder = $this->db->table($collection);
         $builder->where($where)->orWhere($or);
         return $builder->countAllResults();
     }
@@ -130,9 +146,9 @@ class UserModel extends Model
      * @return mixed
      * @throws \Exception
      */
-    public function getOneOr(string $collection, array $where = [], string $order = 'id ASC', string $select = '*',array $or = [])
+    public function getOneOr(string $collection, array $where = [], string $order = 'id ASC', string $select = '*', array $or = [])
     {
-        $builder=$this->db->table($collection);
+        $builder = $this->db->table($collection);
         $builder->select($select)->where($where)->orWhere($or)->orderBy($order);
         return $builder->get()->getResult();
     }
@@ -146,9 +162,9 @@ class UserModel extends Model
      * @throws \Exception
      */
 
-    public function updateManyOr(string $collection, array $where, array $set, string $select = '*', array $or =[])
+    public function updateManyOr(string $collection, array $where, array $set, string $select = '*', array $or = [])
     {
-        $builder=$this->db->table($collection);
-        return $builder->select($select)->orWhere($or)->update($set,$where);
+        $builder = $this->db->table($collection);
+        return $builder->select($select)->orWhere($or)->update($set, $where);
     }
 }

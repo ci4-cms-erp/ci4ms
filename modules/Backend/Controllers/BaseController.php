@@ -62,8 +62,8 @@ class BaseController extends Controller
         $navigation=$this->commonModel->lists('auth_permissions_pages','*', ['inNavigation' => true, 'isBackoffice'=>true],'pageSort');
         $nav=[];
         foreach ($navigation as $item) {
-            $result=$this->authLib->has_perm($item->id);
-            if($result===true) $nav[]=$item;
+            $result=$this->authLib->has_perm($item->className,$item->methodName);
+            if((bool)$result===true) $nav[]=$item;
         }
         $settings = $this->commonModel->selectOne('settings');
         $this->config->mailConfig=['protocol' => $settings->mailProtocol,

@@ -29,11 +29,8 @@ class BackendAfterLoginFilter implements FilterInterface
         if(is_dir(ROOTPATH.'/modules/Installation')) {
             helper('filesystem');
             $result = delete_files(ROOTPATH . '/modules/Installation', true);
-            if($result==true)
-                $result=rmdir(ROOTPATH . '/modules/Installation');
-
-            if ($result == false)
-                return view('\Modules\Installation\Views\deleteModule');
+            if($result==true) $result=rmdir(ROOTPATH . '/modules/Installation');
+            if ($result == false) return view('\Modules\Installation\Views\deleteModule');
         }
 
         $authLib=new AuthLibrary();
@@ -41,7 +38,6 @@ class BackendAfterLoginFilter implements FilterInterface
 
         $router = service('router');
         $perms = $authLib->has_perm($router->controllerName(), $router->methodName());
-
         if ($perms === false) return redirect()->to('/backend/403');
 	}
 
