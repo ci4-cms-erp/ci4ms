@@ -508,4 +508,16 @@ class AuthLibrary
         if(!empty($intersect)) return true;
         else return false;
     }
+
+    public function sidebarNavigation()
+    {
+        $searchValues = [1];
+        $navigation = array_filter(cache(session()->get($this->config->logged_in) . '_permissions'),
+            fn($item) => (bool) $item['inNavigation'] === (bool) $searchValues[0]
+        );
+        $nav = array_filter($navigation, fn($item) => $this->has_perm($item['className'], $item['methodName']));
+        usort($nav, fn($a, $b) => $a['pageSort'] <=> $b['pageSort']);
+        $nav = array_map(fn($item) => (object) $item, $nav);
+        return $nav;
+    }
 }

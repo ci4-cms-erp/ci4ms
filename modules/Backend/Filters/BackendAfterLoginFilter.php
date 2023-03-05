@@ -26,11 +26,20 @@ class BackendAfterLoginFilter implements FilterInterface
 	 */
 	public function before(RequestInterface $request, $arguments = null)
 	{
+        helper('filesystem');
         if(is_dir(ROOTPATH.'/modules/Installation')) {
-            helper('filesystem');
             $result = delete_files(ROOTPATH . '/modules/Installation', true);
             if($result==true) $result=rmdir(ROOTPATH . '/modules/Installation');
-            if ($result == false) return view('\Modules\Installation\Views\deleteModule');
+            if (!$result) return view('\Modules\Installation\Views\deleteModule');
+        }
+
+        $templates=directory_map(ROOTPATH.'public/templates');
+        foreach($templates as $key=>$template){
+            if(!is_file(ROOTPATH.'public/templates/'.$key.'info.xml') || !is_file(ROOTPATH.'public/templates/'.$key.'screenshot.png'))
+            {
+                session()->setFlashdata('warning', ROOTPATH.'public/templates/'.$key.' klasöründe "info.xml" ve/veya "screenshot.png" dosyaları bulunmuyor. Kontrolü sağlayınız.');
+                break;
+            }
         }
 
         $authLib=new AuthLibrary();
@@ -38,7 +47,7 @@ class BackendAfterLoginFilter implements FilterInterface
 
         $router = service('router');
         $perms = $authLib->has_perm($router->controllerName(), $router->methodName());
-        if ($perms === false) return redirect()->to('/backend/403');
+        if (!$perms) return redirect()->to('/backend/403');
 	}
 
 	/**
