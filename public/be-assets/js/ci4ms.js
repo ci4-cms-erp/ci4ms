@@ -7,7 +7,7 @@ function pageImgelfinderDialog() {
         destroyOnClose: true,
         cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme-gray.css'],
         getFileCallback: function (files, fm) {
-            $('.pageimg-input').val(files.url);
+            $('.pageimg-input').val(files.url.replace('https://'+location.hostname,''));
             $('.pageimg').attr('src',files.url);
             const img = new Image();
             img.onload = function() {
@@ -27,7 +27,6 @@ function pageImgelfinderDialog() {
 }
 
 function pageMultipleImgelfinderDialog(id) {
-    console.log(id);
     var fm = $('<div/>').dialogelfinder({
         url: '/be-assets/plugins/elFinder/php/connector.minimal.php', // change with the url of your connector
         lang: 'en',
@@ -37,7 +36,7 @@ function pageMultipleImgelfinderDialog(id) {
         cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme-gray.css'],
 
         getFileCallback: function (files) {
-            $('[name="imgs['+id+'][pageimg]"]').val(files.url);
+            $('[name="imgs['+id+'][pageimg]"]').val(files.url.replace('https://'+location.hostname,''));
             $('[name="imgs['+id+'][img]').attr('src',files.url);//TODO: çözülecek
             const img = new Image();
             img.onload = function() {
@@ -82,7 +81,7 @@ function elfinderDialog() {
         destroyOnClose: true,
         cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme-gray.css'],
         getFileCallback: function (files, fm) {
-            $('.editor').summernote('editor.insertImage', files.url);
+            $('.editor').summernote('editor.insertImage', files.url.replace('https://'+location.hostname,''));
         },
         commandsOptions: {
             getfile: {
