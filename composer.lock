@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
-            "version": "1.1.4",
+            "version": "1.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bertugfahriozer/ci4commonModel.git",
-                "reference": "1fc06ab48ead5419b5e6c51d2389fa36ab945824"
+                "reference": "aec5e289f56b48dd3ae9653ceee829aa2f3a1f91"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bertugfahriozer/ci4commonModel/zipball/1fc06ab48ead5419b5e6c51d2389fa36ab945824",
-                "reference": "1fc06ab48ead5419b5e6c51d2389fa36ab945824",
+                "url": "https://api.github.com/repos/bertugfahriozer/ci4commonModel/zipball/aec5e289f56b48dd3ae9653ceee829aa2f3a1f91",
+                "reference": "aec5e289f56b48dd3ae9653ceee829aa2f3a1f91",
                 "shasum": ""
             },
             "require": {
@@ -47,7 +47,7 @@
                 "issues": "https://github.com/bertugfahriozer/ci4commonModel/issues",
                 "source": "https://github.com/bertugfahriozer/ci4mongodblibrary"
             },
-            "time": "2023-01-29T00:48:29+00:00"
+            "time": "2023-03-18T00:22:55+00:00"
         },
         {
             "name": "codeigniter4/framework",

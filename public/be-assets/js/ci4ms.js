@@ -37,7 +37,7 @@ function pageMultipleImgelfinderDialog(id) {
 
         getFileCallback: function (files) {
             $('[name="imgs['+id+'][pageimg]"]').val(files.url.replace(location.origin,''));
-            $('[name="imgs['+id+'][img]').attr('src',files.url);//TODO: çözülecek
+            $('[name="imgs['+id+'][img]').attr('src',files.url);
             const img = new Image();
             img.onload = function() {
                 $('[name="imgs['+id+'][pageIMGHeight]"]').val(this.height)

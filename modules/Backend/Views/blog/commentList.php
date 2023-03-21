@@ -16,14 +16,8 @@
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
-            <div class="col-sm-6">
+            <div class="col-12">
                 <h1><?=lang('Backend.'.$title->pagename)?></h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <a href="<?= route_to('') ?>" class="btn btn-outline-info"><i
-                                class="fas fa-arrow-circle-left"></i> Listeye Dön</a>
-                </ol>
             </div>
         </div>
     </div><!-- /.container-fluid -->
@@ -46,6 +40,9 @@
         <div class="card-body">
             <?= view('Modules\Auth\Views\_message_block') ?>
             <div class="col-12">
+                <button class="btn btn-info unapproved" type="button">Show Unapproved</button>
+            </div>
+            <div class="col-12">
                 <table id="example1" class="table table-bordered table-striped">
                     <thead>
                     <tr>
@@ -65,7 +62,6 @@
         <!-- /.card-body -->
     </div>
     <!-- /.card -->
-
 </section>
 <!-- /.content -->
 <?= $this->endSection() ?>
@@ -85,14 +81,31 @@
 <?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
 <?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
 <script>
+    let isApprove=1;
+
+    $('.unapproved').on('click',function (){
+        isApprove = !isApprove;
+        var buttonText = isApprove ? 'Show Unapproved' : 'Show Approved';
+        $(this).text(buttonText);
+        table.context[0].ajax.data.isApproved=isApprove;
+        table.ajax.reload();
+    });
+
     var table = $("#example1").DataTable({
         responsive: true, lengthChange: false, autoWidth: false,
-        buttons: ["pageLength"],
-        processing: true, pageLength: 10, serverSide: true,
+        buttons: ["pageLength",{
+            text:"Refresh",
+            className: "btn btn-teal",
+            action: function (e,dt,node,config){
+                dt.ajax.reload();
+            }
+            }],
+        processing: true, pageLength: 5, serverSide: true,
         ordering: false, "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
         ajax: {
             url: '<?=route_to('commentResponse')?>',
-            type: 'POST'
+            type: 'POST',
+            data:{isApproved: isApprove}
         },
         columns: [
             {data: 'id'},
@@ -107,22 +120,5 @@
                 .appendTo($('.col-md-6:eq(0)', table.table().container()));
         }
     });
-
-    function processing() {
-        Swal.fire({
-            title: 'Please Wait !',
-            timer: 2000,
-            html: 'Proses',// add html attribute if you want or remove
-            allowEscapeKey: false,
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            showClass: {
-                backdrop: 'swal2-noanimation', // disable backdrop animation
-            },
-            willOpen: () => {
-                Swal.showLoading()
-            }
-        });
-    }
 </script>
 <?= $this->endSection() ?>

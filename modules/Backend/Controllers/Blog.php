@@ -11,15 +11,27 @@ class Blog extends BaseController
 {
     use ResponseTrait;
 
+    /**
+     * @var CommonTagsLibrary
+     */
     private $commonTagsLib;
+    /**
+     * @var AjaxModel
+     */
     private $model;
 
+    /**
+     *
+     */
     public function __construct()
     {
         $this->model = new AjaxModel();
         $this->commonTagsLib = new CommonTagsLibrary();
     }
 
+    /**
+     * @return string
+     */
     public function index()
     {
         $totalItems = $this->commonModel->count('categories', []);
@@ -33,6 +45,9 @@ class Blog extends BaseController
         return view('Modules\Backend\Views\blog\list', $this->defData);
     }
 
+    /**
+     * @return string
+     */
     public function new()
     {
         $this->defData['categories'] = $this->commonModel->lists('categories');
@@ -40,6 +55,10 @@ class Blog extends BaseController
         return view('Modules\Backend\Views\blog\create', $this->defData);
     }
 
+    /**
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     * @throws \Exception
+     */
     public function create()
     {
         $valData = ([
@@ -82,6 +101,10 @@ class Blog extends BaseController
         } else return redirect()->back()->withInput()->with('error', 'Blog oluşturulamadı.');
     }
 
+    /**
+     * @param string $id
+     * @return string
+     */
     public function edit(string $id)
     {
         $this->defData['tags'] = $this->model->limitTags_ajax(['tags_pivot.tagType' => 'blogs', 'tags_pivot.piv_id' => $id]);
@@ -99,6 +122,11 @@ class Blog extends BaseController
         return view('Modules\Backend\Views\blog\update', $this->defData);
     }
 
+    /**
+     * @param string $id
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     * @throws \Exception
+     */
     public function update(string $id)
     {
         $valData = ([
@@ -129,9 +157,9 @@ class Blog extends BaseController
         }
         if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
 
-        if(!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
+        if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
         if ($this->commonModel->edit('blog', $data, ['id' => $id])) {
-            if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', $id, 'tags',true);
+            if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', $id, 'tags', true);
             if (!empty($this->request->getPost('categories'))) {
                 $this->commonModel->remove('blog_categories_pivot', ['blog_id' => $id]);
                 foreach ($this->request->getPost('categories') as $item) {
@@ -142,12 +170,19 @@ class Blog extends BaseController
         } else return redirect()->back()->withInput()->with('error', 'Blog oluşturulamadı.');
     }
 
+    /**
+     * @param $id
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     */
     public function delete($id = null)
     {
-            if ($this->commonModel->remove('blog', ['id' =>$id,'tagType'=>'blogs']) === true) return redirect()->route('blogs', [1])->with('message', 'blog silindi.');
-            else return redirect()->back()->withInput()->with('error', 'Blog Silinemedi.');
+        if ($this->commonModel->remove('blog', ['id' => $id, 'tagType' => 'blogs']) === true) return redirect()->route('blogs', [1])->with('message', 'blog silindi.');
+        else return redirect()->back()->withInput()->with('error', 'Blog Silinemedi.');
     }
 
+    /**
+     * @return string
+     */
     public function commentList()
     {
         return view('Modules\Backend\Views\blog\commentList', $this->defData);
@@ -155,51 +190,84 @@ class Blog extends BaseController
 
     public function commentResponse()
     {
-        if ($this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            if (empty($data['search']['value'])) unset($data['search']);
-            unset($data['columns'], $data['order']);
-            $searchData = ['isApproved' => true];
-            if (!empty($data['search']['value'])) $searchData['comFullName'] = $data['search']['value'];
-            if ($data['length'] > 0) $results = $this->commonModel->lists('comments','*', [],'id ASC', $data['length'],(int)$data['start'],$searchData);
-            else $results = $this->commonModel->lists('comments', $searchData);
-            $c = ((int)$data['start'] > 0) ? (int)$data['start'] + 1 : 1;
-            $data = [
-                'draw' => intval($data['draw']),
-                "iTotalRecords" => $this->commonModel->count('comments', $searchData),
-                "iTotalDisplayRecords" => $this->commonModel->count('comments', $searchData),
+        if (!$this->request->isAJAX()) return $this->respond(['message' => 'Not Found data'], 204);
+        $data = clearFilter($this->request->getPost());
+        $like = $data['search']['value'] ?? '';
+        $searchData = ['isApproved' => $this->request->getPost('isApproved')=='true'?true:false];
+        $l=[];
+        if (!empty($like)) $l=['comFullName'=> $like, 'comEmail'=>$like];
+        $results = $this->commonModel->lists('comments', '*', $searchData, 'id DESC',
+            (int)$data['length'], (int)$data['start'],$l);
+        $totalRecords = $this->commonModel->count('comments', $searchData);
+        $totalDisplayRecords = $totalRecords;
+        $c = ($data['start'] > 0) ? $data['start'] + 1 : 1;
+        $aaData = [];
+        foreach ($results as $result) {
+            $aaData[] = [
+                'id' => $c,
+                'com_name_surname' => $result->comFullName,
+                'email' => $result->comEmail,
+                'created_at' => $result->created_at,
+                'status' => ($result->isApproved == true) ? 'Approved' : 'Not approved',
+                'process' => '<a href="' . route_to('displayComment', $result->id) . '"
+                               class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>
+                            <a href="' . route_to('displayComment', $result->id) . '"
+                               class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>'
             ];
-            foreach ($results as $result) {
-                $id = (string)$result->id;
-                $data['aaData'][] = ['id' => $c,
-                    'com_name_surname' => $result->comFullName,
-                    'email' => $result->comEmail,
-                    'created_at' => $result->created_at,
-                    'status' => ($result->isApproved == true) ? 'Approved' : 'Not approved',
-                    'process' => '<a href="' . route_to('blogUpdate', $result->id) . '"
-                                   class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>
-                                <a href="' . route_to('blogDelete', $result->id) . '"
-                                   class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>'];
-                $c++;
-            }
-            _printr($data);
-            if (!empty($data)) return $this->respond($data, 200);
-            else return $this->respond(['message' => 'Not Found data'], 204);
+            $c++;
         }
+
+        $data = [
+            'draw' => intval($data['draw']),
+            'iTotalRecords' => $totalRecords,
+            'iTotalDisplayRecords' => $totalDisplayRecords,
+            'aaData' => $aaData,
+        ];
+        return $this->respond($data, 200);
     }
 
     public function commentPendingApproval()
-    {
+    {//bu metoda gerek kalmadı.
         dd('commentPendingApproval');
     }
 
-    public function confirmComment()
+    public function displayComment(int $id)
     {
-        dd('confirmComment');
+        $this->defData['commentInfo'] = $this->commonModel->selectOne('comments', ['id' => $id]);
+        $this->defData['blogInfo'] = $this->commonModel->selectOne('blog', ['id' => $this->defData['commentInfo']->blog_id]);
+        return view('Modules\Backend\Views\blog\displayComment', $this->defData);
+    }
+
+    public function confirmComment(int $id)
+    {
+        $rules = [
+            'options' => 'required|is_natural_no_zero|greater_than_equal_to[1]|less_than_equal_to[2]'
+        ];
+        if (!$this->validate($rules)) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        $isApproved = (int)$this->request->getPost('options');
+        if ($isApproved===1) {
+            if($this->commonModel->edit('comments', ['isApproved' => $isApproved], ['id' => $id])) {
+                $message = "The comment with an id of {$id} has been published.";
+                return redirect()->route('comments')->with('message', $message);
+            }
+            else{
+                $error = 'Comment cannot be published. Please try again or check logs.';
+                return redirect()->back()->withInput()->with('error', $error);
+            }
+        } else {
+            if($this->commonModel->remove('comments', ['id' =>$id])){
+                $message = "The comment with an id of {$id} has been removed.";
+                return redirect()->route('comments')->with('warning', $message);
+            }else {
+                $error = 'Comment cannot be removed. Please try again or check logs.';
+                return redirect()->back()->withInput()->with('error', $error);
+            }
+        }
     }
 
     public function badwordList()
     {
+
         dd('badwordList');
     }
 

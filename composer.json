@@ -6,7 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^7.4 || ^8.0",
-        "codeigniter4/framework": "^4.0",
+        "codeigniter4/framework": "4.3.1",
         "gregwar/captcha": "1.*",
         "phpmailer/phpmailer": "^6.4",
         "jasongrimes/paginator": "~1.0",
