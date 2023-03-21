@@ -254,9 +254,11 @@ trait Ci4msTrait
         // Retrieves the namespace part from the fully qualified class name.
         $namespace = trim(implode('\\', array_slice(explode('\\', $class), 0, -1)), '\\');
         $search[] = '<@php';
+        $search[] = '<@=';
         $search[] = '{namespace}';
         $search[] = '{class}';
         $replace[] = '<?php';
+        $replace[] = '<?=';
         $replace[] = $namespace;
         $replace[] = str_replace($namespace . '\\', '', $class);
 

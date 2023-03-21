@@ -115,7 +115,7 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
            $routes->get('commentRemove/(:num)','Blog::commentRemove/$1',['as'=>'commentRemove','filter'=>'backendAfterLoginFilter']);
            $routes->get('displayComment/(:num)','Blog::displayComment/$1',['as'=>'displayComment','filter'=>'backendAfterLoginFilter']);
            $routes->post('confirmComment/(:num)','Blog::confirmComment/$1',['as'=>'confirmComment','filter'=>'backendAfterLoginFilter']);
-           $routes->get('badwords/(:num)','Blog::badwordList/$1',['as'=>'badwords','filter'=>'backendAfterLoginFilter']);
+           $routes->get('badwords','Blog::badwordList',['as'=>'badwords','filter'=>'backendAfterLoginFilter']);
            $routes->post('badwordsAdd','Blog::badwordsAdd',['as'=>'badwordsAdd','filter'=>'backendAfterLoginFilter']);
         });
     });

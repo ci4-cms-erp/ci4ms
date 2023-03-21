@@ -267,8 +267,10 @@ class Blog extends BaseController
 
     public function badwordList()
     {
-
-        dd('badwordList');
+        $this->defData['badwords']=$this->commonModel->selectOne('settings',[],'badwords');
+        if(empty($this->defData['badwords']))$this->defData['badwords']=null;
+        else $this->defData['badwords']=json_decode($this->defData['badwords']);
+        return view('Modules\Backend\Views\blog\badwordlist', $this->defData);
     }
 
     public function badwordsAdd()

@@ -278,18 +278,33 @@
                             <hr>
                             <div class="w-100">
                                 <h2><?=lang('Backend.fileTypes')?></h2>
+                                <div id="accordion">
                                 <?php foreach ($mimes as $key=>$mime) :; ?>
-                                    <h5 for=""><?=$key?></h5>
-                                <ul>
-                                    <?php if(is_string($mime)):?>
-                                    <li><?=$mime?></li>
-                                    <?php else:
-                                   foreach($mimes[$key] as $m) : ?>
-                                    <li><?=$m?></li>
-                                    <?php endforeach;
-                                    endif; ?>
-                                </ul>
+                                        <div class="card">
+                                            <div class="card-header" id="heading<?=$key?>">
+                                                <h5 class="mb-0">
+                                                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapse<?=$key?>" aria-expanded="true" aria-controls="collapse<?=$key?>">
+                                                        <?=$key?>
+                                                    </button>
+                                                </h5>
+                                            </div>
+
+                                            <div id="collapse<?=$key?>" class="collapse" aria-labelledby="heading<?=$key?>" data-parent="#accordion">
+                                                <div class="card-body">
+                                                    <ul>
+                                                        <?php if(is_string($mime)):?>
+                                                            <li><?=$mime?></li>
+                                                        <?php else:
+                                                            foreach($mimes[$key] as $m) : ?>
+                                                                <li><?=$m?></li>
+                                                            <?php endforeach;
+                                                        endif; ?>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
                                 <?php endforeach; ?>
+                                </div>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="vert-tabs-login" role="tabpanel"
