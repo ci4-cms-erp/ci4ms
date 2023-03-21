@@ -54,7 +54,7 @@ class AuthLibrary
 
         Services::response()->noCache();
 
-        if ($remember && $this->config->allowRemembering) $this->rememberUser($this->user->_id);
+        if ($remember && $this->config->allowRemembering) $this->rememberUser($this->user->id);
 
         if (mt_rand(1, 100) < 20) $this->userModel->purgeOldRememberTokens();
 
