@@ -193,11 +193,11 @@ class Blog extends BaseController
         if (!$this->request->isAJAX()) return $this->respond(['message' => 'Not Found data'], 204);
         $data = clearFilter($this->request->getPost());
         $like = $data['search']['value'] ?? '';
-        $searchData = ['isApproved' => $this->request->getPost('isApproved')=='true'?true:false];
-        $l=[];
-        if (!empty($like)) $l=['comFullName'=> $like, 'comEmail'=>$like];
+        $searchData = ['isApproved' => $this->request->getPost('isApproved') == 'true' ? true : false];
+        $l = [];
+        if (!empty($like)) $l = ['comFullName' => $like, 'comEmail' => $like];
         $results = $this->commonModel->lists('comments', '*', $searchData, 'id DESC',
-            (int)$data['length'], (int)$data['start'],$l);
+            (int)$data['length'], (int)$data['start'], $l);
         $totalRecords = $this->commonModel->count('comments', $searchData);
         $totalDisplayRecords = $totalRecords;
         $c = ($data['start'] > 0) ? $data['start'] + 1 : 1;
@@ -211,7 +211,7 @@ class Blog extends BaseController
                 'status' => ($result->isApproved == true) ? 'Approved' : 'Not approved',
                 'process' => '<a href="' . route_to('displayComment', $result->id) . '"
                                class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>
-                            <a href="' . route_to('displayComment', $result->id) . '"
+                            <a href="' . route_to('commentRemove', $result->id) . '"
                                class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>'
             ];
             $c++;
@@ -226,9 +226,10 @@ class Blog extends BaseController
         return $this->respond($data, 200);
     }
 
-    public function commentPendingApproval()
-    {//bu metoda gerek kalmadı.
-        dd('commentPendingApproval');
+    public function commentRemove(int $id)
+    {
+        if ($this->commonModel->remove('comments', ['id' => $id])) return redirect()->route('comments')->with('warning', "The comment with an id of <strong>{$id}</strong> has been removed.");
+        else return redirect()->back()->withInput()->with('error', 'Comment cannot be removed. Please try again or check logs.');
     }
 
     public function displayComment(int $id)
@@ -245,20 +246,19 @@ class Blog extends BaseController
         ];
         if (!$this->validate($rules)) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $isApproved = (int)$this->request->getPost('options');
-        if ($isApproved===1) {
-            if($this->commonModel->edit('comments', ['isApproved' => $isApproved], ['id' => $id])) {
+        if ($isApproved === 1) {
+            if ($this->commonModel->edit('comments', ['isApproved' => $isApproved], ['id' => $id])) {
                 $message = "The comment with an id of {$id} has been published.";
                 return redirect()->route('comments')->with('message', $message);
-            }
-            else{
+            } else {
                 $error = 'Comment cannot be published. Please try again or check logs.';
                 return redirect()->back()->withInput()->with('error', $error);
             }
         } else {
-            if($this->commonModel->remove('comments', ['id' =>$id])){
+            if ($this->commonModel->remove('comments', ['id' => $id])) {
                 $message = "The comment with an id of {$id} has been removed.";
                 return redirect()->route('comments')->with('warning', $message);
-            }else {
+            } else {
                 $error = 'Comment cannot be removed. Please try again or check logs.';
                 return redirect()->back()->withInput()->with('error', $error);
             }

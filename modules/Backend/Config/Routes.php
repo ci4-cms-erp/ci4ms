@@ -112,7 +112,7 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->group('comments',function ($routes){
            $routes->get('/','Blog::commentList',['as'=>'comments','filter'=>'backendAfterLoginFilter']);
            $routes->post('commentResponse','Blog::commentResponse/$1',['as'=>'commentResponse','filter'=>'backendAfterLoginFilter']);
-           $routes->get('commentPendingApproval/(:num)','Blog::commentPendingApproval/$1',['as'=>'commentPendingApproval','filter'=>'backendAfterLoginFilter']);
+           $routes->get('commentRemove/(:num)','Blog::commentRemove/$1',['as'=>'commentRemove','filter'=>'backendAfterLoginFilter']);
            $routes->get('displayComment/(:num)','Blog::displayComment/$1',['as'=>'displayComment','filter'=>'backendAfterLoginFilter']);
            $routes->post('confirmComment/(:num)','Blog::confirmComment/$1',['as'=>'confirmComment','filter'=>'backendAfterLoginFilter']);
            $routes->get('badwords/(:num)','Blog::badwordList/$1',['as'=>'badwords','filter'=>'backendAfterLoginFilter']);

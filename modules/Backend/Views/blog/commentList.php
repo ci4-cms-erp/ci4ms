@@ -81,7 +81,7 @@
 <?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
 <?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
 <script>
-    let isApprove=1;
+    let isApprove=true;
 
     $('.unapproved').on('click',function (){
         isApprove = !isApprove;
@@ -100,7 +100,7 @@
                 dt.ajax.reload();
             }
             }],
-        processing: true, pageLength: 5, serverSide: true,
+        processing: true, pageLength: 10, serverSide: true,
         ordering: false, "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
         ajax: {
             url: '<?=route_to('commentResponse')?>',
