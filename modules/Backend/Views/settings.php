@@ -416,15 +416,10 @@
 <?=script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js")?>
 <?=script_tag("be-assets/js/ci4ms.js")?>
 <script>
-    $(document).ready(function () {
-        'use strict';
-
         $('.repeater').repeater({
             defaultValues: {},
             isFirstItemUndeletable: true,
-            show: function () {
-                $(this).slideDown();
-            },
+            show: function () {$(this).slideDown();},
             hide: function (deleteElement) {
                 Swal.fire({
                     title: 'Bu sosyal ağı listeden silmek istediğinizden emin misiniz?',
@@ -440,41 +435,24 @@
                 })
             }
         });
-    });
 
     function chooseTemplate(path,templateName){
-        $.post('<?=route_to('setTemplate')?>',{
-            "<?=csrf_token()?>": "<?=csrf_hash()?>",
-            "path":path,"tName":templateName
-        }).done(function (data) {
+        $.post('<?=route_to('setTemplate')?>',{"path":path,"tName":templateName}).done(function (data) {
            if(data.result===true){
-               Swal.fire('Tema Seçimi Başarılı!', '', 'success');
-               $('#'+path).remove();
-           }else{
-               Swal.fire('Tema Seçimi Sağlamanadı tekrar deneyiniz.','','warning')
-           }
+               Swal.fire('Tema Seçimi Başarılı!', '', 'success').then((result) => {
+                   if (result.isConfirmed) location.reload();
+               });
+           }else Swal.fire('Tema Seçimi Sağlamanadı tekrar deneyiniz.','','warning');
         });
     }
     $('.bswitch').bootstrapSwitch();
     $('.bswitch').on('switchChange.bootstrapSwitch',function(){
         var id=$(this).data('id'), isActive;
-
-        if($(this).prop('checked'))
-            isActive=1;
-        else
-            isActive=0;
-
-        $.post('<?=route_to('maintenance')?>',
-            {
-                "id":id,
-                'isActive':isActive},'json').done(function (data) {
-            if (data.result === true) {
-                Swal.fire('Bakım Aşaması Sayfası yayına alındı.', '', 'success');
-            }
+        if($(this).prop('checked')) isActive=1; else isActive=0;
+        $.post('<?=route_to('maintenance')?>', {"id":id, 'isActive':isActive},'json').done(function (data) {
+            if (data.result === true) Swal.fire('Bakım Aşaması Sayfası yayına alındı.', '', 'success');
             else Swal.fire('Bakım Aşaması Sayfası devre dışı bırakıldı.', '', 'success');
-            if(data.pr === false) {
-                Swal.fire('Bakım Aşaması Sayfası Aktif edilemedi.', '', 'erroe')
-            }
+            if(data.pr === false) Swal.fire('Bakım Aşaması Sayfası Aktif edilemedi.', '', 'erroe');
         });
     });
 </script>

@@ -197,10 +197,13 @@ class Settings extends BaseController
         if ($this->request->isAJAX()) {
             $valData = ([
                 'path' => ['label' => 'path', 'rules' => 'required'],
-                'tName' => ['label' => 'tName', 'rules' => 'required'],
+                'tName' => ['label' => 'tName', 'rules' => 'required']
             ]);
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-            if ($this->commonModel->updateOne('settings', ['_id' => $this->defData['settings']->_id], ['templateInfos' => ['path' => $this->request->getPost('path'), 'name' => $this->request->getPost('name')]])) return $this->response->setJSON(['result' => true]);
+            if ($this->commonModel->edit('settings',
+                ['templateInfos' => json_encode(['path' => $this->request->getPost('path'),
+                    'name' => $this->request->getPost('name')],JSON_UNESCAPED_UNICODE)],
+                ['id' => $this->defData['settings']->id])) return $this->response->setJSON(['result' => true]);
             else return $this->response->setJSON(['result' => false]);
         } else redirect()->route('403');
     }
