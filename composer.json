@@ -7,6 +7,7 @@
     "require": {
         "php": "^7.4 || ^8.0",
         "codeigniter4/framework": "4.3.1",
+        "codeigniter4/translations": "^4.1",
         "gregwar/captcha": "1.*",
         "phpmailer/phpmailer": "^6.4",
         "jasongrimes/paginator": "~1.0",
@@ -39,5 +40,10 @@
         "forum": "https://forum.codeigniter.com/",
         "source": "https://github.com/codeigniter4/CodeIgniter4",
         "slack": "https://codeigniterchat.slack.com"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
     }
 }

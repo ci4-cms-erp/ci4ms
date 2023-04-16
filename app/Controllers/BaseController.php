@@ -65,16 +65,16 @@ abstract class BaseController extends Controller
         // E.g.: $this->session = \Config\Services::session();
 
         $this->commonModel=new CommonModel();
-        $this->defData = ['logo' => $this->commonModel->selectOne('settings', [],'logo,siteName,companyAddress,companyEMail,slogan,companyPhone,socialNetwork'),
-            'menus' =>$this->commonModel->lists('menu','*',[],'queue ASC'),
-            'settings'=>$this->commonModel->selectOne('settings')];
+        $settings=$this->commonModel->selectOne('settings');
+        $this->defData = ['logo' => $settings,'settings'=>$settings,
+            'menus' =>$this->commonModel->lists('menu','*',[],'queue ASC')];
         $this->defData['settings']->templateInfos=json_decode($this->defData['settings']->templateInfos);
         $this->defData['settings']->templateInfos=(object)$this->defData['settings']->templateInfos;
         $this->defData['settings']->socialNetwork=json_decode($this->defData['settings']->socialNetwork);
         $this->defData['settings']->socialNetwork=(object)$this->defData['settings']->socialNetwork;
         $this->defData['schema']=new Schema(
             new Thing('Organization', [
-                'url'          => site_url(),
+                'url'          => site_url(), //TODO: burada site linkleri mi olması gerekiyor araştır.
                 'logo'         => $this->defData['logo']->logo,
                 'contactPoint' => new Thing('ContactPoint', [
                     'telephone' => $this->defData['settings']->companyPhone,

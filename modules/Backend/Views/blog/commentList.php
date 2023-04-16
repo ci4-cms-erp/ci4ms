@@ -1,7 +1,7 @@
 <?= $this->extend('Modules\Backend\Views\base') ?>
 
 <?= $this->section('title') ?>
-<?=lang('Backend.'.$title->pagename)?>
+<?= lang('Backend.' . $title->pagename) ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('head') ?>
@@ -17,7 +17,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-12">
-                <h1><?=lang('Backend.'.$title->pagename)?></h1>
+                <h1><?= lang('Backend.' . $title->pagename) ?></h1>
             </div>
         </div>
     </div><!-- /.container-fluid -->
@@ -39,9 +39,6 @@
         </div>
         <div class="card-body">
             <?= view('Modules\Auth\Views\_message_block') ?>
-            <div class="col-12">
-                <button class="btn btn-info unapproved" type="button">Show Unapproved</button>
-            </div>
             <div class="col-12">
                 <table id="example1" class="table table-bordered table-striped">
                     <thead>
@@ -81,39 +78,41 @@
 <?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
 <?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
 <script>
-    let isApprove=true;
-
-    $('.unapproved').on('click',function (){
-        isApprove = !isApprove;
-        var buttonText = isApprove ? 'Show Unapproved' : 'Show Approved';
-        $(this).text(buttonText);
-        table.context[0].ajax.data.isApproved=isApprove;
-        table.ajax.reload();
-    });
-
+    let isApprove = true;
     var table = $("#example1").DataTable({
         responsive: true, lengthChange: false, autoWidth: false,
-        buttons: ["pageLength",{
-            text:"Refresh",
+        buttons: ["pageLength", {
+            text: "Refresh",
             className: "btn btn-teal",
-            action: function (e,dt,node,config){
+            action: function (e, dt, node, config) {
                 dt.ajax.reload();
+            }},
+            {
+                text: "Show Unapproved",
+                className: "unapproved",
+                action:function(e,dt,node,config){
+                    isApprove = !isApprove;
+                    var buttonText = isApprove ? 'Show Unapproved' : 'Show Approved';
+                    node.text(buttonText);
+                    dt.context[0].ajax.data.isApproved = isApprove;
+                    dt.ajax.reload();
+                }
             }
-            }],
+        ],
         processing: true, pageLength: 10, serverSide: true,
         ordering: false, "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
         ajax: {
             url: '<?=route_to('commentResponse')?>',
             type: 'POST',
-            data:{isApproved: isApprove}
+            data: {isApproved: isApprove}
         },
         columns: [
             {data: 'id'},
             {data: 'com_name_surname'},
             {data: 'email'},
-            {data:'created_at'},
-            {data:'status'},
-            {data:'process'}
+            {data: 'created_at'},
+            {data: 'status'},
+            {data: 'process'}
         ],
         initComplete: function () {
             table.buttons().container()

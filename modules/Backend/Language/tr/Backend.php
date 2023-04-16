@@ -123,5 +123,7 @@ return [
     'trustedIps'=>'Güvenilir IP Aralığını',
     'trustedIp'=>'Güvenilir Tekil Ip',
     'trustedUsername'=>'Güvenilir Kullanıcı Adı',
-    'gallery'=>'Galeri'
+    'gallery'=>'Galeri',
+    'commentList'=>'Yorumlar',
+    'badwords' => 'Kötü Söz listesi'
 ];

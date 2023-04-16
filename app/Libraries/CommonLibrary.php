@@ -34,7 +34,7 @@ class CommonLibrary
     public function phpMailer(string $setFromMail, string $setFromName, array $addAddresses, string $addReplyToMail, string $addReplyToName, string $subject, string $body, string $altBody = '', array $addCCs = [], array $addBCCs = [], array $addAttachments = [],)
     {
         $settings = $this->commonModel->selectOne('settings');
-        $this->config->mailConfig=['protocol' => $settings->mailProtocol,
+        $this->config->mailConfig = ['protocol' => $settings->mailProtocol,
             'SMTPHost' => $settings->mailServer,
             'SMTPPort' => $settings->mailPort,
             'SMTPUser' => $settings->mailAddress,
@@ -42,9 +42,9 @@ class CommonLibrary
             'charset' => 'UTF-8',
             'mailtype' => 'html',
             'wordWrap' => 'true',
-            'TLS'=>$settings->mailTLS,
+            'TLS' => $settings->mailTLS,
             'newline' => "\r\n"];
-        if($settings->mailProtocol==='smtp') $this->config->mailConfig['SMTPCrypto']='PHPMailer::ENCRYPTION_STARTTLS';
+        if ($settings->mailProtocol === 'smtp') $this->config->mailConfig['SMTPCrypto'] = 'PHPMailer::ENCRYPTION_STARTTLS';
         $mail = new PHPMailer(true);
         try {
             //Server settings
@@ -94,51 +94,66 @@ class CommonLibrary
      * @param string $coverImage
      * @return MetaTags
      */
-    public function seo($title, $description, string $url, array $metatagsArray=[], string $coverImage='')
+    public function seo($title, $description, string $url, array $metatagsArray = [], string $coverImage = '')
     {
         $metatags = new MetaTags();
         $metatags->title($title);
         $metatags->description($description);
         if (!empty($coverImage)) $metatags->image($coverImage);
         if (is_array($metatagsArray['keywords']) && !empty($metatagsArray['keywords'])) {
-            $keywords='';
+            $keywords = '';
             foreach ($metatagsArray['keywords'] as $tag) {
-                $keywords.=$tag.', ';
+                $keywords .= $tag . ', ';
             }
-            $metatags->meta('keywords', substr($keywords,0,-2));
+            $metatags->meta('keywords', substr($keywords, 0, -2));
         }
-        if(!empty($metatagsArray['author'])) $metatags->meta('author', $metatagsArray['author']);
+        if (!empty($metatagsArray['author'])) $metatags->meta('author', $metatagsArray['author']);
         $metatags->canonical(site_url($url));
         return $metatags;
     }
 
-    private function findFunction($string, $start, $end) {
-        $part = explode ($start,$string);
-        $d=[];
+    private function findFunction($string, $start, $end)
+    {
+        $part = explode($start, $string);
+        $d = [];
         foreach ($part as $item) {
-            if(strpos($item,'/}')) $d[]=explode ($end,$item);
+            if (strpos($item, '/}')) $d[] = explode($end, $item);
         }
-        $part=null;
+        $part = null;
         foreach ($d as $item) {
-            $part[$start.$item[0].$end]=$item[0];
+            $part[$start . $item[0] . $end] = $item[0];
         }
         return $part;
     }
+
     //TODO: çoklu veri işlenmesi için virgül kullanılır hale getirilecek.(,)
     public function parseInTextFunctions(string $string)
     {
-        $functions=$this->findFunction($string,'{','/}');
-        if(strpos($string,'[/')) {
+        $functions = $this->findFunction($string, '{', '/}');
+        if (strpos($string, '[/')) {
             $val = $this->findFunction($string, '[/', '/]');
             $v = array_values($val)[0];
         }
-        if(empty($functions)) return $string;
+        if (empty($functions)) return $string;
         foreach ($functions as $function) {
-            $f=explode('|',$function);
-            if(strpos($f[1],'[/')) $f[1]=strstr($f[1],'[/',true);
-            if(!empty($val)) $data[$function] = call_user_func_array($f,[$v]);
+            $f = explode('|', $function);
+            if (strpos($f[1], '[/')) $f[1] = strstr($f[1], '[/', true);
+            if (!empty($val)) $data[$function] = call_user_func_array($f, [$v]);
             else $data[$function] = call_user_func($f);
         }
         return str_replace(array_keys($functions), $data, $string);
+    }
+
+    public function commentBadwordFiltering(string $comment, array $badwordsList, bool $status = false, bool $autoReject = false,bool $autoAccept=false): bool|string
+    {
+        $pattern = '/\b(' . implode('|', $badwordsList) . ')\b/i';
+        if ($autoReject === true && (bool)preg_match($pattern, $comment)) return false;
+        if($status && $autoReject){
+            $comment = preg_replace($pattern, str_repeat('*', strlen('$0')), $comment);
+            return $comment;
+        }
+        if ($status) return preg_replace($pattern, str_repeat('*', strlen('$0')), $comment);
+        if ($autoAccept) return $comment;
+        return false;
     }
 }

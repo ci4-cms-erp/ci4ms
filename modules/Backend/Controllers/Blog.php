@@ -267,14 +267,30 @@ class Blog extends BaseController
 
     public function badwordList()
     {
-        $this->defData['badwords']=$this->commonModel->selectOne('settings',[],'badwords');
-        if(empty($this->defData['badwords']))$this->defData['badwords']=null;
-        else $this->defData['badwords']=json_decode($this->defData['badwords']);
+        $this->defData['badwords'] = json_decode($this->commonModel->selectOne('settings', ['option' => 'badwords'], 'content')->content, JSON_UNESCAPED_UNICODE);
+        if (empty($this->defData['badwords']))
+            $this->defData['badwords'] = null;
+        else {
+            $this->defData['badwords'] = (object)['list' => implode(',', $this->defData['badwords']['list']),
+                'status' => $this->defData['badwords']['status'],
+                'autoReject'=>$this->defData['badwords']['autoReject'],
+                'autoAccept'=>$this->defData['badwords']['autoAccept']
+            ];
+        }
         return view('Modules\Backend\Views\blog\badwordlist', $this->defData);
     }
 
     public function badwordsAdd()
     {
-        dd('badwordsAdd');
+        if ($this->commonModel->edit('settings',
+            ['content' => json_encode(['status' => ($this->request->getPost('status') == "on") ? 1 : 0,
+                'autoReject' => ($this->request->getPost('autoReject') == "on") ? 1 : 0,
+                'autoAccept' => ($this->request->getPost('autoAccept') == "on") ? 1 : 0,
+                'list' => explode(',', $this->request->getPost('badwords'))],
+                JSON_UNESCAPED_UNICODE)],
+            ['option' => 'badwords']))
+            return redirect()->route('badwords')->with('message', "Bad word list updated.");
+        else return redirect()->back()->withInput()->with('error',
+            "Bad word list cannot updated. Please try again or check logs.");
     }
 }
