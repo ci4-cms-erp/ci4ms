@@ -148,7 +148,7 @@ class CommonLibrary
     {
         $pattern = '/\b(' . implode('|', $badwordsList) . ')\b/i';
         if ($autoReject === true && (bool)preg_match($pattern, $comment)) return false;
-        if($status && $autoReject){
+        if($status && $autoAccept){
             $comment = preg_replace($pattern, str_repeat('*', strlen('$0')), $comment);
             return $comment;
         }
