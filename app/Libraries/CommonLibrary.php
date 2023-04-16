@@ -147,7 +147,7 @@ class CommonLibrary
     public function commentBadwordFiltering(string $comment, array $badwordsList, bool $status = false, bool $autoReject = false,bool $autoAccept=false): bool|string
     {
         $pattern = '/\b(' . implode('|', $badwordsList) . ')\b/i';
-        if ($autoReject === true && (bool)preg_match($pattern, $comment)) return false;
+        if ($autoReject) return false;
         if($status && $autoAccept){
             $comment = preg_replace($pattern, str_repeat('*', strlen('$0')), $comment);
             return $comment;
