@@ -158,6 +158,7 @@ class Home extends BaseController
             $badwordFilterSettings = json_decode($this->commonModel->selectOne('settings',
                 ['option' => 'badwords'], 'content')->content);
             $checked = $this->commonLibrary->commentBadwordFiltering($this->request->getPost('comMessage'),
+                $badwordFilterSettings->list,
                 (bool)$badwordFilterSettings->status, (bool)$badwordFilterSettings->autoReject);
             if (is_bool($checked) && !$checked) return $this->fail('Lütfen kelimelerinize dikkat ediniz.');
             $data = ['blog_id' => $this->request->getPost('blog_id'), 'created_at' => date('Y-m-d H:i:s'),
