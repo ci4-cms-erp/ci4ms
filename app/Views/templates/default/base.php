@@ -12,6 +12,7 @@
     <link href="/templates/default/assets/node_modules/startbootstrap-modern-business/dist/css/styles.css" rel="stylesheet"/>
     <link href="/templates/default/assets/ci4ms.css" rel="stylesheet"/>
     <?= $this->renderSection('head') ?>
+    <?=(!empty($schema))?$schema:''?>
 </head>
 <body class="d-flex flex-column h-100">
 <main class="flex-shrink-0">
@@ -19,10 +20,10 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container px-5">
             <a class="navbar-brand" href="<?=route_to('/')?>">
-                <?php if (empty($logo->logo)):
-                    echo $logo->siteName;
+                <?php if (empty($settings->logo)):
+                    echo $settings->siteName;
                 else: ?>
-                    <img src="<?= $logo->logo ?>" alt="<?= $logo->siteName ?>" class="img-fluid">
+                    <img src="<?= $settings->logo ?>" alt="<?= $settings->siteName ?>" class="img-fluid">
                 <?php endif; ?>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -43,7 +44,7 @@
     <div class="container px-5">
         <div class="row align-items-center justify-content-between flex-column flex-sm-row">
             <div class="col-auto">
-                <div class="small m-0 text-white">Copyright &copy; <?=$logo->siteName.' '. date('Y')?> </div>
+                <div class="small m-0 text-white">Copyright &copy; <?=$settings->siteName.' '. date('Y')?> </div>
             </div>
             <div class="col-auto">
                 <a class="link-light small" href="#!">Privacy</a>
@@ -62,6 +63,5 @@
 <script src="<?= base_url("templates/default/assets/node_modules/jquery/dist/jquery.js")?>"></script>
 <script src="<?= base_url("templates/default/assets/ci4ms.js")?>"></script>
 <?= $this->renderSection('javascript') ?>
-<?=$schema?>
 </body>
 </html>

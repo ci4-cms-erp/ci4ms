@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Ci4msseoLibrary;
 use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\CLIRequest;
@@ -9,8 +10,6 @@ use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
-use Melbahja\Seo\Schema;
-use Melbahja\Seo\Schema\Thing;
 use CodeIgniter\API\ResponseTrait;
 
 /**
@@ -26,6 +25,7 @@ use CodeIgniter\API\ResponseTrait;
 abstract class BaseController extends Controller
 {
     use ResponseTrait;
+
     /**
      * Instance of the main Request object.
      *
@@ -51,6 +51,7 @@ abstract class BaseController extends Controller
     /*Ci4ms*/
     public $defData;
     public $commonModel;
+    public $ci4msseoLibrary;
 
     /**
      * Constructor.
@@ -63,24 +64,14 @@ abstract class BaseController extends Controller
         // Preload any models, libraries, etc, here.
 
         // E.g.: $this->session = \Config\Services::session();
-
-        $this->commonModel=new CommonModel();
-        $settings=$this->commonModel->selectOne('settings');
-        $this->defData = ['logo' => $settings,'settings'=>$settings,
-            'menus' =>$this->commonModel->lists('menu','*',[],'queue ASC')];
-        $this->defData['settings']->templateInfos=json_decode($this->defData['settings']->templateInfos);
-        $this->defData['settings']->templateInfos=(object)$this->defData['settings']->templateInfos;
-        $this->defData['settings']->socialNetwork=json_decode($this->defData['settings']->socialNetwork);
-        $this->defData['settings']->socialNetwork=(object)$this->defData['settings']->socialNetwork;
-        $this->defData['schema']=new Schema(
-            new Thing('Organization', [
-                'url'          => site_url(), //TODO: burada site linkleri mi olması gerekiyor araştır.
-                'logo'         => $this->defData['logo']->logo,
-                'contactPoint' => new Thing('ContactPoint', [
-                    'telephone' => $this->defData['settings']->companyPhone,
-                    'contactType' => 'customer service'
-                ])
-            ])
-        );
+        $this->commonModel = new CommonModel();
+        $this->ci4msseoLibrary=new Ci4msseoLibrary();
+        $settings = $this->commonModel->selectOne('settings');
+        $this->defData = ['settings' => $settings,
+            'menus' => $this->commonModel->lists('menu', '*', [], 'queue ASC')];
+        $this->defData['settings']->templateInfos = json_decode($this->defData['settings']->templateInfos);
+        $this->defData['settings']->templateInfos = (object)$this->defData['settings']->templateInfos;
+        $this->defData['settings']->socialNetwork = json_decode($this->defData['settings']->socialNetwork);
+        $this->defData['settings']->socialNetwork = (object)$this->defData['settings']->socialNetwork;
     }
 }

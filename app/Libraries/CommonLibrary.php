@@ -1,7 +1,6 @@
 <?php namespace App\Libraries;
 
 use ci4commonModel\Models\CommonModel;
-use Melbahja\Seo\MetaTags;
 use Modules\Backend\Config\Auth;
 use PHPMailer\PHPMailer\PHPMailer;
 
@@ -84,32 +83,6 @@ class CommonLibrary
         } catch (\App\Libraries\Exception $e) {
             return $mail->ErrorInfo;
         }
-    }
-
-    /**
-     * @param $title
-     * @param $description
-     * @param string $url
-     * @param array $metatags
-     * @param string $coverImage
-     * @return MetaTags
-     */
-    public function seo($title, $description, string $url, array $metatagsArray = [], string $coverImage = '')
-    {
-        $metatags = new MetaTags();
-        $metatags->title($title);
-        $metatags->description($description);
-        if (!empty($coverImage)) $metatags->image($coverImage);
-        if (is_array($metatagsArray['keywords']) && !empty($metatagsArray['keywords'])) {
-            $keywords = '';
-            foreach ($metatagsArray['keywords'] as $tag) {
-                $keywords .= $tag . ', ';
-            }
-            $metatags->meta('keywords', substr($keywords, 0, -2));
-        }
-        if (!empty($metatagsArray['author'])) $metatags->meta('author', $metatagsArray['author']);
-        $metatags->canonical(site_url($url));
-        return $metatags;
     }
 
     private function findFunction($string, $start, $end)

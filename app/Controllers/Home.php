@@ -32,7 +32,22 @@ class Home extends BaseController
                     $keywords[] = $keyword->value;
                 }
             }
-            $this->defData['seo'] = $this->commonLibrary->seo($this->defData['pageInfo']->title, $this->defData['pageInfo']->seo->description, $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['pageInfo']->seo->coverImage) ? $this->defData['pageInfo']->seo->coverImage : '');
+            $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['pageInfo']->title, $this->defData['pageInfo']->seo->description, $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['pageInfo']->seo->coverImage) ? $this->defData['pageInfo']->seo->coverImage : '');
+            $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('Organization', [
+                'url' => site_url(),
+                'logo' => $this->defData['settings']->logo,
+                'name' => $this->defData['settings']->siteName,
+                'children' => [
+                    'ContactPoint' =>
+                        [
+                            'ContactPoint' => [
+                                'telephone' => $this->defData['settings']->companyPhone,
+                                'contactType' => 'customer support'
+                            ]
+                        ]
+                ],
+                'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
+            ]);
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
         } else return show_404();
     }
@@ -45,7 +60,7 @@ class Home extends BaseController
 
     public function blog()
     {
-        $this->defData['seo'] = $this->commonLibrary->seo('Blog', 'blog listesi', 'blog', ['keywords' => ["value" => "blog listesi"]]);
+        $this->defData['seo'] = $this->ci4msseoLibrary->metaTags('Blog', 'blog listesi', 'blog', ['keywords' => ["value" => "blog listesi"]]);
         $itemsPerPage = 12;
         $paginator = new Paginator($this->commonModel->count('blog', ['isActive' => true]), $itemsPerPage, $this->request->uri->getSegment(2, 1), '/blog/(:num)');
         $paginator->setMaxPagesToShow(5);
@@ -59,6 +74,21 @@ class Home extends BaseController
             $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,sirname');
         }
         $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
+        $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('Organization', [
+            'url' => site_url(implode('/', $this->request->uri->getSegments())),
+            'logo' => $this->defData['settings']->logo,
+            'name' => $this->defData['settings']->siteName,
+            'children' => [
+                'ContactPoint' =>
+                    [
+                        'ContactPoint' => [
+                            'telephone' => $this->defData['settings']->companyPhone,
+                            'contactType' => 'customer support'
+                        ]
+                    ]
+            ],
+            'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
+        ]);
         return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
     }
 
@@ -82,8 +112,31 @@ class Home extends BaseController
             $this->defData['comments'] = $this->commonModel->lists('comments', '*', ['blog_id' => $this->defData['infos']->id], 'id ASC', 5);
             $this->defData['infos']->seo = json_decode($this->defData['infos']->seo);
             $this->defData['infos']->seo = (object)$this->defData['infos']->seo;
-            $this->defData['seo'] = $this->commonLibrary->seo($this->defData['infos']->title, $this->defData['infos']->seo->description, 'blog/' . $seflink, $metatags = ['keywords' => $keywords, 'author' => $this->defData['authorInfo']->firstname . ' ' . $this->defData['authorInfo']->sirname], $this->defData['infos']->seo->coverImage);
+            $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['infos']->title, $this->defData['infos']->seo->description, 'blog/' . $seflink, $metatags = ['keywords' => $keywords, 'author' => $this->defData['authorInfo']->firstname . ' ' . $this->defData['authorInfo']->sirname], $this->defData['infos']->seo->coverImage);
             $this->defData['categories'] = $this->commonModel->lists('categories');
+            $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('BlogPosting', [
+                'url' => site_url(implode('/', $this->request->uri->getSegments())),
+                'logo' => $this->defData['settings']->logo,
+                'name' => $this->defData['settings']->siteName,
+                'headline' => $this->defData['infos']->title,
+                'image' => $this->defData['infos']->seo->coverImage,
+                'description' => $this->defData['infos']->seo->description,
+                'datePublished' => $this->defData['infos']->created_at,
+                //'dateModified' => $this->defData['infos']->seo->description,
+                'children' => [
+                    'mainEntityOfPage' => [
+                        'WebPage' => []
+                    ],
+                    'ContactPoint' =>
+                        [
+                            'ContactPoint' => [
+                                'telephone' => $this->defData['settings']->companyPhone,
+                                'contactType' => 'customer support'
+                            ]
+                        ]
+                ],
+                'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
+            ]);
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/post', $this->defData);
         } else return show_404();
     }
