@@ -30,7 +30,7 @@ class Categories extends BaseController
     {
         $valData = (['title' => ['label' => 'Kategori Adı', 'rules' => 'required'], 'seflink' => ['label' => 'Kategori URL', 'rules' => 'required'],]);
         if (!empty($this->request->getPost('pageimg'))) {
-            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required|valid_url'];
+            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
             $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
             $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
         }
@@ -63,7 +63,7 @@ class Categories extends BaseController
     {
         $valData = (['title' => ['label' => 'Kategori Adı', 'rules' => 'required'], 'seflink' => ['label' => 'Kategori URL', 'rules' => 'required'],]);
         if (!empty($this->request->getPost('pageimg'))) {
-            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required|valid_url'];
+            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
             $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
             $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
         }

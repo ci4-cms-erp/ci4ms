@@ -57,7 +57,8 @@ class Filters extends BaseConfig
                 'backend/menu/queueMenuAjax',
                 'backend/menu/addMultipleMenu',
                 'backend/summary/summary_render',
-                'backend/settings/setTemplate'
+                'backend/settings/setTemplate',
+                'backend/settings/elfinderConvertWebp'
             ]],
             // 'invalidchars',
         ],

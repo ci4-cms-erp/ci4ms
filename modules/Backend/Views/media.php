@@ -60,12 +60,19 @@
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function () {
         $('#elfinder').elfinder(
+            // 1st Arg - options
             {
-                url: '/be-assets/plugins/elFinder/php/connector.minimal.php',  // connector URL (REQUIRED)
                 cssAutoLoad: [window.location.origin + '/be-assets/node_modules/elfinder-material-theme/Material/css/theme-gray.css'],
-                height: 768
+                baseUrl: 'uploads/media/',                    // Base URL to css/*, js/*
+                url: '/be-assets/plugins/elFinder/php/connector.minimal.php',  // connector URL (REQUIRED)
+                height: 768,
+                getFileCallback: function (file) {
+                    top.elfinder_callback(file);
+                    top.$.colorbox.close();
+                }
+                // , lang: 'ru'                    // language (OPTIONAL)
             }
-        );
-    });
+        ).elfinder('intance');
+    })
 </script>
 <?= $this->endSection() ?>

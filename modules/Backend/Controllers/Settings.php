@@ -32,6 +32,7 @@ class Settings extends BaseController
         $this->defData['whitelistLine'] = ($whitelistLine ?? '');
         $this->defData['whitelistUsername'] = ($whitelistUsername ?? '');
         $this->defData['mimes'] = Mimes::$mimes;
+        $this->defData['elfinderConvertWebp']=$this->commonModel->selectOne('settings',['option'=>'elfinderConvertWebp']);
         return view('Modules\Backend\Views\settings', $this->defData);
     }
 

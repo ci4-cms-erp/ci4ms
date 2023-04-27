@@ -45,7 +45,7 @@ class Pages extends BaseController
             'isActive' => ['label' => 'Yayın veya taslak', 'rules' => 'required']
         ]);
         if (!empty($this->request->getPost('pageimg'))) {
-            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required|valid_url'];
+            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
             $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
             $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
         }
@@ -93,7 +93,7 @@ class Pages extends BaseController
             'isActive' => ['label' => 'Yayın veya taslak', 'rules' => 'required']
         ]);
         if (!empty($this->request->getPost('pageimg'))) {
-            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required|valid_url'];
+            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
             $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
             $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
         }

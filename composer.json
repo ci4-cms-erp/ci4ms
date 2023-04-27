@@ -13,7 +13,9 @@
         "jasongrimes/paginator": "~1.0",
         "melbahja/seo": "^2.0",
         "bertugfahriozer/ci4commonmodel": "^1.0",
-        "phpoffice/phpspreadsheet": "^1.27"
+        "phpoffice/phpspreadsheet": "^1.27",
+        "studio-42/elfinder": "^2.1",
+        "rosell-dk/webp-convert": "^2.9"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",

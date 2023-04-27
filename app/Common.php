@@ -49,11 +49,19 @@ if(!function_exists('seflink')) {
     /**
      * @param $str
      * @param $options
+     * @example for $options
+     * array(
+     *   'delimiter' => '-',
+     *   'limit' => null,
+     *   'lowercase' => true,
+     *   'replacements' => array(),
+     *   'transliterate' => true
+     * )
      * @return string
      */
-    function seflink($str, $options = array())
+    function seflink(string $str, $options = array())
     {
-        $str = mb_convert_encoding((string)$str, 'UTF-8', mb_list_encodings());
+        $str = mb_convert_encoding($str, 'UTF-8', mb_list_encodings());
         $defaults = array(
             'delimiter' => '-',
             'limit' => null,

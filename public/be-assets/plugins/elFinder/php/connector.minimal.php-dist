@@ -39,9 +39,8 @@ ob_start();
 include($_SERVER['DOCUMENT_ROOT'] . '/index.php');
 ob_end_clean();
 $ci4ms = new \Modules\Backend\Libraries\AuthLibrary();
-if (!$ci4ms->check()) throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
-$request= \Config\Services::request();
 $commonModel = new \ci4commonModel\Models\CommonModel();
+if (!$ci4ms->check()) throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
 // ===============================================
 
 // // Enable FTP connector netmount
@@ -132,28 +131,26 @@ elFinder::$netDrivers['ftp'] = 'FTP';
  * Simple function to demonstrate how to control file access using "accessControl" callback.
  * This method will disable accessing files/folders starting from '.' (dot)
  *
- * @param string $attr attribute name (read|write|locked|hidden)
- * @param string $path absolute file path
- * @param string $data value of volume option `accessControlData`
- * @param object $volume elFinder volume driver object
- * @param bool|null $isDir path is directory (true: directory, false: file, null: unknown)
- * @param string $relpath file path relative to volume root directory started with directory separator
+ * @param  string    $attr    attribute name (read|write|locked|hidden)
+ * @param  string    $path    absolute file path
+ * @param  string    $data    value of volume option `accessControlData`
+ * @param  object    $volume  elFinder volume driver object
+ * @param  bool|null $isDir   path is directory (true: directory, false: file, null: unknown)
+ * @param  string    $relpath file path relative to volume root directory started with directory separator
  * @return bool|null
  **/
-function access($attr, $path, $data, $volume, $isDir, $relpath)
-{
-    $basename = basename($path);
-    return $basename[0] === '.'                  // if file/folder begins with '.' (dot)
-    && strlen($relpath) !== 1           // but with out volume root
-        ? !($attr == 'read' || $attr == 'write') // set read+write to false, other (locked+hidden) set to true
-        : null;                                 // else elFinder decide it itself
+function access($attr, $path, $data, $volume, $isDir, $relpath) {
+	$basename = basename($path);
+	return $basename[0] === '.'                  // if file/folder begins with '.' (dot)
+			 && strlen($relpath) !== 1           // but with out volume root
+		? !($attr == 'read' || $attr == 'write') // set read+write to false, other (locked+hidden) set to true
+		:  null;                                 // else elFinder decide it itself
 }
 
 
 // Documentation for connector options:
 // https://github.com/Studio-42/elFinder/wiki/Connector-configuration-options
 $allowedFiles = $commonModel->selectOne('settings', [], 'allowedFiles');
-$webpElfinder=$commonModel->selectOne('settings', ['option'=>'elfinderConvertWebp'],'content');
 $allowedFiles->allowedFiles = json_decode($allowedFiles->allowedFiles);
 $opts = array(
     // 'debug' => true,
@@ -168,8 +165,7 @@ $opts = array(
             'uploadDeny' => array('all'),                // All Mimetypes not allowed to upload
             'uploadAllow' => (array)$allowedFiles->allowedFiles, // Mimetype `image` and `text/plain` allowed to upload
             'uploadOrder' => array('deny', 'allow'),      // allowed Mimetype `image` and `text/plain` only
-            'accessControl' => 'access',                     // disable and hide dot starting files (OPTIONAL)
-            'dirrm'=>true
+            'accessControl' => 'access'                     // disable and hide dot starting files (OPTIONAL)
         ),
         // Trash volume
         array(
@@ -181,29 +177,80 @@ $opts = array(
             'uploadDeny' => array('all'),                // Recomend the same settings as the original volume that uses the trash
             'uploadAllow' => (array)$allowedFiles->allowedFiles, // Same as above
             'uploadOrder' => array('deny', 'allow'),      // Same as above
-            'accessControl' => 'access'                    // Same as above
+            'accessControl' => 'access',                    // Same as above
         ),
     )
 );
 
-// Convert WEBP format
-if ((bool)$webpElfinder===true && $request->getFileMultiple('upload')) {
-    $webp_converter = new \WebPConvert\WebPConvert();
-    foreach ($request->getFileMultiple('upload') as $file) {
-        $file_type = $file->getClientMimeType();
-        // Dosya uzantısı kontrolü ve dönüştürme
-        if ($file_type == 'image/gif' || $file_type == 'image/jpg' || $file_type == 'image/jpeg'
-            || $file_type == 'image/png' || $file_type == 'image/bmp') {
-            $file_name = $file->getName();
-            $file_tmp = $file->getTempName();
-            $file_path = ROOTPATH.'public/uploads/media/' . $file_name;
-            $filename = preg_replace('/\.(jpg|png|jpeg|gif|bmp)$/i', '', $file_name);
+// Elfinder nesnesi oluşturulur
+$elfinder = new elFinder($opts);
 
-            /*if (file_exists($file_path)){
-                unlink($file_path);
-            }*/
+// Dosya yükleme işlemi
+if (isset($_FILES['upload']['name'])) {
+    $filename = $_FILES['upload']['name'][0];
+    $tempPath = $_FILES['upload']['tmp_name'][0];
+    $type = $_FILES['upload']['type'][0];
 
-            $webp_converter->convert($file_tmp, 'uploads/media/' . seflink($filename) . '.webp', ['quality' => 80]);
+    // Dosya uzantısı kontrolü ve dönüştürme
+    if ($type == 'image/gif' || $type == 'image/jpg' || $type == 'image/jpeg'
+        || $type == 'image/png' || $type == 'image/bmp') {
+        // Dosya isminin sonundaki ".jpg" veya ".png" kısmını silme
+        $filename = preg_replace('/\.(jpg|png|jpeg|gif|bmp)$/i', '', $filename);
+
+        $destination = 'uploads/media/' . $filename;
+        move_uploaded_file($tempPath, $destination);
+
+        // GD kütüphanesi kullanarak resmi WebP formatına dönüştürme
+        $img = null;
+        $file_type = exif_imagetype($destination);
+        switch ($file_type) {
+            case IMAGETYPE_GIF:
+                $img = imagecreatefromgif($destination);
+                break;
+            case IMAGETYPE_JPEG:
+                $img = imagecreatefromjpeg($destination);
+                break;
+            case IMAGETYPE_PNG:
+                $img = imagecreatefrompng($destination);
+                imagepalettetotruecolor($img);
+                imagealphablending($img, true);
+                imagesavealpha($img, true);
+                break;
+            case IMAGETYPE_BMP:
+                $img = imagecreatefrombmp($destination);
+                break;
+            default:
+                break;
+        }
+
+        if ($img) {
+            imagewebp($img, $destination.'.webp');
+            unlink($destination);
+
+            // WebP dosyasına yeniden adlandırma
+            $filename = $filename . '.webp';
+            $destination = 'uploads/media/' . $filename;
+
+            // WebP dosyasını elFinder'a gönderme
+            $response = [
+                'changed' => [],
+                'added' => [
+                    [
+                        'name' => $filename,
+                        'hash' => md5($filename),
+                        'changed' => time(),
+                        'mime' => 'image/webp',
+                        'size' => filesize($destination),
+                        'url'  => 'uploads/media/' . $filename
+                    ]
+                ],
+                'removed'=>[]
+            ];
+
+            // WebP dosyasının bilgilerini elFinder'a gönderme
+            header('Content-type: application/json');
+            echo json_encode($response);
+            exit;
         }
     }
 }

@@ -198,7 +198,7 @@
 			info : {
 				id: 'tuiimgedit',
 				name: 'TUI Image Editor',
-				iconImg: '/be-assets/plugins/elFinder/img/editor-icons.png 0 -48',
+				iconImg: 'img/editor-icons.png 0 -48',
 				dataScheme: true,
 				schemeContent: true,
 				openMaximized: true,
@@ -218,9 +218,9 @@
 					this.disabled = true;
 				} else {
 					this.opts = Object.assign({
-						version: 'v3.14.3'
+						version: 'v3.15.2'
 					}, opts.extraOptions.tuiImgEditOpts || {}, {
-						iconsPath : '/be-assets/plugins/elFinder/img/tui-',
+						iconsPath : fm.baseUrl + 'img/tui-',
 						theme : {}
 					});
 					if (!fm.isSameOrigin(this.opts.iconsPath)) {
@@ -255,20 +255,7 @@
 										path: $base.data('url'),
 										name: self.file.name
 									},
-									theme: Object.assign(opts.theme, {
-										'menu.normalIcon.path': iconsPath + 'icon-d.svg',
-										'menu.normalIcon.name': 'icon-d',
-										'menu.activeIcon.path': iconsPath + 'icon-b.svg',
-										'menu.activeIcon.name': 'icon-b',
-										'menu.disabledIcon.path': iconsPath + 'icon-a.svg',
-										'menu.disabledIcon.name': 'icon-a',
-										'menu.hoverIcon.path': iconsPath + 'icon-c.svg',
-										'menu.hoverIcon.name': 'icon-c',
-										'submenu.normalIcon.path': iconsPath + 'icon-d.svg',
-										'submenu.normalIcon.name': 'icon-d',
-										'submenu.activeIcon.path': iconsPath + 'icon-c.svg',
-										'submenu.activeIcon.name': 'icon-c'
-									}),
+									theme: opts.theme,
 									initMenu: 'filter',
 									menuBarPosition: 'bottom'
 								},
@@ -283,7 +270,7 @@
 										w = parseInt(c.attr('width')),
 										h = parseInt(c.attr('height')),
 										a = w / h,
-										mw, mh;
+										z, mw, mh;
 									if (v === 0) {
 										mw = w;
 										mh = h;
@@ -295,7 +282,16 @@
 											mh = h;
 										}
 									}
-									per.text(Math.round(mw / w * 100) + '%');
+									z = Math.round(mw / w * 100);
+									// Control zoom button of TUI Image Editor
+									if (z < 100) {
+										iEditor.resetZoom();
+										iEditor.stopDrawingMode();
+										tuiZoomCtrls.hide();
+									} else {
+										tuiZoomCtrls.show();
+									}
+									per.text(z + '%');
 									iEditor.resizeCanvasDimension({width: mw, height: mh});
 									// continually change more
 									if (zoomMore) {
@@ -308,6 +304,7 @@
 							zup = $('<span class="ui-icon ui-icon-plusthick"></span>').data('val', 10),
 							zdown = $('<span class="ui-icon ui-icon-minusthick"></span>').data('val', -10),
 							per = $('<button></button>').css('width', '4em').text('%').attr('title', '100%').data('val', 0),
+							tuiZoomCtrls,
 							quty, qutyTm, zoomTm, zoomMore;
 
 						tmpContainer.remove();
@@ -372,6 +369,8 @@
 									quty.trigger('change');
 								});
 							}
+							// ZOOM controls of TUI Image Editor
+							tuiZoomCtrls = $base.find('.tie-btn-zoomIn,.tie-btn-zoomOut,.tie-btn-hand');
 							// show initial scale
 							zoom(null);
 						}, 100);
@@ -473,7 +472,7 @@
 			info : {
 				id : 'photopea',
 				name : 'Photopea',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 -160',
+				iconImg : 'img/editor-icons.png 0 -160',
 				single: true,
 				noContent: true,
 				arrayBufferContent: true,
@@ -691,7 +690,7 @@
 			info : {
 				id : 'pixo',
 				name : 'Pixo Editor',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 -208',
+				iconImg : 'img/editor-icons.png 0 -208',
 				dataScheme: true,
 				schemeContent: true,
 				single: true,
@@ -900,7 +899,7 @@
 			info : {
 				id : 'aceeditor',
 				name : 'ACE Editor',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 -96'
+				iconImg : 'img/editor-icons.png 0 -96'
 			},
 			load : function(textarea) {
 				var self = this,
@@ -1105,7 +1104,7 @@
 			info : {
 				id : 'codemirror',
 				name : 'CodeMirror',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 -176'
+				iconImg : 'img/editor-icons.png 0 -176'
 			},
 			load : function(textarea) {
 				var fm = this.fm,
@@ -1261,7 +1260,7 @@
 			info : {
 				id : 'simplemde',
 				name : 'SimpleMDE',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 -80'
+				iconImg : 'img/editor-icons.png 0 -80'
 			},
 			exts  : ['md'],
 			load : function(textarea) {
@@ -1357,7 +1356,7 @@
 			info : {
 				id : 'ckeditor',
 				name : 'CKEditor',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 0'
+				iconImg : 'img/editor-icons.png 0 0'
 			},
 			exts  : ['htm', 'html', 'xhtml'],
 			setup : function(opts, fm) {
@@ -1478,7 +1477,7 @@
 			info : {
 				id : 'ckeditor5',
 				name : 'CKEditor5',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 -16'
+				iconImg : 'img/editor-icons.png 0 -16'
 			},
 			exts : ['htm', 'html', 'xhtml'],
 			html : '<div class="edit-editor-ckeditor5"></div>',
@@ -1772,7 +1771,7 @@
 			info : {
 				id : 'tinymce',
 				name : 'TinyMCE',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 -64'
+				iconImg : 'img/editor-icons.png 0 -64'
 			},
 			exts  : ['htm', 'html', 'xhtml'],
 			setup : function(opts, fm) {
@@ -2014,7 +2013,7 @@
 			info : {
 				id : 'zohoeditor',
 				name : 'Zoho Editor',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 -32',
+				iconImg : 'img/editor-icons.png 0 -32',
 				cmdCheck : 'ZohoOffice',
 				preventGet: true,
 				hideButtons: true,
@@ -2144,7 +2143,7 @@
 			info : {
 				id : 'ziparchive',
 				name : 'btnMount',
-				iconImg : '/be-assets/plugins/elFinder/img/toolbar.png 0 -416',
+				iconImg : 'img/toolbar.png 0 -416',
 				cmdCheck : 'ZipArchive',
 				edit : function(file, editor) {
 					var fm = this,
@@ -2213,7 +2212,7 @@
 			info : {
 				id : 'onlineconvert',
 				name : 'Online Convert',
-				iconImg : '/be-assets/plugins/elFinder/img/editor-icons.png 0 -144',
+				iconImg : 'img/editor-icons.png 0 -144',
 				cmdCheck : 'OnlineConvert',
 				preventGet: true,
 				hideButtons: true,

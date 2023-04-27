@@ -49,7 +49,7 @@ class Home extends BaseController
                 'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
             ]);
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
-        } else return show_404();
+        } /*else return show_404();*/
     }
 
     public function maintenanceMode()

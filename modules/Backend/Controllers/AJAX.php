@@ -107,4 +107,19 @@ class AJAX extends BaseController
                 return $this->fail(['pr' => false]);
         } else redirect('403');
     }
+
+    public function elfinderConvertWebp()
+    {
+        if ($this->request->isAJAX()) {
+            $valData = ([
+                'id' => ['label' => 'id', 'rules' => 'required'],
+                'isActive' => ['label' => 'isActive', 'rules' => 'required']
+            ]);
+            if ($this->validate($valData) == false) return redirect('403');
+            if ($this->commonModel->edit('settings', ['content' => (int)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
+                return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
+            else
+                return $this->fail(['pr' => false]);
+        } else redirect('403');
+    }
 }
