@@ -14,7 +14,6 @@ class UserController extends BaseController
      * @var UserscrudModel
      */
     protected $userModel;
-    protected $yandexMail;
 
     /**
      *
@@ -51,7 +50,6 @@ class UserController extends BaseController
     {
         $this->defData['groups'] = $this->commonModel->lists('auth_groups');
         $this->defData['authLib'] = $this->authLib;
-
         return view('Modules\Backend\Views\usersCrud\createUser', $this->defData);
     }
 
@@ -168,7 +166,6 @@ class UserController extends BaseController
         if ($this->request->getPost('password')) $data['password_hash'] = $this->authLib->setPassword($this->request->getPost('password'));
 
         $result = (string)$this->commonModel->edit('users', $data,['id' => $id]);
-
         if ((bool)$result == false) return redirect()->back()->withInput()->with('error', 'Kullanıcı oluşturulamadı.');
         else return redirect()->route('officeWorker', [1])->with('message', 'Üyelik Güncellendi.');
     }

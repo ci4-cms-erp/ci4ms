@@ -117,6 +117,10 @@ class PermgroupController extends BaseController
             }
             $this->commonModel->remove('auth_groups_permissions',['group_id'=>$id]);
             $result = $this->commonModel->createMany('auth_groups_permissions', $data);
+            $userIds=$this->commonModel->lists('users','id',['group_id'=>$id]);
+            foreach ($userIds as $userId) {
+                cache()->delete("{$userId}_permissions");
+            }
             if ((bool)$result == false) return redirect()->back()->withInput()->with('error', 'Grup Yetkileri eklenemedi.');
             else return redirect()->route('groupList',[1])->with('message', '<b>' . $this->request->getPost('groupName') . '</b> adlı grup ve yetkileri başarıyla eklendi.');
         } else
@@ -155,8 +159,8 @@ class PermgroupController extends BaseController
             ];
         }
         $result=false;
-        if($this->commonModel->remove('auth_users_permissions',['user_id'=>$id]))
-            $result = $this->commonModel->createMany('auth_users_permissions', $data);
+        if($this->commonModel->remove('auth_users_permissions',['user_id'=>$id])) $result = $this->commonModel->createMany('auth_users_permissions', $data);
+        cache()->delete("{$id}_permissions");
         if ((bool)$result == false)
             return redirect()->back()->withInput()->with('error', 'Kullanıcı Yetkileri eklenemedi.');
         else
