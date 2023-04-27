@@ -206,7 +206,7 @@ class Settings extends BaseController
                     'name' => $this->request->getPost('name')],JSON_UNESCAPED_UNICODE)],
                 ['id' => $this->defData['settings']->id])) return $this->response->setJSON(['result' => true]);
             else return $this->response->setJSON(['result' => false]);
-        } else redirect()->route('403');
+        } else return $this->failForbidden();
     }
 
     /**

@@ -254,7 +254,7 @@ class UserController extends BaseController
             else $result = ['result' => true, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteye eklenemedi.']];
 
             return $this->respond($result,200);
-        }
+        } else return $this->failForbidden();
     }
 
     public function ajax_remove_from_blackList_post()
@@ -287,7 +287,7 @@ class UserController extends BaseController
                 $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteden çıkarılamadı.']];
 
             return $this->response->setJSON($result);
-        }
+        } else return $this->failForbidden();
     }
 
     public function ajax_force_reset_password()
@@ -313,6 +313,6 @@ class UserController extends BaseController
             } else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => 'Şifre sıfırlama isteği gerçekleştirilemedi.']];
 
             return $this->response->setJSON($result);
-        }
+        } else return $this->failForbidden();
     }
 }

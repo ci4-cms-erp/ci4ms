@@ -190,7 +190,7 @@ class Blog extends BaseController
 
     public function commentResponse()
     {
-        if (!$this->request->isAJAX()) return $this->respond(['message' => 'Not Found data'], 204);
+        if (!$this->request->isAJAX()) return $this->failForbidden();
         $data = clearFilter($this->request->getPost());
         $like = $data['search']['value'] ?? '';
         $searchData = ['isApproved' => $this->request->getPost('isApproved') == 'true' ? true : false];

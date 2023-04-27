@@ -39,7 +39,7 @@ class Menu extends BaseController
             }
             if ($this->commonModel->create('menu', $data))
                 return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
-        } else $this->respond('403', 403);
+        } else $this->failForbidden();
     }
 
     public function addMultipleMenu()
@@ -62,7 +62,7 @@ class Menu extends BaseController
                 $this->commonModel->create('menu', $data);
             }
             return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
-        } else return $this->respond('403', 403);
+        } else return $this->failForbidden();
     }
 
     public function delete_ajax()
@@ -82,7 +82,7 @@ class Menu extends BaseController
             if(!empty($getData->parent) && $this->commonModel->isHave('menu',['parent'=>(int)$getData->parent])===0) $this->commonModel->edit('menu',['hasChildren'=>false],['id'=>$getData->parent]);
             $this->commonModel->edit($type,['inMenu'=>0],['id'=>$getData->pages_id]);
             return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
-        } else return $this->respond('403', 403);
+        } else return $this->failForbidden();
     }
 
     private function queue($menu, $parent = null)
@@ -105,7 +105,7 @@ class Menu extends BaseController
         if ($this->request->isAJAX()) {
             $this->queue($this->request->getPost('queue'));
             return view('Modules\Backend\Views\menu\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
-        } else $this->respond('403', 403);
+        } else $this->failForbidden();
     }
 
     public function listURLs()

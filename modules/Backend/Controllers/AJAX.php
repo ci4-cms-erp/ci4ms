@@ -45,7 +45,7 @@ class AJAX extends BaseController
                 $result[] = ['id' => (string)$item->id, 'value' => $item->tag];
             }
             return $this->response->setJSON($result);
-        } else return redirect('403');
+        } else return $this->failForbidden();
     }
 
     /**
@@ -69,7 +69,7 @@ class AJAX extends BaseController
                     if ($this->commonModel->isHave($this->request->getPost('where'), ['seflink' => $new_link]) === 0) return $this->respond(['seflink' => $new_link], 200);
                 }
             }
-        } else return redirect('403');
+        } else return $this->failForbidden();
     }
 
     /**
@@ -90,7 +90,7 @@ class AJAX extends BaseController
                 return $this->respond(['result' => true], 200);
             else
                 return $this->fail(['result' => false]);
-        } else redirect('403');
+        } else return $this->failForbidden();
     }
 
     public function maintenance()
@@ -105,7 +105,7 @@ class AJAX extends BaseController
                 return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
             else
                 return $this->fail(['pr' => false]);
-        } else redirect('403');
+        } else return $this->failForbidden();
     }
 
     public function elfinderConvertWebp()
@@ -120,6 +120,6 @@ class AJAX extends BaseController
                 return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
             else
                 return $this->fail(['pr' => false]);
-        } else redirect('403');
+        } else return $this->failForbidden();
     }
 }
