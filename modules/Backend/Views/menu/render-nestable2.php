@@ -1,3 +1,3 @@
 <ol class="dd-list">
-<?php if (!empty($nestable2)) menu($nestable2); ?>
+<?php if (!empty($nestable2)) nestable($nestable2); ?>
 </ol>

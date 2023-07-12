@@ -104,7 +104,7 @@
                 <div class="col-md-6">
                     <div class="dd">
                         <ol class="dd-list">
-                        <?php if (!empty($nestable2)) menu($nestable2); ?>
+                        <?php if (!empty($nestable2)) nestable($nestable2); ?>
                         </ol>
                     </div>
                     <button class="btn btn-success float-right" onclick="saveMenu()"><?=lang('Backend.save')?></button>
