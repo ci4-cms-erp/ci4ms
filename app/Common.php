@@ -184,34 +184,24 @@ if(!function_exists('seflink')) {
     }
 }
 
-if (!function_exists('navigationWidget')) {
-    /**
-     * Bootstrap 5 dropdown used.
-     * @param array $menus
-     * @param $parent
-     * @param string $class
-     * @return void
-     */
-    function navigationWidget(array $menus, $parent = null, string $class='nav-link')
+if(!function_exists('menu')) {
+    function menu($kategori, $parent = null)
     {
-        foreach ($menus as $menu) {
+        foreach ($kategori as $menu) {
             if ($menu->parent == $parent) {
-                echo '<li class="nav-item ';
-                if ((bool)$menu->hasChildren === true) {
-                    echo "dropdown";
-                    $class.=' dropdown-toggle';
-                }
-                echo '"><a class="'.$class.'" href="';
-                if($menu->urlType==='url') echo $menu->seflink;
-                else echo site_url($menu->seflink);
-                echo '"';
+                echo '<li class="';
+                if (empty($menu->parent)) echo 'nav-item';
+                if ((bool)$menu->hasChildren === true) echo ' dropdown';
+                echo '">';
+                echo '<a class="';
+                if (empty($menu->parent)) echo 'nav-link';
+                else echo 'dropdown-item';
+                if ((bool)$menu->hasChildren === true) echo ' dropdown-toggle';
+                echo '" href="' . site_url($menu->seflink) . '"';
                 if ((bool)$menu->hasChildren === true) echo ' role="button" data-bs-toggle="dropdown" aria-expanded="false"';
-                echo '>'.$menu->title.'</a>';
-                if ((bool)$menu->hasChildren === true) {
-                    echo '<ul class="dropdown-menu">';
-                    $class='dropdown-item';
-                }
-                navigationWidget($menus, $menu->id,$class);
+                echo '>' . $menu->title . '</a>';
+                if ((bool)$menu->hasChildren === true) echo '<ul class="dropdown-menu dropdown-menu-end">';
+                menu($kategori, $menu->id);
                 if ((bool)$menu->hasChildren === true) echo '</ul>';
                 echo '</li>';
             }
