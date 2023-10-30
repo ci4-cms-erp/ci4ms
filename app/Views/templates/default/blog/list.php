@@ -14,6 +14,24 @@
                 endif; ?>
             </h1>
         </div>
+        <!--TODO: burayı dinamik hale getirmek gerekiyor. blog modülü için dinamik halde olursa güzel olur.-->
+        <div onload=""></div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <?php foreach ($breadcrumbs as $breadcrumb) { ?>
+                    <li class="breadcrumb-item <?= (empty($breadcrumb['url'])) ? 'active' : '' ?>"
+                        <?= (empty($breadcrumb['url'])) ? 'aria-current="page"' : '' ?>>
+                        <?php if (empty($breadcrumb['url'])) { ?>
+                            <?= $breadcrumb['title'] ?>
+                        <?php } else { ?>
+                            <a href="<?= site_url($breadcrumb['url']) ?>">
+                                <?= $breadcrumb['title'] ?>
+                            </a>
+                        <?php } ?>
+                    </li>
+                <?php } ?>
+            </ol>
+        </nav>
     </div>
 </header>
 <section class="py-5">

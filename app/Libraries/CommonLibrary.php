@@ -117,6 +117,8 @@ class CommonLibrary
         return str_replace(array_keys($functions), $data, $string);
     }
 
+    /*TODO: buraya blog controllerınun yapacağı işleri fonksiyonlayarak çağırılmasını sağlayacağız. conroller dururken pages kısmına eklenen sayfalar içinde fonksiyonlar ile çağırılacak.*/
+
     public function commentBadwordFiltering(string $comment, array $badwordsList, bool $status = false, bool $autoReject = false,bool $autoAccept=false): bool|string
     {
         $pattern = '/\b(' . implode('|', $badwordsList) . ')\b/i';
@@ -128,5 +130,47 @@ class CommonLibrary
         if ($status) return preg_replace($pattern, str_repeat('*', strlen('$0')), $comment);
         if ($autoAccept) return $comment;
         return false;
+    }
+
+    public function get_breadcrumbs(mixed $page_id)
+    {
+        $menus=(object)cache('menus');
+        $homepage = array_filter((array) $menus, function($menu) {
+            return $menu->seflink == '/';
+        });
+        $homepage = reset($homepage);
+        if(is_integer($page_id))
+            $current_page = array_filter((array) $menus, function($menu) use($page_id) {
+                return $menu->pages_id == $page_id;
+            });
+        if(is_string($page_id))
+            $current_page = array_filter((array) $menus, function($menu) use($page_id) {
+                return $menu->seflink == $page_id;
+            });
+        $current_page = reset($current_page);
+        // Mevcut sayfa veya anasayfa boş ise breadcrumb'ları boş döndürün
+        if (!$current_page || !$homepage) return array();
+
+        $breadcrumbs = array();
+
+        // Anasayfayı breadcrumb'lar dizisinin başına ekleyin
+        array_unshift($breadcrumbs, ['title' => $homepage->title, 'url' => $homepage->seflink]);
+        $tmpCurrentPage=$current_page;
+        // Sayfanın mevcut parent_id'si olana kadar döngüye girin ve breadcrumb'ları diziye ekleyin
+        while ($tmpCurrentPage->parent) {
+            $parent_pages = array_filter((array) $menus, function($menu) use($tmpCurrentPage) {
+                return $menu->id == $tmpCurrentPage->parent && $menu->seflink != '/';
+            });
+            $parent_page = reset($parent_pages);
+
+            if ($parent_page) {
+                array_push($breadcrumbs, ['title' => $parent_page->title, 'url' => $parent_page->seflink]);
+                $tmpCurrentPage = $parent_page;
+            }
+        }
+        // Son olarak, mevcut sayfanın bileşenlerini de breadcrumb'lar dizisine ekleyin
+        array_push($breadcrumbs, ['title' => $current_page->title, 'url' =>'']);
+
+        return $breadcrumbs;
     }
 }

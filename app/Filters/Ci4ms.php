@@ -8,6 +8,14 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class Ci4ms implements FilterInterface
 {
+
+    protected $commonModel;
+
+    public function __construct()
+    {
+        $this->commonModel = new CommonModel();
+    }
+
     /**
      * Do whatever processing this filter needs to do.
      * By default it should not return anything during
@@ -25,8 +33,7 @@ class Ci4ms implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
-        $commonModel = new CommonModel();
-        $settings=$commonModel->selectOne('settings');
+        $settings=$this->commonModel->selectOne('settings');
         if((bool)$settings->maintenanceMode===true) return redirect()->route('maintenance-mode');
     }
 
@@ -44,6 +51,6 @@ class Ci4ms implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        //
+        if(empty(cache('menus'))) cache()->save('menus',$this->commonModel->lists('menu','id,title,seflink,parent,pages_id'),86400);
     }
 }

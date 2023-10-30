@@ -59,20 +59,61 @@
 <?= script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js") ?>
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function () {
-        $('#elfinder').elfinder(
-            // 1st Arg - options
-            {
-                cssAutoLoad: [window.location.origin + '/be-assets/node_modules/elfinder-material-theme/Material/css/theme-gray.css'],
-                baseUrl: 'uploads/media/',                    // Base URL to css/*, js/*
-                url: '/be-assets/plugins/elFinder/php/connector.minimal.php',  // connector URL (REQUIRED)
-                height: 768,
-                getFileCallback: function (file) {
-                    top.elfinder_callback(file);
-                    top.$.colorbox.close();
-                }
-                // , lang: 'ru'                    // language (OPTIONAL)
-            }
-        ).elfinder('intance');
+        var i18nPath = '/be-assets/plugins/elFinder/js/i18n',
+            start = function (lng) {
+                $().ready(function () {
+                    var elf = $('#elfinder').elfinder(
+                        // 1st Arg - options
+                        {
+                            cssAutoLoad: [window.location.origin + '/be-assets/node_modules/elfinder-material-theme/Material/css/theme-gray.css'],
+                            baseUrl: 'uploads/media/',                    // Base URL to css/*, js/*
+                            url: '/backend/media/elfinderConnection',  // connector URL (REQUIRED)
+                            height: 768,
+                            getFileCallback: function (file) {
+                                top.elfinder_callback(file);
+                                top.$.colorbox.close();
+                            },
+                            soundPath: '/be-assets/plugins/elFinder/sounds',
+                            sync: 1000,
+                            handlers: {
+                                upload: function () {
+                                    $('.elfinder-dialog-error').hide();
+                                }
+                            }
+                        }
+                    ).elfinder('intance');
+                });
+            },
+            loct = window.location.search,
+            full_lng, locm, lng;
+
+        // detect language
+        if (loct && (locm = loct.match(/lang=([a-zA-Z_-]+)/))) {
+            full_lng = locm[1];
+        } else {
+            full_lng = (navigator.browserLanguage || navigator.language || navigator.userLanguage);
+        }
+        lng = full_lng.substr(0, 2);
+        if (lng == 'ja') lng = 'jp';
+        else if (lng == 'pt') lng = 'pt_BR';
+        else if (lng == 'zh') lng = (full_lng.substr(0, 5) == 'zh-tw') ? 'zh_TW' : 'zh_CN';
+
+        if (lng != 'en') {
+            $.ajax({
+                url: i18nPath + '/elfinder.' + lng + '.js',
+                cache: true,
+                dataType: 'script'
+            })
+                .done(function () {
+                    start(lng);
+                })
+                .fail(function () {
+                    start('en');
+                });
+        } else {
+            start(lng);
+        }
+
     })
 </script>
 <?= $this->endSection() ?>

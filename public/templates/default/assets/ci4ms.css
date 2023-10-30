@@ -1,3 +1,7 @@
 .dropdown-hover-all .dropdown-menu, .dropdown-hover > .dropdown-menu.dropend {
     margin-left: -1px !important
 }
+
+.navbar-brand img{
+    height:50px !important;
+}

@@ -32,7 +32,7 @@ class Home extends BaseController
                     $keywords[] = $keyword->value;
                 }
             }
-            $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['pageInfo']->title, $this->defData['pageInfo']->seo->description, $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['pageInfo']->seo->coverImage) ? $this->defData['pageInfo']->seo->coverImage : '');
+            $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['pageInfo']->title, (!empty($this->defData['pageInfo']->seo->description))?$this->defData['pageInfo']->seo->description:'', $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['pageInfo']->seo->coverImage) ? $this->defData['pageInfo']->seo->coverImage : '');
             $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('Organization', [
                 'url' => site_url(),
                 'logo' => $this->defData['settings']->logo,
@@ -48,8 +48,9 @@ class Home extends BaseController
                 ],
                 'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
             ]);
+            if($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs($this->defData['pageInfo']->id);
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
-        } /*else return show_404();*/
+        } else return show_404();
     }
 
     public function maintenanceMode()
@@ -89,6 +90,7 @@ class Home extends BaseController
             ],
             'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
         ]);
+        $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs('/blog/1');
         return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
     }
 

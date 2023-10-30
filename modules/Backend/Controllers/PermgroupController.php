@@ -119,7 +119,7 @@ class PermgroupController extends BaseController
             $result = $this->commonModel->createMany('auth_groups_permissions', $data);
             $userIds=$this->commonModel->lists('users','id',['group_id'=>$id]);
             foreach ($userIds as $userId) {
-                cache()->delete("{$userId}_permissions");
+                cache()->delete("{$userId->id}_permissions");
             }
             if ((bool)$result == false) return redirect()->back()->withInput()->with('error', 'Grup Yetkileri eklenemedi.');
             else return redirect()->route('groupList',[1])->with('message', '<b>' . $this->request->getPost('groupName') . '</b> adlı grup ve yetkileri başarıyla eklendi.');

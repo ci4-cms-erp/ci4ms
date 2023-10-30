@@ -73,8 +73,10 @@
                         foreach ($navigation as $nav) :
                             $p = null;
                             foreach ($navigation as $item) {
-                                if ($item->sefLink!='profile' && $item->sefLink === $uri)
+                                if ($item->sefLink!='profile' && $item->sefLink === $uri) {
                                     $p = $item;
+                                    break;
+                                }
                             }
                             if ($nav->parent_pk == $child) : ?>
                                 <li class="nav-item <?= (!empty($p) && $p->parent_pk == $nav->id) ? 'menu-is-opening menu-open' : '' ?>">

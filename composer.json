@@ -1,12 +1,17 @@
 {
     "name": "codeigniter4/appstarter",
-    "type": "project",
     "description": "CodeIgniter4 starter app",
-    "homepage": "https://codeigniter.com",
     "license": "MIT",
+    "type": "project",
+    "homepage": "https://codeigniter.com",
+    "support": {
+        "forum": "https://forum.codeigniter.com/",
+        "source": "https://github.com/codeigniter4/CodeIgniter4",
+        "slack": "https://codeigniterchat.slack.com"
+    },
     "require": {
         "php": "^7.4 || ^8.0",
-        "codeigniter4/framework": "4.3.1",
+        "codeigniter4/framework": "4.4.3",
         "codeigniter4/translations": "^4.1",
         "gregwar/captcha": "1.*",
         "phpmailer/phpmailer": "^6.4",
@@ -14,16 +19,13 @@
         "melbahja/seo": "^2.0",
         "bertugfahriozer/ci4commonmodel": "^1.0",
         "phpoffice/phpspreadsheet": "^1.27",
-        "studio-42/elfinder": "^2.1",
-        "rosell-dk/webp-convert": "^2.9"
+        "studio-42/elfinder": "2.1.62",
+        "claviska/simpleimage": "4.0.6"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",
         "mikey179/vfsstream": "^1.6",
         "phpunit/phpunit": "^9.1"
-    },
-    "suggest": {
-        "ext-fileinfo": "Improves mime type detection for files"
     },
     "autoload": {
         "exclude-from-classmap": [
@@ -35,17 +37,12 @@
             "Tests\\Support\\": "tests/_support"
         }
     },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
     "scripts": {
         "test": "phpunit"
-    },
-    "support": {
-        "forum": "https://forum.codeigniter.com/",
-        "source": "https://github.com/codeigniter4/CodeIgniter4",
-        "slack": "https://codeigniterchat.slack.com"
-    },
-    "config": {
-        "allow-plugins": {
-            "phpstan/extension-installer": true
-        }
     }
 }
