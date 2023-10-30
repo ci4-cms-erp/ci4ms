@@ -2,13 +2,14 @@
 
 namespace Config;
 
+use CodeIgniter\Router\RouteCollection;
 use ci4commonmodel\Models\CommonModel;
 
 $commonModel = new CommonModel();
 $activeTemplate=$commonModel->selectOne('settings',[],'templateInfos');
-
-// Create a new instance of our RouteCollection class.
-$routes = Services::routes();
+/**
+ * @var RouteCollection $routes
+ */
 
 /*
  * --------------------------------------------------------------------

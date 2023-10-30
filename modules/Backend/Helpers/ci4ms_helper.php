@@ -1,12 +1,12 @@
 <?php
 
-if (!function_exists('menu')) {
+if (!function_exists('nestable')) {
     /**
      * @param $menus
      * @param $parent
      * @return void
      */
-    function menu($menus, $parent = null)
+    function nestable($menus, $parent = null)
     {
         foreach ($menus as $menu) {
             if ($menu->parent == $parent) {
@@ -29,7 +29,7 @@ if (!function_exists('menu')) {
                                     </div>
                                 </div>';
                 if ((bool)$menu->hasChildren === true) echo '<ol class="dd-list">';
-                menu($menus, $menu->id);
+                nestable($menus, $menu->id);
                 if ((bool)$menu->hasChildren === true) echo '</ol>';
                 echo '</li>';
             }

@@ -73,8 +73,10 @@
                         foreach ($navigation as $nav) :
                             $p = null;
                             foreach ($navigation as $item) {
-                                if ($item->sefLink!='profile' && $item->sefLink === $uri)
+                                if ($item->sefLink!='profile' && $item->sefLink === $uri) {
                                     $p = $item;
+                                    break;
+                                }
                             }
                             if ($nav->parent_pk == $child) : ?>
                                 <li class="nav-item <?= (!empty($p) && $p->parent_pk == $nav->id) ? 'menu-is-opening menu-open' : '' ?>">
@@ -98,6 +100,47 @@
                     }
 
                     navigation($navigation, $uri);
+
+                    /* TODO: optimize edilmek üzere denemeler.
+                     <?php
+
+function navigation($navigation, $uri, $child = null)
+{
+    $output = '';
+
+    foreach ($navigation as $nav) {
+        $p = null;
+
+        match($uri) {
+            default => $p = null,
+            $nav->sefLink !== 'profile' && $nav->sefLink === $uri => $p = $nav,
+        };
+
+        if ($nav->parent_pk == $child) {
+            $output .= '<li class="nav-item ' . (!empty($p) && $p->parent_pk == $nav->id ? 'menu-is-opening menu-open' : '') . '">';
+            $output .= '<a href="' . route_to(...explode('/', $nav->sefLink)) . '" class="nav-link ' . (!empty($p) && ($nav->sefLink == $uri || $p->parent_pk == $nav->id) ? 'active' : '') . '">';
+            $output .= '<i class="nav-icon ' . $nav->symbol . '"></i>';
+            $output .= '<p>' . (lang('Backend.'.$nav->pagename) ?? '') . ($nav->hasChild ? '<i class="right fas fa-angle-left"></i>' : '') . '</p>';
+            $output .= '</a>';
+
+            if ($nav->hasChild) {
+                $output .= '<ul class="nav nav-treeview">';
+                $output .= navigation($navigation, $uri, $nav->id);
+                $output .= '</ul>';
+            }
+
+            $output .= '</li>';
+        }
+    }
+
+    return $output;
+}
+
+echo navigation($navigation, $uri);
+
+?>
+
+                     */
                     ?>
                 </ul>
             </nav>

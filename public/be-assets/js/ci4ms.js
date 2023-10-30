@@ -1,6 +1,6 @@
 function pageImgelfinderDialog() {
     var fm = $('<div/>').dialogelfinder({
-        url: '/be-assets/plugins/elFinder/php/connector.minimal.php', // change with the url of your connector
+        url: '/backend/media/elfinderConnection', // change with the url of your connector
         lang: 'en',
         width: 1024,
         height: 768,
@@ -22,13 +22,20 @@ function pageImgelfinderDialog() {
                 folders: false,
                 multiple:false
             }
+        },
+        soundPath: '/be-assets/plugins/elFinder/sounds',
+        sync: 1000,
+        handlers: {
+            upload: function () {
+                $('.elfinder-dialog-error').hide();
+            }
         }
     }).dialogelfinder('instance');
 }
 
 function pageMultipleImgelfinderDialog(id) {
     var fm = $('<div/>').dialogelfinder({
-        url: '/be-assets/plugins/elFinder/php/connector.minimal.php', // change with the url of your connector
+        url: '/backend/media/elfinderConnection', // change with the url of your connector
         lang: 'en',
         width: '80%',
         height: 768,
@@ -49,6 +56,13 @@ function pageMultipleImgelfinderDialog(id) {
             getfile: {
                 oncomplete: 'close',
                 folders: false
+            }
+        },
+        soundPath: '/be-assets/plugins/elFinder/sounds',
+        sync: 1000,
+        handlers: {
+            upload: function () {
+                $('.elfinder-dialog-error').hide();
             }
         }
     }).dialogelfinder('instance');
@@ -74,7 +88,7 @@ $('.pageimg-input').change(function () {
 
 function elfinderDialog() {
     var fm = $('<div/>').dialogelfinder({
-        url: '/be-assets/plugins/elFinder/php/connector.minimal.php', // change with the url of your connector
+        url: '/backend/media/elfinderConnection', // change with the url of your connector
         lang: 'en',
         width: '100%',
         height: 768,
@@ -87,6 +101,13 @@ function elfinderDialog() {
             getfile: {
                 oncomplete: 'close',
                 folders: false
+            }
+        },
+        soundPath: '/be-assets/plugins/elFinder/sounds',
+        sync: 1000,
+        handlers: {
+            upload: function () {
+                $('.elfinder-dialog-error').hide();
             }
         }
     }).dialogelfinder('instance');

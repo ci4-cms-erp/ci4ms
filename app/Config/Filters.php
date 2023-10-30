@@ -35,30 +35,14 @@ class Filters extends BaseConfig
      */
     public array $globals = [
         'before' => [
-            // 'honeypot',
-            'csrf'=>['except' => [
-                'newComment',
-                'repliesComment',
-                'loadMoreComments',
-                'commentCaptcha',
-                'backend/officeWorker/blackList',
-                'backend/officeWorker/removeFromBlackList',
-                'backend/officeWorker/forceResetPassword',
-                'backend/menu/deleteMenuAjax',
-                'backend/menu/queueMenuAjax',
-                'backend/tagify',
-                'backend/checkSeflink',
-                'backend/isActive',
-                'backend/maintenance',
-                'backend/blogs/comments/commentResponse',
-                'backend/menu/createMenu',
-                'backend/menu/menuList',
-                'backend/menu/deleteMenuAjax',
-                'backend/menu/queueMenuAjax',
-                'backend/menu/addMultipleMenu',
-                'backend/summary/summary_render',
-                'backend/settings/setTemplate',
-                'backend/settings/elfinderConvertWebp'
+            'honeypot',
+            'csrf'=>['except' => ['newComment', 'repliesComment',
+                'loadMoreComments', 'commentCaptcha', 'backend/officeWorker/blackList', 'backend/officeWorker/removeFromBlackList',
+                'backend/officeWorker/forceResetPassword', 'backend/menu/deleteMenuAjax', 'backend/menu/queueMenuAjax', 'backend/tagify',
+                'backend/checkSeflink', 'backend/isActive', 'backend/maintenance', 'backend/blogs/comments/commentResponse',
+                'backend/menu/createMenu', 'backend/menu/menuList', 'backend/menu/deleteMenuAjax', 'backend/menu/queueMenuAjax',
+                'backend/menu/addMultipleMenu', 'backend/summary/summary_render', 'backend/settings/setTemplate',
+                'backend/settings/elfinderConvertWebp', 'backend/media/elfinderConnection',
             ]],
             // 'invalidchars',
         ],
@@ -93,5 +77,9 @@ class Filters extends BaseConfig
      * Example:
      * 'isLoggedIn' => ['before' => ['account/*', 'profiles/*']]
      */
-    public array $filters = [];
+    public array $filters = [
+        'backendAuthFilter' => ['before'=>['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],
+        'backendAfterLoginFilter'=>['before' => ['backend','backend/officeWorker/*', 'backend/pages/*', 'backend/settings/*', 'backend/menu/*', 'backend/blogs/*', 'backend/tagify',
+'backend/checkSeflink', 'backend/isActive', 'backend/maintenance', 'backend/media', 'backend/locked', 'backend/profile']]
+    ];
 }

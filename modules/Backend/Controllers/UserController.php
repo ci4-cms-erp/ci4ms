@@ -175,7 +175,7 @@ class UserController extends BaseController
      */
     public function user_del(string $id)
     {
-        if ($this->commonModel->update('users', ['deleted_at' => date('Y-m-d H:i:s'), 'status' => 'deleted'], ['id' => $id]) === true) return redirect()->route('officeWorker', [1])->with('message', 'Üyelik Silindi.');
+        if ($this->commonModel->edit('users', ['deleted_at' => date('Y-m-d H:i:s'), 'status' => 'deleted'], ['id' => $id]) === true) return redirect()->route('officeWorker', [1])->with('message', 'Üyelik Silindi.');
         return redirect()->route('officeWorker', [1])->with('error', 'Üyelik Silinemedi.');
     }
 
