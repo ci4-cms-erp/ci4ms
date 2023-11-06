@@ -126,3 +126,4 @@ nb-configuration.xml
 /.phpunit.*.cache
 
 template
+app/Config/Routes.php
