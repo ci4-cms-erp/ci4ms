@@ -14,4 +14,75 @@ Flat RBAC per NIST standards, described <a href="https://csrc.nist.gov/Projects/
 <li>Email-based account verification</li>
 </ul>
 
-# In preparation
+# How to Install ?
+
+1. Let's create the project along with Composer.
+```php
+composer create-project ci4-cms-erp/ci4ms myproject
+```
+
+2. Copy the env file in the folder as .env. Then the section that needs to be updated in the .env file is as follows.
+```php
+php spark env development
+```
+
+```php
+...
+#--------------------------------------------------------------------
+# APP
+#--------------------------------------------------------------------
+app.baseURL = 'https://ci4ms/'
+
+...
+#--------------------------------------------------------------------
+# DATABASE
+#--------------------------------------------------------------------
+
+database.default.hostname = localhost
+database.default.database = test
+database.default.username = root
+database.default.password =
+database.default.DBDriver = MySQLi
+database.default.DBPrefix = ci4ms_
+# database.default.port = 3306
+
+...
+#--------------------------------------------------------------------
+# HONEYPOT
+#--------------------------------------------------------------------
+
+honeypot.hidden = 'true'
+honeypot.label = 'Honey Pot CMS'
+honeypot.name = 'honeypot_cms'
+honeypot.template = '<label>{label}</label><input type="text" name="{name}" value=""/>'
+honeypot.container = '<div style="display:none">{template}</div>'
+
+#--------------------------------------------------------------------
+# SECURITY
+#--------------------------------------------------------------------
+
+security.csrfProtection = 'session'
+security.tokenRandomize = true
+security.tokenName = 'csrf_token_ci4ms'
+security.headerName = 'X-CSRF-TOKEN'
+security.cookieName = 'csrf_cookie_ci4ms'
+security.expires = 7200
+security.regenerate = true
+security.redirect = false
+security.samesite = 'Lax'
+...
+```
+
+3. After making your adjustments in the ENV file, navigate to the folder in the terminal.
+```php
+cd myproject
+```
+
+4. Let's use the codes added to Spark sequentially.
+```php
+php spark migrate
+php spark db:seed Ci4msDefaultsSeeder
+php spark create:route
+php spark key:generate
+```
+Once the installation is successfully completed, you will encounter the initial homepage. You can now develop the theme, build modules, and make additions to bring your project to the desired level.
