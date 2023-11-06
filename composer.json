@@ -1,14 +1,9 @@
 {
-    "name": "codeigniter4/appstarter",
-    "description": "CodeIgniter4 starter app",
+    "name": "ci4-cms-erp/ci4ms",
+    "description": "CodeIgniter 4 CMS",
     "license": "MIT",
     "type": "project",
-    "homepage": "https://codeigniter.com",
-    "support": {
-        "forum": "https://forum.codeigniter.com/",
-        "source": "https://github.com/codeigniter4/CodeIgniter4",
-        "slack": "https://codeigniterchat.slack.com"
-    },
+    "homepage": "https://github.com/ci4-cms-erp/ci4ms",
     "require": {
         "php": "^7.4 || ^8.0",
         "codeigniter4/framework": "4.4.3",

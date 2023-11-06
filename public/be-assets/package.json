@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "@yaireo/tagify": "^4.9.1",
-    "elfinder-material-theme": "^2.1.11",
-    "jquery.repeater": "^1.2.1",
-    "nestable2": "^1.6.0"
-  }
-}

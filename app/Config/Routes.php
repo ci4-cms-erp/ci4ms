@@ -6,7 +6,20 @@ use CodeIgniter\Router\RouteCollection;
 use ci4commonmodel\Models\CommonModel;
 
 $commonModel = new CommonModel();
-$activeTemplate=$commonModel->selectOne('settings',[],'templateInfos');
+if(empty(cache('settings'))){
+    $settings=$commonModel->lists('settings');
+    cache()->save('settings',$settings,86400);
+}
+else $settings=cache()->get('settings');
+
+$searchValue='templateInfos';
+$activeTemplate = array_reduce($settings, function ($carry, $item) use ($searchValue) {
+    if ($searchValue == $item->option) {
+        return $item;
+    }
+    return $carry;
+});
+
 /**
  * @var RouteCollection $routes
  */
@@ -72,7 +85,7 @@ if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
 if (is_dir(APPPATH.'Config')) {
     $modulesPath = APPPATH.'Config';
     $modules = scandir($modulesPath.'/templates');
-    $activeTemplate->templateInfos=json_decode($activeTemplate->templateInfos);
+    $activeTemplate->templateInfos=json_decode($activeTemplate->content);
     $activeTemplate->templateInfos=(object)$activeTemplate->templateInfos;
     foreach ($modules as $module) {
         if ($module === '.' || $module === '..') continue;

@@ -41,12 +41,12 @@ class Home extends BaseController
                     'ContactPoint' =>
                         [
                             'ContactPoint' => [
-                                'telephone' => $this->defData['settings']->companyPhone,
+                                'telephone' => $this->defData['settings']->companyInfos->phone,
                                 'contactType' => 'customer support'
                             ]
                         ]
                 ],
-                'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
+                'sameAs' => array_map(fn($sN) => $sN['link'], $this->defData['settings']->socialNetwork)
             ]);
             if($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs($this->defData['pageInfo']->id);
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
@@ -83,12 +83,12 @@ class Home extends BaseController
                 'ContactPoint' =>
                     [
                         'ContactPoint' => [
-                            'telephone' => $this->defData['settings']->companyPhone,
+                            'telephone' => $this->defData['settings']->companyInfos->phone,
                             'contactType' => 'customer support'
                         ]
                     ]
             ],
-            'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
+            'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
         ]);
         $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs('/blog/1');
         return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
@@ -132,12 +132,12 @@ class Home extends BaseController
                     'ContactPoint' =>
                         [
                             'ContactPoint' => [
-                                'telephone' => $this->defData['settings']->companyPhone,
+                                'telephone' => $this->defData['settings']->companyInfos->phone,
                                 'contactType' => 'customer support'
                             ]
                         ]
                 ],
-                'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
+                'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
             ]);
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/post', $this->defData);
         } else return show_404();

@@ -32,7 +32,7 @@ class CommonLibrary
      */
     public function phpMailer(string $setFromMail, string $setFromName, array $addAddresses, string $addReplyToMail, string $addReplyToName, string $subject, string $body, string $altBody = '', array $addCCs = [], array $addBCCs = [], array $addAttachments = [],)
     {
-        $settings = $this->commonModel->selectOne('settings');
+        $settings = cache('settings');
         $this->config->mailConfig = ['protocol' => $settings->mailProtocol,
             'SMTPHost' => $settings->mailServer,
             'SMTPPort' => $settings->mailPort,

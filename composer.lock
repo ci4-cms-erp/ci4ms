@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "33bb345d747a53c8aa2151a867e72bb2",
+    "content-hash": "af2073db5759b6baa7d5ab861c8701f4",
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
