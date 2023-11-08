@@ -1161,7 +1161,7 @@ class Ci4msDefaultsSeeder extends Seeder
             'username' => $username,
             'email' => $email,
             'status' => 'active',
-            'group_id'=>1,
+            'group_id' => 1,
             'password_hash' => $authLib->setPassword($password)
         ]);
         $commonModel->createMany(getenv('database.default.DBPrefix') . 'auth_groups_permissions', json_decode('[
@@ -1841,6 +1841,237 @@ class Ci4msDefaultsSeeder extends Seeder
     "id": 35,
     "option": "elfinderConvertWebp",
     "content": "1"
+  }
+]', true));
+        $commonModel->create(getenv('database.default.DBPrefix').'pages',[
+            'title' => 'Hakkımızda',
+            'content' => '<!-- About section one-->
+            <section class="py-5 bg-light" id="scroll-target">
+                <div class="container px-5 my-5">
+                    <div class="row gx-5 align-items-center">
+                        <div class="col-lg-6"><img class="img-fluid rounded mb-5 mb-lg-0" src="https://dummyimage.com/600x400/343a40/6c757d" alt="..."></div>
+                        <div class="col-lg-6">
+                            <h2 class="fw-bolder">Our founding</h2>
+                            <p class="lead fw-normal text-muted mb-0">Lorem ipsum dolor sit amet consectetur adipisicing elit. Iusto est, ut esse a labore aliquam beatae expedita. Blanditiis impedit numquam libero molestiae et fugit cupiditate, quibusdam expedita, maiores eaque quisquam.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- About section two-->
+            <section class="py-5">
+                <div class="container px-5 my-5">
+                    <div class="row gx-5 align-items-center">
+                        <div class="col-lg-6 order-first order-lg-last"><img class="img-fluid rounded mb-5 mb-lg-0" src="https://dummyimage.com/600x400/343a40/6c757d" alt="..."></div>
+                        <div class="col-lg-6">
+                            <h2 class="fw-bolder">Growth & beyond</h2>
+                            <p class="lead fw-normal text-muted mb-0">Lorem ipsum dolor sit amet consectetur adipisicing elit. Iusto est, ut esse a labore aliquam beatae expedita. Blanditiis impedit numquam libero molestiae et fugit cupiditate, quibusdam expedita, maiores eaque quisquam.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Team members section-->
+            <section class="py-5 bg-light">
+                <div class="container px-5 my-5">
+                    <div class="text-center">
+                        <h2 class="fw-bolder">Our team</h2>
+                        <p class="lead fw-normal text-muted mb-5">Dedicated to quality and your success</p>
+                    </div>
+                    <div class="row gx-5 row-cols-1 row-cols-sm-2 row-cols-xl-4 justify-content-center">
+                        <div class="col mb-5 mb-5 mb-xl-0">
+                            <div class="text-center">
+                                <img class="img-fluid rounded-circle mb-4 px-4" src="https://dummyimage.com/150x150/ced4da/6c757d" alt="...">
+                                <h5 class="fw-bolder">Ibbie Eckart</h5>
+                                <div class="fst-italic text-muted">Founder & CEO</div>
+                            </div>
+                        </div>
+                        <div class="col mb-5 mb-5 mb-xl-0">
+                            <div class="text-center">
+                                <img class="img-fluid rounded-circle mb-4 px-4" src="https://dummyimage.com/150x150/ced4da/6c757d" alt="...">
+                                <h5 class="fw-bolder">Arden Vasek</h5>
+                                <div class="fst-italic text-muted">CFO</div>
+                            </div>
+                        </div>
+                        <div class="col mb-5 mb-5 mb-sm-0">
+                            <div class="text-center">
+                                <img class="img-fluid rounded-circle mb-4 px-4" src="https://dummyimage.com/150x150/ced4da/6c757d" alt="...">
+                                <h5 class="fw-bolder">Toribio Nerthus</h5>
+                                <div class="fst-italic text-muted">Operations Manager</div>
+                            </div>
+                        </div>
+                        <div class="col mb-5">
+                            <div class="text-center">
+                                <img class="img-fluid rounded-circle mb-4 px-4" src="https://dummyimage.com/150x150/ced4da/6c757d" alt="...">
+                                <h5 class="fw-bolder">Malvina Cilla</h5>
+                                <div class="fst-italic text-muted">CTO</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>',
+            'seflink' => 'hakkimizda',
+            'creationDate' => date('Y-m-d H:i:s'),
+            'isActive' => 1,
+            'seo' => '{"coverImage":"https://kun-cms/uploads/media/main-vector.png","IMGWidth":"398","IMGHeight":"249","description":"Ci4MS hakkında","keywords":[{"value":"hakkımızda"}]}',
+            'inMenu' => 1
+        ]);
+        $commonModel->create(getenv('database.default.DBPrefix').'pages',[
+                "id" => 2,
+                "title" => "İletişim",
+                "content" => '<section class="py-5">
+                <div class="container px-5">
+{\App\Libraries\templates\default\Ci4mstemplateLib|contactForm/}
+<!-- Contact cards-->
+                    <div class="row gx-5 row-cols-2 row-cols-lg-4 py-5">
+                        <div class="col">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-chat-dots"></i></div>
+                            <div class="h5 mb-2">Chat with us</div>
+                            <p class="text-muted mb-0">Chat live with one of our support specialists.</p>
+                        </div>
+                        <div class="col">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-people"></i></div>
+                            <div class="h5">Ask the community</div>
+                            <p class="text-muted mb-0">Explore our community forums and communicate with other users.</p>
+                        </div>
+                        <div class="col">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-question-circle"></i></div>
+                            <div class="h5">Support center</div>
+                            <p class="text-muted mb-0">Browse FAQs and support articles to find solutions.</p>
+                        </div>
+                        <div class="col">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-telephone"></i></div>
+                            <div class="h5">Call us</div>
+                            <p class="text-muted mb-0">Call us during normal business hours at (555) 892-9403.</p>
+                        </div>
+                    </div>
+                </div>
+{\App\Libraries\templates\default\Ci4mstemplateLib|gmapiframe/}
+            </section>',
+                "seflink" => "iletisim",
+                'creationDate' => date('Y-m-d H:i:s'),
+                'isActive' => 1,
+                "seo"=>'{"description":"Ci4MS iletişim"}',
+                'inMenu' => 1]);
+        $commonModel->create(getenv('database.default.DBPrefix').'pages',["id" => 3,
+                "title" => "Anasayfa",
+                "content" => '<!-- Header-->
+<header class="bg-dark py-5">
+    <div class="container px-5">
+        <div class="row gx-5 align-items-center justify-content-center">
+            <div class="col-lg-8 col-xl-7 col-xxl-6">
+                <div class="my-5 text-center text-xl-start">
+                    <h1 class="display-5 fw-bolder text-white mb-2">A Bootstrap 5 template for modern businesses</h1>
+                    <p class="lead fw-normal text-white-50 mb-4">Quickly design and customize responsive mobile-first sites with Bootstrap, the world’s most popular front-end open source toolkit!</p>
+                    <div class="d-grid gap-3 d-sm-flex justify-content-sm-center justify-content-xl-start">
+                        <a class="btn btn-primary btn-lg px-4 me-sm-3" href="#features">Get Started</a>
+                        <a class="btn btn-outline-light btn-lg px-4" href="#!">Learn More</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-5 col-xxl-6 d-none d-xl-block text-center"><img class="img-fluid rounded-3 my-5" src="https://dummyimage.com/600x400/343a40/6c757d" alt="..." /></div>
+        </div>
+    </div>
+</header>
+<!-- Features section-->
+<section class="py-5" id="features">
+    <div class="container px-5 my-5">
+        <div class="row gx-5">
+            <div class="col-lg-4 mb-5 mb-lg-0"><h2 class="fw-bolder mb-0">A better way to start building.</h2></div>
+            <div class="col-lg-8">
+                <div class="row gx-5 row-cols-1 row-cols-md-2">
+                    <div class="col mb-5 h-100">
+                        <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-collection"></i></div>
+                        <h2 class="h5">Featured title</h2>
+                        <p class="mb-0">Paragraph of text beneath the heading to explain the heading. Here is just a bit more text.</p>
+                    </div>
+                    <div class="col mb-5 h-100">
+                        <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-building"></i></div>
+                        <h2 class="h5">Featured title</h2>
+                        <p class="mb-0">Paragraph of text beneath the heading to explain the heading. Here is just a bit more text.</p>
+                    </div>
+                    <div class="col mb-5 mb-md-0 h-100">
+                        <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-toggles2"></i></div>
+                        <h2 class="h5">Featured title</h2>
+                        <p class="mb-0">Paragraph of text beneath the heading to explain the heading. Here is just a bit more text.</p>
+                    </div>
+                    <div class="col h-100">
+                        <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-toggles2"></i></div>
+                        <h2 class="h5">Featured title</h2>
+                        <p class="mb-0">Paragraph of text beneath the heading to explain the heading. Here is just a bit more text.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Testimonial section-->
+<div class="py-5 bg-light">
+    <div class="container px-5 my-5">
+        <div class="row gx-5 justify-content-center">
+            <div class="col-lg-10 col-xl-7">
+                <div class="text-center">
+                    <div class="fs-4 mb-4 fst-italic">"Working with Start Bootstrap templates has saved me tons of development time when building new projects! Starting with a Bootstrap template just makes things easier!"</div>
+                    <div class="d-flex align-items-center justify-content-center">
+                        <img class="rounded-circle me-3" src="https://dummyimage.com/40x40/ced4da/6c757d" alt="..." />
+                        <div class="fw-bold">
+                            Tom Ato
+                            <span class="fw-bold text-primary mx-1">/</span>
+                            CEO, Pomodoro
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>',
+                "seflink" => "/",
+                'creationDate' => date('Y-m-d H:i:s'),
+                'isActive' => 1,
+                "seo" => '{"description":"Ci4MS anasayfa","keywords":[{"value":"anasayfa"}]}',
+                'inMenu' => 1]);
+        $commonModel->createMany(getenv('database.default.DBPrefix') . 'menu', json_decode('[
+  {
+    "id": 1,
+    "pages_id": 3,
+    "parent": null,
+    "queue": 1,
+    "urlType": "pages",
+    "title": "Anasayfa",
+    "seflink": "/",
+    "target": null,
+    "hasChildren": 0
+  },
+  {
+    "id": 2,
+    "pages_id": 1,
+    "parent": null,
+    "queue": 2,
+    "urlType": "pages",
+    "title": "Hakkımızda",
+    "seflink": "hakkimizda",
+    "target": null,
+    "hasChildren": 0
+  },
+  {
+    "id": 3,
+    "pages_id": 2,
+    "parent": null,
+    "queue": 4,
+    "urlType": "pages",
+    "title": "İletişim",
+    "seflink": "iletisim",
+    "target": null,
+    "hasChildren": 0
+  },
+  {
+    "id": 4,
+    "pages_id": null,
+    "parent": null,
+    "queue": 3,
+    "urlType": "url",
+    "title": "Blog",
+    "seflink": "/blog/1",
+    "target": null,
+    "hasChildren": 0
   }
 ]', true));
     }

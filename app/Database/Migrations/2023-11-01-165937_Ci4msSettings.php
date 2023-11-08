@@ -26,7 +26,6 @@ class Ci4msSettings extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addKey('option', false,true);
-        $this->forge->addKey('option');
         $this->forge->createTable('settings');
     }
 

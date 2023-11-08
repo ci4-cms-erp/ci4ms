@@ -52,8 +52,8 @@ class Ci4msComments extends Migration
             ]
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey('tag');
-        $this->forge->addKey('seflink');
+        $this->forge->addKey('comFullName');
+        $this->forge->addKey('comEmail');
         $this->forge->addForeignKey('blog_id', 'blog', 'id', 'CASCADE', 'CASCADE', 'comments_blog_id_fk');
         $this->forge->addForeignKey('parent_id', 'comments', 'id', 'CASCADE', 'CASCADE', 'comments_comments_id_fk');
         $this->forge->createTable( 'comments');
