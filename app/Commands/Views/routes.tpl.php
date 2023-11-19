@@ -3,22 +3,21 @@
 namespace Config;
 
 use CodeIgniter\Router\RouteCollection;
-use ci4commonmodel\Models\CommonModel;
 
-$commonModel = new CommonModel();
 if(empty(cache('settings'))){
+    $commonModel = new \ci4commonmodel\Models\CommonModel();
     $settings=$commonModel->lists('settings');
-    cache()->save('settings',$settings,86400);
-}
-else $settings=cache()->get('settings');
-
-$searchValue='templateInfos';
-$activeTemplate = array_reduce($settings, function ($carry, $item) use ($searchValue) {
-    if ($searchValue == $item->option) {
-        return $item;
+    $set=[];
+    $formatRules=new \CodeIgniter\Validation\FormatRules();
+    foreach ($settings as $setting) {
+        if($formatRules->valid_json($setting->content)===true)
+            $set[$setting->option]=(object)json_decode($setting->content,JSON_UNESCAPED_UNICODE);
+        else
+            $set[$setting->option] = $setting->content;
     }
-    return $carry;
-});
+    cache()->save('settings',$set,86400);
+}
+else $settings=(object)cache('settings');
 
 /**
  * @var RouteCollection $routes
@@ -85,12 +84,10 @@ if (is_file(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
 if (is_dir(APPPATH.'Config')) {
     $modulesPath = APPPATH.'Config';
     $modules = scandir($modulesPath.'/templates');
-    $activeTemplate->templateInfos=json_decode($activeTemplate->content);
-    $activeTemplate->templateInfos=(object)$activeTemplate->templateInfos;
     foreach ($modules as $module) {
         if ($module === '.' || $module === '..') continue;
         if (is_dir($modulesPath) . '/' . $module) {
-            $routesPath = $modulesPath . '/templates/'.$activeTemplate->templateInfos->path.'/Routes.php';
+            $routesPath = $modulesPath . '/templates/'.$settings->templateInfos->path.'/Routes.php';
             if (is_file($routesPath)) require($routesPath);
             else continue;
         }

@@ -1,4 +1,4 @@
-<@?php namespace Modules\Backend\Models;
+<@php namespace Modules\Backend\Models;
 
 use ci4mongodblibrary\Libraries\Mongo;
 
