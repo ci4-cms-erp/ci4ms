@@ -95,22 +95,22 @@
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.companyAddress') ?></label>
                                     <input type="text" name="cAddress" class="form-control"
-                                           value="<?= (!empty($settings->companyAddress)) ? $settings->companyAddress : '' ?>">
+                                           value="<?= (!empty($settings->company->address)) ? $settings->company->address : '' ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.companyPhone') ?></label>
                                     <input type="text" name="cPhone" class="form-control"
-                                           value="<?= (!empty($settings->companyPhone)) ? $settings->companyPhone : '' ?>">
+                                           value="<?= (!empty($settings->company->phone)) ? $settings->company->phone : '' ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.companyGsm') ?></label>
                                     <input type="text" name="cGSM" class="form-control"
-                                           value="<?= (!empty($settings->companyGSM)) ? $settings->companyGSM : '' ?>">
+                                           value="<?= (!empty($settings->company->gsm)) ? $settings->company->gsm : '' ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.companyEmail') ?></label>
                                     <input type="text" name="cMail" class="form-control"
-                                           value="<?= (!empty($settings->companyEMail)) ? $settings->companyEMail : '' ?>">
+                                           value="<?= (!empty($settings->company->email)) ? $settings->company->email : '' ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.gmapIframe') ?></label>
@@ -135,7 +135,7 @@
                                 <label><?= lang('Backend.maintenanceMode') ?></label>
                                 <input type="checkbox" name="my-checkbox" id="my-checkbox"
                                        class="bswitch" <?= ((bool)$settings->maintenanceMode === true) ? 'checked' : '' ?>
-                                       data-id="<?= $settings->id ?>" data-off-color="danger" data-on-color="success">
+                                       data-id="maintenanceMode" data-off-color="danger" data-on-color="success">
                             </div>
                         </div>
                         <div class="tab-pane fade" id="vert-tabs-templates" role="tabpanel"
@@ -188,13 +188,14 @@
                                                 <div class="col-md-6 form-group">
                                                     <label for=""><?= lang('Backend.socialMedia') ?></label>
                                                     <input type="text" class="form-control" name="smName"
-                                                           value="<?= $socialNetwork->smName ?>" placeholder="facebook"
+                                                           value="<?= $socialNetwork['smName'] ?>"
+                                                           placeholder="facebook"
                                                            required>
                                                 </div>
                                                 <div class="col-md-5 form-group">
                                                     <label for=""><?= lang('Backend.socialMediaLink') ?></label>
                                                     <input type="text" class="form-control" name="link"
-                                                           value="<?= $socialNetwork->link ?>" required>
+                                                           value="<?= $socialNetwork['link'] ?>" required>
                                                 </div>
                                                 <div class="col-md-1 form-group">
                                                     <input data-repeater-delete type="button"
@@ -238,34 +239,34 @@
                                 <div class="col-md-6 form-group">
                                     <label for="">Mail Server</label>
                                     <input type="text" name="mServer" class="form-control"
-                                           value="<?= empty($settings->mailServer) ? '' : $settings->mailServer ?>"
+                                           value="<?= empty($settings->mail->server) ? '' : $settings->mail->server ?>"
                                            required>
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for="">Mail Port</label>
                                     <input type="text" name="mPort" class="form-control"
-                                           value="<?= empty($settings->mailPort) ? '' : $settings->mailPort ?>"
+                                           value="<?= empty($settings->mail->port) ? '' : $settings->mail->port ?>"
                                            required>
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.mailAddress') ?></label>
                                     <input type="text" name="mAddress" class="form-control"
-                                           value="<?= empty($settings->mailAddress) ? '' : $settings->mailAddress ?>"
+                                           value="<?= empty($settings->mail->address) ? '' : $settings->mail->address ?>"
                                            required>
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.mailPassword') ?></label>
                                     <input type="text" name="mPwd" class="form-control"
-                                           value="<?= empty($settings->mailPassword) ? '' : $settings->mailPassword ?>"
+                                           value="<?= empty($settings->mail->password) ? '' : $settings->mail->password ?>"
                                            required>
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.mailProtocol') ?></label>
                                     <select name="mProtocol" id="" class="form-control" required>
-                                        <option value="smtp" <?= (isset($settings->mailProtocol) && $settings->mailProtocol === 'smtp') ? 'selected' : '' ?>>
+                                        <option value="smtp" <?= (isset($settings->mail->protocol) && $settings->mail->protocol === 'smtp') ? 'selected' : '' ?>>
                                             SMTP
                                         </option>
-                                        <option value="pop3" <?= (isset($settings->mailProtocol) && $settings->mailProtocol === 'pop3') ? 'selected' : '' ?>>
+                                        <option value="pop3" <?= (isset($settings->mail->protocol) && $settings->mail->protocol === 'pop3') ? 'selected' : '' ?>>
                                             POP3
                                         </option>
                                     </select>
@@ -273,7 +274,7 @@
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.isTLSactive') ?> </label>
                                     <input type="checkbox" name="mTls"
-                                           id="" <?= (!empty($settings->mailTLS) && $settings->mailTLS === true) ? 'checked' : '' ?>>
+                                           id="" <?= (!empty($settings->mail->tls) && $settings->mail->tls === true) ? 'checked' : '' ?>>
                                 </div>
                                 <div class="col-md-12 form-group">
                                     <button class="btn btn-success float-right"><?= lang('Backend.update') ?></button>
@@ -291,8 +292,8 @@
                                 <div class="col-md-6 form-group">
                                     <label><?= lang('Backend.elfinderConvertWebp') ?></label>
                                     <input type="checkbox" name="elfinderConvertWebp" id="elfinderConvertWebp"
-                                           class="bswitch" <?= ((bool)$elfinderConvertWebp->content === true) ? 'checked' : '' ?>
-                                           data-id="<?= $elfinderConvertWebp->id ?>" data-off-color="danger"
+                                           class="bswitch" <?= ((bool)$settings->elfinderConvertWebp === true) ? 'checked' : '' ?>
+                                           data-off-color="danger"
                                            data-on-color="success">
                                 </div>
                                 <div class="col-md-6 form-group">
@@ -438,7 +439,7 @@
 <?= script_tag("be-assets/node_modules/jquery.repeater/jquery.repeater.js") ?>
 <!-- Bootstrap Switch -->
 <?= script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js") ?>
-<?= script_tag("be-assets/plugins/elFinder/js/elfinder.full.js") ?>
+<?= script_tag("be-assets/plugins/elFinder/js/elfinder.min.js") ?>
 <?= script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>
 <?= script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js") ?>
 <?= script_tag("be-assets/js/ci4ms.js") ?>
@@ -479,7 +480,7 @@
     $('#my-checkbox').on('switchChange.bootstrapSwitch', function () {
         var id = $(this).data('id'), isActive;
         if ($(this).prop('checked')) isActive = 1; else isActive = 0;
-        $.post('<?=route_to('maintenance')?>', {"id": id, 'isActive': isActive}, 'json').done(function (data) {
+        $.post('<?=route_to('maintenance')?>', {'isActive': isActive}, 'json').done(function (data) {
             if (data.result === true) Swal.fire('Bakım Aşaması Sayfası yayına alındı.', '', 'success');
             else Swal.fire('Bakım Aşaması Sayfası devre dışı bırakıldı.', '', 'warning');
             if (data.pr === false) Swal.fire('Bakım Aşaması Sayfası Aktif edilemedi.', '', 'error');
@@ -489,7 +490,7 @@
     $('#elfinderConvertWebp').on('switchChange.bootstrapSwitch', function () {
         var id = $(this).data('id'), isActive;
         if ($(this).prop('checked')) isActive = 1; else isActive = 0;
-        $.post('<?=route_to('elfinderConvertWebp')?>', {"id": id, 'isActive': isActive}, 'json').done(function (data) {
+        $.post('<?=route_to('elfinderConvertWebp')?>', {'isActive': isActive}, 'json').done(function (data) {
             if (data.result === true) Swal.fire('Elfinder ile webp formatına çevirme ektif edildi.', '', 'success');
             else Swal.fire('Elfinder ile webp formatına çevirme ektif durumdan çıkarıldı.', '', 'warning');
             if (data.pr === false) Swal.fire('Elfinder ile webp formatına çevirme ektif edilemedi.', '', 'error');

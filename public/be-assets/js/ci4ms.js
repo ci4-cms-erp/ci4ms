@@ -4,8 +4,9 @@ function pageImgelfinderDialog() {
         lang: 'en',
         width: 1024,
         height: 768,
+        workerBaseUrl:"/be-assets/plugins/elFinder/js/worker",
         destroyOnClose: true,
-        cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme-gray.css'],
+        cssAutoLoad: [window.location.origin+'/be-assets/node_modles/elfinder-material-theme/Material/css/theme.css'],
         getFileCallback: function (files, fm) {
             $('.pageimg-input').val(files.url.replace(location.origin,''));
             $('.pageimg').attr('src',files.url);

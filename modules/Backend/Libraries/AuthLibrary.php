@@ -1,9 +1,9 @@
 <?php namespace Modules\Backend\Libraries;
 
+use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Events\Events;
 use CodeIgniter\I18n\Time;
 use Config\App;
-use ci4commonModel\Models\CommonModel;
 use Config\Services;
 use Modules\Backend\Config\Auth;
 use Modules\Backend\Exceptions\AuthException;
@@ -27,7 +27,19 @@ class AuthLibrary
         $this->config->userTable = 'users';
         $this->ipAddress = Services::request()->getIPAddress();
         $this->now = Time::createFromFormat('Y-m-d H:i:s', new Time('now'), 'Europe/Istanbul');
-
+        $settings=(object)cache()->get('settings');
+        if(empty($settings)){
+            $settings=$this->commonModel->lists('settings');
+            $set=[];
+            $formatRules=new \CodeIgniter\Validation\FormatRules();
+            foreach ($settings as $setting) {
+                if($formatRules->valid_json($setting->content)===true)
+                    $set[$setting->option]=(object)json_decode($setting->content, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+                else
+                    $set[$setting->option] = $setting->content;
+            }
+            cache()->save('settings',$set,86400);
+        }
     }
 
     public function login(object $user = null, bool $remember = false): bool
@@ -45,8 +57,6 @@ class AuthLibrary
         $this->userModel->updateManyOr('locked', ['islocked' => true], $set_data, '*', $where_or);
 
         $this->recordLoginAttempt($this->user->email, true);
-        // Regenerate the session ID to help protect against session fixation
-        if (ENVIRONMENT !== 'testing') session()->regenerate();
 
         session()->set(['redirect_url' => $groupSefLink->seflink,
             $this->config->logged_in => $this->user->id,
@@ -140,11 +150,12 @@ class AuthLibrary
 
         $this->user = $this->validate($credentials, true);
         $falseLogin = $this->commonModel->selectOne('auth_logins', ['ip_address' => $this->ipAddress], '*', 'id DESC');
-        $settings = $this->commonModel->selectOne('settings', [/* where */], '*', 'lockedMin,lockedTry');
+        $settings=cache('settings');
+        $settings = (object)json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('locked' == $item->option ? $item : null))->content, true);
 
         // Kalan deneme hakkı hesaplanıyor.
         if ($falseLogin && $falseLogin->isSuccess === false) {
-            if ($falseLogin->counter && ((int)$falseLogin->counter + 1) >= (int)$settings->lockedTry) $falseCounter = -1;
+            if ($falseLogin->counter && ((int)$falseLogin->counter + 1) >= (int)$settings->try) $falseCounter = -1;
             else $falseCounter = $falseLogin->counter;
         } else $falseCounter = null;
 
@@ -370,8 +381,9 @@ class AuthLibrary
     /* if return is true user blocked else login active */
     public function isBlockedAttempt($username): bool
     {
-        $settings = $this->commonModel->selectOne('settings');
-        if ($settings->lockedIsActive) {
+        $settings=cache('settings');
+        $settings = (object)json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('locked' == $item->option ? $item : null))->content, true);
+        if ($settings->isActive) {
             $whitelist = $this->commonModel->selectOne('login_rules', ['type' => 'whitelist']);
             if ($whitelist) {
                 foreach ($whitelist->username as $locked_username)
@@ -403,7 +415,7 @@ class AuthLibrary
             if (!$countLocked) $countLockedValue = 0;
             else $countLockedValue = $countLocked->counter;
 
-            if ((int)$settings->lockedRecord <= $countLockedValue) {
+            if ((int)$settings->record <= $countLockedValue) {
                 $this->commonModel->edit('locked', ['id' => $countLocked->id], ['counter' => 0]);
                 return false;
             }
@@ -418,9 +430,9 @@ class AuthLibrary
 
             $loginAttempts = $this->userModel->getOneOr('auth_logins', ['isSuccess' => false], 'id DESC', 'id,counter', $where_or);
 
-            if ($loginAttempts && isset($loginAttempts->counter) && ($loginAttempts->counter + 1) >= (int)$settings->lockedTry) {
-                if (($countLockedValue + 1) < ((int)$settings->lockedRecord))
-                    $expiry_date = Time::createFromFormat('Y-m-d H:i:s', $this->now->addMinutes((int)$settings->lockedMin));
+            if ($loginAttempts && isset($loginAttempts->counter) && ($loginAttempts->counter + 1) >= (int)$settings->try) {
+                if (($countLockedValue + 1) < ((int)$settings->record))
+                    $expiry_date = Time::createFromFormat('Y-m-d H:i:s', $this->now->addMinutes((int)$settings->min));
                 else {
                     $countLockedValue = -1;
                     $expiry_date = Time::createFromFormat('Y-m-d H:i:s', $this->now->addMinutes(1440)); // 24 hours ago
@@ -488,9 +500,10 @@ class AuthLibrary
     public function remainingEntryCalculation()
     {
         $falseLogin = $this->commonModel->selectOne('auth_logins', ['ip_address' => $this->ipAddress], '*', 'id DESC');
-        $settings = $this->commonModel->selectOne('settings', [/* where */], 'lockedMin,lockedIsActive,lockedTry');
-        if ($falseLogin) return (int)$settings->lockedTry - (int)$falseLogin->counter - 1;
-        else return (int)$settings->lockedTry - 1;
+        $settings=cache('settings');
+        $settings = (object)json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('locked' == $item->option ? $item : null))->content, true);
+        if ($falseLogin) return (int)$settings->try - (int)$falseLogin->counter - 1;
+        else return (int)$settings->try - 1;
     }
 
     public function has_perm(string $module, string $method = ''): bool

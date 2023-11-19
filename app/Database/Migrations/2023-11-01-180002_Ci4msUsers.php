@@ -57,7 +57,7 @@ class Ci4msUsers extends Migration
             ],
             'status' => [
                 'type' => 'ENUM',
-                'constraint' => ['deactive', 'banned', 'deleted']
+                'constraint' => ['active','deactive', 'banned', 'deleted']
             ],
             'statusMessage' => [
                 'type' => 'VARCHAR',

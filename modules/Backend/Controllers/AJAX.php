@@ -37,14 +37,14 @@ class AJAX extends BaseController
                         $edited[] = ['id' => (string)$item->id, 'value' => $item->tag];
                     }
                     unset($result);
-                    return $this->response->setJSON($edited);
-                } else return $this->response->setJSON([]);
+                    return $this->respond(['result' => $edited], 200);
+                } else return $this->failNotFound();
             }
             $result = null;
             foreach ($this->commonModel->lists('tags', '*', [], 'id DESC', 10) as $item) {
                 $result[] = ['id' => (string)$item->id, 'value' => $item->tag];
             }
-            return $this->response->setJSON($result);
+            return $this->respond(['result' => $result], 200);
         } else return $this->failForbidden();
     }
 
@@ -101,7 +101,7 @@ class AJAX extends BaseController
                 'isActive' => ['label' => 'isActive', 'rules' => 'required']
             ]);
             if ($this->validate($valData) == false) return redirect('403');
-            if ($this->commonModel->edit('settings', ['maintenanceMode' => (bool)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
+            if ($this->commonModel->edit('settings', ['content' => (bool)$this->request->getPost('isActive')], ['option' => 'maintenanceMode']))
                 return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
             else
                 return $this->fail(['pr' => false]);

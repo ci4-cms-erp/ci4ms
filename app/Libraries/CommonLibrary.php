@@ -7,12 +7,10 @@ use PHPMailer\PHPMailer\PHPMailer;
 class CommonLibrary
 {
     protected $config;
-    protected $commonModel;
 
     public function __construct()
     {
         $this->config = new Auth();
-        $this->commonModel = new CommonModel();
     }
 
     /**
@@ -33,17 +31,17 @@ class CommonLibrary
     public function phpMailer(string $setFromMail, string $setFromName, array $addAddresses, string $addReplyToMail, string $addReplyToName, string $subject, string $body, string $altBody = '', array $addCCs = [], array $addBCCs = [], array $addAttachments = [],)
     {
         $settings = cache('settings');
-        $this->config->mailConfig = ['protocol' => $settings->mailProtocol,
-            'SMTPHost' => $settings->mailServer,
-            'SMTPPort' => $settings->mailPort,
-            'SMTPUser' => $settings->mailAddress,
-            'SMTPPass' => $settings->mailPassword,
+        $this->config->mailConfig = ['protocol' => $settings->mail->protocol,
+            'SMTPHost' => $settings->mail->server,
+            'SMTPPort' => $settings->mail->port,
+            'SMTPUser' => $settings->mail->address,
+            'SMTPPass' => $settings->mail->password,
             'charset' => 'UTF-8',
             'mailtype' => 'html',
             'wordWrap' => 'true',
-            'TLS' => $settings->mailTLS,
+            'TLS' => $settings->mail->tls,
             'newline' => "\r\n"];
-        if ($settings->mailProtocol === 'smtp') $this->config->mailConfig['SMTPCrypto'] = 'PHPMailer::ENCRYPTION_STARTTLS';
+        if ($settings->mail->protocol === 'smtp') $this->config->mailConfig['SMTPCrypto'] = 'PHPMailer::ENCRYPTION_STARTTLS';
         $mail = new PHPMailer(true);
         try {
             //Server settings

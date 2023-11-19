@@ -9,7 +9,6 @@
 <link rel="stylesheet" type="text/css"
       href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 <?= link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
-<?= link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -65,10 +64,11 @@
                     var elf = $('#elfinder').elfinder(
                         // 1st Arg - options
                         {
-                            cssAutoLoad: [window.location.origin + '/be-assets/node_modules/elfinder-material-theme/Material/css/theme-gray.css'],
+                            cssAutoLoad: [window.location.origin+'/be-assets/node_modles/elfinder-material-theme/Material/css/theme.css'],
                             baseUrl: 'uploads/media/',                    // Base URL to css/*, js/*
                             url: '/backend/media/elfinderConnection',  // connector URL (REQUIRED)
                             height: 768,
+                            workerBaseUrl:"/be-assets/plugins/elFinder/js/worker",
                             getFileCallback: function (file) {
                                 top.elfinder_callback(file);
                                 top.$.colorbox.close();

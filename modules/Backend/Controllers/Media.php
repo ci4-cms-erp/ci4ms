@@ -12,9 +12,8 @@ class Media extends BaseController
     public function elfinderConnection()
     {
         // ELFinder ayarlarını yapın
-        $allowedFiles = $this->commonModel->selectOne('settings', [], 'allowedFiles');
         $webpElfinder=$this->commonModel->selectOne('settings', ['option'=>'elfinderConvertWebp'],'content');
-        $allowedFiles->allowedFiles = json_decode($allowedFiles->allowedFiles);
+        $allowedFiles = json_decode(array_reduce(cache('settings'), fn($carry, $item) => $carry ?? ('allowedFiles' == $item->option ? $item : null))->content);
         $opts = array(
             // 'debug' => true,
             'roots' => array(
@@ -26,7 +25,7 @@ class Media extends BaseController
                     'trashHash' => 't1_Lw',                     // elFinder's hash of trash folder
                     'winHashFix' => DIRECTORY_SEPARATOR !== '/', // to make hash same to Linux one on windows too
                     'uploadDeny' => array('all'),                // All Mimetypes not allowed to upload
-                    'uploadAllow' => (array)$allowedFiles->allowedFiles, // Mimetype `image` and `text/plain` allowed to upload
+                    'uploadAllow' => (array)$allowedFiles, // Mimetype `image` and `text/plain` allowed to upload
                     'uploadOrder' => array('deny', 'allow'),      // allowed Mimetype `image` and `text/plain` only
                     'accessControl' => array($this,'elfinderAccess'), // disable and hide dot starting files (OPTIONAL)
                     'dirrm'=>true
@@ -39,7 +38,7 @@ class Media extends BaseController
                     'tmbURL' => site_url('uploads/media/.trash/.tmb/'),
                     'winHashFix' => DIRECTORY_SEPARATOR !== '/', // to make hash same to Linux one on windows too
                     'uploadDeny' => array('all'),                // Recomend the same settings as the original volume that uses the trash
-                    'uploadAllow' => (array)$allowedFiles->allowedFiles, // Same as above
+                    'uploadAllow' => (array)$allowedFiles, // Same as above
                     'uploadOrder' => array('deny', 'allow'),      // Same as above
                     'accessControl' => array($this,'elfinderAccess')                   // Same as above
                 ),

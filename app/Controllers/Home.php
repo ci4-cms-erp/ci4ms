@@ -41,12 +41,12 @@ class Home extends BaseController
                     'ContactPoint' =>
                         [
                             'ContactPoint' => [
-                                'telephone' => $this->defData['settings']->companyInfos->phone,
+                                'telephone' => $this->defData['settings']->company->phone,
                                 'contactType' => 'customer support'
                             ]
                         ]
                 ],
-                'sameAs' => array_map(fn($sN) => $sN['link'], $this->defData['settings']->socialNetwork)
+                'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
             ]);
             if($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs($this->defData['pageInfo']->id);
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
@@ -55,7 +55,7 @@ class Home extends BaseController
 
     public function maintenanceMode()
     {
-        if ((bool)$this->defData['settings']->maintenanceMode === false) return redirect()->route('/');
+        if ($this->defData['settings']->maintenanceMode === null) return redirect()->route('/');
         return view('maintenance', $this->defData);
     }
 
@@ -83,7 +83,7 @@ class Home extends BaseController
                 'ContactPoint' =>
                     [
                         'ContactPoint' => [
-                            'telephone' => $this->defData['settings']->companyInfos->phone,
+                            'telephone' => $this->defData['settings']->company->phone,
                             'contactType' => 'customer support'
                         ]
                     ]
@@ -132,7 +132,7 @@ class Home extends BaseController
                     'ContactPoint' =>
                         [
                             'ContactPoint' => [
-                                'telephone' => $this->defData['settings']->companyInfos->phone,
+                                'telephone' => $this->defData['settings']->company->phone,
                                 'contactType' => 'customer support'
                             ]
                         ]

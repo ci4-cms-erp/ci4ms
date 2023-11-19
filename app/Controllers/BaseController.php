@@ -66,16 +66,6 @@ abstract class BaseController extends Controller
         // E.g.: $this->session = \Config\Services::session();
         $this->commonModel = new CommonModel();
         $this->ci4msseoLibrary = new Ci4msseoLibrary();
-        $settings = cache('settings');
-        $this->defData = ['settings' => (object)[
-            'templateInfos' => (object)json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('templateInfos' == $item->option ? $item : null))->content, true),
-            'companyInfos' => (object)json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('company' == $item->option ? $item : null))->content, true),
-            'socialNetwork' => json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('socialNetwork' == $item->option ? $item : null))->content, true),
-            'siteName' => array_reduce($settings, fn($carry, $item) => $carry ?? ('siteName' == $item->option ? $item : null))->content,
-            'logo' => array_reduce($settings, fn($carry, $item) => $carry ?? ('logo' == $item->option ? $item : null))->content,
-            'maintenanceMode' => array_reduce($settings, fn($carry, $item) => $carry ?? ('maintenanceMode' == $item->option ? $item : null))->content
-        ],
-            'menus' => $this->commonModel->lists('menu', '*', [], 'queue ASC')];
-        //dd($this->defData['settings']->socialNetwork);
+        $this->defData = ['settings' => (object)cache('settings'), 'menus' => $this->commonModel->lists('menu', '*', [], 'queue ASC')];
     }
 }

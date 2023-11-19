@@ -51,18 +51,23 @@ class BaseController extends Controller
         $this->config = new Auth();
         $this->authLib = new AuthLibrary();
         $this->commonModel = new CommonModel();
-        $settings = $this->commonModel->selectOne('settings');
-        $this->config->mailConfig=['protocol' => $settings->mailProtocol,
-            'SMTPHost' => $settings->mailServer,
-            'SMTPPort' => $settings->mailPort,
-            'SMTPUser' => $settings->mailAddress,
-            'SMTPPass' => $settings->mailPassword,
+        if(empty(cache('settings'))){
+            $settings=$this->commonModel->lists('settings');
+            cache()->save('settings',$settings,86400);
+        }
+        else $settings=cache()->get('settings');
+        $mailSettings = (object)json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('mail' == $item->option ? $item : null))->content, true);
+        $this->config->mailConfig=['protocol' => $mailSettings->protocol,
+            'SMTPHost' => $mailSettings->server,
+            'SMTPPort' => $mailSettings->port,
+            'SMTPUser' => $mailSettings->address,
+            'SMTPPass' => $mailSettings->password,
             'charset' => 'UTF-8',
             'mailtype' => 'html',
             'wordWrap' => 'true',
-            'TLS'=>$settings->mailTLS,
+            'TLS'=>$mailSettings->tls,
             'newline' => "\r\n"];
-        if($settings->mailProtocol==='smtp')
+        if($mailSettings->protocol==='smtp')
             $this->config->mailConfig['SMTPCrypto']='PHPMailer::ENCRYPTION_STARTTLS';
     }
 

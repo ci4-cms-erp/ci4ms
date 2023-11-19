@@ -103,7 +103,6 @@ if(!function_exists('seflink')) {
                     'Ϋ' => 'Y'));
                 break;
             case 'tr':
-                _printr('tr de');
                 /* Turkish */
                 $char_map = array_merge($char_map, array('ş' => 's', 'Ş' => 'S', 'ı' => 'i', 'İ' => 'I', 'ğ' => 'g', 'Ğ' => 'G'));
                 break;
@@ -169,7 +168,6 @@ if(!function_exists('seflink')) {
                     'ن' => 'n', 'ه' => 'h', 'و' => 'o', 'ي' => 'y'));
                 break;
             case 'sr':
-                _printr('sr de');
                 /* Serbian */
                 $char_map = array_merge($char_map, array('ђ' => 'dj', 'ј' => 'j', 'љ' => 'lj', 'њ' => 'nj', 'ћ' => 'c', 'џ' => 'dz', 'đ' => 'dj',
                     'Ђ' => 'Dj', 'Ј' => 'j', 'Љ' => 'Lj', 'Њ' => 'Nj', 'Ћ' => 'C', 'Џ' => 'Dz', 'Đ' => 'Dj'));

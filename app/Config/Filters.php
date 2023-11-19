@@ -79,7 +79,7 @@ class Filters extends BaseConfig
      */
     public array $filters = [
         'backendAuthFilter' => ['before'=>['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],
-        'backendAfterLoginFilter'=>['before' => ['backend','backend/officeWorker/*', 'backend/pages/*', 'backend/settings/*', 'backend/menu/*', 'backend/blogs/*', 'backend/tagify',
+        'backendAfterLoginFilter'=>['before' => ['backend','backend/officeWorker/*', 'backend/pages/*', 'backend/settings','backend/settings/*', 'backend/menu/*', 'backend/blogs/*', 'backend/tagify',
 'backend/checkSeflink', 'backend/isActive', 'backend/maintenance', 'backend/media', 'backend/locked', 'backend/profile']]
     ];
 }

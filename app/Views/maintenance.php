@@ -20,7 +20,8 @@
         <span class="title-text pp-primary-title">We are social</span>
         <div class="pp-social-icons pp-social-icons-center pp-responsive-center">
             <?php if(!empty($settings->socialNetwork)):
-                foreach($settings->socialNetwork as $sn):?>
+                foreach($settings->socialNetwork as $sn):
+                    $sn=(object)$sn;?>
 	<span class="pp-social-icon">
 		<link itemprop="url" href="#">
 		<a itemprop="sameAs" href="<?=$sn->link?>" target="_blank" title="<?=$sn->smName?>" aria-label="<?=$sn->smName?>" role="button">
