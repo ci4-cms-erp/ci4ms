@@ -33,7 +33,6 @@ class Ci4ms implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
-        //_printrDie(var_dump((bool)cache()->get('settings')['maintenanceMode']));
         if(cache()->get('settings')['maintenanceMode']===1) return redirect()->route('maintenance-mode');
     }
 
