@@ -150,12 +150,11 @@ class AuthLibrary
 
         $this->user = $this->validate($credentials, true);
         $falseLogin = $this->commonModel->selectOne('auth_logins', ['ip_address' => $this->ipAddress], '*', 'id DESC');
-        $settings=cache('settings');
-        $settings = (object)json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('locked' == $item->option ? $item : null))->content, true);
+        $settings=(object)cache('settings');
 
         // Kalan deneme hakkı hesaplanıyor.
         if ($falseLogin && $falseLogin->isSuccess === false) {
-            if ($falseLogin->counter && ((int)$falseLogin->counter + 1) >= (int)$settings->try) $falseCounter = -1;
+            if ($falseLogin->counter && ((int)$falseLogin->counter + 1) >= (int)$settings->locked->try) $falseCounter = -1;
             else $falseCounter = $falseLogin->counter;
         } else $falseCounter = null;
 
@@ -381,9 +380,8 @@ class AuthLibrary
     /* if return is true user blocked else login active */
     public function isBlockedAttempt($username): bool
     {
-        $settings=cache('settings');
-        $settings = (object)json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('locked' == $item->option ? $item : null))->content, true);
-        if ($settings->isActive) {
+        $settings=(object)cache('settings');
+        if ($settings->locked->isActive) {
             $whitelist = $this->commonModel->selectOne('login_rules', ['type' => 'whitelist']);
             if ($whitelist) {
                 foreach ($whitelist->username as $locked_username)
@@ -415,7 +413,7 @@ class AuthLibrary
             if (!$countLocked) $countLockedValue = 0;
             else $countLockedValue = $countLocked->counter;
 
-            if ((int)$settings->record <= $countLockedValue) {
+            if ((int)$settings->locked->record <= $countLockedValue) {
                 $this->commonModel->edit('locked', ['id' => $countLocked->id], ['counter' => 0]);
                 return false;
             }
@@ -430,9 +428,9 @@ class AuthLibrary
 
             $loginAttempts = $this->userModel->getOneOr('auth_logins', ['isSuccess' => false], 'id DESC', 'id,counter', $where_or);
 
-            if ($loginAttempts && isset($loginAttempts->counter) && ($loginAttempts->counter + 1) >= (int)$settings->try) {
-                if (($countLockedValue + 1) < ((int)$settings->record))
-                    $expiry_date = Time::createFromFormat('Y-m-d H:i:s', $this->now->addMinutes((int)$settings->min));
+            if ($loginAttempts && isset($loginAttempts->counter) && ($loginAttempts->counter + 1) >= (int)$settings->locked->try) {
+                if (($countLockedValue + 1) < ((int)$settings->locked->record))
+                    $expiry_date = Time::createFromFormat('Y-m-d H:i:s', $this->now->addMinutes((int)$settings->locked->min));
                 else {
                     $countLockedValue = -1;
                     $expiry_date = Time::createFromFormat('Y-m-d H:i:s', $this->now->addMinutes(1440)); // 24 hours ago
@@ -500,10 +498,9 @@ class AuthLibrary
     public function remainingEntryCalculation()
     {
         $falseLogin = $this->commonModel->selectOne('auth_logins', ['ip_address' => $this->ipAddress], '*', 'id DESC');
-        $settings=cache('settings');
-        $settings = (object)json_decode(array_reduce($settings, fn($carry, $item) => $carry ?? ('locked' == $item->option ? $item : null))->content, true);
-        if ($falseLogin) return (int)$settings->try - (int)$falseLogin->counter - 1;
-        else return (int)$settings->try - 1;
+        $settings=(object)cache('settings');
+        if ($falseLogin) return (int)$settings->locked->try - (int)$falseLogin->counter - 1;
+        else return (int)$settings->locked->try - 1;
     }
 
     public function has_perm(string $module, string $method = ''): bool
@@ -516,6 +513,7 @@ class AuthLibrary
             return $item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1];
         });
         $perms = reset($perms);
+        //dd($perms['typeOfPermissions']);
         $typeOfPermissions = (array)json_decode($perms['typeOfPermissions']);
         $intersect = array_intersect_assoc($typeOfPermissions, $perms);
         if(!empty($intersect)) return true;

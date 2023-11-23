@@ -205,7 +205,7 @@ class Settings extends BaseController
             if ($this->commonModel->edit('settings',
                 ['content' => json_encode(['path' => $this->request->getPost('path'),
                     'name' => $this->request->getPost('name')], JSON_UNESCAPED_UNICODE)],
-                ['opiton' => 'templateInfos'])) {
+                ['option' => 'templateInfos'])) {
                 cache()->delete('settings');
                 return $this->response->setJSON(['result' => true]);
             } else return $this->response->setJSON(['result' => false]);

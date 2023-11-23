@@ -66,6 +66,6 @@ abstract class BaseController extends Controller
         // E.g.: $this->session = \Config\Services::session();
         $this->commonModel = new CommonModel();
         $this->ci4msseoLibrary = new Ci4msseoLibrary();
-        $this->defData = ['settings' => (object)cache('settings'), 'menus' => $this->commonModel->lists('menu', '*', [], 'queue ASC')];
+        $this->defData = ['settings' => (object)cache('settings'), 'menus' => $this->commonModel->lists('menu', '*', [], 'queue ASC'), 'agent'=>$this->request->getUserAgent()];
     }
 }
