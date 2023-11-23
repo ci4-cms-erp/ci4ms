@@ -16,6 +16,7 @@ if(empty(cache('settings'))){
             $set[$setting->option] = $setting->content;
     }
     cache()->save('settings',$set,86400);
+    $settings=(object)$set;
 }
 else $settings=(object)cache('settings');
 
