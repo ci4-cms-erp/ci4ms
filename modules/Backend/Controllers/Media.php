@@ -12,8 +12,7 @@ class Media extends BaseController
     public function elfinderConnection()
     {
         // ELFinder ayarlarını yapın
-        $webpElfinder=$this->commonModel->selectOne('settings', ['option'=>'elfinderConvertWebp'],'content');
-        $allowedFiles = json_decode(array_reduce(cache('settings'), fn($carry, $item) => $carry ?? ('allowedFiles' == $item->option ? $item : null))->content);
+        $allowedFiles = $this->defData['settings']->allowedFiles;
         $opts = array(
             // 'debug' => true,
             'roots' => array(
@@ -46,7 +45,7 @@ class Media extends BaseController
         );
 
         $char_map = ['.jpg' => '.webp', '.png' => '.webp', '.jpeg' => '.webp'];
-        if ((bool)$webpElfinder===true && $this->request->getFileMultiple('upload')) {
+        if ((bool)$this->defData['settings']->elfinderConvertWebp->scalar===true && $this->request->getFileMultiple('upload')) {
             $webp_converter = new \claviska\SimpleImage();
             foreach ($this->request->getFileMultiple('upload') as $file) {
                 $file_type = $file->getClientMimeType();
