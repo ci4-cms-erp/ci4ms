@@ -62,7 +62,7 @@ class AJAX extends BaseController
             if ($this->validate($valData) == false) return redirect('403');
 
             $existingSeflinks = $this->commonModel->lists($this->request->getPost('where'), 'seflink');
-            $desiredSeflink = seflink($this->request->getPost('makeSeflink'), ['locale' => $this->commonModel->selectOne('languages', ['defaultLanguage' => true])->translateName]);
+            $desiredSeflink = seflink($this->request->getPost('makeSeflink'));
 
             if (in_array($desiredSeflink, array_column($existingSeflinks, 'seflink')) === true) {
                 $i = 1;
