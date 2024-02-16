@@ -74,7 +74,7 @@ class Adminview extends BaseCommand
     protected function prepare(string $class): string
     {
         return $this->parseTemplate(
-            $class,['<@'],['<']
+            $class,['<@'],['<?']
         );
     }
 }

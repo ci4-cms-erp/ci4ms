@@ -3,7 +3,7 @@
 use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Events\Events;
 use CodeIgniter\I18n\Time;
-use Config\App;
+use Config\Cookie;
 use Config\Services;
 use Modules\Backend\Config\Auth;
 use Modules\Backend\Exceptions\AuthException;
@@ -86,7 +86,7 @@ class AuthLibrary
         $this->userModel->rememberUser($userID, $selector, $validator, $expires);
 
         // Save it to the user's browser in a cookie.
-        $appConfig = new App();
+        $appConfig = new Cookie();
         $response = Services::response();
 
         // Create the cookie
@@ -94,9 +94,9 @@ class AuthLibrary
             $this->config->rememberCookie,                     // Cookie Name
             $token,                         // Value
             $this->config->rememberLength,  // # Seconds until it expires
-            $appConfig->cookieDomain,
-            $appConfig->cookiePath,
-            $appConfig->cookiePrefix,
+            $appConfig->domain,
+            $appConfig->path,
+            $appConfig->prefix,
             true,                          // Only send over HTTPS?
             true                            // Hide from Javascript?
         );
@@ -119,9 +119,9 @@ class AuthLibrary
 
     public function logout()
     {
-        $appConfig = new App();
+        $appConfig = new Cookie();
         $response = Services::response();
-        $response->deleteCookie($this->config->rememberCookie, $appConfig->cookieDomain, $appConfig->cookiePath, $appConfig->cookiePrefix);
+        $response->deleteCookie($this->config->rememberCookie, $appConfig->domain, $appConfig->path, $appConfig->prefix);
         $oid = session($this->config->logged_in);
         if ($userID = $oid) $this->user = $this->commonModel->selectOne($this->config->userTable, ['id' => $userID]);
 
@@ -328,16 +328,16 @@ class AuthLibrary
         // Save it to the user's browser in a cookie.
         helper('cookie');
 
-        $appConfig = new App();
+        $appConfig = new Cookie();
 
         // Create the cookie
         set_cookie(
             $this->config->rememberCookie,               // Cookie Name
             $selector . ':' . $validator, // Value
             $this->config->rememberLength,  // # Seconds until it expires
-            $appConfig->cookieDomain,
-            $appConfig->cookiePath,
-            $appConfig->cookiePrefix,
+            $appConfig->domain,
+            $appConfig->path,
+            $appConfig->prefix,
             false,                  // Only send over HTTPS?
             true                  // Hide from Javascript?
         );
@@ -513,7 +513,7 @@ class AuthLibrary
             return $item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1];
         });
         $perms = reset($perms);
-        //dd($perms['typeOfPermissions']);
+        if(empty($perms)) return false;
         $typeOfPermissions = (array)json_decode($perms['typeOfPermissions']);
         $intersect = array_intersect_assoc($typeOfPermissions, $perms);
         if(!empty($intersect)) return true;

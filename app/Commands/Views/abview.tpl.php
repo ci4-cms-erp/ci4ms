@@ -53,5 +53,5 @@
 <@= $this->endSection() ?>
 
 <@= $this->section('javascript') ?>
-<$?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js")?>
+<@= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js")?>
 <@= $this->endSection() ?>

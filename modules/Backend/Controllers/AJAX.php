@@ -61,13 +61,17 @@ class AJAX extends BaseController
 
             if ($this->validate($valData) == false) return redirect('403');
 
-            $max_url_increment = 10000;
-            if ($this->commonModel->isHave($this->request->getPost('where'), ['seflink' => seflink($this->request->getPost('makeSeflink'))]) === 0) return $this->respond(['seflink' => seflink($this->request->getPost('makeSeflink'))], 200);
-            else {
-                for ($i = 1; $i <= $max_url_increment; $i++) {
-                    $new_link = seflink($this->request->getPost('makeSeflink')) . '-' . $i;
-                    if ($this->commonModel->isHave($this->request->getPost('where'), ['seflink' => $new_link]) === 0) return $this->respond(['seflink' => $new_link], 200);
+            $existingSeflinks = $this->commonModel->lists($this->request->getPost('where'), 'seflink');
+            $desiredSeflink = seflink($this->request->getPost('makeSeflink'), ['locale' => $this->commonModel->selectOne('languages', ['defaultLanguage' => true])->translateName]);
+
+            if (in_array($desiredSeflink, array_column($existingSeflinks, 'seflink')) === true) {
+                $i = 1;
+                while (in_array($desiredSeflink . '-' . $i, array_column($existingSeflinks, 'seflink'))) {
+                    $i++;
                 }
+                return $this->respond(['seflink' => $desiredSeflink. '-' . $i], 200);
+            } else {
+                return $this->respond(['seflink' => $desiredSeflink], 200);
             }
         } else return $this->failForbidden();
     }

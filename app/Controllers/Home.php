@@ -48,7 +48,7 @@ class Home extends BaseController
                 ],
                 'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
             ]);
-            if($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs($this->defData['pageInfo']->id);
+            if($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id);
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
         } else return show_404();
     }
