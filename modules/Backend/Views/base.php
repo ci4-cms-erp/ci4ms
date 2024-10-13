@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noimageindex, nofollow, nosnippet">
 
-    <title>Kun-CMS/ERP <?= $backConfig->vers ?> | <?=lang('Backend.'.$title->pagename)?></title>
+    <title>Kun-CMS/ERP <?= getGitVersion() ?> | <?=lang('Backend.'.$title->pagename)?></title>
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet"
@@ -157,7 +157,7 @@ echo navigation($navigation, $uri);
 
     <footer class="main-footer">
         <div class="float-right d-none d-sm-block">
-            <b>Version</b> <?= $backConfig->vers ?>
+            <b>Version</b> <?= getGitVersion() ?>
         </div>
         <strong>Copyright &copy; <?= date('Y') ?>.</strong> All rights reserved.
     </footer>

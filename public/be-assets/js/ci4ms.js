@@ -1,4 +1,5 @@
 function pageImgelfinderDialog() {
+    var syncInterval;
     var fm = $('<div/>').dialogelfinder({
         url: '/backend/media/elfinderConnection', // change with the url of your connector
         lang: 'en',
@@ -25,16 +26,39 @@ function pageImgelfinderDialog() {
             }
         },
         soundPath: '/be-assets/plugins/elFinder/sounds',
-        sync: 1000,
         handlers: {
             upload: function () {
                 $('.elfinder-dialog-error').hide();
+            },
+            open: function(event, instance) {
+                // elFinder açıldığında sync başlat
+                startSync(instance);
+            },
+            close: function(event, instance) {
+                // elFinder kapandığında sync durdur
+                stopSync();
+            },
+            destroy: function(event, instance) {
+                // elFinder destroy edildiğinde sync durdur
+                stopSync();
             }
         }
     }).dialogelfinder('instance');
+
+    function startSync(instance) {
+        syncInterval = setInterval(function() {
+            instance.exec('sync');
+        }, 1000); // 1000 ms (1 saniye)
+    }
+
+    function stopSync() {
+        clearInterval(syncInterval);
+    }
 }
 
 function pageMultipleImgelfinderDialog(id) {
+    var syncInterval;
+
     var fm = $('<div/>').dialogelfinder({
         url: '/backend/media/elfinderConnection', // change with the url of your connector
         lang: 'en',
@@ -42,14 +66,13 @@ function pageMultipleImgelfinderDialog(id) {
         height: 768,
         destroyOnClose: true,
         cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme-gray.css'],
-
         getFileCallback: function (files) {
-            $('[name="imgs['+id+'][pageimg]"]').val(files.url.replace(location.origin,''));
-            $('[name="imgs['+id+'][img]').attr('src',files.url);
+            $('[name="imgs['+id+'][pageimg]"]').val(files.url.replace(location.origin, ''));
+            $('[name="imgs['+id+'][img]"]').attr('src', files.url);
             const img = new Image();
             img.onload = function() {
-                $('[name="imgs['+id+'][pageIMGHeight]"]').val(this.height)
-                $('[name="imgs['+id+'][pageIMGWidth]"]').val(this.width)
+                $('[name="imgs['+id+'][pageIMGHeight]"]').val(this.height);
+                $('[name="imgs['+id+'][pageIMGWidth]"]').val(this.width);
             }
             img.src = files.url;
         },
@@ -60,13 +83,34 @@ function pageMultipleImgelfinderDialog(id) {
             }
         },
         soundPath: '/be-assets/plugins/elFinder/sounds',
-        sync: 1000,
         handlers: {
             upload: function () {
                 $('.elfinder-dialog-error').hide();
+            },
+            open: function(event, instance) {
+                // elFinder açıldığında sync başlat
+                startSync(instance);
+            },
+            close: function(event, instance) {
+                // elFinder kapandığında sync durdur
+                stopSync();
+            },
+            destroy: function(event, instance) {
+                // elFinder destroy edildiğinde sync durdur
+                stopSync();
             }
         }
     }).dialogelfinder('instance');
+
+    function startSync(instance) {
+        syncInterval = setInterval(function() {
+            instance.exec('sync');
+        }, 1000); // 1000 ms (1 saniye)
+    }
+
+    function stopSync() {
+        clearInterval(syncInterval);
+    }
 }
 
 function multipleImgSelect(id) {

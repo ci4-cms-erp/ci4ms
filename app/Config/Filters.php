@@ -2,17 +2,22 @@
 
 namespace Config;
 
-use App\Filters\Ci4ms;
-use CodeIgniter\Config\BaseConfig;
+use CodeIgniter\Config\Filters as BaseFilters;
+use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
 use CodeIgniter\Filters\DebugToolbar;
+use CodeIgniter\Filters\ForceHTTPS;
 use CodeIgniter\Filters\Honeypot;
 use CodeIgniter\Filters\InvalidChars;
+use CodeIgniter\Filters\PageCache;
+use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
+
+use App\Filters\Ci4ms;
 use Modules\Backend\Filters\BackendAfterLoginFilter;
 use Modules\Backend\Filters\BackendAuthFilter;
 
-class Filters extends BaseConfig
+class Filters extends BaseFilters
 {
     /**
      * Configures aliases for Filter classes to
@@ -24,14 +29,45 @@ class Filters extends BaseConfig
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
+        'cors'          => Cors::class,
+        'forcehttps'    => ForceHTTPS::class,
+        'pagecache'     => PageCache::class,
+        'performance'   => PerformanceMetrics::class,
         'ci4ms' => Ci4ms::class,
         'backendAuthFilter' => BackendAuthFilter::class,
         'backendAfterLoginFilter' => BackendAfterLoginFilter::class,
     ];
 
     /**
+     * List of special required filters.
+     *
+     * The filters listed here are special. They are applied before and after
+     * other kinds of filters, and always applied even if a route does not exist.
+     *
+     * Filters set by default provide framework functionality. If removed,
+     * those functions will no longer work.
+     *
+     * @see https://codeigniter.com/user_guide/incoming/filters.html#provided-filters
+     *
+     * @var array{before: list<string>, after: list<string>}
+     */
+    public array $required = [
+        'before' => [
+            'forcehttps', // Force Global Secure Requests
+            'pagecache',  // Web Page Caching
+        ],
+        'after' => [
+            'pagecache',   // Web Page Caching
+            'performance', // Performance Metrics
+            'toolbar',     // Debug Toolbar
+        ],
+    ];
+
+    /**
      * List of filter aliases that are always
      * applied before and after every request.
+     *
+     * @var array<string, array<string, array<string, string>>>|array<string, list<string>>
      */
     public array $globals = [
         'before' => [
@@ -58,15 +94,13 @@ class Filters extends BaseConfig
      * particular HTTP method (GET, POST, etc.).
      *
      * Example:
-     * 'post' => ['foo', 'bar']
-     *
-     *
-     *
-     *
+     * 'POST' => ['foo', 'bar']
      *
      * If you use this, you should disable auto-routing because auto-routing
      * permits any HTTP method to access a controller. Accessing the controller
-     * with a method you don’t expect could bypass the filter.
+     * with a method you don't expect could bypass the filter.
+     *
+     * @var array<string, list<string>>
      */
     public array $methods = [];
 
@@ -76,10 +110,13 @@ class Filters extends BaseConfig
      *
      * Example:
      * 'isLoggedIn' => ['before' => ['account/*', 'profiles/*']]
+     *
+     * @var array<string, array<string, list<string>>>
      */
     public array $filters = [
         'backendAuthFilter' => ['before'=>['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],
-        'backendAfterLoginFilter'=>['before' => ['backend','backend/officeWorker/*', 'backend/pages/*', 'backend/settings','backend/settings/*', 'backend/menu/*', 'backend/blogs/*', 'backend/tagify',
-'backend/checkSeflink', 'backend/isActive', 'backend/maintenance', 'backend/media', 'backend/locked', 'backend/profile']]
+        'backendAfterLoginFilter'=>['before' => ['backend','backend/officeWorker/*','backend/pages/*','backend/settings','backend/settings/*',
+            'backend/menu/*','backend/blogs/*','backend/tagify','backend/checkSeflink','backend/isActive',
+            'backend/maintenance','backend/menu','backend/media','backend/locked','backend/profile']]
     ];
 }

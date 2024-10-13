@@ -53,27 +53,30 @@ class AJAX extends BaseController
      */
     public function autoLookSeflinks()
     {
-        if ($this->request->isAJAX()) {
-            $valData = ([
-                'makeSeflink' => ['label' => 'makeSeflink', 'rules' => 'required'],
-                'where' => ['label' => 'where', 'rules' => 'required']
-            ]);
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $valData = ([
+            'makeSeflink' => ['label' => 'makeSeflink', 'rules' => 'required'],
+            'where' => ['label' => 'where', 'rules' => 'required']
+        ]);
 
-            if ($this->validate($valData) == false) return redirect('403');
-
-            $existingSeflinks = $this->commonModel->lists($this->request->getPost('where'), 'seflink');
-            $desiredSeflink = seflink($this->request->getPost('makeSeflink'));
-
-            if (in_array($desiredSeflink, array_column($existingSeflinks, 'seflink')) === true) {
-                $i = 1;
-                while (in_array($desiredSeflink . '-' . $i, array_column($existingSeflinks, 'seflink'))) {
-                    $i++;
-                }
-                return $this->respond(['seflink' => $desiredSeflink. '-' . $i], 200);
-            } else {
-                return $this->respond(['seflink' => $desiredSeflink], 200);
+        if ($this->validate($valData) == false) return redirect('403');
+        $locale = !empty($this->request->getPost('locale')) ? ['locale' => $this->request->getPost('locale')] : ['locale' => 'tr'];
+        if ($this->request->getPost('update') == 1) {
+            $oldSeflink = $this->commonModel->selectOne($this->request->getPost('where'), ['id' => $this->request->getPost('id')]);
+            if (seflink($this->request->getPost('makeSeflink'), $locale) == $oldSeflink->seflink)
+                return $this->respond(['seflink' => $oldSeflink->seflink], 200);
+        }
+        $existingSeflinks = $this->commonModel->lists($this->request->getPost('where'), 'seflink');
+        $desiredSeflink = seflink($this->request->getPost('makeSeflink'), $locale);
+        if (in_array($desiredSeflink, array_column($existingSeflinks, 'seflink')) === true) {
+            $i = 1;
+            while (in_array($desiredSeflink . '-' . $i, array_column($existingSeflinks, 'seflink'))) {
+                $i++;
             }
-        } else return $this->failForbidden();
+            return $this->respond(['seflink' => $desiredSeflink . '-' . $i], 200);
+        } else {
+            return $this->respond(['seflink' => $desiredSeflink], 200);
+        }
     }
 
     /**
@@ -106,7 +109,7 @@ class AJAX extends BaseController
             ]);
             if ($this->validate($valData) == false) return redirect('403');
             if ($this->commonModel->edit('settings', ['content' => (bool)$this->request->getPost('isActive')], ['option' => 'maintenanceMode']))
-                return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
+                return $this->respond(['result' => (bool)$this->request->getPost('isActive')], 200);
             else
                 return $this->fail(['pr' => false]);
         } else return $this->failForbidden();
@@ -121,7 +124,7 @@ class AJAX extends BaseController
             ]);
             if ($this->validate($valData) == false) return redirect('403');
             if ($this->commonModel->edit('settings', ['content' => (int)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
-                return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
+                return $this->respond(['result' => (bool)$this->request->getPost('isActive')], 200);
             else
                 return $this->fail(['pr' => false]);
         } else return $this->failForbidden();

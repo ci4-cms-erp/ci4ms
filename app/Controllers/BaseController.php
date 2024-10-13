@@ -40,7 +40,7 @@ abstract class BaseController extends Controller
      *
      * @var array
      */
-    protected $helpers = ['html'];
+    protected $helpers = [];
 
     /**
      * Be sure to declare properties for any property fetch you initialized.
@@ -66,6 +66,8 @@ abstract class BaseController extends Controller
         // E.g.: $this->session = \Config\Services::session();
         $this->commonModel = new CommonModel();
         $this->ci4msseoLibrary = new Ci4msseoLibrary();
-        $this->defData = ['settings' => (object)cache('settings'), 'menus' => $this->commonModel->lists('menu', '*', [], 'queue ASC'), 'agent'=>$this->request->getUserAgent()];
+        if (empty(cache('menus'))) $menus = $this->commonModel->lists('menu', '*', [], 'queue ASC');
+        else $menus = (object)cache('menus');
+        $this->defData = ['settings' => (object)cache('settings'), 'menus' => $menus, 'agent' => $this->request->getUserAgent()];
     }
 }

@@ -50,6 +50,6 @@ class Ci4ms implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        if(empty(cache('menus'))) cache()->save('menus',$this->commonModel->lists('menu','id,title,seflink,parent,pages_id'),86400);
+        if(empty(cache('menus'))) cache()->save('menus',$this->commonModel->lists('menu','id,title,seflink,parent,pages_id,hasChildren',[],'queue ASC'),86400);
     }
 }

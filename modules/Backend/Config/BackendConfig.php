@@ -25,9 +25,4 @@ class BackendConfig extends BaseConfig
     // Layout for the views to extend
     //--------------------------------------------------------------------
     public $viewLayout = 'Modules\Backend\Views\base';
-
-    //--------------------------------------------------------------------
-    // Version for the views
-    //--------------------------------------------------------------------
-    public $vers = 'v0.3.2';
 }

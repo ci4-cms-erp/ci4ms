@@ -97,7 +97,7 @@ class AuthLibrary
             $appConfig->domain,
             $appConfig->path,
             $appConfig->prefix,
-            true,                          // Only send over HTTPS?
+            false,                          // Only send over HTTPS?
             true                            // Hide from Javascript?
         );
     }
@@ -287,8 +287,7 @@ class AuthLibrary
         if ($this->isLoggedIn()) return true;
 
         // Check the remember me functionality.
-        helper('cookie');
-        $remember = get_cookie('remember');
+        $remember = Services::request()->getCookie(getenv('cookie.prefix').$this->config->rememberCookie);
 
         if (empty($remember)) return false;
 
