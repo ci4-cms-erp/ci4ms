@@ -10,12 +10,12 @@ class Tags extends BaseController
     {
         $totalItems = $this->commonModel->count('tags',[]);
         $itemsPerPage = 20;
-        $currentPage = $this->request->uri->getSegment(4, 1);
+        $currentPage = $this->request->getUri()->getSegment(4, 1);
         $urlPattern = '/backend/pages/(:num)';
         $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
         $paginator->setMaxPagesToShow(5);
         $this->defData['paginator'] = $paginator;
-        $bpk = ($this->request->uri->getSegment(4, 1) - 1) * $itemsPerPage;
+        $bpk = ($this->request->getUri()->getSegment(4, 1) - 1) * $itemsPerPage;
         $this->defData['tags']=$this->commonModel->lists('tags','*',[],'id ASC',$itemsPerPage,$bpk);
         return view('Modules\Backend\Views\tags\list',$this->defData);
     }

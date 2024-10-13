@@ -29,11 +29,11 @@ class Locked extends BaseController
         }
         $totalItems = $this->commonModel->count('locked', $filterData);
         $itemsPerPage = 10;
-        $currentPage = $this->request->uri->getSegment(3, 1);
+        $currentPage = $this->request->getUri()->getSegment(3, 1);
         $urlPattern = '/backend/locked/(:num)';
         $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
         $paginator->setMaxPagesToShow(5);
-        $bpk = ($this->request->uri->getSegment(3, 1) - 1) * $itemsPerPage;
+        $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
 
         //dd($clearData);
         $this->defData = array_merge($this->defData, [

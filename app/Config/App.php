@@ -93,7 +93,7 @@ class App extends BaseConfig
      * strings (like currency markers, numbers, etc), that your program
      * should run under for this request.
      */
-    public string $defaultLocale = 'tr';
+    public string $defaultLocale = 'en';
 
     /**
      * --------------------------------------------------------------------------
@@ -120,7 +120,7 @@ class App extends BaseConfig
      *
      * @var list<string>
      */
-    public array $supportedLocales = ['tr'];
+    public array $supportedLocales = ['en','tr'];
 
     /**
      * --------------------------------------------------------------------------

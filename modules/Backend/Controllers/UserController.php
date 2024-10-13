@@ -31,12 +31,12 @@ class UserController extends BaseController
         $this->defData['timeClass'] = new Time();
         $totalItems = $this->commonModel->count('users', ['group_id!=' => 1, 'deleted_at' => null]);
         $itemsPerPage = 20;
-        $currentPage = $this->request->uri->getSegment('3', 1);
+        $currentPage = $this->request->getUri()->getSegment('3', 1);
         $urlPattern = '/backend/officeWorker/(:num)';
         $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
         $paginator->setMaxPagesToShow(5);
         $this->defData['paginator'] = $paginator;
-        $bpk = ($this->request->uri->getSegment(3, 1) - 1) * $itemsPerPage;
+        $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
         $this->defData['userLists'] = $this->userModel->userList($itemsPerPage,
             'users.id,email,firstname,sirname,status,auth_groups.name,black_list_users.notes,reset_expires',
             [/*'group_id!=' => 1,*/ 'deleted_at' => null], $bpk);

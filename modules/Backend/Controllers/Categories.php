@@ -10,11 +10,11 @@ class Categories extends BaseController
     {
         $totalItems = $this->commonModel->count('categories', []);
         $itemsPerPage = 20;
-        $currentPage = $this->request->uri->getSegment('4', 1);
+        $currentPage = $this->request->getUri()->getSegment('4', 1);
         $urlPattern = '/backend/blogs/categories/(:num)';
         $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
         $paginator->setMaxPagesToShow(5);
-        $bpk = ($this->request->uri->getSegment(4, 1) - 1) * $itemsPerPage;
+        $bpk = ($this->request->getUri()->getSegment(4, 1) - 1) * $itemsPerPage;
         $this->defData['paginator'] = $paginator;
         $this->defData['categories'] = $this->commonModel->lists('categories','*',[],'id ASC',$itemsPerPage, $bpk);
         return view('Modules\Backend\Views\categories\list', $this->defData);

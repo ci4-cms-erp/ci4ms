@@ -61,6 +61,7 @@ writable/uploads/*
 !writable/uploads/index.html
 
 writable/debugbar/*
+!writable/debugbar/.gitkeep
 
 php_errors.log
 
@@ -103,7 +104,7 @@ _modules/*
 nbproject/
 build/
 nbbuild/
-#dist/
+dist/
 nbdist/
 nbactions.xml
 nb-configuration.xml
@@ -123,7 +124,6 @@ nb-configuration.xml
 
 /results/
 /phpunit*.xml
-/.phpunit.*.cache
 
 template
 app/Config/Routes.php

@@ -36,11 +36,11 @@ class Blog extends BaseController
     {
         $totalItems = $this->commonModel->count('categories', []);
         $itemsPerPage = 20;
-        $currentPage = $this->request->uri->getSegment(3, 1);
+        $currentPage = $this->request->getUri()->getSegment(3, 1);
         $urlPattern = '/backend/blogs/(:num)';
         $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
         $paginator->setMaxPagesToShow(5);
-        $bpk = ($this->request->uri->getSegment(3, 1) - 1) * $itemsPerPage;
+        $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
         $this->defData = array_merge($this->defData, ['paginator' => $paginator, 'blogs' => $this->commonModel->lists('blog', '*', [], 'id ASC', $itemsPerPage, $bpk)]);
         return view('Modules\Backend\Views\blog\list', $this->defData);
     }

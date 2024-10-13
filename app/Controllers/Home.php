@@ -21,8 +21,9 @@ class Home extends BaseController
 
     public function index(string $seflink = '/')
     {
-        if ($this->commonModel->isHave('pages', ['seflink' => $seflink, 'isActive' => true]) === 1) {
-            $this->defData['pageInfo'] = $this->commonModel->selectOne('pages', ['seflink' => $seflink]);
+        $page=$this->commonModel->selectOne('pages', ['seflink' => $seflink]);
+        if (!empty($page)) {
+            $this->defData['pageInfo'] = $page;
             $this->defData['pageInfo']->content = $this->commonLibrary->parseInTextFunctions($this->defData['pageInfo']->content);
             $keywords = [];
             $this->defData['pageInfo']->seo = json_decode($this->defData['pageInfo']->seo);
@@ -63,10 +64,10 @@ class Home extends BaseController
     {
         $this->defData['seo'] = $this->ci4msseoLibrary->metaTags('Blog', 'blog listesi', 'blog', ['keywords' => ["value" => "blog listesi"]]);
         $itemsPerPage = 12;
-        $paginator = new Paginator($this->commonModel->count('blog', ['isActive' => true]), $itemsPerPage, $this->request->uri->getSegment(2, 1), '/blog/(:num)');
+        $paginator = new Paginator($this->commonModel->count('blog', ['isActive' => true]), $itemsPerPage, $this->request->getUri()->getSegment(2, 1), '/blog/(:num)');
         $paginator->setMaxPagesToShow(5);
         $this->defData['paginator'] = $paginator;
-        $bpk = ($this->request->uri->getSegment(2, 1) - 1) * $itemsPerPage;
+        $bpk = ($this->request->getUri()->getSegment(2, 1) - 1) * $itemsPerPage;
         $this->defData['dateI18n'] = new Time();
         $this->defData['blogs'] = $this->commonModel->lists('blog', '*', ['isActive' => true], 'id ASC', $itemsPerPage, $bpk);
         $modelTag = new AjaxModel();
@@ -76,7 +77,7 @@ class Home extends BaseController
         }
         $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
         $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('Organization', [
-            'url' => site_url(implode('/', $this->request->uri->getSegments())),
+            'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
             'logo' => $this->defData['settings']->logo,
             'name' => $this->defData['settings']->siteName,
             'children' => [
@@ -117,7 +118,7 @@ class Home extends BaseController
             $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['infos']->title, $this->defData['infos']->seo->description, 'blog/' . $seflink, $metatags = ['keywords' => $keywords, 'author' => $this->defData['authorInfo']->firstname . ' ' . $this->defData['authorInfo']->sirname], $this->defData['infos']->seo->coverImage);
             $this->defData['categories'] = $this->commonModel->lists('categories');
             $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('BlogPosting', [
-                'url' => site_url(implode('/', $this->request->uri->getSegments())),
+                'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
                 'logo' => $this->defData['settings']->logo,
                 'name' => $this->defData['settings']->siteName,
                 'headline' => $this->defData['infos']->title,
@@ -148,12 +149,12 @@ class Home extends BaseController
         if ($this->commonModel->isHave('tags', ['seflink' => $seflink]) === 1) {
             $totalItems = $this->commonModel->count('blog', ['isActive' => true]);
             $itemsPerPage = 12;
-            $currentPage = $this->request->uri->getSegment(3, 1);
+            $currentPage = $this->request->getUri()->getSegment(3, 1);
             $urlPattern = '/tag/' . $seflink . '/(:num)';
             $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
             $paginator->setMaxPagesToShow(5);
             $this->defData['paginator'] = $paginator;
-            $bpk = ($this->request->uri->getSegment(3, 1) - 1) * $itemsPerPage;
+            $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
             $this->defData['dateI18n'] = new Time();
             $this->defData['blogs'] = $this->ci4msModel->taglist(['tags.seflink' => $seflink, 'blog.isActive' => true], $itemsPerPage, $bpk, 'blog.*');
             $modelTag = new AjaxModel();
@@ -181,12 +182,12 @@ class Home extends BaseController
         $this->defData['seo'] = $this->commonLibrary->seo($this->defData['category']->title, $this->defData['category']->seo->description, $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['category']->seo->coverImage) ? $this->defData['category']->seo->coverImage : '');
         $totalItems = $this->commonModel->count('blog', ['isActive' => true]);
         $itemsPerPage = 12;
-        $currentPage = $this->request->uri->getSegment(3, 1);
+        $currentPage = $this->request->getUri()->getSegment(3, 1);
         $urlPattern = '/category/' . $seflink . '/(:num)';
         $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
         $paginator->setMaxPagesToShow(5);
         $this->defData['paginator'] = $paginator;
-        $bpk = ($this->request->uri->getSegment(3, 1) - 1) * $itemsPerPage;
+        $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
         $this->defData['dateI18n'] = new Time();
         $this->defData['blogs'] = $this->ci4msModel->categoryList(['categories_id' => $this->defData['category']->id, 'isActive' => true], $itemsPerPage, $bpk);
         $modelTag = new AjaxModel();

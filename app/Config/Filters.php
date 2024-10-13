@@ -22,6 +22,11 @@ class Filters extends BaseFilters
     /**
      * Configures aliases for Filter classes to
      * make reading things nicer and simpler.
+     *
+     * @var array<string, class-string|list<class-string>>
+     *
+     * [filter_name => classname]
+     * or [filter_name => [classname1, classname2, ...]]
      */
     public array $aliases = [
         'csrf'          => CSRF::class,
@@ -83,7 +88,7 @@ class Filters extends BaseFilters
             // 'invalidchars',
         ],
         'after' => [
-            'toolbar',
+            'toolbar'
             // 'honeypot',
             // 'secureheaders',
         ],
@@ -113,10 +118,5 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [
-        'backendAuthFilter' => ['before'=>['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],
-        'backendAfterLoginFilter'=>['before' => ['backend','backend/officeWorker/*','backend/pages/*','backend/settings','backend/settings/*',
-            'backend/menu/*','backend/blogs/*','backend/tagify','backend/checkSeflink','backend/isActive',
-            'backend/maintenance','backend/menu','backend/media','backend/locked','backend/profile']]
-    ];
+    public array $filters = [];
 }

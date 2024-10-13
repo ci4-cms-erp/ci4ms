@@ -50,14 +50,14 @@ class BaseController extends Controller
         $this->logged_in_user = $userModel->loggedUser(0, '*', ['users.id' => session()->get($this->config->logged_in)]);
         $this->logged_in_user = reset($this->logged_in_user);
         $uri = '';
-        if ($this->request->uri->getTotalSegments() > 1) {
-            $segs = $this->request->uri->getSegments();
+        if ($this->request->getUri()->getTotalSegments() > 1) {
+            $segs = $this->request->getUri()->getSegments();
             unset($segs[0]);
             foreach ($segs as $totalSegment) {
                 $uri .= '/' . $totalSegment;
             }
             $uri = substr($uri, 1);
-        } else $uri = $this->request->uri->getSegment(1);
+        } else $uri = $this->request->getUri()->getSegment(1);
         $router = service('router');
         $searchValues = [str_replace('\\', '-', $router->controllerName()), $router->methodName()];
         $perms = array_reduce(cache(session()->get($this->config->logged_in) . '_permissions'), fn($carry, $item) => $carry ?? ($item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1] ? $item : null));

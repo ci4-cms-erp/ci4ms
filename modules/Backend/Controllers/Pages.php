@@ -21,12 +21,12 @@ class Pages extends BaseController
     {
         $totalItems = $this->commonModel->count('pages', []);
         $itemsPerPage = 20;
-        $currentPage = $this->request->uri->getSegment('3', 1);
+        $currentPage = $this->request->getUri()->getSegment('3', 1);
         $urlPattern = '/backend/pages/(:num)';
         $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
         $paginator->setMaxPagesToShow(5);
         $this->defData['paginator'] = $paginator;
-        $bpk = ($this->request->uri->getSegment(3, 1) - 1) * $itemsPerPage;
+        $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
         $this->defData['pages'] = $this->commonModel->lists('pages', '*', [], 'id ASC', $itemsPerPage, $bpk);
         return view('Modules\Backend\Views\pages\list', $this->defData);
     }
