@@ -66,7 +66,6 @@ class UserController extends BaseController
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
         if ($this->commonModel->isHave('users',['email' => $this->request->getPost('email')]) === 1) return redirect()->back()->withInput()->with('errors', ['E-posta adresi daha önce kayıt edilmiş lütfen üye listesini kontrol ediniz.']);
-        d(session()->get('logged_in'));
         $data = [
             'email' => $this->request->getPost('email'),
             'firstname' => $this->request->getPost('firstname'),

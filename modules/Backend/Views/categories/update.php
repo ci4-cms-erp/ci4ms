@@ -146,7 +146,9 @@
         $.post('<?=route_to('checkSeflink')?>', {
             "<?=csrf_token()?>": "<?=csrf_hash()?>",
             'makeSeflink': $(this).val(),
-            'where': 'categories'
+            'where': 'categories',
+            'update':1,
+            'id':<?=$infos->id?>
         }, 'json').done(function (data) {
             $('.seflink').val(data.seflink);
         });
@@ -154,9 +156,10 @@
 
     $('.seflink').on('change', function () {
         $.post('<?=route_to('checkSeflink')?>', {
-            "<?=csrf_token()?>": "<?=csrf_hash()?>",
             'makeSeflink': $(this).val(),
-            'where': 'categories'
+            'update':1,
+            'where': 'categories',
+            'id':<?=$infos->id?>
         }, 'json').done(function (data) {
             $('.seflink').val(data.seflink);
         });

@@ -5,12 +5,9 @@ namespace Modules\Backend\Controllers;
 use JasonGrimes\Paginator;
 use Modules\Backend\Libraries\CommonTagsLibrary;
 use Modules\Backend\Models\AjaxModel;
-use CodeIgniter\API\ResponseTrait;
 
 class Blog extends BaseController
 {
-    use ResponseTrait;
-
     /**
      * @var CommonTagsLibrary
      */

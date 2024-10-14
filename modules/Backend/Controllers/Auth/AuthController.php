@@ -102,8 +102,8 @@ class AuthController extends BaseController
         if (is_null($user)) return redirect()->back()->with('error', lang('Auth.forgotNoUser'));
 
         // Save the reset hash /
-        $this->commonModel->updateOne('users', ['_id' => new ObjectId($user->_id)], ['reset_hash' => $this->authLib->generateActivateHash(), 'reset_expires' => date('Y-m-d H:i:s', time() + $this->config->resetTime)]);
-        $user = $this->commonModel->getOne('users', ['_id' => new ObjectId($user->_id)]);
+        $this->commonModel->updateOne('users', ['id' => $user->_id], ['reset_hash' => $this->authLib->generateActivateHash(), 'reset_expires' => date('Y-m-d H:i:s', time() + $this->config->resetTime)]);
+        $user = $this->commonModel->getOne('users', ['id' => $user->_id]);
         $commonLibrary = new CommonLibrary();
         $mailResult = $commonLibrary->phpMailer('noreply@ci4ms.com', 'noreply@ci4ms.com',
             ['mail' => $user->email],

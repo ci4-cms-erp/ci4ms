@@ -9,7 +9,7 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
 
     // Login/out
     $routes->get('login', 'Auth\AuthController::login', ['as' => 'login']);
-    $routes->post('login', 'Auth\AuthController::attemptLogin', []);
+    $routes->post('login', 'Auth\AuthController::attemptLogin');
     $routes->get('logout', 'Auth\AuthController::logout', ['as' => 'logout']);
 
     // Activation
@@ -32,9 +32,9 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->get('update_user/(:any)', 'UserController::update_user/$1', ['as' => 'update_user']);
         $routes->post('update_user/(:any)', 'UserController::update_user_post/$1', []);
         $routes->get('user_del/(:any)', 'UserController::user_del/$1', ['as' => 'user_del']);
-        $routes->post('blackList', 'UserController::ajax_blackList_post', ['as'=>'blackList',]);
+        $routes->post('blackList', 'UserController::ajax_blackList_post', ['as' => 'blackList']);
         $routes->post('removeFromBlacklist', 'UserController::ajax_remove_from_blackList_post', []);
-        $routes->post('forceResetPassword', 'UserController::ajax_force_reset_password', ['as'=>'forceResetPassword']);
+        $routes->post('forceResetPassword', 'UserController::ajax_force_reset_password', ['as' => 'forceResetPassword']);
         $routes->get('user_perms/(:any)', 'PermgroupController::user_perms/$1', ['as' => 'user_perms']);
         $routes->post('user_perms/(:any)', 'PermgroupController::user_perms_post/$1', []);
 

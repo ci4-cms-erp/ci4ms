@@ -84,20 +84,19 @@ class AJAX extends BaseController
      */
     public function isActive()
     {
-        if ($this->request->isAJAX()) {
+        if (!$this->request->isAJAX()) return $this->failForbidden();
             $valData = ([
                 'id' => ['label' => 'id', 'rules' => 'required'],
                 'isActive' => ['label' => 'isActive', 'rules' => 'required'],
                 'where' => ['label' => 'where', 'rules' => 'required']
             ]);
 
-            if ($this->validate($valData) == false) return redirect('403');
+            if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
 
             if ($this->commonModel->edit($this->request->getPost('where'), ['isActive' => (bool)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
                 return $this->respond(['result' => true], 200);
             else
-                return $this->fail(['result' => false]);
-        } else return $this->failForbidden();
+            return $this->failForbidden();
     }
 
     public function maintenance()
@@ -109,7 +108,7 @@ class AJAX extends BaseController
             ]);
             if ($this->validate($valData) == false) return redirect('403');
             if ($this->commonModel->edit('settings', ['content' => (bool)$this->request->getPost('isActive')], ['option' => 'maintenanceMode']))
-                return $this->respond(['result' => (bool)$this->request->getPost('isActive')], 200);
+                return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
             else
                 return $this->fail(['pr' => false]);
         } else return $this->failForbidden();
@@ -124,7 +123,7 @@ class AJAX extends BaseController
             ]);
             if ($this->validate($valData) == false) return redirect('403');
             if ($this->commonModel->edit('settings', ['content' => (int)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
-                return $this->respond(['result' => (bool)$this->request->getPost('isActive')], 200);
+                return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
             else
                 return $this->fail(['pr' => false]);
         } else return $this->failForbidden();

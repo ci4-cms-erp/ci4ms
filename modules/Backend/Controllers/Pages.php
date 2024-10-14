@@ -102,7 +102,7 @@ class Pages extends BaseController
 
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $info = $this->commonModel->selectOne('pages', ['id' => $id]);
-        if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave(['seflink' => $this->request->getPost('seflink')], 'pages') === 1) return redirect()->back()->withInput()->with('error', 'Sayfa seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
+        if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave('pages',['seflink' => $this->request->getPost('seflink'),'id!='=>$id]) === 1) return redirect()->back()->withInput()->with('error', 'Sayfa seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
         $data = ['title' => $this->request->getPost('title'),
             'content' => $this->request->getPost('content'),
             'isActive' => (bool)$this->request->getPost('isActive'),

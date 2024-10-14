@@ -34,11 +34,10 @@ class Categories extends BaseController
             $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
             $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
         }
-        if (!empty($this->request->getPost('pageimg'))) $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'valid_url'];
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         if ($this->commonModel->isHave('categories',['seflink' => $this->request->getPost('seflink')]) === 0) {
             $data = ['title' => $this->request->getPost('title'), 'seflink' => $this->request->getPost('seflink'),'isActive' => $this->request->getPost('isActive')];
-            if (!empty($this->request->getPost('parent'))) $data['parent'] = new ObjectId($this->request->getPost('parent'));
+            if (!empty($this->request->getPost('parent'))) $data['parent'] = $this->request->getPost('parent');
             $seo = [];
             if (!empty($this->request->getPost('description'))) $seo['description'] = $this->request->getPost('description');
             if (!empty($this->request->getPost('pageimg'))) $seo['coverImage'] = $this->request->getPost('pageimg');
@@ -67,7 +66,6 @@ class Categories extends BaseController
             $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
             $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
         }
-        if (!empty($this->request->getPost('pageimg'))) $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'valid_url'];
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $info = $this->commonModel->selectOne('categories', ['id' => $id]);
         if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->get_where(['seflink' => $this->request->getPost('seflink')], 'categories') === 1) return redirect()->back()->withInput()->with('error', 'Kategori seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');

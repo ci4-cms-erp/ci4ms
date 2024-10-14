@@ -25,8 +25,8 @@ class CustomRules
                     $error = " Bu değer ip4 yada ip6 formatına uygun değil. <b>" . $ip . "</b>";
                     return false;
                 }
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) $ipsFormat [] = 'ip4';
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) $ipsFormat [] = 'ip6';
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) $ipsFormat[] = 'ip4';
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) $ipsFormat[] = 'ip6';
             }
             if (count(array_unique($ipsFormat)) !== 1) {
                 $error = "IP formatları aynı değil. <b>" . $item . "<b>";
@@ -60,5 +60,30 @@ class CustomRules
         } else {
             trigger_error('GMP or BCMATH extension not installed!', E_USER_ERROR);
         }
+    }
+
+    public function phoneNumberVal(string $phone, string &$error = null)
+    {
+        if (!preg_match('/^\(\d{3}\)\s\d{3}\s\d{2}\s\d{2}$/', $phone)) {
+            $error = 'Telefon Numarası Uygun formatta değil. Lütfen doğru formatta yazınız.';
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Bir verinin JSON formatında olup olmadığını kontrol eder.
+     *
+     * @param string $string Kontrol edilecek string.
+     * 
+     * @return bool Verinin geçerli JSON olup olmadığını döner.
+     */
+    function isValidJson($string)
+    {
+        // json_decode ile string'i çözümlemeye çalışıyoruz
+        json_decode($string);
+
+        // json_last_error() ile herhangi bir hata olup olmadığını kontrol ediyoruz
+        return (json_last_error() === JSON_ERROR_NONE);
     }
 }

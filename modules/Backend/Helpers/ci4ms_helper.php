@@ -23,8 +23,8 @@ if (!function_exists('nestable')) {
 
                 echo '<span class="float-left">' . $menu->title . '</span>
                                         <div class="dd-nodrag btn-group float-right">
-                               <button class="removeFromMenu btn btn-secondary btn-sm" onclick="removeFromMenu(\''.$menu->id . '\',\'' . $menu->urlType.
-                '\')" type="button"><i class="fas fa-trash"></i></button>
+                               <button class="removeFromMenu btn btn-secondary btn-sm" onclick="removeFromMenu(\'' . $menu->id . '\',\'' . $menu->urlType .
+                    '\')" type="button"><i class="fas fa-trash"></i></button>
                               </div>
                                     </div>
                                 </div>';
@@ -37,7 +37,7 @@ if (!function_exists('nestable')) {
     }
 }
 
-if(!function_exists('format_number')){
+if (!function_exists('format_number')) {
     function format_number($n = '')
     {
         return ($n === '') ? '' : number_format((float)$n, 2, '.', ',');

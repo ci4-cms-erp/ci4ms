@@ -1,4 +1,6 @@
-<?php namespace Modules\Backend\Libraries;
+<?php
+
+namespace Modules\Backend\Libraries;
 
 use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Events\Events;
@@ -16,7 +18,8 @@ class AuthLibrary
     public $error;
     protected $user;
     protected $commonModel;
-
+    protected $ipAddress;
+    protected $now;
 
     public function __construct()
     {
@@ -26,19 +29,19 @@ class AuthLibrary
         $this->user = null;
         $this->config->userTable = 'users';
         $this->ipAddress = Services::request()->getIPAddress();
-        $this->now = Time::createFromFormat('Y-m-d H:i:s', new Time('now'), 'Europe/Istanbul');
-        $settings=(object)cache()->get('settings');
-        if(empty($settings)){
-            $settings=$this->commonModel->lists('settings');
-            $set=[];
-            $formatRules=new \CodeIgniter\Validation\FormatRules();
+        $this->now = Time::createFromFormat('Y-m-d H:i:s', (new Time('now'))->toDateTimeString(), 'Europe/Istanbul');
+        $settings = (object)cache()->get('settings');
+        if (empty($settings)) {
+            $settings = $this->commonModel->lists('settings');
+            $set = [];
+            $formatRules = new \CodeIgniter\Validation\FormatRules();
             foreach ($settings as $setting) {
-                if($formatRules->valid_json($setting->content)===true)
-                    $set[$setting->option]=(object)json_decode($setting->content, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+                if ($formatRules->valid_json($setting->content) === true)
+                    $set[$setting->option] = (object)json_decode($setting->content, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
                 else
                     $set[$setting->option] = $setting->content;
             }
-            cache()->save('settings',$set,86400);
+            cache()->save('settings', $set, 86400);
         }
     }
 
@@ -58,9 +61,11 @@ class AuthLibrary
 
         $this->recordLoginAttempt($this->user->email, true);
 
-        session()->set(['redirect_url' => $groupSefLink->seflink,
+        session()->set([
+            'redirect_url' => $groupSefLink->seflink,
             $this->config->logged_in => $this->user->id,
-            'group_id' => $this->user->group_id]);
+            'group_id' => $this->user->group_id
+        ]);
 
         Services::response()->noCache();
 
@@ -85,20 +90,19 @@ class AuthLibrary
         // Store it in the database
         $this->userModel->rememberUser($userID, $selector, $validator, $expires);
 
-        // Save it to the user's browser in a cookie.
-        $appConfig = new Cookie();
         $response = Services::response();
+        $appConfig = new Cookie();
 
         // Create the cookie
         $response->setCookie(
             $this->config->rememberCookie,                     // Cookie Name
             $token,                         // Value
-            $this->config->rememberLength,  // # Seconds until it expires
+            $this->config->rememberLength,
             $appConfig->domain,
             $appConfig->path,
             $appConfig->prefix,
-            false,                          // Only send over HTTPS?
-            true                            // Hide from Javascript?
+            false,
+            true
         );
     }
 
@@ -150,7 +154,7 @@ class AuthLibrary
 
         $this->user = $this->validate($credentials, true);
         $falseLogin = $this->commonModel->selectOne('auth_logins', ['ip_address' => $this->ipAddress], '*', 'id DESC');
-        $settings=(object)cache('settings');
+        $settings = (object)cache('settings');
 
         // Kalan deneme hakkı hesaplanıyor.
         if ($falseLogin && $falseLogin->isSuccess === false) {
@@ -307,7 +311,7 @@ class AuthLibrary
         $this->login($user);
 
         // We only want our remember me tokens to be valid for a single use.
-        $this->refreshRemember($user->_id, $selector);
+        $this->refreshRemember($user->id, $selector);
 
         return true;
     }
@@ -325,12 +329,11 @@ class AuthLibrary
         $this->userModel->updateRememberValidator($selector, $validator);
 
         // Save it to the user's browser in a cookie.
-        helper('cookie');
-
+        $response = Services::response();
         $appConfig = new Cookie();
 
         // Create the cookie
-        set_cookie(
+        $response->set_cookie(
             $this->config->rememberCookie,               // Cookie Name
             $selector . ':' . $validator, // Value
             $this->config->rememberLength,  // # Seconds until it expires
@@ -379,7 +382,7 @@ class AuthLibrary
     /* if return is true user blocked else login active */
     public function isBlockedAttempt($username): bool
     {
-        $settings=(object)cache('settings');
+        $settings = (object)cache('settings');
         if ($settings->locked->isActive) {
             $whitelist = $this->commonModel->selectOne('login_rules', ['type' => 'whitelist']);
             if ($whitelist) {
@@ -453,9 +456,11 @@ class AuthLibrary
     public function ipRangeControl($range, $ipAddress): bool
     {
         $parseRange = explode('-', $range);
-        if ($this->ipFormatContol($ipAddress, $parseRange[0], $parseRange[1]) && // ipler aynı formattalar mı ?
+        if (
+            $this->ipFormatContol($ipAddress, $parseRange[0], $parseRange[1]) && // ipler aynı formattalar mı ?
             $this->ip2long_vX($ipAddress) >= $this->ip2long_vX($parseRange[0]) &&
-            $this->ip2long_vX($ipAddress) <= $this->ip2long_vX($parseRange[1]))
+            $this->ip2long_vX($ipAddress) <= $this->ip2long_vX($parseRange[1])
+        )
             return true;
 
         else return false;
@@ -467,8 +472,8 @@ class AuthLibrary
     {
         $ips = array('ipAddress' => $ipAddress, 'rangeStart' => $rangeStart, 'rangeEnd' => $rangeEnd);
         foreach ($ips as $ip) {
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) $ipsFormat [] = 'ip4';
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) $ipsFormat [] = 'ip6';
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) $ipsFormat[] = 'ip4';
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) $ipsFormat[] = 'ip6';
         }
         /* All array value are same value ? */
         if (count(array_unique($ipsFormat)) === 1) return true;
@@ -497,7 +502,7 @@ class AuthLibrary
     public function remainingEntryCalculation()
     {
         $falseLogin = $this->commonModel->selectOne('auth_logins', ['ip_address' => $this->ipAddress], '*', 'id DESC');
-        $settings=(object)cache('settings');
+        $settings = (object)cache('settings');
         if ($falseLogin) return (int)$settings->locked->try - (int)$falseLogin->counter - 1;
         else return (int)$settings->locked->try - 1;
     }
@@ -505,24 +510,25 @@ class AuthLibrary
     public function has_perm(string $module, string $method = ''): bool
     {
         if ($method == 'error_403') return true;
-        $cache=(array)$this->userModel->getPermissionsForUser(session()->get($this->config->logged_in), session()->get('group_id'));
-        if(empty($cache)) return false;
+        $cache = (array)$this->userModel->getPermissionsForUser(session()->get($this->config->logged_in), session()->get('group_id'));
+        if (empty($cache)) return false;
         $searchValues = [str_replace('\\', '-', $module), $method];
         $perms = array_filter($cache, function ($item) use ($searchValues) {
             return $item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1];
         });
         $perms = reset($perms);
-        if(empty($perms)) return false;
+        //dd($perms['typeOfPermissions']);
         $typeOfPermissions = (array)json_decode($perms['typeOfPermissions']);
         $intersect = array_intersect_assoc($typeOfPermissions, $perms);
-        if(!empty($intersect)) return true;
+        if (!empty($intersect)) return true;
         else return false;
     }
 
     public function sidebarNavigation()
     {
         $searchValues = [1];
-        $navigation = array_filter(cache(session()->get($this->config->logged_in) . '_permissions'),
+        $navigation = array_filter(
+            cache(session()->get($this->config->logged_in) . '_permissions'),
             fn($item) => (bool) $item['inNavigation'] === (bool) $searchValues[0]
         );
         $nav = array_filter($navigation, fn($item) => $this->has_perm($item['className'], $item['methodName']));

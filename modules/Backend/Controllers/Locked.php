@@ -35,11 +35,10 @@ class Locked extends BaseController
         $paginator->setMaxPagesToShow(5);
         $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
 
-        //dd($clearData);
         $this->defData = array_merge($this->defData, [
             'paginator' => $paginator,
-            'locks' => $this->commonModel->lists('locked','*', $filterData,'id ASC', $itemsPerPage,$bpk,['username' => (isset($clearData['email'])) ? $clearData['email']: null,
-                'ip_address' => (isset($clearData['ip'])) ?$clearData['ip'] : null]),
+            'locks' => $this->commonModel->lists('locked','*', $filterData,'id ASC', $itemsPerPage,$bpk,['username' => (isset($clearData['email'])) ? $clearData['email']: '',
+                'ip_address' => (isset($clearData['ip'])) ?$clearData['ip'] : '']),
             'totalCount' => $totalItems,
             'filteredData' => $clearData ?? null,
         ]);
