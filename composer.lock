@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "daac59a6060aebc3aab046ada72dcde2",
+    "content-hash": "b50a2efb7d6e988a6a9149566d92c638",
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
@@ -1210,16 +1210,16 @@
         },
         {
             "name": "studio-42/elfinder",
-            "version": "2.1.64",
+            "version": "2.1.65",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Studio-42/elFinder.git",
-                "reference": "deaa6797df1c6f288238b47284c9b593174bfc0f"
+                "reference": "5535a8677558c44a20c19ff9b97ec37702f9c44d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Studio-42/elFinder/zipball/deaa6797df1c6f288238b47284c9b593174bfc0f",
-                "reference": "deaa6797df1c6f288238b47284c9b593174bfc0f",
+                "url": "https://api.github.com/repos/Studio-42/elFinder/zipball/5535a8677558c44a20c19ff9b97ec37702f9c44d",
+                "reference": "5535a8677558c44a20c19ff9b97ec37702f9c44d",
                 "shasum": ""
             },
             "require": {
@@ -1266,7 +1266,7 @@
             "homepage": "http://elfinder.org",
             "support": {
                 "issues": "https://github.com/Studio-42/elFinder/issues",
-                "source": "https://github.com/Studio-42/elFinder/tree/2.1.64"
+                "source": "https://github.com/Studio-42/elFinder/tree/2.1.65"
             },
             "funding": [
                 {
@@ -1274,7 +1274,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-12-20T07:43:10+00:00"
+            "time": "2024-01-05T05:01:39+00:00"
         },
         {
             "name": "symfony/finder",
