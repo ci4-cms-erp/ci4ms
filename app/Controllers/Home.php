@@ -63,13 +63,15 @@ class Home extends BaseController
     public function blog()
     {
         $this->defData['seo'] = $this->ci4msseoLibrary->metaTags('Blog', 'blog listesi', 'blog', ['keywords' => ["value" => "blog listesi"]]);
-        $itemsPerPage = 12;
-        $paginator = new Paginator($this->commonModel->count('blog', ['isActive' => true]), $itemsPerPage, $this->request->getUri()->getSegment(2, 1), '/blog/(:num)');
-        $paginator->setMaxPagesToShow(5);
-        $this->defData['paginator'] = $paginator;
-        $bpk = ($this->request->getUri()->getSegment(2, 1) - 1) * $itemsPerPage;
+        $perPage = 12;
+        $page=$this->request->getUri()->getSegment(2, 1);
+        $offset=($page-1)*$perPage;
+        $this->defData['blogs'] = $this->commonModel->lists('blog', '*', ['isActive' => true], 'id ASC', $perPage, $offset);
+        $totalBlogs = $this->commonModel->count('blog', ['isActive' => true]);
+        $pager = \Config\Services::pager();
+        $this->defData['pager'] = $pager->makeLinks($page,$perPage,$totalBlogs,$this->defData['settings']->templateInfos->path,2);
+        $this->defData['pager_info_text'] = (object)['total_products' => $totalBlogs, 'start' => ($page - 1) * $perPage + 1, 'end' => $perPage * $page];
         $this->defData['dateI18n'] = new Time();
-        $this->defData['blogs'] = $this->commonModel->lists('blog', '*', ['isActive' => true], 'id ASC', $itemsPerPage, $bpk);
         $modelTag = new AjaxModel();
         foreach ($this->defData['blogs'] as $key => $blog) {
             $this->defData['blogs'][$key]->tags = $modelTag->limitTags_ajax(['tags_pivot.piv_id' => $blog->id]);

@@ -3,6 +3,7 @@
 namespace Config;
 
 use CodeIgniter\Config\BaseConfig;
+use Ratchet\App;
 
 class Pager extends BaseConfig
 {
@@ -34,4 +35,24 @@ class Pager extends BaseConfig
      * The default number of results shown in a single page.
      */
     public int $perPage = 20;
+
+    public function __construct()
+    {
+        $this->loadThemePaginationTemplates();
+    }
+
+    private function loadThemePaginationTemplates()
+    {
+        $settings = (object)cache('settings');
+        $themePath = APPPATH . "Views" . DIRECTORY_SEPARATOR . "templates" . DIRECTORY_SEPARATOR . "{$settings->templateInfos->path}" . DIRECTORY_SEPARATOR;
+        $paginationTemplates = glob($themePath . 'pagination_*.php');
+        if (!empty($paginationTemplates)) {
+            foreach ($paginationTemplates as $template) {
+                if (file_exists($template)) {
+                    $templateName = basename($template, '.php');
+                    $this->templates[$settings->templateInfos->path] = "App" . DIRECTORY_SEPARATOR . "Views" . DIRECTORY_SEPARATOR . "templates" . DIRECTORY_SEPARATOR . "{$settings->templateInfos->path}" . DIRECTORY_SEPARATOR . "{$templateName}";
+                }
+            }
+        }
+    }
 }
