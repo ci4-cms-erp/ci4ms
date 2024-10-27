@@ -48,15 +48,12 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
     //Pages Module
     $routes->group('pages', function ($routes) {
         $routes->get('(:num)', 'Pages::index/$1', ['as' => 'pages']);
-        $routes->get('create', 'Pages::create', ['as' => 'pageCreate']);
-        $routes->post('create', 'Pages::create_post', []);
-        $routes->get('pageUpdate/(:any)', 'Pages::update/$1', ['as' => 'pageUpdate']);
-        $routes->post('pageUpdate/(:any)', 'Pages::update_post/$1', []);
+        $routes->match(['GET', 'POST'], 'create', 'Pages::create', ['as' => 'pageCreate']);
+        $routes->match(['GET', 'POST'], 'pageUpdate/(:any)', 'Pages::update/$1', ['as' => 'pageUpdate']);
         $routes->get('pageDelete/(:any)', 'Pages::delete_post/$1', ['as' => 'pageDelete']);
     });
 
-    $routes->get('profile', 'UserController::profile', ['as' => 'profile']);
-    $routes->post('profile', 'UserController::profile_post', []);
+    $routes->match(['GET', 'POST'], 'profile', 'UserController::profile', ['as' => 'profile']);
 
     //setting module
     $routes->group('settings', function ($routes) {
@@ -85,19 +82,15 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
     //blog module
     $routes->group('blogs', function ($routes) {
         $routes->get('(:num)', 'Blog::index/$1', ['as' => 'blogs']);
-        $routes->get('create', 'Blog::new', ['as' => 'blogCreate']);
-        $routes->post('create', 'Blog::create', ['as' => 'blogCreate']);
-        $routes->get('update/(:any)', 'Blog::edit/$1', ['as' => 'blogUpdate']);
-        $routes->post('update/(:any)', 'Blog::update/$1', ['as' => 'blogUpdate']);
+        $routes->match(['GET', 'POST'], 'create', 'Blog::new', ['as' => 'blogCreate']);
+        $routes->match(['GET', 'POST'], 'update/(:any)', 'Blog::edit/$1', ['as' => 'blogUpdate']);
         $routes->get('delete/(:any)', 'Blog::delete/$1', ['as' => 'blogDelete']);
 
         //categories
         $routes->group('categories', function ($routes) {
             $routes->get('(:num)', 'Categories::index/$1', ['as' => 'categories']);
-            $routes->get('create', 'Categories::new', ['as' => 'categoryCreate']);
-            $routes->post('create', 'Categories::create', ['as' => 'categoryCreate']);
-            $routes->get('update/(:any)', 'Categories::edit/$1', ['as' => 'categoryUpdate']);
-            $routes->post('update/(:any)', 'Categories::update/$1', ['as' => 'categoryUpdate']);
+            $routes->match(['GET', 'POST'], 'Categories::new', ['as' => 'categoryCreate']);
+            $routes->match(['GET', 'POST'], 'update/(:any)', 'Categories::edit/$1', ['as' => 'categoryUpdate']);
             $routes->get('delete/(:any)', 'Categories::delete/$1', ['as' => 'categoryDelete']);
         });
 
@@ -105,19 +98,18 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->group('tags', function ($routes) {
             $routes->get('(:num)', 'Tags::index/$1', ['as' => 'tags']);
             $routes->post('create', 'Tags::create', ['as' => 'tagCreate']);
-            $routes->get('update/(:any)', 'Tags::edit/$1', ['as' => 'tagUpdate']);
-            $routes->post('update/(:any)', 'Tags::update/$1', ['as' => 'tagUpdate']);
+            $routes->match(['GET', 'POST'], 'update/(:any)', 'Tags::edit/$1', ['as' => 'tagUpdate']);
             $routes->get('delete/(:any)', 'Tags::delete/$1', ['as' => 'tagDelete']);
         });
 
-        $routes->group('comments',function ($routes){
-           $routes->get('/','Blog::commentList',['as'=>'comments']);
-           $routes->post('commentResponse','Blog::commentResponse/$1',['as'=>'commentResponse']);
-           $routes->get('commentRemove/(:num)','Blog::commentRemove/$1',['as'=>'commentRemove']);
-           $routes->get('displayComment/(:num)','Blog::displayComment/$1',['as'=>'displayComment']);
-           $routes->post('confirmComment/(:num)','Blog::confirmComment/$1',['as'=>'confirmComment']);
-           $routes->get('badwords','Blog::badwordList',['as'=>'badwords']);
-           $routes->post('badwordsAdd','Blog::badwordsAdd',['as'=>'badwordsAdd']);
+        $routes->group('comments', function ($routes) {
+            $routes->get('/', 'Blog::commentList', ['as' => 'comments']);
+            $routes->post('commentResponse', 'Blog::commentResponse/$1', ['as' => 'commentResponse']);
+            $routes->get('commentRemove/(:num)', 'Blog::commentRemove/$1', ['as' => 'commentRemove']);
+            $routes->get('displayComment/(:num)', 'Blog::displayComment/$1', ['as' => 'displayComment']);
+            $routes->post('confirmComment/(:num)', 'Blog::confirmComment/$1', ['as' => 'confirmComment']);
+            $routes->get('badwords', 'Blog::badwordList', ['as' => 'badwords']);
+            $routes->post('badwordsAdd', 'Blog::badwordsAdd', ['as' => 'badwordsAdd']);
         });
     });
 

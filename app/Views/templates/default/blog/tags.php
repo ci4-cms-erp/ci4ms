@@ -51,7 +51,7 @@
                         <?php endforeach; ?>
                     </div>
                     <div class="text-end mb-5 mb-xl-0">
-                        <?= view('paginator-template') ?>
+                        <?= $pager ?>
                     </div>
                 </div>
             </div>

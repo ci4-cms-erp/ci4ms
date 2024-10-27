@@ -28,18 +28,16 @@ class Tags extends BaseController
         else return redirect()->back()->withInput()->with('error', 'Etiket oluşturulamadı.');
     }
 
-    public function edit(string $id)
+    public function edit(int $id)
     {
+        if($this->request->is('post')){
+            $valData = (['title' => ['label' => 'Etiket Başlığı', 'rules' => 'required'], 'seflink' => ['label' => 'Etiket URL', 'rules' => 'required'],]);
+            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->commonModel->edit('tags', ['tag'=>$this->request->getPost('title'),'seflink'=>$this->request->getPost('seflink')],['id'=>$id])) return redirect()->route('tags', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı etiket güncellendi.');
+            else return redirect()->back()->withInput()->with('error', 'Etiket güncellenemedi.');
+        }
         $this->defData['infos']=$this->commonModel->selectOne('tags',['id'=>$id]);
         return view('Modules\Backend\Views\tags\update',$this->defData);
-    }
-
-    public function update(string $id)
-    {
-        $valData = (['title' => ['label' => 'Etiket Başlığı', 'rules' => 'required'], 'seflink' => ['label' => 'Etiket URL', 'rules' => 'required'],]);
-        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        if ($this->commonModel->edit('tags', ['tag'=>$this->request->getPost('title'),'seflink'=>$this->request->getPost('seflink')],['id'=>$id])) return redirect()->route('tags', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı etiket güncellendi.');
-        else return redirect()->back()->withInput()->with('error', 'Etiket güncellenemedi.');
     }
 
     public function delete(string $id)

@@ -118,5 +118,10 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = ['backendAuthFilter' => ['before' => ['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],
+        'backendAfterLoginFilter' => ['before' => [
+            'backend','backend/officeWorker/*','backend/pages/*','backend/settings','backend/settings/*',
+            'backend/menu/*','backend/blogs/*','backend/tagify','backend/checkSeflink','backend/isActive',
+            'backend/maintenance','backend/menu','backend/media','backend/locked','backend/profile'
+        ]]];
 }

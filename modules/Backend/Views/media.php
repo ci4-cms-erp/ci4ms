@@ -64,7 +64,7 @@
                     var elf = $('#elfinder').elfinder(
                         // 1st Arg - options
                         {
-                            cssAutoLoad: [window.location.origin+'/be-assets/node_modles/elfinder-material-theme/Material/css/theme.css'],
+                            cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme.css'],
                             baseUrl: 'uploads/media/',                    // Base URL to css/*, js/*
                             url: '/backend/media/elfinderConnection',  // connector URL (REQUIRED)
                             height: 768,

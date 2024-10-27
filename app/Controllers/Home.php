@@ -1,4 +1,6 @@
-<?php namespace App\Controllers;
+<?php
+
+namespace App\Controllers;
 
 use App\Libraries\CommonLibrary;
 use App\Models\Ci4ms;
@@ -21,7 +23,7 @@ class Home extends BaseController
 
     public function index(string $seflink = '/')
     {
-        $page=$this->commonModel->selectOne('pages', ['seflink' => $seflink]);
+        $page = $this->commonModel->selectOne('pages', ['seflink' => $seflink]);
         if (!empty($page)) {
             $this->defData['pageInfo'] = $page;
             $this->defData['pageInfo']->content = $this->commonLibrary->parseInTextFunctions($this->defData['pageInfo']->content);
@@ -33,30 +35,31 @@ class Home extends BaseController
                     $keywords[] = $keyword->value;
                 }
             }
-            $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['pageInfo']->title, (!empty($this->defData['pageInfo']->seo->description))?$this->defData['pageInfo']->seo->description:'', $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['pageInfo']->seo->coverImage) ? $this->defData['pageInfo']->seo->coverImage : '');
+            $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['pageInfo']->title, (!empty($this->defData['pageInfo']->seo->description)) ? $this->defData['pageInfo']->seo->description : '', $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['pageInfo']->seo->coverImage) ? $this->defData['pageInfo']->seo->coverImage : '');
             $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('Organization', [
                 'url' => site_url(),
                 'logo' => $this->defData['settings']->logo,
                 'name' => $this->defData['settings']->siteName,
                 'children' => [
                     'ContactPoint' =>
-                        [
-                            'ContactPoint' => [
-                                'telephone' => $this->defData['settings']->company->phone,
-                                'contactType' => 'customer support'
-                            ]
+                    [
+                        'ContactPoint' => [
+                            'telephone' => $this->defData['settings']->company->phone,
+                            'contactType' => 'customer support'
                         ]
+                    ]
                 ],
                 'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
             ]);
-            if($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id);
+            if ($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id);
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
         } else return show_404();
     }
 
     public function maintenanceMode()
     {
-        if ($this->defData['settings']->maintenanceMode === null) return redirect()->route('/');
+        d($this->defData['settings']->maintenanceMode->scalar);
+        if ((bool)$this->defData['settings']->maintenanceMode->scalar === false) return redirect()->route('home');
         return view('maintenance', $this->defData);
     }
 
@@ -64,12 +67,12 @@ class Home extends BaseController
     {
         $this->defData['seo'] = $this->ci4msseoLibrary->metaTags('Blog', 'blog listesi', 'blog', ['keywords' => ["value" => "blog listesi"]]);
         $perPage = 12;
-        $page=$this->request->getUri()->getSegment(2, 1);
-        $offset=($page-1)*$perPage;
+        $page = $this->request->getUri()->getSegment(2, 1);
+        $offset = ($page - 1) * $perPage;
         $this->defData['blogs'] = $this->commonModel->lists('blog', '*', ['isActive' => true], 'id ASC', $perPage, $offset);
         $totalBlogs = $this->commonModel->count('blog', ['isActive' => true]);
         $pager = \Config\Services::pager();
-        $this->defData['pager'] = $pager->makeLinks($page,$perPage,$totalBlogs,$this->defData['settings']->templateInfos->path,2);
+        $this->defData['pager'] = $pager->makeLinks($page, $perPage, $totalBlogs, $this->defData['settings']->templateInfos->path, 2);
         $this->defData['pager_info_text'] = (object)['total_products' => $totalBlogs, 'start' => ($page - 1) * $perPage + 1, 'end' => $perPage * $page];
         $this->defData['dateI18n'] = new Time();
         $modelTag = new AjaxModel();
@@ -84,12 +87,12 @@ class Home extends BaseController
             'name' => $this->defData['settings']->siteName,
             'children' => [
                 'ContactPoint' =>
-                    [
-                        'ContactPoint' => [
-                            'telephone' => $this->defData['settings']->company->phone,
-                            'contactType' => 'customer support'
-                        ]
+                [
+                    'ContactPoint' => [
+                        'telephone' => $this->defData['settings']->company->phone,
+                        'contactType' => 'customer support'
                     ]
+                ]
             ],
             'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
         ]);
@@ -133,12 +136,12 @@ class Home extends BaseController
                         'WebPage' => []
                     ],
                     'ContactPoint' =>
-                        [
-                            'ContactPoint' => [
-                                'telephone' => $this->defData['settings']->company->phone,
-                                'contactType' => 'customer support'
-                            ]
+                    [
+                        'ContactPoint' => [
+                            'telephone' => $this->defData['settings']->company->phone,
+                            'contactType' => 'customer support'
                         ]
+                    ]
                 ],
                 'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
             ]);
@@ -149,16 +152,15 @@ class Home extends BaseController
     public function tagList(string $seflink)
     {
         if ($this->commonModel->isHave('tags', ['seflink' => $seflink]) === 1) {
-            $totalItems = $this->commonModel->count('blog', ['isActive' => true]);
-            $itemsPerPage = 12;
-            $currentPage = $this->request->getUri()->getSegment(3, 1);
-            $urlPattern = '/tag/' . $seflink . '/(:num)';
-            $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
-            $paginator->setMaxPagesToShow(5);
-            $this->defData['paginator'] = $paginator;
-            $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
+            $perPage = 12;
+            $page = $this->request->getUri()->getSegment(3, 1);
+            $offset = ($page - 1) * $perPage;
+            $this->defData['blogs'] = $this->ci4msModel->taglist(['tags.seflink' => $seflink, 'blog.isActive' => true], $perPage, $offset, 'blog.*');
+            $totalBlogs = count($this->defData['blogs']);
+            $pager = \Config\Services::pager();
+            $this->defData['pager'] = $pager->makeLinks($page, $perPage, $totalBlogs, $this->defData['settings']->templateInfos->path, 3);
+            $this->defData['pager_info_text'] = (object)['total_products' => $totalBlogs, 'start' => ($page - 1) * $perPage + 1, 'end' => $perPage * $page];
             $this->defData['dateI18n'] = new Time();
-            $this->defData['blogs'] = $this->ci4msModel->taglist(['tags.seflink' => $seflink, 'blog.isActive' => true], $itemsPerPage, $bpk, 'blog.*');
             $modelTag = new AjaxModel();
             foreach ($this->defData['blogs'] as $key => $blog) {
                 $this->defData['blogs'][$key]->tags = $modelTag->limitTags_ajax(['piv_id' => $blog->id]);
@@ -182,16 +184,15 @@ class Home extends BaseController
             }
         }
         $this->defData['seo'] = $this->commonLibrary->seo($this->defData['category']->title, $this->defData['category']->seo->description, $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['category']->seo->coverImage) ? $this->defData['category']->seo->coverImage : '');
-        $totalItems = $this->commonModel->count('blog', ['isActive' => true]);
-        $itemsPerPage = 12;
-        $currentPage = $this->request->getUri()->getSegment(3, 1);
-        $urlPattern = '/category/' . $seflink . '/(:num)';
-        $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
-        $paginator->setMaxPagesToShow(5);
-        $this->defData['paginator'] = $paginator;
-        $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
+        $perPage = 12;
+        $page = $this->request->getUri()->getSegment(3, 1);
+        $offset = ($page - 1) * $perPage;
+        $this->defData['blogs'] = $this->ci4msModel->categoryList(['categories_id' => $this->defData['category']->id, 'isActive' => true], $perPage, $offset);
+        $totalBlogs = count($this->defData['blogs']);
+        $pager = \Config\Services::pager();
+        $this->defData['pager'] = $pager->makeLinks($page, $perPage, $totalBlogs, $this->defData['settings']->templateInfos->path, 3);
+        $this->defData['pager_info_text'] = (object)['total_products' => $totalBlogs, 'start' => ($page - 1) * $perPage + 1, 'end' => $perPage * $page];
         $this->defData['dateI18n'] = new Time();
-        $this->defData['blogs'] = $this->ci4msModel->categoryList(['categories_id' => $this->defData['category']->id, 'isActive' => true], $itemsPerPage, $bpk);
         $modelTag = new AjaxModel();
         foreach ($this->defData['blogs'] as $key => $blog) {
             $this->defData['blogs'][$key]->tags = $modelTag->limitTags_ajax(['tags_pivot.piv_id' => $blog->id]);
@@ -213,20 +214,32 @@ class Home extends BaseController
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         if ($this->request->getPost('captcha') == session()->getFlashdata('cap')) {
-            $badwordFilterSettings = json_decode($this->commonModel->selectOne('settings',
-                ['option' => 'badwords'], 'content')->content);
-            $checked = $this->commonLibrary->commentBadwordFiltering($this->request->getPost('comMessage'),
+            $badwordFilterSettings = json_decode($this->commonModel->selectOne(
+                'settings',
+                ['option' => 'badwords'],
+                'content'
+            )->content);
+            $checked = $this->commonLibrary->commentBadwordFiltering(
+                $this->request->getPost('comMessage'),
                 $badwordFilterSettings->list,
-                (bool)$badwordFilterSettings->status, (bool)$badwordFilterSettings->autoReject);
+                (bool)$badwordFilterSettings->status,
+                (bool)$badwordFilterSettings->autoReject
+            );
             if (is_bool($checked) && !$checked) return $this->fail('Lütfen kelimelerinize dikkat ediniz.');
-            $data = ['blog_id' => $this->request->getPost('blog_id'), 'created_at' => date('Y-m-d H:i:s'),
+            $data = [
+                'blog_id' => $this->request->getPost('blog_id'),
+                'created_at' => date('Y-m-d H:i:s'),
                 'comFullName' => $this->request->getPost('comFullName'),
                 'comEmail' => $this->request->getPost('comEmail'),
-                'comMessage' => $checked];
+                'comMessage' => $checked
+            ];
             if (!empty($this->request->getPost('commentID'))) {
                 $data['parent_id'] = $this->request->getPost('commentID');
-                $this->commonModel->edit('comments', ['isThereAnReply' => true],
-                    ['id' => $this->request->getPost('commentID')]);
+                $this->commonModel->edit(
+                    'comments',
+                    ['isThereAnReply' => true],
+                    ['id' => $this->request->getPost('commentID')]
+                );
             }
             if ($this->commonModel->create('comments', $data)) return $this->respondCreated(['result' => true]);
         } else return $this->fail('Please get a new captcha !');

@@ -47,55 +47,49 @@ class Blog extends BaseController
      */
     public function new()
     {
+        if ($this->request->is('post')) {
+            $valData = ([
+                'title' => ['label' => 'Sayfa Başlığı', 'rules' => 'required'],
+                'seflink' => ['label' => 'Sayfa URL', 'rules' => 'required'],
+                'content' => ['label' => 'İçerik', 'rules' => 'required'],
+                'isActive' => ['label' => 'Yayın veya taslak', 'rules' => 'required'],
+                'categories' => ['label' => 'Kategoriler', 'rules' => 'required'],
+                'author' => ['label' => 'Yazar', 'rules' => 'required'],
+                'created_at' => ['label' => 'Oluşturulma Tarihi', 'rules' => 'required|valid_date[d.m.Y H:i:s]']
+            ]);
+            if (!empty($this->request->getPost('pageimg'))) {
+                $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
+                $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
+            }
+            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => 'Seo Açıklaması', 'rules' => 'required'];
+            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => 'Seo Anahtar Kelimeleri', 'rules' => 'required'];
+            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->commonModel->isHave('blog', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
+
+            $data = ['title' => $this->request->getPost('title'), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => $this->request->getPost('seflink'), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' => $this->request->getPost('created_at')];
+
+            if (!empty($this->request->getPost('pageimg'))) {
+                $data['seo']['coverImage'] = $this->request->getPost('pageimg');
+                $data['seo']['IMGWidth'] = $this->request->getPost('pageIMGWidth');
+                $data['seo']['IMGHeight'] = $this->request->getPost('pageIMGHeight');
+            }
+            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
+
+            $insertID = $this->commonModel->create('blog', $data);
+            if ($insertID) {
+                if (!empty($this->request->getPost('categories'))) {
+                    foreach ($this->request->getPost('categories') as $item) {
+                        $this->commonModel->create('blog_categories_pivot', ['blog_id' => $insertID, 'categories_id' => $item]);
+                    }
+                }
+                if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', (string)$insertID, 'tags');
+                return redirect()->route('blogs', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı blog oluşturuldu.');
+            } else return redirect()->back()->withInput()->with('error', 'Blog oluşturulamadı.');
+        }
         $this->defData['categories'] = $this->commonModel->lists('categories');
         $this->defData['authors'] = $this->commonModel->lists('users', '*', ['status' => 'active']);
         return view('Modules\Backend\Views\blog\create', $this->defData);
-    }
-
-    /**
-     * @return \CodeIgniter\HTTP\RedirectResponse
-     * @throws \Exception
-     */
-    public function create()
-    {
-        $valData = ([
-            'title' => ['label' => 'Sayfa Başlığı', 'rules' => 'required'],
-            'seflink' => ['label' => 'Sayfa URL', 'rules' => 'required'],
-            'content' => ['label' => 'İçerik', 'rules' => 'required'],
-            'isActive' => ['label' => 'Yayın veya taslak', 'rules' => 'required'],
-            'categories' => ['label' => 'Kategoriler', 'rules' => 'required'],
-            'author' => ['label' => 'Yazar', 'rules' => 'required'],
-            'created_at' => ['label' => 'Oluşturulma Tarihi', 'rules' => 'required|valid_date[d.m.Y H:i:s]']
-        ]);
-        if (!empty($this->request->getPost('pageimg'))) {
-            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
-            $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
-            $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
-        }
-        if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => 'Seo Açıklaması', 'rules' => 'required'];
-        if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => 'Seo Anahtar Kelimeleri', 'rules' => 'required'];
-        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        if ($this->commonModel->isHave('blog', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
-
-        $data = ['title' => $this->request->getPost('title'), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => $this->request->getPost('seflink'), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' => $this->request->getPost('created_at')];
-
-        if (!empty($this->request->getPost('pageimg'))) {
-            $data['seo']['coverImage'] = $this->request->getPost('pageimg');
-            $data['seo']['IMGWidth'] = $this->request->getPost('pageIMGWidth');
-            $data['seo']['IMGHeight'] = $this->request->getPost('pageIMGHeight');
-        }
-        if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
-
-        $insertID = $this->commonModel->create('blog', $data);
-        if ($insertID) {
-            if (!empty($this->request->getPost('categories'))) {
-                foreach ($this->request->getPost('categories') as $item) {
-                    $this->commonModel->create('blog_categories_pivot', ['blog_id' => $insertID, 'categories_id' => $item]);
-                }
-            }
-            if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', (string)$insertID, 'tags');
-            return redirect()->route('blogs', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı blog oluşturuldu.');
-        } else return redirect()->back()->withInput()->with('error', 'Blog oluşturulamadı.');
     }
 
     /**
@@ -104,6 +98,47 @@ class Blog extends BaseController
      */
     public function edit(string $id)
     {
+        if ($this->request->is('post')) {
+            $valData = ([
+                'title' => ['label' => 'Sayfa Başlığı', 'rules' => 'required'],
+                'seflink' => ['label' => 'Sayfa URL', 'rules' => 'required'],
+                'content' => ['label' => 'İçerik', 'rules' => 'required'],
+                'isActive' => ['label' => 'Yayın veya taslak', 'rules' => 'required'],
+                'categories' => ['label' => 'Kategoriler', 'rules' => 'required'],
+                'author' => ['label' => 'Yazar', 'rules' => 'required'],
+                'created_at' => ['label' => 'Oluşturulma Tarihi', 'rules' => 'required|valid_date[d.m.Y H:i:s]']
+            ]);
+            if (!empty($this->request->getPost('pageimg'))) {
+                $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
+                $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
+            }
+            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => 'Seo Açıklaması', 'rules' => 'required'];
+            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => 'Seo Anahtar Kelimeleri', 'rules' => 'required'];
+            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            $info = $this->commonModel->selectOne('blog', ['id' => $id]);
+            if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
+            $data = ['title' => $this->request->getPost('title'), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => $this->request->getPost('seflink'), 'author' => $this->request->getPost('author'), 'created_at' => $this->request->getPost('created_at')];
+
+            if (!empty($this->request->getPost('pageimg'))) {
+                $data['seo']['coverImage'] = $this->request->getPost('pageimg');
+                $data['seo']['IMGWidth'] = $this->request->getPost('pageIMGWidth');
+                $data['seo']['IMGHeight'] = $this->request->getPost('pageIMGHeight');
+            }
+            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
+
+            if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
+            if ($this->commonModel->edit('blog', $data, ['id' => $id])) {
+                if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', $id, 'tags', true);
+                if (!empty($this->request->getPost('categories'))) {
+                    $this->commonModel->remove('blog_categories_pivot', ['blog_id' => $id]);
+                    foreach ($this->request->getPost('categories') as $item) {
+                        $this->commonModel->create('blog_categories_pivot', ['blog_id' => $id, 'categories_id' => $item]);
+                    }
+                }
+                return redirect()->route('blogs', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı blog güncellendi.');
+            } else return redirect()->back()->withInput()->with('error', 'Blog güncellenmedi.');
+        }
         $this->defData['tags'] = $this->model->limitTags_ajax(['tags_pivot.tagType' => 'blogs', 'tags_pivot.piv_id' => $id]);
         $t = [];
         foreach ($this->defData['tags'] as $tag) {
@@ -117,54 +152,6 @@ class Blog extends BaseController
         $this->defData['authors'] = $this->commonModel->lists('users', '*', ['status' => 'active']);
         unset($t);
         return view('Modules\Backend\Views\blog\update', $this->defData);
-    }
-
-    /**
-     * @param string $id
-     * @return \CodeIgniter\HTTP\RedirectResponse
-     * @throws \Exception
-     */
-    public function update(string $id)
-    {
-        $valData = ([
-            'title' => ['label' => 'Sayfa Başlığı', 'rules' => 'required'],
-            'seflink' => ['label' => 'Sayfa URL', 'rules' => 'required'],
-            'content' => ['label' => 'İçerik', 'rules' => 'required'],
-            'isActive' => ['label' => 'Yayın veya taslak', 'rules' => 'required'],
-            'categories' => ['label' => 'Kategoriler', 'rules' => 'required'],
-            'author' => ['label' => 'Yazar', 'rules' => 'required'],
-            'created_at' => ['label' => 'Oluşturulma Tarihi', 'rules' => 'required|valid_date[d.m.Y H:i:s]']
-        ]);
-        if (!empty($this->request->getPost('pageimg'))) {
-            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
-            $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
-            $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
-        }
-        if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => 'Seo Açıklaması', 'rules' => 'required'];
-        if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => 'Seo Anahtar Kelimeleri', 'rules' => 'required'];
-        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        $info = $this->commonModel->selectOne('blog', ['id' => $id]);
-        if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
-        $data = ['title' => $this->request->getPost('title'), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => $this->request->getPost('seflink'), 'author' => $this->request->getPost('author'), 'created_at' => $this->request->getPost('created_at')];
-
-        if (!empty($this->request->getPost('pageimg'))) {
-            $data['seo']['coverImage'] = $this->request->getPost('pageimg');
-            $data['seo']['IMGWidth'] = $this->request->getPost('pageIMGWidth');
-            $data['seo']['IMGHeight'] = $this->request->getPost('pageIMGHeight');
-        }
-        if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
-
-        if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
-        if ($this->commonModel->edit('blog', $data, ['id' => $id])) {
-            if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', $id, 'tags', true);
-            if (!empty($this->request->getPost('categories'))) {
-                $this->commonModel->remove('blog_categories_pivot', ['blog_id' => $id]);
-                foreach ($this->request->getPost('categories') as $item) {
-                    $this->commonModel->create('blog_categories_pivot', ['blog_id' => $id, 'categories_id' => $item]);
-                }
-            }
-            return redirect()->route('blogs', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı blog oluşturuldu.');
-        } else return redirect()->back()->withInput()->with('error', 'Blog oluşturulamadı.');
     }
 
     /**
@@ -193,8 +180,15 @@ class Blog extends BaseController
         $searchData = ['isApproved' => $this->request->getPost('isApproved') == 'true' ? true : false];
         $l = [];
         if (!empty($like)) $l = ['comFullName' => $like, 'comEmail' => $like];
-        $results = $this->commonModel->lists('comments', '*', $searchData, 'id DESC',
-            (int)$data['length'], (int)$data['start'], $l);
+        $results = $this->commonModel->lists(
+            'comments',
+            '*',
+            $searchData,
+            'id DESC',
+            (int)$data['length'],
+            (int)$data['start'],
+            $l
+        );
         $totalRecords = $this->commonModel->count('comments', $searchData);
         $totalDisplayRecords = $totalRecords;
         $c = ($data['start'] > 0) ? $data['start'] + 1 : 1;
@@ -268,10 +262,11 @@ class Blog extends BaseController
         if (empty($this->defData['badwords']))
             $this->defData['badwords'] = null;
         else {
-            $this->defData['badwords'] = (object)['list' => implode(',', $this->defData['badwords']['list']),
+            $this->defData['badwords'] = (object)[
+                'list' => implode(',', $this->defData['badwords']['list']),
                 'status' => $this->defData['badwords']['status'],
-                'autoReject'=>$this->defData['badwords']['autoReject'],
-                'autoAccept'=>$this->defData['badwords']['autoAccept']
+                'autoReject' => $this->defData['badwords']['autoReject'],
+                'autoAccept' => $this->defData['badwords']['autoAccept']
             ];
         }
         return view('Modules\Backend\Views\blog\badwordlist', $this->defData);
@@ -279,15 +274,23 @@ class Blog extends BaseController
 
     public function badwordsAdd()
     {
-        if ($this->commonModel->edit('settings',
-            ['content' => json_encode(['status' => ($this->request->getPost('status') == "on") ? 1 : 0,
-                'autoReject' => ($this->request->getPost('autoReject') == "on") ? 1 : 0,
-                'autoAccept' => ($this->request->getPost('autoAccept') == "on") ? 1 : 0,
-                'list' => explode(',', $this->request->getPost('badwords'))],
-                JSON_UNESCAPED_UNICODE)],
-            ['option' => 'badwords']))
+        if ($this->commonModel->edit(
+            'settings',
+            ['content' => json_encode(
+                [
+                    'status' => ($this->request->getPost('status') == "on") ? 1 : 0,
+                    'autoReject' => ($this->request->getPost('autoReject') == "on") ? 1 : 0,
+                    'autoAccept' => ($this->request->getPost('autoAccept') == "on") ? 1 : 0,
+                    'list' => explode(',', $this->request->getPost('badwords'))
+                ],
+                JSON_UNESCAPED_UNICODE
+            )],
+            ['option' => 'badwords']
+        ))
             return redirect()->route('badwords')->with('message', "Bad word list updated.");
-        else return redirect()->back()->withInput()->with('error',
-            "Bad word list cannot updated. Please try again or check logs.");
+        else return redirect()->back()->withInput()->with(
+            'error',
+            "Bad word list cannot updated. Please try again or check logs."
+        );
     }
 }

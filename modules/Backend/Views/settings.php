@@ -134,7 +134,7 @@
                             <div class="w-100">
                                 <label><?= lang('Backend.maintenanceMode') ?></label>
                                 <input type="checkbox" name="my-checkbox" id="my-checkbox"
-                                       class="bswitch" <?= ((bool)$settings->maintenanceMode === true) ? 'checked' : '' ?>
+                                       class="bswitch" <?= ((bool)$settings->maintenanceMode->scalar === true) ? 'checked' : '' ?>
                                        data-id="maintenanceMode" data-off-color="danger" data-on-color="success">
                             </div>
                         </div>

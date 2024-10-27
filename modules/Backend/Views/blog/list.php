@@ -123,7 +123,6 @@ Authenticated Users
 
         $.post('<?=route_to('isActive')?>',
             {
-                "<?=csrf_token()?>": "<?=csrf_hash()?>",
                 "id": id,
                 'isActive': isActive,
                 'where': 'blog'
