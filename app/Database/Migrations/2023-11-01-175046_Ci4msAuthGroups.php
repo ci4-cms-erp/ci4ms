@@ -21,7 +21,8 @@ class Ci4msAuthGroups extends Migration
                 'constraint' => 255
             ],
             'updated_at' => [
-                'type' => 'DATETIME'
+                'type' => 'DATETIME',
+                'null' => true
             ],
             'description' => [
                 'type' => 'VARCHAR',

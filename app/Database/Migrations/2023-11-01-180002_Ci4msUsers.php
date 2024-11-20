@@ -83,7 +83,8 @@ class Ci4msUsers extends Migration
             'group_id' => [
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true
+                'unsigned' => true,
+                'null'=>true
             ],
             'who_created' => [
                 'type' => 'INT',
@@ -95,13 +96,15 @@ class Ci4msUsers extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addKey('email', false, true);
         $this->forge->addKey('username', false, true);
-        $this->forge->addForeignKey('group_id', 'auth_groups', 'id', 'CASCADE', 'SET_NULL', 'users_auth_groups_id_fk');
-        $this->forge->addForeignKey('who_created', 'users', 'id', 'CASCADE', 'SET_NULL', 'users_users_id_fk');
+        $this->forge->addForeignKey('group_id', 'auth_groups', 'id', 'CASCADE', 'SET NULL', 'users_auth_groups_id_fk');
+        $this->forge->addForeignKey('who_created', 'users', 'id', 'CASCADE', 'SET NULL', 'users_users_id_fk');
         $this->forge->createTable( 'users');
+        $this->db->query('ALTER TABLE ci4ms_auth_groups ADD CONSTRAINT ci4ms_auth_groups_ibfk_1 FOREIGN KEY (who_created) REFERENCES ci4ms_users(id) ON DELETE SET NULL ON UPDATE CASCADE');
     }
 
     public function down()
     {
         $this->forge->dropTable( 'users');
+        $this->db->query('ALTER TABLE ci4ms_auth_groups DROP FOREIGN KEY ci4ms_auth_groups_ibfk_1');
     }
 }

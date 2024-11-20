@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filters;
 
 use ci4commonmodel\Models\CommonModel;
@@ -33,7 +34,12 @@ class Ci4ms implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
-        if(cache()->get('settings')['maintenanceMode']->scalar===1) return redirect()->route('maintenance-mode');
+        $commonModel = new \ci4commonmodel\Models\CommonModel();
+        $authLib = new \Modules\Backend\Libraries\AuthLibrary();
+        
+
+
+        if (cache()->get('settings')['maintenanceMode']->scalar === 1) return redirect()->route('maintenance-mode');
     }
 
     /**
@@ -50,6 +56,6 @@ class Ci4ms implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        if(empty(cache('menus'))) cache()->save('menus',$this->commonModel->lists('menu','id,title,seflink,parent,pages_id,hasChildren',[],'queue ASC'),86400);
+        if (empty(cache('menus'))) cache()->save('menus', $this->commonModel->lists('menu', 'id,title,seflink,parent,pages_id,hasChildren', [], 'queue ASC'), 86400);
     }
 }

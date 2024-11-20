@@ -56,7 +56,7 @@ class Ci4msAuthGroupsPermissions extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('group_id', 'auth_groups', 'id', 'CASCADE', 'CASCADE', 'ci4ms_auth_groups_permissions_ibfk_1');
         $this->forge->addForeignKey('page_id', 'auth_permissions_pages', 'id', 'CASCADE', 'CASCADE', 'ci4ms_auth_groups_permissions_ibfk_2');
-        $this->forge->addForeignKey('who_perm', 'users', 'id', 'SET_NULL', 'SET_NULL', 'ci4ms_auth_groups_permissions_ibfk_3');
+        $this->forge->addForeignKey('who_perm', 'users', 'id', 'SET NULL', 'SET NULL', 'ci4ms_auth_groups_permissions_ibfk_3');
         $this->forge->createTable( 'auth_groups_permissions');
     }
 
