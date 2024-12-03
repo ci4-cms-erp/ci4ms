@@ -1,4 +1,6 @@
-<?php namespace Modules\Backend\Models;
+<?php
+
+namespace Modules\Backend\Models;
 
 use CodeIgniter\Model;
 use Config\Services;
@@ -19,17 +21,40 @@ class UserModel extends Model
 
     public function getPermissionsForUser(int $userId, int $groupId): object
     {
-        if (cache("{$userId}_permissions") !== null) return (object)cache("{$userId}_permissions");
-        $combined = $this->db->table('auth_groups_permissions')
-            ->select('auth_permissions_pages.id,auth_permissions_pages.pagename,auth_permissions_pages.pageSort,auth_permissions_pages.hasChild,auth_permissions_pages.symbol,auth_permissions_pages.sefLink,auth_permissions_pages.parent_pk,auth_permissions_pages.inNavigation,auth_permissions_pages.className,auth_permissions_pages.methodName,auth_permissions_pages.typeOfPermissions,auth_groups_permissions.create_r,auth_groups_permissions.read_r,auth_groups_permissions.update_r,auth_groups_permissions.delete_r')
-            ->join('auth_permissions_pages', 'auth_permissions_pages.id=auth_groups_permissions.page_id')
-            ->where(['group_id' => $groupId]);
-        $union = $this->db->table('auth_users_permissions')
-            ->select('auth_permissions_pages.id,auth_permissions_pages.pagename,auth_permissions_pages.pageSort,auth_permissions_pages.hasChild,auth_permissions_pages.symbol,auth_permissions_pages.sefLink,auth_permissions_pages.parent_pk,auth_permissions_pages.inNavigation,auth_permissions_pages.className,auth_permissions_pages.methodName,auth_permissions_pages.typeOfPermissions,auth_users_permissions.create_r,auth_users_permissions.read_r,auth_users_permissions.update_r,auth_users_permissions.delete_r')
-            ->join('auth_permissions_pages', 'auth_permissions_pages.id=auth_users_permissions.page_id')
-            ->where('auth_users_permissions.user_id', $userId);
-        $combined = $combined->unionAll($union)->orderBy('pageSort','ASC')->get()->getResultArray();
-        cache()->save("{$userId}_permissions", $combined, 300);
+        if ($cached = cache("{$userId}_permissions")) return (object) $cached;
+
+        $permissions = $this->db->table('auth_groups_permissions')
+            ->select('auth_permissions_pages.id, auth_permissions_pages.pagename, auth_permissions_pages.pageSort, auth_permissions_pages.hasChild, auth_permissions_pages.symbol, auth_permissions_pages.sefLink, auth_permissions_pages.parent_pk, auth_permissions_pages.inNavigation, auth_permissions_pages.className, auth_permissions_pages.methodName, auth_permissions_pages.typeOfPermissions, auth_groups_permissions.create_r, auth_groups_permissions.read_r, auth_groups_permissions.update_r, auth_groups_permissions.delete_r')
+            ->join('auth_permissions_pages', 'auth_permissions_pages.id = auth_groups_permissions.page_id')
+            ->where('group_id', $groupId)
+            ->unionAll(
+                $this->db->table('auth_users_permissions')
+                    ->select('auth_permissions_pages.id, auth_permissions_pages.pagename, auth_permissions_pages.pageSort, auth_permissions_pages.hasChild, auth_permissions_pages.symbol, auth_permissions_pages.sefLink, auth_permissions_pages.parent_pk, auth_permissions_pages.inNavigation, auth_permissions_pages.className, auth_permissions_pages.methodName, auth_permissions_pages.typeOfPermissions, auth_users_permissions.create_r, auth_users_permissions.read_r, auth_users_permissions.update_r, auth_users_permissions.delete_r')
+                    ->join('auth_permissions_pages', 'auth_permissions_pages.id = auth_users_permissions.page_id')
+                    ->where('auth_users_permissions.user_id', $userId)
+            )
+            ->orderBy('pageSort', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $finalPermissions = [];
+        foreach ($permissions as $perm) {
+            $id = $perm['id'];
+
+            if (!isset($finalPermissions[$id])) {
+                $finalPermissions[$id] = $perm;
+            } else {
+                foreach (['create_r', 'read_r', 'update_r', 'delete_r'] as $key) {
+                    $finalPermissions[$id][$key] |= $perm[$key]; // Binary OR
+                }
+            }
+        }
+
+        $finalPermissions = array_values($finalPermissions);
+
+        cache()->save("{$userId}_permissions", $finalPermissions, 300);
+
+        dd(cache("{$userId}_permissions"));
         return (object)cache("{$userId}_permissions");
     }
 

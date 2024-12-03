@@ -125,6 +125,7 @@ class PermgroupController extends BaseController
 
     public function user_perms(int $id)
     {
+        $userPerms=cache()->get("{$id}_permissions");
         if ($this->request->is('post')) {
             if ($this->validate(['perms' => ['label' => 'İzinler', 'rules' => 'required']]) == false)
                 return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
@@ -154,10 +155,6 @@ class PermgroupController extends BaseController
             else
                 return redirect()->route('officeWorker', [1])->with('message', 'Kullanıcı yetkileri başarıyla eklendi.');
         }
-        //TODO: gruba dahil olmayan sayfalar gösterilecek.
-        $this->defData['pages'] = $this->commonModel->lists('auth_permissions_pages');
-        $this->defData['group_perms'] = $this->commonModel->selectOne('users', ['id' => $id]);
-        $this->defData['group_perms']->auth_users_permissions = $this->commonModel->lists('auth_users_permissions', '*', ['user_id' => $id]);
         return view('Modules\Backend\Views\permGroup\userPerms', $this->defData);
     }
 }

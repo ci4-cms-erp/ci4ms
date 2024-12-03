@@ -35,8 +35,7 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->post('blackList', 'UserController::ajax_blackList_post', ['as' => 'blackList']);
         $routes->post('removeFromBlacklist', 'UserController::ajax_remove_from_blackList_post', []);
         $routes->post('forceResetPassword', 'UserController::ajax_force_reset_password', ['as' => 'forceResetPassword']);
-        $routes->get('user_perms/(:any)', 'PermgroupController::user_perms/$1', ['as' => 'user_perms']);
-        $routes->post('user_perms/(:any)', 'PermgroupController::user_perms_post/$1', []);
+        $routes->match(['GET','POST'],'user_perms/(:any)', 'PermgroupController::user_perms/$1', ['as' => 'user_perms']);
 
         $routes->get('groupList/(:num)', 'PermgroupController::groupList/$1', ['as' => 'groupList']);
         $routes->get('group_create', 'PermgroupController::group_create', ['as' => 'group_create']);
