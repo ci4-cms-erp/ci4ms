@@ -54,7 +54,6 @@ class UserModel extends Model
 
         cache()->save("{$userId}_permissions", $finalPermissions, 300);
 
-        dd(cache("{$userId}_permissions"));
         return (object)cache("{$userId}_permissions");
     }
 
