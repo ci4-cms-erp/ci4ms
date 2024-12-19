@@ -25,4 +25,33 @@ class BackendConfig extends BaseConfig
     // Layout for the views to extend
     //--------------------------------------------------------------------
     public $viewLayout = 'Modules\Backend\Views\base';
+
+    public $csrfExcept = [
+        'backend/officeWorker/blackList',
+        'backend/officeWorker/removeFromBlackList',
+        'backend/officeWorker/forceResetPassword',
+        'backend/menu/deleteMenuAjax',
+        'backend/menu/queueMenuAjax',
+        'backend/tagify',
+        'backend/checkSeflink',
+        'backend/isActive',
+        'backend/maintenance',
+        'backend/blogs/comments/commentResponse',
+        'backend/menu/createMenu',
+        'backend/menu/menuList',
+        'backend/menu/deleteMenuAjax',
+        'backend/menu/queueMenuAjax',
+        'backend/menu/addMultipleMenu',
+        'backend/summary/summary_render',
+        'backend/settings/setTemplate',
+        'backend/settings/elfinderConvertWebp',
+        'backend/media/elfinderConnection'
+    ];
+
+    public $filters=['backendAuthFilter' => ['before' => ['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],
+        'backendAfterLoginFilter' => ['before' => [
+            'backend','backend/officeWorker/*','backend/pages/*','backend/settings','backend/settings/*',
+            'backend/menu/*','backend/blogs/*','backend/tagify','backend/checkSeflink','backend/isActive',
+            'backend/maintenance','backend/menu','backend/media','backend/locked','backend/profile'
+        ]]];
 }
