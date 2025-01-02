@@ -45,13 +45,22 @@ class BackendConfig extends BaseConfig
         'backend/summary/summary_render',
         'backend/settings/setTemplate',
         'backend/settings/elfinderConvertWebp',
-        'backend/media/elfinderConnection'
+        'backend/media/elfinderConnection',
+        'backend/methods',
+        'backend/methods/list',
+        'backend/methods/read',
+        'backend/methods/save',
+        'backend/methods/renameFile',
+        'backend/methods/createFile',
+        'backend/methods/createFolder',
+        'backend/methods/moveFileOrFolder',
+        'backend/methods/deleteFileOrFolder',
     ];
 
     public $filters=['backendAuthFilter' => ['before' => ['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],
         'backendAfterLoginFilter' => ['before' => [
             'backend','backend/officeWorker/*','backend/pages/*','backend/settings','backend/settings/*',
             'backend/menu/*','backend/blogs/*','backend/tagify','backend/checkSeflink','backend/isActive',
-            'backend/maintenance','backend/menu','backend/media','backend/locked','backend/profile'
+            'backend/maintenance','backend/menu','backend/media','backend/locked','backend/profile','backend/methods','backend/methods/*'
         ]]];
 }

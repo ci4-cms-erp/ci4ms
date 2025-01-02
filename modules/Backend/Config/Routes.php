@@ -35,7 +35,7 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->post('blackList', 'UserController::ajax_blackList_post', ['as' => 'blackList']);
         $routes->post('removeFromBlacklist', 'UserController::ajax_remove_from_blackList_post', []);
         $routes->post('forceResetPassword', 'UserController::ajax_force_reset_password', ['as' => 'forceResetPassword']);
-        $routes->match(['GET','POST'],'user_perms/(:any)', 'PermgroupController::user_perms/$1', ['as' => 'user_perms']);
+        $routes->match(['GET', 'POST'], 'user_perms/(:any)', 'PermgroupController::user_perms/$1', ['as' => 'user_perms']);
 
         $routes->get('groupList/(:num)', 'PermgroupController::groupList/$1', ['as' => 'groupList']);
         $routes->get('group_create', 'PermgroupController::group_create', ['as' => 'group_create']);
@@ -121,6 +121,22 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->get('/', 'Media::index', ['as' => 'media', 'filter' => 'backendAfterLoginFilter']);
         $routes->get('elfinderConnection', 'Media::elfinderConnection', ['as' => 'elfinderConnection', 'filter' => 'backendAfterLoginFilter']);
         $routes->post('elfinderConnection', 'Media::elfinderConnection', ['as' => 'elfinderConnection', 'filter' => 'backendAfterLoginFilter']);
+    });
+
+    $routes->group('methods', function ($routes) {
+        $routes->match(['GET', 'POST'], '/', 'Methods::index', ['as' => 'list']);
+        $routes->match(['GET', 'POST'], 'create', 'Methods::create', ['as' => 'methodCreate']);
+        $routes->match(['GET', 'POST'], 'update/(:num)', 'Methods::update/$1', ['as' => 'methodUpdate']);
+        $routes->get('delete/(:num)', 'Methods::delete/$1', ['as' => 'methodDelete']);
+        $routes->get('updateRouteFile', 'Methods::updateRouteFile', ['as' => 'updateRouteFile']);
+        $routes->get('list', 'Methods::listFiles', ['as' => 'listfiles']);
+        $routes->get('read', 'Methods::readFile',['as' => 'readFile']);
+        $routes->post('save', 'Methods::saveFile',['as' => 'saveFile']);
+        $routes->post('renameFile', 'Methods::renameFile',['as' => 'renameFile']);
+        $routes->post('createFile', 'Methods::createFile',['as' => 'createFile']);
+        $routes->post('createFolder', 'Methods::createFolder',['as' => 'createFolder']);
+        $routes->post('moveFileOrFolder', 'Methods::moveFileOrFolder',['as' => 'moveFileOrFolder']);
+        $routes->post('deleteFileOrFolder', 'Methods::deleteFileOrFolder',['as' => 'deleteFileOrFolder']);
     });
 
     //log module

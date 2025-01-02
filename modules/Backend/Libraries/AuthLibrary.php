@@ -292,14 +292,14 @@ class AuthLibrary
 
         // Check the remember me functionality.
         $remember = Services::request()->getCookie(getenv('cookie.prefix').$this->config->rememberCookie);
-
+        
         if (empty($remember)) return false;
 
         [$selector, $validator] = explode(':', $remember);
+        d($validator);
         $validator = hash('sha256', $validator);
 
         $token = $this->commonModel->selectOne('auth_tokens', ['selector' => $selector]);
-
         if (empty($token)) return false;
         if (!hash_equals($token->hashedValidator, $validator)) return false;
 
@@ -517,7 +517,6 @@ class AuthLibrary
             return $item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1];
         });
         $perms = reset($perms);
-        //dd($perms['typeOfPermissions']);
         $typeOfPermissions = (array)json_decode($perms['typeOfPermissions']);
         $intersect = array_intersect_assoc($typeOfPermissions, $perms);
         if (!empty($intersect)) return true;

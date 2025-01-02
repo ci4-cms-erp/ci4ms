@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "065d9f974962fbfd2a4601137651e10c",
+    "content-hash": "7953c456841e1f6e89570bf2d91a0d1d",
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
@@ -104,16 +104,16 @@
         },
         {
             "name": "codeigniter4/framework",
-            "version": "v4.5.5",
+            "version": "v4.5.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/codeigniter4/framework.git",
-                "reference": "2849e7ff36b4c4aa1376d990a9a1e3f0c393b8d0"
+                "reference": "7822476e6c672387b0ca1d64a74040ed28c42d9f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/codeigniter4/framework/zipball/2849e7ff36b4c4aa1376d990a9a1e3f0c393b8d0",
-                "reference": "2849e7ff36b4c4aa1376d990a9a1e3f0c393b8d0",
+                "url": "https://api.github.com/repos/codeigniter4/framework/zipball/7822476e6c672387b0ca1d64a74040ed28c42d9f",
+                "reference": "7822476e6c672387b0ca1d64a74040ed28c42d9f",
                 "shasum": ""
             },
             "require": {
@@ -174,7 +174,7 @@
                 "slack": "https://codeigniterchat.slack.com",
                 "source": "https://github.com/codeigniter4/CodeIgniter4"
             },
-            "time": "2024-09-07T08:49:38+00:00"
+            "time": "2024-12-28T18:27:37+00:00"
         },
         {
             "name": "codeigniter4/translations",

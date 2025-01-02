@@ -6,12 +6,12 @@
     "homepage": "https://github.com/ci4-cms-erp/ci4ms",
     "require": {
         "php": "^8.1",
-        "codeigniter4/framework": "4.5.5",
+        "codeigniter4/framework": "4.5.7",
         "codeigniter4/translations": "^4.1",
-        "gregwar/captcha": "1.*",
-        "phpmailer/phpmailer": "^6.4",
-        "jasongrimes/paginator": "~1.0",
-        "melbahja/seo": "^2.0",
+        "gregwar/captcha": "1.2.1",
+        "phpmailer/phpmailer": "6.9.2",
+        "jasongrimes/paginator": "1.0.3",
+        "melbahja/seo": "2.1.1",
         "bertugfahriozer/ci4commonmodel": "^1.0",
         "studio-42/elfinder": "2.1.65",
         "claviska/simpleimage": "4.0.6"

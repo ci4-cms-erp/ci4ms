@@ -125,5 +125,7 @@ return [
     'trustedUsername'=>'Güvenilir Kullanıcı Adı',
     'gallery'=>'Galeri',
     'commentList'=>'Yorumlar',
-    'badwords' => 'Kötü Söz listesi'
+    'badwords' => 'Kötü Söz listesi',
+    'methodList'=>'Method Düzenleyici',
+    'updateRouteFile'=>'Dosya Düzenleyici'
 ];

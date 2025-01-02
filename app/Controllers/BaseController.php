@@ -54,7 +54,7 @@ abstract class BaseController extends Controller
     public $ci4msseoLibrary;
 
     /**
-     * Constructor.
+     * @return void
      */
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
