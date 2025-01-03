@@ -296,7 +296,7 @@ class AuthLibrary
         if (empty($remember)) return false;
 
         [$selector, $validator] = explode(':', $remember);
-        d($validator);
+        //d($validator);
         $validator = hash('sha256', $validator);
 
         $token = $this->commonModel->selectOne('auth_tokens', ['selector' => $selector]);
