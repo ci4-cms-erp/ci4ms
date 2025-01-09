@@ -40,57 +40,60 @@
                 <?= csrf_field() ?>
                 <div class="form-group col-md-4">
                     <label for="">Sayfa Adı</label>
-                    <input type="text" name="pagename" class="form-control" required>
+                    <input type="text" name="pagename" class="form-control" value="<?=$method->pagename?>" required>
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Açıklama</label>
-                    <input type="text" name="description" class="form-control">
+                    <input type="text" name="description" class="form-control" value="<?=$method->description?>">
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Sınıf Adı</label>
-                    <input type="text" name="className" class="form-control" required>
+                    <input type="text" name="className" class="form-control" value="<?=$method->className?>" required>
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Metot adı</label>
-                    <input type="text" name="methodName" class="form-control" required>
+                    <input type="text" name="methodName" class="form-control" value="<?=$method->methodName?>" required>
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Seflink</label>
-                    <input type="text" name="sefLink" class="form-control" required>
+                    <input type="text" name="sefLink" class="form-control" value="<?=$method->sefLink?>" required>
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Sayfa Sırası</label>
-                    <input type="number" name="pageSort" class="form-control">
+                    <input type="number" name="pageSort" class="form-control" value="<?=$method->pageSort?>">
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Sembol <small>(FontAwesome 5)</small></label>
-                    <input type="text" name="symbol" class="form-control">
+                    <input type="text" name="symbol" class="form-control" value="<?=$method->symbol?>">
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Yetki</label>
-                    <input type="text" name="typeOfPermissions" class="form-control" required>
+                    <input type="text" name="typeOfPermissions" class="form-control" value='<?=$method->typeOfPermissions?>' required>
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Üst Sayfası</label>
                     <select name="parent_pk" id="parentPk" class="form-control select2">
                         <option value="" disabled selected>Üst sayfa seçin</option>
+                        <?php foreach($methods as $methd): ?>
+                            <option value="<?=$methd->id?>" <?=$method->parent_pk==$methd->id?'selected':''?>><?=lang('Backend.'.$methd->pagename)?></option>
+                            <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group col-md-4">
                     <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input" name="inNavigation" type="checkbox" id="inNavigation">
+                        <input class="custom-control-input" value="1" name="inNavigation" type="checkbox" id="inNavigation" <?=$method->inNavigation==true?'checked':''?>>
                         <label for="inNavigation" class="custom-control-label">Menüde mi ?</label>
                     </div>
                 </div>
                 <div class="form-group col-md-4">
                     <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input" name="isBackoffice" type="checkbox" id="isBackoffice" checked>
+                        <input class="custom-control-input" value="1" name="isBackoffice" type="checkbox" id="isBackoffice" <?=$method->isBackoffice==true?'checked':''?>>
                         <label for="isBackoffice" class="custom-control-label">Panelde mi ?</label>
                     </div>
                 </div>
                 <div class="form-group col-md-4">
                     <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input" name="hasChild" type="checkbox" id="hasChild">
+                        <input class="custom-control-input" value="1" name="hasChild" type="checkbox" id="hasChild" <?=$method->hasChild==true?'checked':''?>>
                         <label for="hasChild" class="custom-control-label">Alt sayfası var mı ?</label>
                     </div>
                 </div>

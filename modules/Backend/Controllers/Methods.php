@@ -77,7 +77,7 @@ class Methods extends BaseController
                 'className' => ['label' => '', 'rules' => 'required'],
                 'methodName' => ['label' => '', 'rules' => 'required'],
                 'sefLink' => ['label' => '', 'rules' => 'required'],
-                'typeOfPermissions' => ['label' => '', 'rules' => 'required'],
+                'typeOfPermissions' => ['label' => '', 'rules' => 'required']
             ]);
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
             if ($this->commonModel->edit('auth_permissions_pages', [
@@ -86,18 +86,20 @@ class Methods extends BaseController
                 'className' => $this->request->getPost('className'),
                 'methodName' => $this->request->getPost('methodName'),
                 'sefLink' => $this->request->getPost('sefLink'),
-                'hasChild' => $this->request->getPost('hasChild') ?? 0,
+                'hasChild' => (bool)$this->request->getPost('hasChild') ==true?1: 0,
                 'pageSort' => $this->request->getPost('pageSort') ?? 0,
                 'parent_pk' => $this->request->getPost('parent_pk') ?? NULL,
                 'symbol' => $this->request->getPost('symbol') ?? NULL,
-                'inNavigation' => $this->request->getPost('inNavigation') ?? 0,
-                'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
+                'inNavigation' => (bool)$this->request->getPost('inNavigation') ==true?1: 0,
+                'isBackoffice' => (bool)$this->request->getPost('isBackoffice') ==true?1: 0,
                 'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
-            ],['id' => 'pk']))
-                return redirect()->route('methods')->with('success', 'Kayıt başarılı bir şekilde eklendi');
+            ],['id' => $pk]))
+                return redirect()->route('list')->with('success', 'Kayıt başarılı bir şekilde eklendi');
             else
                 return redirect()->back()->withInput()->with('error', 'Kayıt eklenirken bir hata oluştu');
         }
+        $this->defData['method']=$this->commonModel->selectOne('auth_permissions_pages',['id'=>$pk]);
+        $this->defData['methods']=$this->commonModel->lists('auth_permissions_pages','*',['id!='=>$pk]);
         return view('Modules\Backend\Views\methods\update', $this->defData);
     }
 
