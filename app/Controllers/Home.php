@@ -51,7 +51,7 @@ class Home extends BaseController
                 ],
                 'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
             ]);
-            if ($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id);
+            if ($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id, 'page');
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
         } else return show_404();
     }
@@ -96,7 +96,7 @@ class Home extends BaseController
             ],
             'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
         ]);
-        $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs('/blog/1');
+        $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs('/blog/1', 'page');
         return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
     }
 
@@ -145,6 +145,7 @@ class Home extends BaseController
                 ],
                 'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
             ]);
+            $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['infos']->id, 'blog');
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/post', $this->defData);
         } else return show_404();
     }
@@ -168,6 +169,7 @@ class Home extends BaseController
             }
             $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
             $this->defData['tagInfo'] = $this->commonModel->selectOne('tags', ['seflink' => $seflink]);
+            $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['tagInfo']->id, 'tag');
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/tags', $this->defData);
         } else return show_404();
     }
@@ -199,6 +201,7 @@ class Home extends BaseController
             $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,sirname');
         }
         $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
+        $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['category']->id, 'category');
         return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
     }
 

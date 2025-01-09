@@ -1,4 +1,6 @@
-<?php namespace App\Libraries;
+<?php
+
+namespace App\Libraries;
 
 use ci4commonModel\Models\CommonModel;
 use Modules\Backend\Config\Auth;
@@ -7,10 +9,12 @@ use PHPMailer\PHPMailer\PHPMailer;
 class CommonLibrary
 {
     protected $config;
+    protected $commonModelİ;
 
     public function __construct()
     {
         $this->config = new Auth();
+        $this->commonModel = new CommonModel();
     }
 
     /**
@@ -31,7 +35,8 @@ class CommonLibrary
     public function phpMailer(string $setFromMail, string $setFromName, array $addAddresses, string $addReplyToMail, string $addReplyToName, string $subject, string $body, string $altBody = '', array $addCCs = [], array $addBCCs = [], array $addAttachments = [],)
     {
         $settings = cache('settings');
-        $this->config->mailConfig = ['protocol' => $settings->mail->protocol,
+        $this->config->mailConfig = [
+            'protocol' => $settings->mail->protocol,
             'SMTPHost' => $settings->mail->server,
             'SMTPPort' => $settings->mail->port,
             'SMTPUser' => $settings->mail->address,
@@ -40,7 +45,8 @@ class CommonLibrary
             'mailtype' => 'html',
             'wordWrap' => 'true',
             'TLS' => $settings->mail->tls,
-            'newline' => "\r\n"];
+            'newline' => "\r\n"
+        ];
         if ($settings->mail->protocol === 'smtp') $this->config->mailConfig['SMTPCrypto'] = 'PHPMailer::ENCRYPTION_STARTTLS';
         $mail = new PHPMailer(true);
         try {
@@ -117,11 +123,11 @@ class CommonLibrary
 
     /*TODO: buraya blog controllerınun yapacağı işleri fonksiyonlayarak çağırılmasını sağlayacağız. conroller dururken pages kısmına eklenen sayfalar içinde fonksiyonlar ile çağırılacak.*/
 
-    public function commentBadwordFiltering(string $comment, array $badwordsList, bool $status = false, bool $autoReject = false,bool $autoAccept=false): bool|string
+    public function commentBadwordFiltering(string $comment, array $badwordsList, bool $status = false, bool $autoReject = false, bool $autoAccept = false): bool|string
     {
         $pattern = '/\b(' . implode('|', $badwordsList) . ')\b/i';
         if ($autoReject) return false;
-        if($status && $autoAccept){
+        if ($status && $autoAccept) {
             $comment = preg_replace($pattern, str_repeat('*', strlen('$0')), $comment);
             return $comment;
         }
@@ -130,20 +136,29 @@ class CommonLibrary
         return false;
     }
 
-    public function get_breadcrumbs(mixed $page_id)
+    public function get_breadcrumbs($id, $type = 'page')
     {
-        $menus=(object)cache('menus');
-        $homepage = array_filter((array) $menus, function($menu) {
+        $method = 'get' . ucfirst($type) . 'Breadcrumbs';
+        if (method_exists($this, $method)) {
+            return $this->$method($id);
+        }
+        return [];
+    }
+
+    private function getPageBreadcrumbs($id)
+    {
+        $menus = (object)cache('menus');
+        $homepage = array_filter((array) $menus, function ($menu) {
             return $menu->seflink == '/';
         });
         $homepage = reset($homepage);
-        if(is_integer($page_id))
-            $current_page = array_filter((array) $menus, function($menu) use($page_id) {
-                return $menu->pages_id == $page_id;
+        if (is_integer($id))
+            $current_page = array_filter((array) $menus, function ($menu) use ($id) {
+                return $menu->pages_id == $id;
             });
-        if(is_string($page_id))
-            $current_page = array_filter((array) $menus, function($menu) use($page_id) {
-                return $menu->seflink == $page_id;
+        if (is_string($id))
+            $current_page = array_filter((array) $menus, function ($menu) use ($id) {
+                return $menu->seflink == $id;
             });
         $current_page = reset($current_page);
         // Mevcut sayfa veya anasayfa boş ise breadcrumb'ları boş döndürün
@@ -153,10 +168,10 @@ class CommonLibrary
 
         // Anasayfayı breadcrumb'lar dizisinin başına ekleyin
         array_unshift($breadcrumbs, ['title' => $homepage->title, 'url' => $homepage->seflink]);
-        $tmpCurrentPage=$current_page;
+        $tmpCurrentPage = $current_page;
         // Sayfanın mevcut parent_id'si olana kadar döngüye girin ve breadcrumb'ları diziye ekleyin
         while ($tmpCurrentPage->parent) {
-            $parent_pages = array_filter((array) $menus, function($menu) use($tmpCurrentPage) {
+            $parent_pages = array_filter((array) $menus, function ($menu) use ($tmpCurrentPage) {
                 return $menu->id == $tmpCurrentPage->parent && $menu->seflink != '/';
             });
             $parent_page = reset($parent_pages);
@@ -167,8 +182,44 @@ class CommonLibrary
             }
         }
         // Son olarak, mevcut sayfanın bileşenlerini de breadcrumb'lar dizisine ekleyin
-        array_push($breadcrumbs, ['title' => $current_page->title, 'url' =>'']);
+        array_push($breadcrumbs, ['title' => $current_page->title, 'url' => '']);
 
+        return $breadcrumbs;
+    }
+
+    private function getBlogBreadcrumbs($id)
+    {
+        // Blog breadcrumbs oluşturma işlemleri
+        $breadcrumbs = [];
+        $blog = $this->commonModel->selectOne('blog', ['id' => $id]);
+        if ($blog) {
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
+            $breadcrumbs[] = ['title' => $blog->title, 'url' => site_url('blog/' . $blog->seflink)];
+        }
+        return $breadcrumbs;
+    }
+
+    private function getCategoryBreadcrumbs($id)
+    {
+        // Kategori breadcrumbs oluşturma işlemleri
+        $breadcrumbs = [];
+        $category = $this->commonModel->selectOne('categories', ['id' => $id]);
+        if ($category) {
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
+            $breadcrumbs[] = ['title' => $category->title, 'url' => site_url('category/' . $category->seflink)];
+        }
+        return $breadcrumbs;
+    }
+
+    private function getTagBreadcrumbs($id)
+    {
+        // Kategori breadcrumbs oluşturma işlemleri
+        $breadcrumbs = [];
+        $tag = $this->commonModel->selectOne('tags', ['id' => $id]);
+        if ($tag) {
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
+            $breadcrumbs[] = ['title' => $tag->tag, 'url' => site_url('tag/' . $tag->seflink)];
+        }
         return $breadcrumbs;
     }
 }
