@@ -14,7 +14,6 @@
                 endif; ?>
             </h1>
         </div>
-        <!--TODO: burayı dinamik hale getirmek gerekiyor. blog modülü için dinamik halde olursa güzel olur.-->
         <div onload=""></div>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
