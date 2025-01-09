@@ -13,6 +13,23 @@
                 <!-- Post content-->
                 <article>
                     <!-- Post header-->
+                    <div onload=""></div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <?php foreach ($breadcrumbs as $breadcrumb) { ?>
+                                <li class="breadcrumb-item <?= (empty($breadcrumb['url'])) ? 'active' : '' ?>"
+                                    <?= (empty($breadcrumb['url'])) ? 'aria-current="page"' : '' ?>>
+                                    <?php if (empty($breadcrumb['url'])) { ?>
+                                        <?= $breadcrumb['title'] ?>
+                                    <?php } else { ?>
+                                        <a href="<?= $breadcrumb['url'] ?>">
+                                            <?= $breadcrumb['title'] ?>
+                                        </a>
+                                    <?php } ?>
+                                </li>
+                            <?php } ?>
+                        </ol>
+                    </nav>
                     <header class="mb-4">
                         <!-- Post title-->
                         <h1 class="fw-bolder mb-1"><?= $infos->title ?></h1>
@@ -21,13 +38,13 @@
                         <!-- Post categories-->
                         <?php foreach ($tags as $tag): ?>
                             <a class="badge bg-secondary text-decoration-none link-light"
-                               href="<?= route_to('tag', $tag->seflink) ?>"><?= $tag->tag ?></a>
+                                href="<?= route_to('tag', $tag->seflink) ?>"><?= $tag->tag ?></a>
                         <?php endforeach; ?>
                     </header>
                     <!-- Preview image figure-->
                     <figure class="mb-4">
                         <img class="img-fluid rounded" src="<?= $infos->seo->coverImage ?>"
-                             alt="<?= $infos->title ?>"/>
+                            alt="<?= $infos->title ?>" />
                     </figure>
                     <!-- Post content-->
                     <section class="mb-5">
@@ -37,10 +54,10 @@
                     <div class="d-flex align-items-center mt-lg-5 mb-4">
                         <?php if (empty($authorInfo->profileIMG)): ?>
                             <img class="img-fluid rounded-circle" src="https://dummyimage.com/50x50/ced4da/6c757d.jpg"
-                                 alt="<?= $authorInfo->firstname . ' ' . $authorInfo->sirname ?>"/>
+                                alt="<?= $authorInfo->firstname . ' ' . $authorInfo->sirname ?>" />
                         <?php else: ?>
                             <img class="img-fluid rounded-circle" src="<?= $authorInfo->profileIMG ?>"
-                                 alt="<?= $authorInfo->firstname . ' ' . $authorInfo->sirname ?>"/>
+                                alt="<?= $authorInfo->firstname . ' ' . $authorInfo->sirname ?>" />
                         <?php endif; ?>
                         <div class="ms-3">
                             <div class="fw-bold"><?= $authorInfo->firstname . ' ' . $authorInfo->sirname ?></div>
@@ -57,15 +74,15 @@
                             <form class="mb-4 row">
                                 <div class="col-md-6 form-group mb-3">
                                     <input type="text" class="form-control" name="comFullName" placeholder="Full name"
-                                           value="<?= old('comFullName') ?>">
+                                        value="<?= old('comFullName') ?>">
                                 </div>
                                 <div class="col-md-6 form-group mb-3">
                                     <input type="email" class="form-control" name="comEmail" placeholder="E-mail"
-                                           value="<?= old('comEmail') ?>">
+                                        value="<?= old('comEmail') ?>">
                                 </div>
                                 <div class="col-12 form-group mb-3">
-                                        <textarea class="form-control" rows="3" name="comMessage"
-                                                  placeholder="Join the discussion and leave a comment!"><?= old('comMessage') ?></textarea>
+                                    <textarea class="form-control" rows="3" name="comMessage"
+                                        placeholder="Join the discussion and leave a comment!"><?= old('comMessage') ?></textarea>
                                 </div>
                                 <div class="col-6 form-group">
                                     <div class="input-group">
@@ -76,7 +93,7 @@
                                 </div>
                                 <div class="col-6 form-group text-end">
                                     <button class="btn btn-primary btn-sm sendComment" type="button" data-id=""
-                                            data-blogid="<?= $infos->id ?>">Send
+                                        data-blogid="<?= $infos->id ?>">Send
                                     </button>
                                 </div>
                             </form>
@@ -87,7 +104,7 @@
                                 </div>
                                 <div class="d-flex">
                                     <div class="w-100">
-                                        <button class="btn btn-warning w-100" onclick="loadMore('<?=$infos->id?>')" id="loadMore" data-skip="5" data-defskip="5"><i class=""></i> Load More</button>
+                                        <button class="btn btn-warning w-100" onclick="loadMore('<?= $infos->id ?>')" id="loadMore" data-skip="5" data-defskip="5"><i class=""></i> Load More</button>
                                     </div>
                                 </div>
                             <?php } ?>
