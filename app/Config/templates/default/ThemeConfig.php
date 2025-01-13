@@ -3,6 +3,6 @@
 use CodeIgniter\Config\BaseConfig;
 
 class ThemeConfig extends BaseConfig{
-    public $csrfExcept=[];
+    public $csrfExcept=['forms/searchForm'];
     public $filters=[];
 }
