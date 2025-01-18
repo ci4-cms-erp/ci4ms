@@ -52,16 +52,16 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4">
-                                    <label for="">Kategori listesi</label>
-                                    <input type="checkbox" name="settings[widgets][sidebar][searchWidget]" value="true" <?=!empty($settings->templateInfos->widgets->sidebar->searchWidget) && (boolean)$settings->templateInfos->widgets->sidebar->searchWidget===true?'checked':''?>>
+                                    <label for="">Arama</label>
+                                    <input type="checkbox" name="settings[widgets][sidebar][searchWidget]" value="true" <?=!empty($settings->templateInfos->widgets['sidebar']['searchWidget']) && (boolean)$settings->templateInfos->widgets['sidebar']['searchWidget']===true?'checked':''?>>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="">Kategori listesi</label>
-                                    <input type="checkbox" name="settings[widgets][sidebar][categoriesWidget]" value="true" <?=!empty($settings->templateInfos->widgets->sidebar->categoriesWidget) && (boolean)$settings->templateInfos->widgets->sidebar->categoriesWidget===true?'checked':''?>>
+                                    <input type="checkbox" name="settings[widgets][sidebar][categoriesWidget]" value="true" <?=!empty($settings->templateInfos->widgets['sidebar']['categoriesWidget']) && (boolean)$settings->templateInfos->widgets['sidebar']['categoriesWidget']===true?'checked':''?>>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="">Arşiv listesi</label>
-                                    <input type="checkbox" name="settings[widgets][sidebar][archiveWidget]" value="true" <?=!empty($settings->templateInfos->widgets->sidebar->archiveWidget) && (boolean)$settings->templateInfos->widgets->sidebar->archiveWidget===true?'checked':''?>>
+                                    <input type="checkbox" name="settings[widgets][sidebar][archiveWidget]" value="true" <?=!empty($settings->templateInfos->widgets['sidebar']['archiveWidget']) && (boolean)$settings->templateInfos->widgets['sidebar']['archiveWidget']===true?'checked':''?>>
                                 </div>
                             </div>
                         </div>
