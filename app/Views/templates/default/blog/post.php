@@ -22,7 +22,7 @@
                                     <?php if (empty($breadcrumb['url'])) { ?>
                                         <?= $breadcrumb['title'] ?>
                                     <?php } else { ?>
-                                        <a href="<?= $breadcrumb['url'] ?>">
+                                        <a href="<?= site_url($breadcrumb['url']) ?>">
                                             <?= $breadcrumb['title'] ?>
                                         </a>
                                     <?php } ?>

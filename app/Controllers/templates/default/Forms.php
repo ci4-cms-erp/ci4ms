@@ -55,6 +55,15 @@ class Forms extends \App\Controllers\BaseController
             }, $results);
             $result=array_merge($result, $tags);
         }
+
+        $results = $this->commonModel->lists('categories', '*', [], 'title ASC', 0, 0, ['title' => $this->request->getGet('term')]);
+        if (!empty($results)) {
+            $tags = array_map(function ($page) {
+                return ['value' => '[kategori] '.$page->tag,
+            'url'=>'/category/'.$page->seflink];
+            }, $results);
+            $result=array_merge($result, $tags);
+        }
         if (!empty($result))
             return $this->respond($result, 200);
         else

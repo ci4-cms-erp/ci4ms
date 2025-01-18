@@ -184,7 +184,23 @@ class Home extends BaseController
                 $keywords[] = $keyword->value;
             }
         }
-        $this->defData['seo'] = $this->commonLibrary->seo($this->defData['category']->title, $this->defData['category']->seo->description, $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['category']->seo->coverImage) ? $this->defData['category']->seo->coverImage : '');
+        $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['category']->title, (!empty($this->defData['category']->seo->description)) ? $this->defData['category']->seo->description : '', $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['category']->seo->coverImage) ? $this->defData['category']->seo->coverImage : '');
+        $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('Organization', [
+            'url' => site_url(),
+            'logo' => $this->defData['settings']->logo,
+            'name' => $this->defData['settings']->siteName,
+            'children' => [
+                'ContactPoint' =>
+                [
+                    'ContactPoint' => [
+                        'telephone' => $this->defData['settings']->company->phone,
+                        'contactType' => 'customer support'
+                    ]
+                ]
+            ],
+            'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
+        ]);
+        if ($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['category']->id, 'category');
         $perPage = 12;
         $page = $this->request->getUri()->getSegment(3, 1);
         $offset = ($page - 1) * $perPage;

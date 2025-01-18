@@ -89,6 +89,11 @@ class CommonLibrary
         }
     }
 
+    /**
+     * @param string $string
+     * @param string $start
+     * @param string $end
+     */
     private function findFunction($string, $start, $end)
     {
         $part = explode($start, $string);
@@ -104,6 +109,12 @@ class CommonLibrary
     }
 
     //TODO: çoklu veri işlenmesi için virgül kullanılır hale getirilecek.(,)
+    /**
+     * Undocumented function
+     *
+     * @param string $string
+     * @return void
+     */
     public function parseInTextFunctions(string $string)
     {
         $functions = $this->findFunction($string, '{', '/}');
@@ -121,8 +132,14 @@ class CommonLibrary
         return str_replace(array_keys($functions), $data, $string);
     }
 
-    /*TODO: buraya blog controllerınun yapacağı işleri fonksiyonlayarak çağırılmasını sağlayacağız. conroller dururken pages kısmına eklenen sayfalar içinde fonksiyonlar ile çağırılacak.*/
-
+    /**
+     * @param string $comment
+     * @param array $badwordsList
+     * @param bool $status
+     * @param bool $autoReject
+     * @param bool $autoAccept
+     * @return bool|string
+     */
     public function commentBadwordFiltering(string $comment, array $badwordsList, bool $status = false, bool $autoReject = false, bool $autoAccept = false): bool|string
     {
         $pattern = '/\b(' . implode('|', $badwordsList) . ')\b/i';
@@ -136,6 +153,23 @@ class CommonLibrary
         return false;
     }
 
+    /**
+     * @param string $comment
+     */
+    private function getHomepageBreadcrumb()
+    {
+        $menus = (object)cache('menus');
+        $homepage = array_filter((array) $menus, function ($menu) {
+            return $menu->seflink == '/';
+        });
+        if (!empty($homepage)) return reset($homepage);
+        else return [];
+    }
+
+    /**
+     * @param integer $id
+     * @param string $type
+     */
     public function get_breadcrumbs($id, $type = 'page')
     {
         $method = 'get' . ucfirst($type) . 'Breadcrumbs';
@@ -145,13 +179,15 @@ class CommonLibrary
         return [];
     }
 
+    /**
+     *
+     * @param int $id
+     * @return void
+     */
     private function getPageBreadcrumbs($id)
     {
         $menus = (object)cache('menus');
-        $homepage = array_filter((array) $menus, function ($menu) {
-            return $menu->seflink == '/';
-        });
-        $homepage = reset($homepage);
+        $homepage = $this->getHomepageBreadcrumb();
         if (is_integer($id))
             $current_page = array_filter((array) $menus, function ($menu) use ($id) {
                 return $menu->pages_id == $id;
@@ -164,10 +200,7 @@ class CommonLibrary
         // Mevcut sayfa veya anasayfa boş ise breadcrumb'ları boş döndürün
         if (!$current_page || !$homepage) return array();
 
-        $breadcrumbs = array();
-
-        // Anasayfayı breadcrumb'lar dizisinin başına ekleyin
-        array_unshift($breadcrumbs, ['title' => $homepage->title, 'url' => $homepage->seflink]);
+        $breadcrumbs = [['title' => $homepage->title, 'url' => $homepage->seflink]];
         $tmpCurrentPage = $current_page;
         // Sayfanın mevcut parent_id'si olana kadar döngüye girin ve breadcrumb'ları diziye ekleyin
         while ($tmpCurrentPage->parent) {
@@ -189,36 +222,44 @@ class CommonLibrary
 
     private function getBlogBreadcrumbs($id)
     {
-        // Blog breadcrumbs oluşturma işlemleri
-        $breadcrumbs = [];
+        $homepage = $this->getHomepageBreadcrumb();
+        $breadcrumbs = [['title' => $homepage->title, 'url' => $homepage->seflink]];
         $blog = $this->commonModel->selectOne('blog', ['id' => $id]);
+        $category = $this->commonModel->lists('categories', 'categories.*', ['blog_categories_pivot.blog_id' => $id], 'id ASC', 0, 0, [], [], [
+            [
+                'table' => 'blog_categories_pivot',
+                'cond' => 'categories.id = blog_categories_pivot.categories_id',
+                'type' => 'left'
+            ]
+        ]);
         if ($blog) {
-            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
-            $breadcrumbs[] = ['title' => $blog->title, 'url' => site_url('blog/' . $blog->seflink)];
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => 'blog'];
+            $breadcrumbs[] = ['title' => $category[0]->title, 'url' => 'category/' . $category[0]->seflink];
+            $breadcrumbs[] = ['title' => $blog->title, 'url' => ''];
         }
         return $breadcrumbs;
     }
 
     private function getCategoryBreadcrumbs($id)
     {
-        // Kategori breadcrumbs oluşturma işlemleri
-        $breadcrumbs = [];
+        $homepage = $this->getHomepageBreadcrumb();
+        $breadcrumbs = [['title' => $homepage->title, 'url' => $homepage->seflink]];
         $category = $this->commonModel->selectOne('categories', ['id' => $id]);
         if ($category) {
-            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
-            $breadcrumbs[] = ['title' => $category->title, 'url' => site_url('category/' . $category->seflink)];
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => 'blog'];
+            $breadcrumbs[] = ['title' => $category->title, 'url' => ''];
         }
         return $breadcrumbs;
     }
 
     private function getTagBreadcrumbs($id)
     {
-        // Kategori breadcrumbs oluşturma işlemleri
-        $breadcrumbs = [];
+        $homepage = $this->getHomepageBreadcrumb();
+        $breadcrumbs = [['title' => $homepage->title, 'url' => $homepage->seflink]];
         $tag = $this->commonModel->selectOne('tags', ['id' => $id]);
         if ($tag) {
-            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
-            $breadcrumbs[] = ['title' => $tag->tag, 'url' => site_url('tag/' . $tag->seflink)];
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => 'blog'];
+            $breadcrumbs[] = ['title' => $tag->tag, 'url' => ''];
         }
         return $breadcrumbs;
     }
