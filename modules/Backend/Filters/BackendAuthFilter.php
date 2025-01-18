@@ -39,8 +39,7 @@ class BackendAuthFilter implements FilterInterface
         $authLib=new AuthLibrary();
         if ($authLib->check()) {
             $seflink=session()->get('redirect_url') ?? 'backend/logout';
-            unset($_SESSION['redirect_url']);
-
+			session()->remove('redirect_url');
             return  redirect()->route($seflink);
         }
 	}

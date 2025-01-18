@@ -88,7 +88,7 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         //categories
         $routes->group('categories', function ($routes) {
             $routes->get('(:num)', 'Categories::index/$1', ['as' => 'categories']);
-            $routes->match(['GET', 'POST'], 'Categories::new', ['as' => 'categoryCreate']);
+            $routes->match(['GET', 'POST'], 'new', 'Categories::new', ['as' => 'categoryCreate']);
             $routes->match(['GET', 'POST'], 'update/(:any)', 'Categories::edit/$1', ['as' => 'categoryUpdate']);
             $routes->get('delete/(:any)', 'Categories::delete/$1', ['as' => 'categoryDelete']);
         });
@@ -130,13 +130,13 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->get('delete/(:num)', 'Methods::delete/$1', ['as' => 'methodDelete']);
         $routes->get('updateRouteFile', 'Methods::updateRouteFile', ['as' => 'updateRouteFile']);
         $routes->get('list', 'Methods::listFiles', ['as' => 'listfiles']);
-        $routes->get('read', 'Methods::readFile',['as' => 'readFile']);
-        $routes->post('save', 'Methods::saveFile',['as' => 'saveFile']);
-        $routes->post('renameFile', 'Methods::renameFile',['as' => 'renameFile']);
-        $routes->post('createFile', 'Methods::createFile',['as' => 'createFile']);
-        $routes->post('createFolder', 'Methods::createFolder',['as' => 'createFolder']);
-        $routes->post('moveFileOrFolder', 'Methods::moveFileOrFolder',['as' => 'moveFileOrFolder']);
-        $routes->post('deleteFileOrFolder', 'Methods::deleteFileOrFolder',['as' => 'deleteFileOrFolder']);
+        $routes->get('read', 'Methods::readFile', ['as' => 'readFile']);
+        $routes->post('save', 'Methods::saveFile', ['as' => 'saveFile']);
+        $routes->post('renameFile', 'Methods::renameFile', ['as' => 'renameFile']);
+        $routes->post('createFile', 'Methods::createFile', ['as' => 'createFile']);
+        $routes->post('createFolder', 'Methods::createFolder', ['as' => 'createFolder']);
+        $routes->post('moveFileOrFolder', 'Methods::moveFileOrFolder', ['as' => 'moveFileOrFolder']);
+        $routes->post('deleteFileOrFolder', 'Methods::deleteFileOrFolder', ['as' => 'deleteFileOrFolder']);
     });
 
     //log module

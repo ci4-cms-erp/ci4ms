@@ -5,8 +5,9 @@ namespace Modules\Backend\Libraries;
 use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Events\Events;
 use CodeIgniter\I18n\Time;
-use Config\Cookie;
 use Config\Services;
+use CodeIgniter\Cookie\Cookie;
+use Config\Cookie as confCookie;
 use Modules\Backend\Config\Auth;
 use Modules\Backend\Exceptions\AuthException;
 use Modules\Backend\Models\UserModel;
@@ -70,7 +71,6 @@ class AuthLibrary
         Services::response()->noCache();
 
         if ($remember && $this->config->allowRemembering) $this->rememberUser($this->user->id);
-
         if (mt_rand(1, 100) < 20) $this->userModel->purgeOldRememberTokens();
 
         // trigger login event, in case anyone cares
@@ -91,7 +91,7 @@ class AuthLibrary
         $this->userModel->rememberUser($userID, $selector, $validator, $expires);
 
         $response = Services::response();
-        $appConfig = new Cookie();
+        $appConfig = new confCookie();
 
         // Create the cookie
         $response->setCookie(
@@ -123,7 +123,7 @@ class AuthLibrary
 
     public function logout()
     {
-        $appConfig = new Cookie();
+        $appConfig = new confCookie();
         $response = Services::response();
         $response->deleteCookie($this->config->rememberCookie, $appConfig->domain, $appConfig->path, $appConfig->prefix);
         $oid = session($this->config->logged_in);
@@ -291,27 +291,26 @@ class AuthLibrary
         if ($this->isLoggedIn()) return true;
 
         // Check the remember me functionality.
-        $remember = Services::request()->getCookie(getenv('cookie.prefix').$this->config->rememberCookie);
-        
+        $remember = Services::request()->getCookie(getenv('cookie.prefix') . $this->config->rememberCookie);
+
         if (empty($remember)) return false;
 
         [$selector, $validator] = explode(':', $remember);
-        //d($validator);
         $validator = hash('sha256', $validator);
 
         $token = $this->commonModel->selectOne('auth_tokens', ['selector' => $selector]);
-        if (empty($token)) return false;
-        if (!hash_equals($token->hashedValidator, $validator)) return false;
 
-        // Yay! We were remembered!
-        $user = $this->commonModel->selectOne($this->config->userTable, ['id' => $token->user_id]);
+        if (empty($token)) return false;
+        if ($token->expires > date('Y-m-d H:i:s') && !hash_equals($token->hashedValidator, $validator)) {
+            // Yay! We were remembered!
+            $user = $this->commonModel->selectOne($this->config->userTable, ['id' => $token->user_id]);
+            // We only want our remember me tokens to be valid for a single use.
+            $this->refreshRemember($user->id, $selector);
+        }
 
         if (empty($user)) return false;
 
         $this->login($user);
-
-        // We only want our remember me tokens to be valid for a single use.
-        $this->refreshRemember($user->id, $selector);
 
         return true;
     }
@@ -329,19 +328,19 @@ class AuthLibrary
         $this->userModel->updateRememberValidator($selector, $validator);
 
         // Save it to the user's browser in a cookie.
-        $response = Services::response();
-        $appConfig = new Cookie();
-
-        // Create the cookie
-        $response->set_cookie(
+        //$response = Services::response();
+        $appConfig = new confCookie();
+        $cookie=new Cookie(
             $this->config->rememberCookie,               // Cookie Name
             $selector . ':' . $validator, // Value
-            $this->config->rememberLength,  // # Seconds until it expires
-            $appConfig->domain,
-            $appConfig->path,
-            $appConfig->prefix,
-            false,                  // Only send over HTTPS?
-            true                  // Hide from Javascript?
+            [
+                $this->config->rememberLength,  // # Seconds until it expires
+                $appConfig->domain,
+                $appConfig->path,
+                $appConfig->prefix,
+                false,                  // Only send over HTTPS?
+                true                  // Hide from Javascript?
+            ]
         );
     }
 
