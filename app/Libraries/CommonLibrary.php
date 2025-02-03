@@ -34,7 +34,7 @@ class CommonLibrary
      */
     public function phpMailer(string $setFromMail, string $setFromName, array $addAddresses, string $addReplyToMail, string $addReplyToName, string $subject, string $body, string $altBody = '', array $addCCs = [], array $addBCCs = [], array $addAttachments = [],)
     {
-        $settings = cache('settings');
+        $settings = (object)cache('settings');
         $this->config->mailConfig = [
             'protocol' => $settings->mail->protocol,
             'SMTPHost' => $settings->mail->server,
@@ -71,8 +71,14 @@ class CommonLibrary
             }
 
             $mail->addReplyTo($addReplyToMail, $addReplyToName);
-            foreach ($addCCs as $addCC) $mail->addCC($addCC);
-            foreach ($addBCCs as $addBCC) $mail->addBCC($addBCC);
+            foreach ($addCCs as $addCC) { 
+                if (!empty($addCC['name'])) $mail->addAddress($addCC['mail'], $addCC['name']);  // Name is optional
+                $mail->addCC($addCC['mail']);
+            }
+            foreach ($addBCCs as $addBCC){
+                if (!empty($addBCC['name'])) $mail->addAddress($addBCC['mail'], $addBCC['name']);  // Name is optional
+                $mail->addBCC($addBCC['mail']);
+            }
             foreach ($addAttachments as $addAttachment) {
                 if (!empty($addAttachment['name'])) $mail->addAttachment($addAttachment['path'], $addAttachment['name']);
                 else $mail->addAttachment($addAttachment['path']);
