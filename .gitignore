@@ -129,3 +129,5 @@ template
 app/Config/Routes.php
 *.zip
 .history
+.devilbox
+htdocs

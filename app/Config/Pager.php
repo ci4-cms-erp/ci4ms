@@ -46,12 +46,11 @@ class Pager extends BaseConfig
         $settings = (object)cache('settings');
         $themePath = APPPATH . "Views" . DIRECTORY_SEPARATOR . "templates" . DIRECTORY_SEPARATOR . "{$settings->templateInfos->path}" . DIRECTORY_SEPARATOR;
         $paginationTemplates = glob($themePath . 'pagination_*.php');
+
         if (!empty($paginationTemplates)) {
             foreach ($paginationTemplates as $template) {
-                if (file_exists($template)) {
-                    $templateName = basename($template, '.php');
-                    $this->templates[$settings->templateInfos->path] = "App" . DIRECTORY_SEPARATOR . "Views" . DIRECTORY_SEPARATOR . "templates" . DIRECTORY_SEPARATOR . "{$settings->templateInfos->path}" . DIRECTORY_SEPARATOR . "{$templateName}";
-                }
+                $templateName = basename($template, '.php');
+                $this->templates[$settings->templateInfos->path] = "App\Views\\templates\\".$settings->templateInfos->path."\\".$templateName;
             }
         }
     }

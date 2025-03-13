@@ -1,8 +1,8 @@
 <?= $this->extend('Views/templates/default/base') ?>
-<?= $this->section('head')?>
-    <link href="<?=site_url('templates/default/assets/404.css')?>" rel="stylesheet" />
-<?=$this->endSection()?>
-<?=$this->section('content')?>
+<?= $this->section('head') ?>
+<link href="<?= site_url('templates/default/assets/404.css') ?>" rel="stylesheet" />
+<?= $this->endSection() ?>
+<?= $this->section('content') ?>
 <section class="page_404">
     <div class="container-fluid">
         <div class="row">
@@ -16,11 +16,15 @@
                             Look like you're lost
                         </h3>
                         <p>the page you are looking for not avaible!</p>
-                        <a href="<?=$referer?>" class="link_404">Go to Home</a>
+                        <?php if (empty($referer)) : ?>
+                            <a href="/" class="link_404">Go to Home</a>
+                        <?php else : ?>
+                            <a href="<?= $referer ?>" class="link_404">Go Back</a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<?=$this->endSection()?>
+<?= $this->endSection() ?>
