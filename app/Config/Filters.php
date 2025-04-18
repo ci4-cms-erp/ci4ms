@@ -106,6 +106,7 @@ class Filters extends BaseFilters
      */
     public array $filters = [];
 
+    private string $modulesPath = ROOTPATH . 'modules/';
     public function __construct()
     {
         parent::__construct();
@@ -118,18 +119,24 @@ class Filters extends BaseFilters
             foreach ($settings as $setting) {
                 if ($formatRules->valid_json($setting->content) === true)
                     $set[$setting->option] = (object)json_decode($setting->content, JSON_UNESCAPED_UNICODE);
-                else
-                    $set[$setting->option] = $setting->content;
+                else $set[$setting->option] = $setting->content;
             }
             cache()->save('settings', $set, 86400);
             $settings = (object)$set;
         } else $settings = (object)cache('settings');
 
+        $modules = array_filter(scandir($this->modulesPath), function ($module) {
+            return !in_array($module, ['.', '..', '.DS_Store']) && is_dir($this->modulesPath . DIRECTORY_SEPARATOR . $module);
+        });
+        $mods = [APPPATH . 'Filters'];
+        foreach ($modules as $module) {
+            if (is_dir($this->modulesPath) . '/' . $module) {
+                if (hasFilesInFolder(ROOTPATH . 'modules/' . $module . '/Filters'))
+                    $mods[] = ROOTPATH . 'modules/' . $module . '/Filters';
+            }
+        }
         // Filtre klasörünü tara
-        $this->loadDynamicFilters([
-            APPPATH . 'Filters',
-            ROOTPATH . 'modules/Backend/Filters',
-        ]);
+        $this->loadDynamicFilters($mods);
 
         $this->loadConfig();
     }
@@ -185,9 +192,41 @@ class Filters extends BaseFilters
      */
     private function loadConfig(): void
     {
-        $backendFilters = new \Modules\Backend\Config\BackendConfig();
-        $this->mergeCsrfExcept($backendFilters->csrfExcept);
-        $this->filters = array_merge($this->filters, $backendFilters->filters);
+        $modules = array_filter(scandir($this->modulesPath), function ($module) {
+            return !in_array($module, ['.', '..']) && is_dir($this->modulesPath . DIRECTORY_SEPARATOR . $module);
+        });
+
+        $allCsrfExcept = [];
+        $allFilters = [];
+
+        foreach ($modules as $module) {
+            $configClass = "Modules\\{$module}\\Config\\{$module}Config";
+            if (class_exists($configClass)) {
+                $configInstance = new $configClass();
+                if (property_exists($configInstance, 'csrfExcept') && is_array($configInstance->csrfExcept)) {
+                    $allCsrfExcept = array_merge($allCsrfExcept, $configInstance->csrfExcept);
+                }
+                if (property_exists($configInstance, 'filters') && is_array($configInstance->filters)) {
+                    foreach ($configInstance->filters as $filterName => $filterRules) {
+                        if (!isset($allFilters[$filterName])) {
+                            $allFilters[$filterName] = $filterRules;
+                        } else {
+                            foreach ($filterRules as $filterType => $paths) {
+                                if (!isset($allFilters[$filterName][$filterType])) {
+                                    $allFilters[$filterName][$filterType] = [];
+                                }
+                                $allFilters[$filterName][$filterType] = array_merge($allFilters[$filterName][$filterType], $paths);
+                            }
+                        }
+                    }
+                }
+                // Tekrar eden path'leri temizle
+                $allCsrfExcept = array_unique($allCsrfExcept);
+            }
+        }
+        $this->filters = array_merge($this->filters, $allFilters);
+        $this->mergeCsrfExcept($allCsrfExcept);
+
         $settings = (object) cache('settings');
         $themeConfigPath = APPPATH . 'Config/templates/' . $settings->templateInfos->path . 'ThemeConfig.php';
 

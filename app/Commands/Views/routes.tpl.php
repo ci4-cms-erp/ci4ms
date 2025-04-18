@@ -70,10 +70,11 @@ if (!empty($settings->templateInfos->path) && is_dir(APPPATH.'Config')) {
  */
 if (is_dir(ROOTPATH.'modules')) {
     $modulesPath = ROOTPATH.'modules/';
-    $modules = scandir($modulesPath);
+    $modules = array_filter(scandir($modulesPath), function ($module) {
+        return !in_array($module, ['.', '..', '.DS_Store']) && is_dir(ROOTPATH.'modules/' . $module);
+    });
 
     foreach ($modules as $module) {
-        if ($module === '.' || $module === '..') continue;
         if (is_dir($modulesPath) . '/' . $module) {
             $routesPath = $modulesPath . $module . '/Config/Routes.php';
             if (is_file($routesPath)) require($routesPath);
@@ -99,4 +100,5 @@ $routes->post('newComment','Home::newComment',['filter'=>'ci4ms','as'=>'newComme
 $routes->post('repliesComment','Home::repliesComment',['filter'=>'ci4ms','as'=>'repliesComment']);
 $routes->post('loadMoreComments','Home::loadMoreComments',['filter'=>'ci4ms','as'=>'loadMoreComments']);
 $routes->post('commentCaptcha','Home::commentCaptcha',['filter'=>'ci4ms','as'=>'commentCaptcha']);
+$routes->post('search','Home::search',['filter'=>'ci4ms','as'=>'search']);
 $routes->get('/(:any)', 'Home::index/$1',['filter'=>'ci4ms']);

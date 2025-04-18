@@ -41,9 +41,7 @@ class Autoload extends AutoloadConfig
      */
     public $psr4 = [
         APP_NAMESPACE => APPPATH,
-        'Modules' => ROOTPATH . 'modules',
-        'Modules\Auth' => ROOTPATH . 'modules/Auth',
-        'Modules\Backend' => ROOTPATH . 'modules/Backend'
+        'Modules' => ROOTPATH . 'modules'
     ];
 
     /**
@@ -94,4 +92,17 @@ class Autoload extends AutoloadConfig
      * @var list<string>
      */
     public $helpers = ['text', 'filesystem','html'];
+
+    private string $modulesPath = ROOTPATH . 'modules/';
+    public function __construct()
+    {
+        parent::__construct();
+        $modules = array_filter(scandir($this->modulesPath), function ($module) {
+            return !in_array($module, ['.', '..', '.DS_Store']) && is_dir($this->modulesPath . DIRECTORY_SEPARATOR . $module);
+        });
+
+        foreach ($modules as $module) {
+            $this->psr4['Modules\\' . $module] = $this->modulesPath. $module;
+        }
+    }
 }

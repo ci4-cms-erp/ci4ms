@@ -1,8 +1,10 @@
-<?php namespace Modules\Backend\Controllers;
+<?php
+
+namespace Modules\Backend\Controllers;
 
 use ci4commonmodel\Models\CommonModel;
-use Modules\Backend\Libraries\AuthLibrary;
-use Modules\Backend\Config\Auth;
+use Modules\Auth\Libraries\AuthLibrary;
+use Modules\Auth\Config\AuthConfig;
 use CodeIgniter\Controller;
 use Modules\Backend\Config\BackendConfig;
 use Modules\Backend\Models\UserscrudModel;
@@ -42,12 +44,12 @@ class BaseController extends Controller
         // E.g.:
         // $this->session = \Config\Services::session();
 
-        $this->config = new Auth();
+        $this->config = new AuthConfig();
         $this->backConfig = new BackendConfig();
         $this->authLib = new AuthLibrary();
         $this->commonModel = new CommonModel();
         $userModel = new UserscrudModel();
-        $this->logged_in_user = $userModel->loggedUser(0, '*', ['users.id' => session()->get($this->config->logged_in)]);
+        $this->logged_in_user = $userModel->loggedUser(0, 'users.id,firstname,name,sirname,username', ['users.id' => session()->get($this->config->logged_in)]);
         $this->logged_in_user = reset($this->logged_in_user);
         $uri = '';
         if ($this->request->getUri()->getTotalSegments() > 1) {
@@ -61,14 +63,17 @@ class BaseController extends Controller
         $router = service('router');
         $searchValues = [str_replace('\\', '-', $router->controllerName()), $router->methodName()];
         $perms = array_reduce(cache(session()->get($this->config->logged_in) . '_permissions'), fn($carry, $item) => $carry ?? ($item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1] ? $item : null));
-        $this->defData = ['config' => $this->config,
+        $this->defData = [
+            'config' => $this->config,
             'logged_in_user' => $this->logged_in_user,
             'backConfig' => $this->backConfig,
             'navigation' => $this->authLib->sidebarNavigation(),
             'title' => (object)$perms,
             'uri' => $uri,
-            'settings'=>(object)cache('settings')];
-        $this->config->mailConfig = ['protocol' => $this->defData['settings']->mail->protocol,
+            'settings' => (object)cache('settings')
+        ];
+        $this->config->mailConfig = [
+            'protocol' => $this->defData['settings']->mail->protocol,
             'SMTPHost' => $this->defData['settings']->mail->server,
             'SMTPPort' => $this->defData['settings']->mail->port,
             'SMTPUser' => $this->defData['settings']->mail->address,
@@ -77,7 +82,8 @@ class BaseController extends Controller
             'mailtype' => 'html',
             'wordWrap' => 'true',
             'TLS' => $this->defData['settings']->mail->tls,
-            'newline' => "\r\n"];
+            'newline' => "\r\n"
+        ];
         if ($this->defData['settings']->mail->protocol === 'smtp') $this->config->mailConfig['SMTPCrypto'] = 'PHPMailer::ENCRYPTION_STARTTLS';
         if (count(directory_map(ROOTPATH . 'public/templates')) >= 1) $this->defData['templates'] = directory_map(ROOTPATH . 'public/templates');
     }

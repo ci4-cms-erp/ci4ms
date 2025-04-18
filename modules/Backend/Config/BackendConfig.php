@@ -1,8 +1,6 @@
 <?php namespace Modules\Backend\Config;
 
-use CodeIgniter\Config\BaseConfig;
-
-class BackendConfig extends BaseConfig
+class BackendConfig extends \CodeIgniter\Config\BaseConfig
 {
     //--------------------------------------------------------------------
     // Default User Group
@@ -36,31 +34,15 @@ class BackendConfig extends BaseConfig
         'backend/checkSeflink',
         'backend/isActive',
         'backend/maintenance',
-        'backend/blogs/comments/commentResponse',
-        'backend/menu/createMenu',
-        'backend/menu/menuList',
-        'backend/menu/deleteMenuAjax',
-        'backend/menu/queueMenuAjax',
-        'backend/menu/addMultipleMenu',
         'backend/summary/summary_render',
         'backend/settings/setTemplate',
-        'backend/settings/elfinderConvertWebp',
-        'backend/media/elfinderConnection',
-        'backend/methods',
-        'backend/methods/list',
-        'backend/methods/read',
-        'backend/methods/save',
-        'backend/methods/renameFile',
-        'backend/methods/createFile',
-        'backend/methods/createFolder',
-        'backend/methods/moveFileOrFolder',
-        'backend/methods/deleteFileOrFolder',
+        'backend/settings/elfinderConvertWebp'
     ];
 
     public $filters=['backendAuthFilter' => ['before' => ['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],
         'backendAfterLoginFilter' => ['before' => [
-            'backend','backend/officeWorker/*','backend/pages/*','backend/settings','backend/settings/*',
-            'backend/menu/*','backend/blogs/*','backend/tagify','backend/checkSeflink','backend/isActive',
-            'backend/maintenance','backend/menu','backend/media','backend/locked','backend/profile','backend/methods','backend/methods/*'
+            'backend','backend/officeWorker/*','backend/settings','backend/settings/*',
+            'backend/tagify','backend/checkSeflink','backend/isActive',
+            'backend/maintenance','backend/locked','backend/profile'
         ]]];
 }

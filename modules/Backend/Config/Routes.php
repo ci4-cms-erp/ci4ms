@@ -7,21 +7,6 @@
 $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], function ($routes) {
     $routes->get('403', 'Errors::error_403', ["as" => "403"]);
 
-    // Login/out
-    $routes->get('login', 'Auth\AuthController::login', ['as' => 'login']);
-    $routes->post('login', 'Auth\AuthController::attemptLogin');
-    $routes->get('logout', 'Auth\AuthController::logout', ['as' => 'logout']);
-
-    // Activation
-    $routes->get('activate-account/(:any)', 'Auth\AuthController::activateAccount/$1', ['as' => 'activate-account']);
-    $routes->get('activate-email/(:any)', 'Auth\AuthController::activateEmail/$1', ['as' => 'activate-email']);
-
-    // Forgot/Resets
-    $routes->get('forgot', 'Auth\AuthController::forgotPassword', ['as' => 'forgot']);
-    $routes->post('forgot', 'Auth\AuthController::attemptForgot', []);
-    $routes->get('reset-password/(:any)', 'Auth\AuthController::resetPassword/$1', ['as' => 'reset-password']);
-    $routes->post('reset-password/(:any)', 'Auth\AuthController::attemptReset/$1', []);
-
     $routes->get('/', 'Backend::index', []);
 
     // Users Module
@@ -44,14 +29,6 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->post('group_update/(:any)', 'PermgroupController::group_update_post/$1', ['as' => 'group_update']);
     });
 
-    //Pages Module
-    $routes->group('pages', function ($routes) {
-        $routes->get('(:num)', 'Pages::index/$1', ['as' => 'pages']);
-        $routes->match(['GET', 'POST'], 'create', 'Pages::create', ['as' => 'pageCreate']);
-        $routes->match(['GET', 'POST'], 'pageUpdate/(:any)', 'Pages::update/$1', ['as' => 'pageUpdate']);
-        $routes->get('pageDelete/(:any)', 'Pages::delete_post/$1', ['as' => 'pageDelete']);
-    });
-
     $routes->match(['GET', 'POST'], 'profile', 'UserController::profile', ['as' => 'profile']);
 
     //setting module
@@ -68,76 +45,11 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->post('elfinderConvertWebp', 'AJAX::elfinderConvertWebp', ['as' => 'elfinderConvertWebp']);
     });
 
-    //menu module
-    $routes->group('menu', function ($routes) {
-        $routes->get('/', 'Menu::index', ['as' => 'menu']);
-        $routes->post('createMenu', 'Menu::create', ['as' => 'createMenu']);
-        $routes->post('deleteMenuAjax', 'Menu::delete_ajax', ['as' => 'deleteMenuAjax']);
-        $routes->post('queueMenuAjax', 'Menu::queue_ajax', ['as' => 'queueMenuAjax']);
-        $routes->post('menuList', 'Menu::listURLs', ['as' => 'menuList']);
-        $routes->post('addMultipleMenu', 'Menu::addMultipleMenu', ['as' => 'addMultipleMenu']);
-    });
-
-    //blog module
-    $routes->group('blogs', function ($routes) {
-        $routes->get('(:num)', 'Blog::index/$1', ['as' => 'blogs']);
-        $routes->match(['GET', 'POST'], 'create', 'Blog::new', ['as' => 'blogCreate']);
-        $routes->match(['GET', 'POST'], 'update/(:any)', 'Blog::edit/$1', ['as' => 'blogUpdate']);
-        $routes->get('delete/(:any)', 'Blog::delete/$1', ['as' => 'blogDelete']);
-
-        //categories
-        $routes->group('categories', function ($routes) {
-            $routes->get('(:num)', 'Categories::index/$1', ['as' => 'categories']);
-            $routes->match(['GET', 'POST'], 'new', 'Categories::new', ['as' => 'categoryCreate']);
-            $routes->match(['GET', 'POST'], 'update/(:any)', 'Categories::edit/$1', ['as' => 'categoryUpdate']);
-            $routes->get('delete/(:any)', 'Categories::delete/$1', ['as' => 'categoryDelete']);
-        });
-
-        //tags
-        $routes->group('tags', function ($routes) {
-            $routes->get('(:num)', 'Tags::index/$1', ['as' => 'tags']);
-            $routes->post('create', 'Tags::create', ['as' => 'tagCreate']);
-            $routes->match(['GET', 'POST'], 'update/(:any)', 'Tags::edit/$1', ['as' => 'tagUpdate']);
-            $routes->get('delete/(:any)', 'Tags::delete/$1', ['as' => 'tagDelete']);
-        });
-
-        $routes->group('comments', function ($routes) {
-            $routes->get('/', 'Blog::commentList', ['as' => 'comments']);
-            $routes->post('commentResponse', 'Blog::commentResponse/$1', ['as' => 'commentResponse']);
-            $routes->get('commentRemove/(:num)', 'Blog::commentRemove/$1', ['as' => 'commentRemove']);
-            $routes->get('displayComment/(:num)', 'Blog::displayComment/$1', ['as' => 'displayComment']);
-            $routes->post('confirmComment/(:num)', 'Blog::confirmComment/$1', ['as' => 'confirmComment']);
-            $routes->get('badwords', 'Blog::badwordList', ['as' => 'badwords']);
-            $routes->post('badwordsAdd', 'Blog::badwordsAdd', ['as' => 'badwordsAdd']);
-        });
-    });
-
     // Other Pages
     $routes->post('tagify', 'AJAX::limitTags_ajax', ['as' => 'tagify']);
     $routes->post('checkSeflink', 'AJAX::autoLookSeflinks', ['as' => 'checkSeflink']);
     $routes->post('isActive', 'AJAX::isActive', ['as' => 'isActive']);
     $routes->post('maintenance', 'AJAX::maintenance', ['as' => 'maintenance']);
-    $routes->group('media', function ($routes) {
-        $routes->get('/', 'Media::index', ['as' => 'media', 'filter' => 'backendAfterLoginFilter']);
-        $routes->get('elfinderConnection', 'Media::elfinderConnection', ['as' => 'elfinderConnection', 'filter' => 'backendAfterLoginFilter']);
-        $routes->post('elfinderConnection', 'Media::elfinderConnection', ['as' => 'elfinderConnection', 'filter' => 'backendAfterLoginFilter']);
-    });
-
-    $routes->group('methods', function ($routes) {
-        $routes->match(['GET', 'POST'], '/', 'Methods::index', ['as' => 'list']);
-        $routes->match(['GET', 'POST'], 'create', 'Methods::create', ['as' => 'methodCreate']);
-        $routes->match(['GET', 'POST'], 'update/(:num)', 'Methods::update/$1', ['as' => 'methodUpdate']);
-        $routes->get('delete/(:num)', 'Methods::delete/$1', ['as' => 'methodDelete']);
-        $routes->get('updateRouteFile', 'Methods::updateRouteFile', ['as' => 'updateRouteFile']);
-        $routes->get('list', 'Methods::listFiles', ['as' => 'listfiles']);
-        $routes->get('read', 'Methods::readFile', ['as' => 'readFile']);
-        $routes->post('save', 'Methods::saveFile', ['as' => 'saveFile']);
-        $routes->post('renameFile', 'Methods::renameFile', ['as' => 'renameFile']);
-        $routes->post('createFile', 'Methods::createFile', ['as' => 'createFile']);
-        $routes->post('createFolder', 'Methods::createFolder', ['as' => 'createFolder']);
-        $routes->post('moveFileOrFolder', 'Methods::moveFileOrFolder', ['as' => 'moveFileOrFolder']);
-        $routes->post('deleteFileOrFolder', 'Methods::deleteFileOrFolder', ['as' => 'deleteFileOrFolder']);
-    });
 
     //log module
     $routes->group('locked', function ($routes) {

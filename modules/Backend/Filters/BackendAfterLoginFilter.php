@@ -5,7 +5,7 @@ namespace Modules\Backend\Filters;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
-use Modules\Backend\Libraries\AuthLibrary;
+use Modules\Auth\Libraries\AuthLibrary;
 
 class BackendAfterLoginFilter implements FilterInterface
 {

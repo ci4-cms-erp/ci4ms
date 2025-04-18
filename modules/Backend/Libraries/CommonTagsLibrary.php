@@ -2,7 +2,7 @@
 
 namespace Modules\Backend\Libraries;
 
-use ci4commonModel\Models\CommonModel;
+use ci4commonmodel\Models\CommonModel;
 
 class CommonTagsLibrary
 {
@@ -27,7 +27,6 @@ class CommonTagsLibrary
     {
         if ($isUpdate === true) $this->commonModel->remove('tags_pivot', ['piv_id' => $insertedID, 'tagType' => $type]);
         $jsons = json_decode($tags);
-        d($jsons);
         foreach ($jsons as $item) {
             if (!empty($item->id)) {
                 $tag = $this->commonModel->selectOne('tags', ['tag' => $item->value]);

@@ -42,7 +42,7 @@ class UserController extends BaseController
         $this->defData['userLists'] = $this->userModel->userList(
             $itemsPerPage,
             'users.id,email,firstname,sirname,status,auth_groups.name,black_list_users.notes,reset_expires',
-            [/*'group_id!=' => 1,*/'deleted_at' => null],
+            ['group_id!=' => 1, 'deleted_at' => null],
             $bpk
         );
         return view('Modules\Backend\Views\usersCrud\officeWorkerUsers', $this->defData);
@@ -113,10 +113,10 @@ class UserController extends BaseController
             if ((bool)$result == false) return redirect()->back()->withInput()->with('error', 'Kullanıcı oluşturulamadı.');
             $commonLibrary = new CommonLibrary();
             $mailResult = $commonLibrary->phpMailer(
-                'noreply@ci4ms.com',
-                'noreply@ci4ms.com',
+                'noreply@' . $_SERVER['HTTP_HOST'],
+                'noreply@' . $_SERVER['HTTP_HOST'],
                 [['mail' => $this->request->getPost('email')]],
-                'noreply@ci4ms.com',
+                'noreply@' . $_SERVER['HTTP_HOST'],
                 'Information',
                 'Üyelik Aktivasyonu',
                 'Üyeliğiniz şirket yetkilisi tarafından oluşturuldu. Üyeliğinizi aktif etmek için lütfen <a href="' . site_url('backend/activate-account/' . $data['activate_hash']) . '"><b>buraya</b></a> tıklayınız. Tıkladıktan sonra sizinle paylaşılan <b>email</b> ve <b>şifre</b> ile giriş yapabilirsiniz.<br>E-mail adresi : ' . $this->request->getPost('email') . '<br>Şifreniz : ' . $this->request->getPost('password')
@@ -215,10 +215,10 @@ class UserController extends BaseController
                 if ((bool)$result == true) {
                     $commonLibrary = new CommonLibrary();
                     $mailResult = $commonLibrary->phpMailer(
-                        'noreply@ci4ms.com',
-                        'noreply@ci4ms.com',
+                        'noreply@' . $_SERVER['HTTP_HOST'],
+                        'noreply@' . $_SERVER['HTTP_HOST'],
                         ['mail' => $this->request->getPost('email')],
-                        'noreply@ci4ms.com',
+                        'noreply@' . $_SERVER['HTTP_HOST'],
                         'Information',
                         'Mail Aktivasyonu',
                         'Mail adresiniz tarafınızdan güncellenmiştir. Lütfen <a href="' . site_url('backend/activate-email/' . $data['activate_hash']) . '"><b>buraya</b></a> tıklayınız.'
@@ -270,23 +270,22 @@ class UserController extends BaseController
                 'activate_hash' => $this->authLib->generateActivateHash(),
                 'statusMessage' => null
             ];
-            if ($this->commonModel->update('users', $data, ['id' => $this->request->getPost('uid')]) && $this->commonModel->deleteOne('black_list_users', ['blacked_id' => new ObjectId($this->request->getPost('uid'))])) {
+            if ($this->commonModel->update('users', $data, ['id' => $this->request->getPost('uid')]) && $this->commonModel->deleteOne('black_list_users', ['blacked_id' => $this->request->getPost('uid')])) {
                 $user = $this->commonModel->selectOne('users', ['id' => $this->request->getPost('uid')], 'email');
 
                 $commonLibrary = new CommonLibrary();
                 $mailResult = $commonLibrary->phpMailer(
-                    'noreply@ci4ms.com',
-                    'noreply@ci4ms.com',
+                    'noreply@' . $_SERVER['HTTP_HOST'],
+                    'noreply@' . $_SERVER['HTTP_HOST'],
                     ['mail' => $user->email],
-                    'noreply@ci4ms.com',
+                    'noreply@' . $_SERVER['HTTP_HOST'],
                     'Information',
                     'Mail Aktivasyonu',
                     'Üyeliğinizi yeniden aktif edebilimeniz için şirket yetkilisi müdehale etti. Üyeliğinizi aktif etmek için lütfen <a href="' . site_url('backend/activate-account/' . $data['activate_hash']) . '"><b>buraya</b></a> tıklayınız. Tıkladıktan sonra sizinle paylaşılan <b>email</b> ve <b>şifre</b> ile giriş yapabilirsiniz.<br>E-mail adresi : ' . $user->email . '<br>Şifreniz : ' . $pwd
                 );
                 if ($mailResult === true) $result = ['result' => true, 'error' => ['type' => 'success', 'message' => $user->email . ' e-mail adresli üyelik karalisteden çıkarıldı.']];
                 else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => $mailResult]];
-            } else
-                $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteden çıkarılamadı.']];
+            } else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteden çıkarılamadı.']];
 
             return $this->response->setJSON($result);
         } else return $this->failForbidden();
@@ -305,10 +304,10 @@ class UserController extends BaseController
                 $user = $this->commonModel->selectOne('users', ['id' => $this->request->getPost('uid')]);
                 $commonLibrary = new CommonLibrary();
                 $mailResult = $commonLibrary->phpMailer(
-                    'noreply@ci4ms.com',
-                    'noreply@ci4ms.com',
+                    'noreply@' . $_SERVER['HTTP_HOST'],
+                    'noreply@' . $_SERVER['HTTP_HOST'],
                     ['mail' => $user->email],
-                    'noreply@ci4ms.com',
+                    'noreply@' . $_SERVER['HTTP_HOST'],
                     'Information',
                     'Üyelik Şifre Sıfırlama',
                     'Üyeliğinizin şifre sıfırlaması yetkili gerçekleştirildi. Şifre yenileme isteğiniz ' . date('d-m-Y H:i:s', strtotime($user->reset_expires)) . ' tarihine kadar geçerlidir. Lütfen yeni şifrenizi belirlemek için <a href="' . site_url('backend/reset-password/' . $user->reset_hash) . '"><b>buraya</b></a> tıklayınız.'

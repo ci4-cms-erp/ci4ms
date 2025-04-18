@@ -146,10 +146,10 @@ if (!function_exists('seflink')) {
             'ý' => 'y',
             'þ' => 'th',
             'ÿ' => 'y',
-            'ı'=>'i',
-            'İ'=>'i',
-            'Ğ'=>'g',
-            'ğ'=>'g',
+            'ı' => 'i',
+            'İ' => 'i',
+            'Ğ' => 'g',
+            'ğ' => 'g',
             'ş' => 's',
 
             /* latin_symbols */
@@ -661,5 +661,25 @@ if (!function_exists('getGitVersion')) {
 
         // Versiyon bilgisini döndürüyoruz
         return "Version: " . $versionTag . " (Branch: " . $branchName . " @ " . $commitHash . ")";
+    }
+}
+
+if (!function_exists('hasFilesInFolder')) {
+    function hasFilesInFolder(string $folderPath): bool
+    {
+        try {
+            $iterator = new FilesystemIterator($folderPath, FilesystemIterator::SKIP_DOTS);
+
+            foreach ($iterator as $fileinfo) {
+                if ($fileinfo->isFile()) {
+                    return true; // İlk dosyada döner
+                }
+            }
+        } catch (UnexpectedValueException $e) {
+            // Klasör bulunamadıysa veya açılamadıysa
+            return false;
+        }
+
+        return false; // Hiç dosya yoksa
     }
 }

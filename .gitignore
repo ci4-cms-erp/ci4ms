@@ -131,3 +131,5 @@ app/Config/Routes.php
 .history
 .devilbox
 htdocs
+public/uploads/.tmb/
+public/uploads/.trash/

@@ -5,7 +5,7 @@ namespace Modules\Backend\Models;
 use CodeIgniter\Model;
 use Config\Services;
 use CodeIgniter\I18n\Time;
-use Modules\Backend\Config\Auth;
+use Modules\Auth\Config\AuthConfig as Auth;
 
 class UserModel extends Model
 {
