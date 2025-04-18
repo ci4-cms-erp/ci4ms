@@ -35,9 +35,7 @@ class Ci4ms implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $commonModel = new \ci4commonmodel\Models\CommonModel();
-        $authLib = new \Modules\Backend\Libraries\AuthLibrary();
-        
-
+        $authLib = new \Modules\Auth\Libraries\AuthLibrary();
 
         if (cache()->get('settings')['maintenanceMode']->scalar === 1) return redirect()->route('maintenance-mode');
     }

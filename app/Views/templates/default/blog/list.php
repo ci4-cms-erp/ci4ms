@@ -7,11 +7,9 @@
     <div class="container">
         <div class="text-center my-5">
             <h1 class="fw-bolder">
-                <?php if (isset($category)):
+                <?php if (isset($category))
                     echo $category->title;
-                else:
-                    echo 'Blog';
-                endif; ?>
+                else echo 'Blog'; ?>
             </h1>
         </div>
         <div onload=""></div>
@@ -64,7 +62,7 @@
                                                     src="https://dummyimage.com/40x40/ced4da/6c757d" alt="..." />
                                                 <div class="small">
                                                     <div class="fw-bold"><?= $blog->author->firstname . ' ' . $blog->author->sirname ?></div>
-                                                    <div class="text-muted"><?= $dateI18n->createFromTimestamp(strtotime($blog->created_at), app_timezone(), 'tr_TR')->toFormattedDateString(); ?></div>
+                                                    <div class="text-muted"><?= ($blog->created_at != '0000-00-00 00:00:00') ? $dateI18n::createFromTimestamp(strtotime($blog->created_at), app_timezone(), 'tr_TR')->toLocalizedString('dd MMMM yyyy HH:mm') : '' ?></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -78,9 +76,8 @@
                     </div>
                 </div>
             </div>
-            <?php if (!empty($settings->templateInfos->widgets['sidebar'])):
-                echo view('templates/default/widgets/sidebar');
-            endif; ?>
+            <?php if (!empty($settings->templateInfos->widgets['sidebar']))
+                echo view('templates/default/widgets/sidebar'); ?>
         </div>
     </div>
 </section>

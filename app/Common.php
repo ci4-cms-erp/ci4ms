@@ -14,6 +14,8 @@
  * @link: https://codeigniter4.github.io/CodeIgniter4/
  */
 
+use CodeIgniter\I18n\Time;
+
 if (!function_exists('clearFilter')) {
     /**
      * @param array $array

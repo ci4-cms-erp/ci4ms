@@ -3,7 +3,7 @@
 namespace App\Libraries;
 
 use ci4commonModel\Models\CommonModel;
-use Modules\Backend\Config\Auth;
+use Modules\Auth\Config\AuthConfig as Auth;
 use PHPMailer\PHPMailer\PHPMailer;
 
 class CommonLibrary
@@ -71,7 +71,7 @@ class CommonLibrary
             }
 
             $mail->addReplyTo($addReplyToMail, $addReplyToName);
-            foreach ($addCCs as $addCC) { 
+            foreach ($addCCs as $addCC) {
                 if (!empty($addCC['name'])) $mail->addAddress($addCC['mail'], $addCC['name']);  // Name is optional
                 $mail->addCC($addCC['mail']);
             }
