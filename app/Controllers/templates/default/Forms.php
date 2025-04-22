@@ -34,7 +34,7 @@ class Forms extends \App\Controllers\BaseController
         if (!empty($results)) {
             $pages = array_map(function ($page) {
                 return ['value' => $page->title,
-            'url'=>'/'.$page->seflink];
+            'url'=>$page->seflink=='/'?'/':'/'.$page->seflink];
             }, $results);
             $result=array_merge($result, $pages);
         }
