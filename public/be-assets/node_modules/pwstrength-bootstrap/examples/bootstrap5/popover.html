@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Bootstrap 5 Password Strength Meter Example - Popover</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container mt-2">
+        <h1>Bootstrap 5 Password Strength Meter Example - Popover</h1>
+        <form role="form" class="my-5">
+            <div class="row" id="pwd-container">
+                <div class="col-sm">
+                    <label for="name" class="form-label">Name:</label>
+                    <input type="text" class="form-control" id="username" placeholder="Name">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Password">
+                </div>
+                <div class="col-sm pt-5">
+                    <div class="pwstrength_viewport_progress"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div id="messages" class="col small text-muted"></div>
+            </div>
+        </form>
+        <pre>jQuery(document).ready(function () {
+    "use strict";
+    var options = {};
+    options.ui = {
+        container: "#pwd-container",
+        viewports: {
+            progress: ".pwstrength_viewport_progress"
+        },
+        showPopover: true,
+        showErrors: true
+    };
+    options.common = {
+        debug: true,
+        onLoad: function () {
+            $('#messages').text('Start typing password');
+        }
+    };
+    $(':password').pwstrength(options);
+});</pre>
+        <p><a href="..">Go back</a></p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="../pwstrength.js"></script>
+    <script type="text/javascript">
+        jQuery(document).ready(function () {
+            "use strict";
+            var options = {};
+            options.ui = {
+                container: "#pwd-container",
+                viewports: {
+                    progress: ".pwstrength_viewport_progress"
+                },
+                showPopover: true,
+                showErrors: true
+            };
+            options.common = {
+                debug: true,
+                onLoad: function () {
+                    $('#messages').text('Start typing password');
+                }
+            };
+            $(':password').pwstrength(options);
+        });
+    </script>
+</body>
+
+</html>

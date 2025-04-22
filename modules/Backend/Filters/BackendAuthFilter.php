@@ -2,6 +2,7 @@
 
 namespace Modules\Backend\Filters;
 
+use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -26,22 +27,14 @@ class BackendAuthFilter implements FilterInterface
 	 */
 	public function before(RequestInterface $request, $arguments = null)
 	{
-        if(is_dir(ROOTPATH.'/modules/Installation')) {
-            helper('filesystem');
-            $result = delete_files(ROOTPATH . '/modules/Installation', true);
-            if($result==true)
-                $result=rmdir(ROOTPATH . '/modules/Installation');
-
-            if ($result == false)
-                return view('\Modules\Installation\Views\deleteModule');
-        }
-
-        $authLib=new AuthLibrary();
-        if ($authLib->check()) {
-            $seflink=session()->get('redirect_url') ?? 'backend/logout';
+		$commonModel = new CommonModel();
+		if (!$commonModel->isHave('users', [])) return redirect()->to('install');
+		$authLib = new AuthLibrary();
+		if ($authLib->check()) {
+			$seflink = session()->get('redirect_url') ?? 'backend/logout';
 			session()->remove('redirect_url');
-            return  redirect()->route($seflink);
-        }
+			return  redirect()->route($seflink);
+		}
 	}
 
 	/**
@@ -58,6 +51,6 @@ class BackendAuthFilter implements FilterInterface
 	 */
 	public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
 	{
-        //
+		//
 	}
 }
