@@ -110,20 +110,21 @@ class Filters extends BaseFilters
     public function __construct()
     {
         parent::__construct();
-
-        if (empty(cache('settings'))) {
-            $commonModel = new \ci4commonmodel\Models\CommonModel();
-            $settings = $commonModel->lists('settings');
-            $set = [];
-            $formatRules = new \CodeIgniter\Validation\FormatRules();
-            foreach ($settings as $setting) {
-                if ($formatRules->valid_json($setting->content) === true)
-                    $set[$setting->option] = (object)json_decode($setting->content, JSON_UNESCAPED_UNICODE);
-                else $set[$setting->option] = $setting->content;
-            }
-            cache()->save('settings', $set, 86400);
-            $settings = (object)$set;
-        } else $settings = (object)cache('settings');
+        if (file_exists(ROOTPATH . '.env')) {
+            if (empty(cache('settings'))) {
+                $commonModel = new \ci4commonmodel\Models\CommonModel();
+                $settings = $commonModel->lists('settings');
+                $set = [];
+                $formatRules = new \CodeIgniter\Validation\FormatRules();
+                foreach ($settings as $setting) {
+                    if ($formatRules->valid_json($setting->content) === true)
+                        $set[$setting->option] = (object)json_decode($setting->content, JSON_UNESCAPED_UNICODE);
+                    else $set[$setting->option] = $setting->content;
+                }
+                cache()->save('settings', $set, 86400);
+                $settings = (object)$set;
+            } else $settings = (object)cache('settings');
+        }
 
         $modules = array_filter(scandir($this->modulesPath), function ($module) {
             return !in_array($module, ['.', '..', '.DS_Store']) && is_dir($this->modulesPath . DIRECTORY_SEPARATOR . $module);
@@ -227,19 +228,21 @@ class Filters extends BaseFilters
         $this->filters = array_merge($this->filters, $allFilters);
         $this->mergeCsrfExcept($allCsrfExcept);
 
-        $settings = (object) cache('settings');
-        $themeConfigPath = APPPATH . 'Config/templates/' . $settings->templateInfos->path . 'ThemeConfig.php';
+        if (file_exists(ROOTPATH . '.env')) {
+            $settings = (object) cache('settings');
+            $themeConfigPath = APPPATH . 'Config/templates/' . $settings->templateInfos->path . 'ThemeConfig.php';
 
-        if (file_exists($themeConfigPath) && is_file($themeConfigPath)) {
-            $className = '\\Config\\templates\\' . $settings->templateInfos->path;
-            $themeConfig = new $className();
+            if (file_exists($themeConfigPath) && is_file($themeConfigPath)) {
+                $className = '\\Config\\templates\\' . $settings->templateInfos->path;
+                $themeConfig = new $className();
 
-            if (!empty($themeConfig->csrfExcept['before']['csrf']['except'])) {
-                $this->mergeCsrfExcept($themeConfig->csrfExcept['before']['csrf']['except']);
-            }
+                if (!empty($themeConfig->csrfExcept['before']['csrf']['except'])) {
+                    $this->mergeCsrfExcept($themeConfig->csrfExcept['before']['csrf']['except']);
+                }
 
-            if (!empty($themeConfig->filters)) {
-                $this->filters = array_merge($this->filters, $themeConfig->filters);
+                if (!empty($themeConfig->filters)) {
+                    $this->filters = array_merge($this->filters, $themeConfig->filters);
+                }
             }
         }
     }
