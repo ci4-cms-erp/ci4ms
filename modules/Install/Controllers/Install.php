@@ -25,9 +25,9 @@ class Install extends Controller
                 'siteName' => ['label' => '', 'rules' => 'required']
             ]);
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-            shell_exec('php spark env development');
-            shell_exec('php spark migrate');
+            $this->copyEnvFile();
             $updates = [
+                'CI_ENVIRONMENT' => 'development',
                 'app.baseURL' => $this->request->getPost('baseUrl'),
                 'database.default.hostname' => $this->request->getPost('host'),
                 'database.default.database' => $this->request->getPost('dbname'),
@@ -41,18 +41,20 @@ class Install extends Controller
                 'security.cookieName' => 'csrf_cookie_ci4ms',
             ];
             if ($this->updateEnvSettings($updates)) {
-                shell_exec('php spark create:route');
-                shell_exec('php spark key:generate');
+                $this->generateEncryptionKey();
+
+                // Create default routes file
+                unlink(APPPATH . 'Config/Routes.php');
+                $file = APPPATH . 'Commands/Views/routes.tpl.php';
+                $content = file_get_contents($file);
+                $content = str_replace('<@', '<?', $content);
+                if (!write_file(APPPATH . 'Config/Routes.php', $content)) {
+                    return redirect()->back()->withInput()->with('errors', ['route' => 'Routes dosyası oluşturulamadı.']);
+                }
             }
-            $createDBs = new InstallService();
-            $createDBs->createDefaultData([
-                'fname' => $this->request->getPost('name'),
-                'sname' => $this->request->getPost('surname'),
-                'username' => $this->request->getPost('username'),
-                'email' => $this->request->getPost('email'),
-                'baseUrl' => $this->request->getPost('baseUrl'),
-                'siteName' => $this->request->getPost('siteName'),
-            ]);
+
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+            return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install/dbsetup?fname=' . $this->request->getPost('name') . '&sname=' . $this->request->getPost('surname') . '&username=' . $this->request->getPost('username') . '&email=' . $this->request->getPost('email') . '&password=' . $this->request->getPost('password') . '&siteName=' . $this->request->getPost('baseUrl') . '&siteName=' . $this->request->getPost('siteName'), 308);
         }
         return view('Modules\Install\Views\install');
     }
@@ -71,5 +73,60 @@ class Install extends Controller
         }
         file_put_contents($envPath, $contents);
         return true;
+    }
+
+    private function copyEnvFile()
+    {
+        $source = ROOTPATH . 'env';
+        $destination = ROOTPATH . '.env';
+        if (!file_exists($source)) {
+            return ['error' => "'env' dosyası bulunamadı."];
+        }
+        if (!copy($source, $destination)) {
+            return ['error' => "'env' dosyası .env olarak kopyalanamadı."];
+        }
+        return true;
+    }
+
+    private function generateEncryptionKey()
+    {
+        $envPath = ROOTPATH . '.env';
+        if (!file_exists($envPath)) return false;
+        $contents = file_get_contents($envPath);
+        $key = 'hex2bin:' . bin2hex(random_bytes(32));
+        $pattern = '/^encryption\.key=.*/m';
+        $replacement = "encryption.key={$key}";
+        if (preg_match($pattern, $contents)) {
+            $contents = preg_replace($pattern, $replacement, $contents);
+        } else {
+            $contents .= PHP_EOL . $replacement;
+        }
+        file_put_contents($envPath, $contents);
+        return true;
+    }
+
+    public function dbsetup()
+    {
+        // Create default database tables
+        $migrate = \Config\Services::migrations();
+        try {
+            $migrate->latest();
+        } catch (\Throwable $e) {
+            // Hata mesajını görebilmek için logla veya ekrana yazdır
+            log_message('error', $e->getMessage());
+            return redirect()->back()->withInput()->with('errors', ['migration' => $e->getMessage()]);
+        }
+        $createDBs = new InstallService();
+        $createDBs->createDefaultData([
+            'fname' => $this->request->getPost('name'),
+            'sname' => $this->request->getPost('surname'),
+            'username' => $this->request->getPost('username'),
+            'email' => $this->request->getPost('email'),
+            'password' => $this->request->getPost('password'),
+            'baseUrl' => $this->request->getPost('baseUrl'),
+            'siteName' => $this->request->getPost('siteName'),
+        ]);
+
+        return redirect()->to('/');
     }
 }

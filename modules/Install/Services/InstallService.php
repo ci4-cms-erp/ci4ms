@@ -7,7 +7,7 @@ class InstallService
     public function createDefaultData(array $args)
     {
         $commonModel = new \ci4commonmodel\Models\CommonModel();
-        $authLib = new \Modules\Backend\Libraries\AuthLibrary();
+        $authLib = new \Modules\Auth\Libraries\AuthLibrary();
         $commonModel->create('auth_groups', [
             "id" => 1,
             "name" => "super user",

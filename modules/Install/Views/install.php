@@ -1,6 +1,6 @@
 <?= $this->extend('Modules\Install\Views\base') ?>
 <?= $this->section('head') ?>
-<?= link_tag("be-assets/plugins/bs-stepper/css/bs-stepper.min.css") ?>
+<link rel="stylesheet" href="/be-assets/plugins/bs-stepper/css/bs-stepper.min.css">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -12,7 +12,7 @@
       </div>
       <div class="card-body p-0">
         <?= view('Modules\Auth\Views\_message_block') ?>
-        <form action="<?=route_to('install')?>" method="post">
+        <form action="/install" method="post">
           <div class="bs-stepper">
             <div class="bs-stepper-header" role="tablist">
               <!-- your steps here -->
@@ -127,9 +127,9 @@
 </div>
 <?= $this->endSection() ?>
 <?= $this->section('javascript') ?>
-<?= script_tag("be-assets/plugins/bs-stepper/js/bs-stepper.min.js") ?>
-<?= script_tag("be-assets/node_modules/zxcvbn/dist/zxcvbn.js") ?>
-<?= script_tag("be-assets/node_modules/pwstrength-bootstrap/dist/pwstrength-bootstrap.min.js") ?>
+<script src="/be-assets/plugins/bs-stepper/js/bs-stepper.min.js"></script>
+<script src="/be-assets/node_modules/zxcvbn/dist/zxcvbn.js"></script>
+<script src="/be-assets/node_modules/pwstrength-bootstrap/dist/pwstrength-bootstrap.min.js"></script>
 <script>
   // BS-Stepper Init
   document.addEventListener('DOMContentLoaded', function() {

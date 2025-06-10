@@ -34,7 +34,9 @@
                         <!-- Post title-->
                         <h1 class="fw-bolder mb-1"><?= $infos->title ?></h1>
                         <!-- Post meta content-->
-                        <div class="text-muted fst-italic mb-2"><?= $dateI18n->createFromTimestamp(strtotime($infos->created_at), app_timezone(), 'tr_TR')->toFormattedDateString(); ?></div>
+                        <? if ($infos->created_at != '0000-00-00 00:00:00'): ?>
+                            <div class="text-muted fst-italic mb-2"><?= $dateI18n->createFromTimestamp(strtotime($infos->created_at), app_timezone(), 'tr_TR')->toFormattedDateString(); ?></div>
+                        <?php endif; ?>
                         <!-- Post categories-->
                         <?php foreach ($tags as $tag): ?>
                             <a class="badge bg-secondary text-decoration-none link-light"

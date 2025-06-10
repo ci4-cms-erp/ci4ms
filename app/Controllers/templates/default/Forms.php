@@ -30,40 +30,66 @@ class Forms extends \App\Controllers\BaseController
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $result = [];
+        $term=$this->request->getPost('term');
         $results = $this->commonModel->lists('pages', '*', [], 'title ASC', 0, 0, ['title' => $this->request->getGet('term'), 'content' => $this->request->getGet('term')]);
+        $isTermOnlyInComments = function ($content, $term) {
+        // Yorumları bul
+        preg_match_all('/<!--(.*?)-->/s', $content, $matches);
+        $comments = implode(' ', $matches[1]); // Tüm yorumları birleştir
+
+        // Yorumları içerikten çıkar
+        $contentWithoutComments = preg_replace('/<!--.*?-->/s', '', $content);
+
+        // Eğer terim yalnızca yorumlarda varsa ve içerikte başka bir yerde yoksa
+        return stripos($comments, $term) !== false && stripos($contentWithoutComments, $term) === false;
+    };
         if (!empty($results)) {
-            $pages = array_map(function ($page) {
-                return ['value' => $page->title,
-            'url'=>$page->seflink=='/'?'/':'/'.$page->seflink];
-            }, $results);
-            $result=array_merge($result, $pages);
+            $results = array_filter($results, function ($page) use ($removeHtmlComments, $term) {
+                // Yorumları kaldır ve içeriği kontrol et
+                $cleanContent = $removeHtmlComments($page->content);
+                return stripos($cleanContent, $term) !== false; // Arama terimi temizlenmiş içerikte varsa
+            });
+            $pages = array_filter($results, function ($page) use ($isTermOnlyInComments, $term) {
+            // Eğer terim yalnızca yorumlarda varsa, bu veriyi yoksay
+            if ($isTermOnlyInComments($page->content, $term)) {
+                return false; // Yorumlarda bulundu, bu veriyi dahil etme
+            }
+            return true; // Yorumlarda bulunmadı veya içerikte de bulundu, bu veriyi dahil et
+        });
+            $result = array_merge($result, $pages);
         }
 
         $results = $this->commonModel->lists('blog', '*', [], 'title ASC', 0, 0, ['title' => $this->request->getGet('term'), 'content' => $this->request->getGet('term')]);
         if (!empty($results)) {
             $blogs = array_map(function ($page) {
-                return ['value' => '[blog] '.$page->title,
-            'url'=>'/blog/'.$page->seflink];
+                return [
+                    'value' => '[blog] ' . $page->title,
+                    'url' => '/blog/' . $page->seflink
+                ];
             }, $results);
-            $result=array_merge($result, $blogs);
+            $result = array_merge($result, $blogs);
         }
 
         $results = $this->commonModel->lists('tags', '*', [], 'tag ASC', 0, 0, ['tag' => $this->request->getGet('term')]);
         if (!empty($results)) {
             $tags = array_map(function ($page) {
-                return ['value' => '[etiket] '.$page->tag,
-            'url'=>'/tag/'.$page->seflink];
+                return [
+                    'value' => '[etiket] ' . $page->tag,
+                    'url' => '/tag/' . $page->seflink
+                ];
             }, $results);
-            $result=array_merge($result, $tags);
+            $result = array_merge($result, $tags);
         }
 
         $results = $this->commonModel->lists('categories', '*', [], 'title ASC', 0, 0, ['title' => $this->request->getGet('term')]);
         if (!empty($results)) {
             $tags = array_map(function ($page) {
-                return ['value' => '[kategori] '.$page->tag,
-            'url'=>'/category/'.$page->seflink];
+                return [
+                    'value' => '[kategori] ' . $page->tag,
+                    'url' => '/category/' . $page->seflink
+                ];
             }, $results);
-            $result=array_merge($result, $tags);
+            $result = array_merge($result, $tags);
         }
         if (!empty($result))
             return $this->respond($result, 200);

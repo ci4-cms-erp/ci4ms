@@ -1,13 +1,17 @@
-<?php namespace Modules\Install\Config;
+<?php
 
-class InstallConfig extends \CodeIgniter\Config\BaseConfig{
+namespace Modules\Install\Config;
+
+class InstallConfig extends \CodeIgniter\Config\BaseConfig
+{
     public $csrfExcept = [
         'install',
+        'install/*'
     ];
 
-    public $filters=[
+    public $filters = [
         'installFilter' => ['before' => [
-            'install','install/*'
+            'install'
         ]]
     ];
 }
