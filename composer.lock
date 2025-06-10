@@ -4,24 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "453bbc06939282727731246d861ac0c5",
+    "content-hash": "fa5ad1ba277bba848bc287efab256e88",
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
-            "version": "1.1.11",
+            "version": "1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bertugfahriozer/ci4commonModel.git",
-                "reference": "77718f730e892d92e75dec19ceca4971d3fafbed"
+                "reference": "e7d393bb97414e8eafbf3a61d479af8803933091"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bertugfahriozer/ci4commonModel/zipball/77718f730e892d92e75dec19ceca4971d3fafbed",
-                "reference": "77718f730e892d92e75dec19ceca4971d3fafbed",
+                "url": "https://api.github.com/repos/bertugfahriozer/ci4commonModel/zipball/e7d393bb97414e8eafbf3a61d479af8803933091",
+                "reference": "e7d393bb97414e8eafbf3a61d479af8803933091",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.3||^8.0"
+                "php": "^7.4||^8.0"
             },
             "type": "library",
             "autoload": {
@@ -47,7 +47,7 @@
                 "issues": "https://github.com/bertugfahriozer/ci4commonModel/issues",
                 "source": "https://github.com/bertugfahriozer/ci4mongodblibrary"
             },
-            "time": "2024-09-15T21:41:41+00:00"
+            "time": "2025-05-26T20:07:27+00:00"
         },
         {
             "name": "claviska/simpleimage",
