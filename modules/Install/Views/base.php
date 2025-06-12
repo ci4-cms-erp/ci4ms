@@ -30,7 +30,7 @@
             <div class="row p-3 bg-success">
                 <div class="col-12">
                     <div class="float-right d-none d-sm-block">
-                        <?= getGitVersion() ?>
+                        <b>Version</b> <?= getGitVersion() ?>
                     </div>
                     <strong>Copyright &copy; <?= date('Y') ?>.</strong> All rights reserved.
                 </div>

@@ -1,11 +1,11 @@
 <?= $this->extend('Modules\Backend\Views\base') ?>
 
 <?= $this->section('title') ?>
-<?=lang('Backend.'.$title->pagename)?>
+<?= lang('Backend.' . $title->pagename) ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('head') ?>
-<?= link_tag("be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css")?>
+<?= link_tag("be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css") ?>
 <?= link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
 <?= link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
 <?= link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
@@ -17,20 +17,15 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?=lang('Backend.'.$title->pagename)?></h1>
+                <h1><?= lang('Backend.' . $title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                <li>
-                <a href="<?= route_to('updateRouteFile') ?>" class="btn bg-purple">
-                        <i class="far fa-folder"></i> Dosya Düzenleyici
-                    </a>
-                </li>
-                <li>
-                <a href="<?= route_to('methodCreate') ?>" class="btn btn-outline-success">
-                        <?=lang('Backend.add')?>
-                    </a>
-                </li>
+                    <li>
+                        <a href="<?= route_to('methodCreate') ?>" class="btn btn-outline-success">
+                            <?= lang('Backend.add') ?>
+                        </a>
+                    </li>
                 </ol>
             </div>
         </div>
@@ -77,7 +72,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('javascript') ?>
-<?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js")?>
+<?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
 <?= script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
 <?= script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
 <?= script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
@@ -132,7 +127,9 @@
             url: '<?= route_to('products') ?>',
             type: 'post'
         },
-        columns: [{data:'id'},{
+        columns: [{
+                data: 'id'
+            }, {
                 data: 'pagename',
                 orderable: false
             }, {

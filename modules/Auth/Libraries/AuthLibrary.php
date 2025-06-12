@@ -263,7 +263,7 @@ class AuthLibrary
         // logged in.
         if (password_needs_rehash($user->password_hash, $this->config->hashAlgorithm)) {
             $user->password_hash = $password;
-            $this->commonModel->edit('users', $user, ['id' => $user->id]);
+            $this->commonModel->edit('users', (array)$user, ['id' => $user->id]);
         }
 
         return $returnUser ? $user : true;
