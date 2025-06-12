@@ -11,7 +11,8 @@ class InstallConfig extends \CodeIgniter\Config\BaseConfig
 
     public $filters = [
         'installFilter' => ['before' => [
-            'install'
+            'install',
+            'install/*'
         ]]
     ];
 }

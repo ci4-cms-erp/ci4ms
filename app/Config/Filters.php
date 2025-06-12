@@ -2,6 +2,7 @@
 
 namespace Config;
 
+use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -107,13 +108,14 @@ class Filters extends BaseFilters
     public array $filters = [];
 
     private string $modulesPath = ROOTPATH . 'modules/';
+    private $commonModel;
     public function __construct()
     {
         parent::__construct();
-        if (file_exists(ROOTPATH . '.env')) {
+        $this->commonModel = new CommonModel();
+        if (file_exists(ROOTPATH . '.env') && $this->commonModel->db->tableExists('settings')) {
             if (empty(cache('settings'))) {
-                $commonModel = new \ci4commonmodel\Models\CommonModel();
-                $settings = $commonModel->lists('settings');
+                $settings = $this->commonModel->lists('settings');
                 $set = [];
                 $formatRules = new \CodeIgniter\Validation\FormatRules();
                 foreach ($settings as $setting) {
@@ -227,8 +229,7 @@ class Filters extends BaseFilters
         }
         $this->filters = array_merge($this->filters, $allFilters);
         $this->mergeCsrfExcept($allCsrfExcept);
-
-        if (file_exists(ROOTPATH . '.env')) {
+        if (file_exists(ROOTPATH . '.env') && $this->commonModel->db->tableExists('settings')) {
             $settings = (object) cache('settings');
             $themeConfigPath = APPPATH . 'Config/templates/' . $settings->templateInfos->path . 'ThemeConfig.php';
 

@@ -662,7 +662,7 @@ if (!function_exists('getGitVersion')) {
         }
 
         // Versiyon bilgisini döndürüyoruz
-        return "Version: " . $versionTag . " (Branch: " . $branchName . " @ " . $commitHash . ")";
+        return "<b>Version:</b> " . $versionTag . " (Branch: " . $branchName . " @ " . $commitHash . ")";
     }
 }
 

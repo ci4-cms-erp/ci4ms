@@ -11,7 +11,8 @@ class InstallFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        if (file_exists(ROOTPATH . '.env')) return show_404();
+        $commonModel = new CommonModel();
+        if (file_exists(ROOTPATH . '.env') && $commonModel->db->tableExists('settings')) return show_404();
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
