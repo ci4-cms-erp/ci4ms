@@ -14,7 +14,7 @@ class Ci4ms implements FilterInterface
 
     public function __construct()
     {
-        $this->commonModel = new CommonModel();
+        if (file_exists(ROOTPATH . '.env')) $this->commonModel = new CommonModel();
     }
 
     /**

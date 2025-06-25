@@ -112,9 +112,9 @@ class Filters extends BaseFilters
     public function __construct()
     {
         parent::__construct();
-        $this->commonModel = new CommonModel();
-        if (file_exists(ROOTPATH . '.env') && $this->commonModel->db->tableExists('settings')) {
-            if (empty(cache('settings'))) {
+        if (file_exists(ROOTPATH . '.env')) {
+            $this->commonModel = new CommonModel();
+            if (empty(cache('settings')) && $this->commonModel->db->tableExists('settings')) {
                 $settings = $this->commonModel->lists('settings');
                 $set = [];
                 $formatRules = new \CodeIgniter\Validation\FormatRules();
