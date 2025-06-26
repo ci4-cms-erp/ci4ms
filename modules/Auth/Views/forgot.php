@@ -1,6 +1,6 @@
 <?= $this->extend($config->viewLayout) ?>
 <?= $this->section('head') ?>
-    <title><?=$config->vers?> | Şifremi Unuttum</title>
+    <title>Ci4MS - <?=getGitVersion()?> | Şifremi Unuttum</title>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
 <div class="login-box">

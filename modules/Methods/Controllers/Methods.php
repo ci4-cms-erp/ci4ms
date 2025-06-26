@@ -10,7 +10,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             $data = clearFilter($this->request->getPost());
             $like = $data['search']['value'];
             $l = [];
-            if (!empty($like)) $l = ['title' => $like];
+            if (!empty($like)) $l = ['pagename' => $like, 'className' => $like, 'methodName' => $like, 'sefLink' => $like];
             $results = $this->commonModel->lists('auth_permissions_pages', '*', [], 'id ' . (!empty($data['order'][0]['dir']) ? $data['order'][0]['dir'] : 'asc'), ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
             $totalRecords = $this->commonModel->count('auth_permissions_pages');
             $totalDisplayRecords = $totalRecords;
@@ -61,9 +61,11 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'inNavigation' => $this->request->getPost('inNavigation') ?? 0,
                 'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
                 'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
-            ]))
-                return redirect()->route('methods')->with('success', 'Kayıt başarılı bir şekilde eklendi');
-            else
+            ])) {
+                $id = $this->defData['logged_in_user']->id;
+                cache()->delete("{$id}_permissions");
+                return redirect()->route('list')->with('success', 'Kayıt başarılı bir şekilde eklendi');
+            } else
                 return redirect()->back()->withInput()->with('error', 'Kayıt eklenirken bir hata oluştu');
         }
         return view('Modules\Methods\Views\create', $this->defData);
@@ -93,9 +95,11 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'inNavigation' => (bool)$this->request->getPost('inNavigation') == true ? 1 : 0,
                 'isBackoffice' => (bool)$this->request->getPost('isBackoffice') == true ? 1 : 0,
                 'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
-            ], ['id' => $pk]))
+            ], ['id' => $pk])) {
+                $id = $this->defData['logged_in_user']->id;
+                cache()->delete("{$id}_permissions");
                 return redirect()->route('list')->with('success', 'Kayıt başarılı bir şekilde eklendi');
-            else
+            } else
                 return redirect()->back()->withInput()->with('error', 'Kayıt eklenirken bir hata oluştu');
         }
         $this->defData['method'] = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pk]);

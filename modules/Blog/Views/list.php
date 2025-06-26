@@ -7,7 +7,6 @@
 <?= $this->section('head') ?>
 <link rel="stylesheet" href="/be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
 <?= $this->endSection() ?>
-Authenticated Users
 <?= $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">

@@ -22,11 +22,6 @@ class AuthConfig extends BaseConfig
     public $viewLayout = 'Modules\Auth\Views\base';
 
     //--------------------------------------------------------------------
-    // Version for the views
-    //--------------------------------------------------------------------
-    public $vers = 'Kun-CMS v0.1.0';
-
-    //--------------------------------------------------------------------
     // Authentication
     //--------------------------------------------------------------------
     // Fields that are available to be used as credentials for login.

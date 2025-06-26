@@ -260,9 +260,9 @@ class AuthLibrary
         // Check to see if the password needs to be rehashed.
         // This would be due to the hash algorithm or hash
         // cost changing since the last time that a user
-        // logged in.
+        // logged in. $2y$10$XWe.Q5nGG3Nwdj3ihUnNl.HzYh3B4BeguvlgQ3NnrwD6MgyGiZmLm
         if (password_needs_rehash($user->password_hash, $this->config->hashAlgorithm)) {
-            $user->password_hash = $password;
+            $user->password_hash = $this->setPassword($password);
             $this->commonModel->edit('users', (array)$user, ['id' => $user->id]);
         }
 

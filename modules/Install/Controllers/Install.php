@@ -38,8 +38,27 @@ class Install extends Controller
                 'database.default.DBPrefix' => $this->request->getPost('dbpre'),
                 'database.default.port' => $this->request->getPost('dbport'),
                 'cookie.prefix' => '\'ci4ms_\'',
+                'cookie.expires' => 0,
+                'cookie.path' => '\'/\'',
+                'cookie.domain' => '\'\'',
+                'cookie.secure' => 'false',
+                'cookie.httponly' => 'false',
+                'cookie.samesite' => '\'Lax\'',
+                'cookie.raw' => 'false',
+                'honeypot.hidden' => '\'true\'',
+                'honeypot.label' => '\'Honey Pot CMS\'',
+                'honeypot.name' => '\'honeypot_cms\'',
+                'honeypot.template' => '\'<label>{label}</label><input type="text" name="{name}" value=""/>\'',
+                'honeypot.container' => '\'<div style="display:none">{template}</div>\'',
+                'security.csrfProtection' => '\'session\'',
+                'security.tokenRandomize' => 'true',
                 'security.tokenName' => '\'csrf_token_ci4ms\'',
+                'security.headerName' => '\'X-CSRF-TOKEN\'',
                 'security.cookieName' => '\'csrf_cookie_ci4ms\'',
+                'security.expires' => 7200,
+                'security.regenerate' => 'true',
+                'security.redirect' => 'false',
+                'security.samesite' => '\'Lax\''
             ];
             if ($this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
@@ -100,7 +119,7 @@ class Install extends Controller
         // Create default database tables
         $migrate = \Config\Services::migrations();
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-        $baseURL=$protocol . $_SERVER['SERVER_NAME'];
+        $baseURL = $protocol . $_SERVER['SERVER_NAME'];
         try {
             $migrate->latest();
         } catch (\Throwable $e) {

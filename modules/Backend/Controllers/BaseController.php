@@ -43,7 +43,6 @@ class BaseController extends Controller
         //--------------------------------------------------------------------
         // E.g.:
         // $this->session = \Config\Services::session();
-
         $this->config = new AuthConfig();
         $this->backConfig = new BackendConfig();
         $this->authLib = new AuthLibrary();

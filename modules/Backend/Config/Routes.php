@@ -23,10 +23,8 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->match(['GET', 'POST'], 'user_perms/(:any)', 'PermgroupController::user_perms/$1', ['as' => 'user_perms']);
 
         $routes->get('groupList/(:num)', 'PermgroupController::groupList/$1', ['as' => 'groupList']);
-        $routes->get('group_create', 'PermgroupController::group_create', ['as' => 'group_create']);
-        $routes->post('group_create', 'PermgroupController::group_create_post', []);
-        $routes->get('group_update/(:any)', 'PermgroupController::group_update/$1', ['as' => 'group_update']);
-        $routes->post('group_update/(:any)', 'PermgroupController::group_update_post/$1', ['as' => 'group_update']);
+        $routes->match(['GET', 'POST'], 'group_create', 'PermgroupController::group_create', ['as' => 'group_create']);
+        $routes->match(['GET', 'POST'], 'group_update/(:any)', 'PermgroupController::group_update/$1', ['as' => 'group_update']);
     });
 
     $routes->match(['GET', 'POST'], 'profile', 'UserController::profile', ['as' => 'profile']);

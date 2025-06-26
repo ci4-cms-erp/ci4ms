@@ -134,3 +134,4 @@ htdocs
 public/uploads/.tmb/
 public/uploads/.trash/
 public/uploads/media/.tmb/
+writable/tmp/*

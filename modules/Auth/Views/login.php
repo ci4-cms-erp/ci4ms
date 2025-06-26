@@ -1,6 +1,6 @@
 <?= $this->extend($config->viewLayout) ?>
 <?= $this->section('head') ?>
-<title><?= $config->vers ?> | Giriş Yap</title>
+<title>Ci4MS - <?= getGitVersion() ?> | Giriş Yap</title>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
 <div class="login-box">
