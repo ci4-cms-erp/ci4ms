@@ -55,11 +55,11 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'methodName' => $this->request->getPost('methodName'),
                 'sefLink' => $this->request->getPost('sefLink'),
                 'hasChild' => $this->request->getPost('hasChild') ?? 0,
-                'pageSort' => $this->request->getPost('pageSort') ?? 0,
+                'pageSort' => $this->request->getPost('pageSort') ?? NULL,
                 'parent_pk' => $this->request->getPost('parent_pk') ?? NULL,
                 'symbol' => $this->request->getPost('symbol') ?? NULL,
                 'inNavigation' => $this->request->getPost('inNavigation') ?? 0,
-                'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
+                'isBackoffice' => $this->request->getPost('isBackoffice') ?? NULL,
                 'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
             ])) {
                 $id = $this->defData['logged_in_user']->id;
