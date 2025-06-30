@@ -64,7 +64,7 @@ class UserModel extends Model
      * @return mixed
      * @throws \Exception
      */
-    public function recordLoginAttempt(string $email, bool $success, int $falseCounter = null)
+    public function recordLoginAttempt(string $email, bool $success, int $falseCounter)
     {
         $ipAddress = Services::request()->getIPAddress();
         $user_agent = Services::request()->getUserAgent();

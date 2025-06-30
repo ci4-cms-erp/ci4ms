@@ -57,7 +57,6 @@ class Home extends BaseController
 
     public function maintenanceMode()
     {
-        d($this->defData['settings']->maintenanceMode->scalar);
         if ((bool)$this->defData['settings']->maintenanceMode->scalar === false) return redirect()->route('home');
         return view('maintenance', $this->defData);
     }

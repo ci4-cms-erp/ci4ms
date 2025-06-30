@@ -91,7 +91,7 @@ class Autoload extends AutoloadConfig
      *
      * @var list<string>
      */
-    public $helpers = ['text', 'filesystem','html'];
+    public $helpers = ['text', 'filesystem', 'html'];
 
     private string $modulesPath = ROOTPATH . 'modules/';
     public function __construct()
@@ -102,7 +102,7 @@ class Autoload extends AutoloadConfig
         });
 
         foreach ($modules as $module) {
-            $this->psr4['Modules\\' . $module] = $this->modulesPath. $module;
+            $this->psr4['Modules\\' . $module] = $this->modulesPath . $module;
         }
     }
 }

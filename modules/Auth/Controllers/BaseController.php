@@ -51,6 +51,7 @@ class BaseController extends Controller
         $this->config = new AuthConfig();
         $this->authLib = new AuthLibrary();
         $this->commonModel = new CommonModel();
+        $this->authLib->check();
         if(empty(cache('settings'))){
             $settings=$this->commonModel->lists('settings');
             cache()->save('settings',$settings,86400);

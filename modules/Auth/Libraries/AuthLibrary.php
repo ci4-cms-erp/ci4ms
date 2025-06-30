@@ -6,7 +6,6 @@ use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Events\Events;
 use CodeIgniter\I18n\Time;
 use Config\Services;
-use CodeIgniter\Cookie\Cookie;
 use Config\Cookie as confCookie;
 use Modules\Auth\Config\AuthConfig;
 use Modules\Auth\Exceptions\AuthException;
@@ -46,7 +45,7 @@ class AuthLibrary
         }
     }
 
-    public function login(object $user = null, bool $remember = false): bool
+    public function login(object $user, bool $remember = false): bool
     {
         if (empty($user)) {
             $this->user = null;
@@ -149,7 +148,7 @@ class AuthLibrary
         Events::trigger('logout', $user);
     }
 
-    public function attempt(array $credentials, bool $remember = null): bool
+    public function attempt(array $credentials, bool $remember = false): bool
     {
 
         $this->user = $this->validate($credentials, true);
@@ -160,7 +159,7 @@ class AuthLibrary
         if ($falseLogin && $falseLogin->isSuccess === false) {
             if ($falseLogin->counter && ((int)$falseLogin->counter + 1) >= (int)$settings->locked->try) $falseCounter = -1;
             else $falseCounter = $falseLogin->counter;
-        } else $falseCounter = null;
+        } else $falseCounter = 0;
 
 
         if (empty($this->user)) {
@@ -197,7 +196,7 @@ class AuthLibrary
         return $this->login($this->user, $remember);
     }
 
-    protected function recordLoginAttempt(string $email, bool $success, int $falseCounter = null)
+    protected function recordLoginAttempt(string $email, bool $success, int $falseCounter = 0)
     {
         $ipAddress = Services::request()->getIPAddress();
         $user_agent = Services::request()->getUserAgent();
@@ -301,8 +300,8 @@ class AuthLibrary
         $token = $this->commonModel->selectOne('auth_tokens', ['selector' => $selector]);
 
         if (empty($token)) return false;
-        if ($token->expires > date('Y-m-d H:i:s') && !hash_equals($token->hashedValidator, $validator)) {
-            // Yay! We were remembered!
+
+        if ($token->expires > date('Y-m-d H:i:s') && hash_equals($token->hashedValidator, $validator)) {
             $user = $this->commonModel->selectOne($this->config->userTable, ['id' => $token->user_id]);
             // We only want our remember me tokens to be valid for a single use.
             $this->refreshRemember($user->id, $selector);
@@ -315,32 +314,37 @@ class AuthLibrary
         return true;
     }
 
-    public function refreshRemember(string $userID, string $selector)
+    public function refreshRemember(int $userID, string $selector)
     {
         $existing = $this->commonModel->selectOne('auth_tokens', ['selector' => $selector]);
 
         // No matching record? Shouldn't happen, but remember the user now.
         if (empty($existing)) return $this->rememberUser($userID);
 
-        // Update the validator in the database and the session
+        // Update the validator in the database and the cookie
         $validator = bin2hex(random_bytes(20));
 
         $this->userModel->updateRememberValidator($selector, $validator);
 
         // Save it to the user's browser in a cookie.
-        //$response = Services::response();
+        helper('cookie');
         $appConfig = new confCookie();
-        $cookie = new Cookie(
+        delete_cookie(
+            $this->config->rememberCookie,
+            $appConfig->domain,
+            $appConfig->path,
+            $appConfig->prefix
+        );
+        // Create the cookie
+        set_cookie(
             $this->config->rememberCookie,               // Cookie Name
             $selector . ':' . $validator, // Value
-            [
-                $this->config->rememberLength,  // # Seconds until it expires
-                $appConfig->domain,
-                $appConfig->path,
-                $appConfig->prefix,
-                false,                  // Only send over HTTPS?
-                true                  // Hide from Javascript?
-            ]
+            $this->config->rememberLength,  // # Seconds until it expires
+            $appConfig->domain,
+            $appConfig->path,
+            $appConfig->prefix,
+            false,                  // Only send over HTTPS?
+            true                  // Hide from Javascript?
         );
     }
 

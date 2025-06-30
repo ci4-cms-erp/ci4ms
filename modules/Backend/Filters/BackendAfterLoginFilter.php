@@ -26,13 +26,6 @@ class BackendAfterLoginFilter implements FilterInterface
 	 */
 	public function before(RequestInterface $request, $arguments = null)
 	{
-        helper('filesystem');
-        if(is_dir(ROOTPATH.'/modules/Installation')) {
-            $result = delete_files(ROOTPATH . '/modules/Installation', true);
-            if($result==true) $result=rmdir(ROOTPATH . '/modules/Installation');
-            if (!$result) return view('\Modules\Installation\Views\deleteModule');
-        }
-
         $templates=directory_map(ROOTPATH.'public/templates');
         foreach($templates as $key=>$template){
             if(!is_file(ROOTPATH.'public/templates/'.$key.'info.xml') || !is_file(ROOTPATH.'public/templates/'.$key.'screenshot.png'))
