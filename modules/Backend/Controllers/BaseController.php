@@ -21,6 +21,7 @@ class BaseController extends Controller
     public $defData;
     public $authLib;
     public $config;
+    public $encrypter;
     /**
      * An array of helpers to be loaded automatically upon
      * class instantiation. These helpers will be available
@@ -43,6 +44,7 @@ class BaseController extends Controller
         //--------------------------------------------------------------------
         // E.g.:
         // $this->session = \Config\Services::session();
+        $this->encrypter = \Config\Services::encrypter();
         $this->config = new AuthConfig();
         $this->backConfig = new BackendConfig();
         $this->authLib = new AuthLibrary();
@@ -69,14 +71,16 @@ class BaseController extends Controller
             'navigation' => $this->authLib->sidebarNavigation(),
             'title' => (object)$perms,
             'uri' => $uri,
-            'settings' => (object)cache('settings')
+            'settings' => (object)cache('settings'),
+            'encrypter' => $this->encrypter
         ];
+        //\_printrDie($this->encrypter->decrypt(base64_decode($this->defData['settings']->pass)));
         $this->config->mailConfig = [
             'protocol' => $this->defData['settings']->mail->protocol,
             'SMTPHost' => $this->defData['settings']->mail->server,
             'SMTPPort' => $this->defData['settings']->mail->port,
             'SMTPUser' => $this->defData['settings']->mail->address,
-            'SMTPPass' => $this->defData['settings']->mail->password,
+            'SMTPPass' => $this->encrypter->decrypt(base64_decode($this->defData['settings']->mail->password)),
             'charset' => 'UTF-8',
             'mailtype' => 'html',
             'wordWrap' => 'true',

@@ -41,6 +41,7 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
         $routes->get('templateSettings', 'Settings::templateSettings', ['as' => 'templateSettings']);
         $routes->post('templateSettings_post', 'Settings::templateSettings_post', ['as' => 'templateSettings_post']);
         $routes->post('elfinderConvertWebp', 'AJAX::elfinderConvertWebp', ['as' => 'elfinderConvertWebp']);
+        $routes->post('testMail', 'Settings::testMail', ['as' => 'testMail']);
     });
 
     // Other Pages

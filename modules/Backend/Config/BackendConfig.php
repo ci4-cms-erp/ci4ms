@@ -36,7 +36,8 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
         'backend/maintenance',
         'backend/summary/summary_render',
         'backend/settings/setTemplate',
-        'backend/settings/elfinderConvertWebp'
+        'backend/settings/elfinderConvertWebp',
+        'backend/settings/testMail',
     ];
 
     public $filters=['backendAuthFilter' => ['before' => ['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],

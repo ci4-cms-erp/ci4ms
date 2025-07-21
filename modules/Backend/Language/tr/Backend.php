@@ -127,5 +127,7 @@ return [
     'commentList' => 'Yorumlar',
     'badwords' => 'Kötü Söz listesi',
     'methodList' => 'Method Düzenleyici',
-    'fileEditor' => 'Dosya Düzenleyici'
+    'fileEditor' => 'Dosya Düzenleyici',
+    'notFindinMenuPages' => 'Menüye eklenebilecek sayfa bulunamadı !',
+    'notFindinMenuBlogs' => 'Menüye eklenebilecek yazı bulunamadı !',
 ];

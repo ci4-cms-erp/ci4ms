@@ -516,7 +516,6 @@ class AuthLibrary
         $cache = (array)$this->userModel->getPermissionsForUser(session()->get($this->config->logged_in), session()->get('group_id'));
         if (empty($cache)) return false;
         $searchValues = [str_replace('\\', '-', $module), $method];
-        //dd($cache, $module, $method, $searchValues);
         $perms = array_filter($cache, function ($item) use ($searchValues) {
             return $item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1];
         });

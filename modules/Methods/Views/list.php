@@ -124,7 +124,7 @@
             [25, 50, 100, "Tümü"]
         ],
         ajax: {
-            url: '<?= route_to('products') ?>',
+            url: '<?= route_to('list') ?>',
             type: 'post'
         },
         columns: [{

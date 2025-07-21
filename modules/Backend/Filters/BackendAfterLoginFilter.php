@@ -26,21 +26,20 @@ class BackendAfterLoginFilter implements FilterInterface
 	 */
 	public function before(RequestInterface $request, $arguments = null)
 	{
-        $templates=directory_map(ROOTPATH.'public/templates');
-        foreach($templates as $key=>$template){
-            if(!is_file(ROOTPATH.'public/templates/'.$key.'info.xml') || !is_file(ROOTPATH.'public/templates/'.$key.'screenshot.png'))
-            {
-                session()->setFlashdata('warning', ROOTPATH.'public/templates/'.$key.' klasöründe "info.xml" ve/veya "screenshot.png" dosyaları bulunmuyor. Kontrolü sağlayınız.');
-                break;
-            }
-        }
+		$templates = directory_map(ROOTPATH . 'public/templates');
+		foreach ($templates as $key => $template) {
+			if (!is_file(ROOTPATH . 'public/templates/' . $key . 'info.xml') || !is_file(ROOTPATH . 'public/templates/' . $key . 'screenshot.png')) {
+				session()->setFlashdata('warning', ROOTPATH . 'public/templates/' . $key . ' klasöründe "info.xml" ve/veya "screenshot.png" dosyaları bulunmuyor. Kontrolü sağlayınız.');
+				break;
+			}
+		}
 
-        $authLib=new AuthLibrary();
-        if (!$authLib->check()) return redirect()->route('logout');
+		$authLib = new AuthLibrary();
+		if (!$authLib->check()) return redirect()->route('logout');
 
-        $router = service('router');
-        $perms = $authLib->has_perm($router->controllerName(), $router->methodName());
-        if (!$perms) return redirect()->to('/backend/403');
+		$router = service('router');
+		$perms = $authLib->has_perm($router->controllerName(), $router->methodName());
+		if (!$perms) return redirect()->to('/backend/403');
 	}
 
 	/**
@@ -57,6 +56,6 @@ class BackendAfterLoginFilter implements FilterInterface
 	 */
 	public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
 	{
-	    //
+		//
 	}
 }

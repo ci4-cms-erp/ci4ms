@@ -1,4 +1,6 @@
-<?php namespace Modules\Backend\Controllers;
+<?php
+
+namespace Modules\Backend\Controllers;
 
 use Config\Mimes;
 
@@ -122,17 +124,37 @@ class Settings extends BaseController
 
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
-        $data = ['server' => $this->request->getPost('mServer'),
+        $data = [
+            'server' => $this->request->getPost('mServer'),
             'port' => $this->request->getPost('mPort'),
             'address' => $this->request->getPost('mAddress'),
-            'password' => $this->request->getPost('mPwd'),
+            'password' => base64_encode($this->encrypter->encrypt($this->request->getPost('mPwd'))),
             'protocol' => $this->request->getPost('mProtocol'),
-            'tls' => false];
+            'tls' => false
+        ];
         if ($this->request->getPost('mTls')) $data['tls'] = true;
-        $result = $this->commonModel->edit('settings', ['content' => $data], ['option' => 'mail']);
+        $result = $this->commonModel->edit('settings', ['content' => json_encode($data)], ['option' => 'mail']);
         cache()->save('settings', $this->commonModel->lists('settings'));
         if ((bool)$result === false) return redirect()->back()->withInput()->with('error', 'Mail Bilgileri Güncellenemedi.');
         else return redirect()->back()->with('message', 'Mail Bilgileri Güncellendi.');
+    }
+
+    public function testMail()
+    {
+        if ($this->request->isAJAX()) {
+            $commonLibrary = new \App\Libraries\CommonLibrary();
+            $mailResult = $commonLibrary->phpMailer(
+                'noreply@' . $_SERVER['HTTP_HOST'],
+                'noreply@' . $_SERVER['HTTP_HOST'],
+                [['mail' => $this->request->getPost('testemail')]],
+                'noreply@' . $_SERVER['HTTP_HOST'],
+                'Information',
+                'Test Mail',
+                'Mail working correctly.',
+            );
+            if ($mailResult === true) return $this->response->setJSON(['result' => true, 'message' => 'Test e-mail başarıyla gönderildi.']);
+            else return $this->response->setJSON(['result' => false, 'message' => $mailResult]);
+        }
     }
 
     /**
@@ -202,10 +224,14 @@ class Settings extends BaseController
                 'tName' => ['label' => 'tName', 'rules' => 'required']
             ]);
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-            if ($this->commonModel->edit('settings',
-                ['content' => json_encode(['path' => $this->request->getPost('path'),
-                    'name' => $this->request->getPost('name')], JSON_UNESCAPED_UNICODE)],
-                ['option' => 'templateInfos'])) {
+            if ($this->commonModel->edit(
+                'settings',
+                ['content' => json_encode([
+                    'path' => $this->request->getPost('path'),
+                    'name' => $this->request->getPost('name')
+                ], JSON_UNESCAPED_UNICODE)],
+                ['option' => 'templateInfos']
+            )) {
                 cache()->delete('settings');
                 return $this->response->setJSON(['result' => true]);
             } else return $this->response->setJSON(['result' => false]);

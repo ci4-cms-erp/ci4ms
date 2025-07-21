@@ -57,11 +57,12 @@ class BaseController extends Controller
             cache()->save('settings',$settings,86400);
         }
         else $settings=(object)cache()->get('settings');
+        $encrypter = \Config\Services::encrypter();
         $this->config->mailConfig=['protocol' => $settings->mail->protocol,
             'SMTPHost' => $settings->mail->server,
             'SMTPPort' => $settings->mail->port,
             'SMTPUser' => $settings->mail->address,
-            'SMTPPass' => $settings->mail->password,
+            'SMTPPass' => $encrypter->decrypt(base64_decode($settings->mail->password)),
             'charset' => 'UTF-8',
             'mailtype' => 'html',
             'wordWrap' => 'true',

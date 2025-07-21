@@ -33,8 +33,8 @@ class Filters extends BaseFilters
         'secureheaders' => SecureHeaders::class,
         'cors'          => Cors::class,
         'forcehttps'    => ForceHTTPS::class,
-        'pagecache'     => PageCache::class,
-        'performance'   => PerformanceMetrics::class,
+        //'pagecache'     => PageCache::class,
+        //'performance'   => PerformanceMetrics::class,
     ];
 
     /**
@@ -53,11 +53,11 @@ class Filters extends BaseFilters
     public array $required = [
         'before' => [
             'forcehttps', // Force Global Secure Requests
-            'pagecache',  // Web Page Caching
+            //'pagecache',  // Web Page Caching
         ],
         'after' => [
-            'pagecache',   // Web Page Caching
-            'performance', // Performance Metrics
+            //'pagecache',   // Web Page Caching
+            //'performance', // Performance Metrics
             'toolbar',     // Debug Toolbar
         ],
     ];
@@ -138,6 +138,7 @@ class Filters extends BaseFilters
                     $mods[] = ROOTPATH . 'modules/' . $module . '/Filters';
             }
         }
+        $mods[] = APPPATH . 'Filters/templates/' . $settings->templateInfos->path;
         // Filtre klasörünü tara
         $this->loadDynamicFilters($mods);
 
@@ -231,14 +232,13 @@ class Filters extends BaseFilters
         $this->mergeCsrfExcept($allCsrfExcept);
         if (file_exists(ROOTPATH . '.env') && $this->commonModel->db->tableExists('settings')) {
             $settings = (object) cache('settings');
-            $themeConfigPath = APPPATH . 'Config/templates/' . $settings->templateInfos->path . 'ThemeConfig.php';
-
-            if (file_exists($themeConfigPath) && is_file($themeConfigPath)) {
-                $className = '\\Config\\templates\\' . $settings->templateInfos->path;
+            $themeConfigPath = APPPATH . 'Config/templates/' . $settings->templateInfos->path;
+            if (file_exists($themeConfigPath) && is_file($themeConfigPath . '/' . ucfirst($settings->templateInfos->path) . 'Config.php')) {
+                $className = '\\Config\\templates\\' . $settings->templateInfos->path . '\\' . ucfirst($settings->templateInfos->path) . 'Config';
                 $themeConfig = new $className();
 
-                if (!empty($themeConfig->csrfExcept['before']['csrf']['except'])) {
-                    $this->mergeCsrfExcept($themeConfig->csrfExcept['before']['csrf']['except']);
+                if (!empty($themeConfig->csrfExcept)) {
+                    $this->mergeCsrfExcept($themeConfig->csrfExcept);
                 }
 
                 if (!empty($themeConfig->filters)) {

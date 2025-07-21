@@ -51,6 +51,7 @@
                             <input type="checkbox" name="my-checkbox" class="bswitch" <?=((bool)$page->isActive===true)?'checked':''?> data-id="<?=$page->id?>" data-off-color="danger" data-on-color="success">
                         </td>
                         <td class="col-md-2">
+                            
                             <a href="<?= route_to('pageUpdate', $page->id) ?>"
                                class="btn btn-outline-info btn-sm"><?=lang('Backend.update')?></a>
                             <a href="<?= route_to('pageDelete', $page->id) ?>"

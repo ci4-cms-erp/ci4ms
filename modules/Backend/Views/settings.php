@@ -260,7 +260,6 @@
                                 <div class="col-md-6 form-group">
                                     <label for=""><?= lang('Backend.mailPassword') ?></label>
                                     <input type="text" name="mPwd" class="form-control"
-                                        value="<?= empty($settings->mail->password) ? '' : $settings->mail->password ?>"
                                         required>
                                 </div>
                                 <div class="col-md-6 form-group">
@@ -279,7 +278,13 @@
                                     <input type="checkbox" name="mTls"
                                         id="" <?= (!empty($settings->mail->tls) && $settings->mail->tls === true) ? 'checked' : '' ?>>
                                 </div>
-                                <div class="col-md-12 form-group">
+                                <div class="col-md-6 form-group">
+                                    <div class="input-group">
+                                        <input type="text" id="testemail" name="testemail" class="form-control" placeholder="simple@domain.com">
+                                        <button class="btn btn-success" id="sendtest">Gönder</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 form-group">
                                     <button class="btn btn-success float-right"><?= lang('Backend.update') ?></button>
                                 </div>
                             </form>
@@ -508,6 +513,40 @@
             if (data.result === true) Swal.fire('Elfinder ile webp formatına çevirme ektif edildi.', '', 'success');
             else Swal.fire('Elfinder ile webp formatına çevirme ektif durumdan çıkarıldı.', '', 'warning');
             if (data.pr === false) Swal.fire('Elfinder ile webp formatına çevirme ektif edilemedi.', '', 'error');
+        });
+    });
+
+    $('#sendtest').on('click', function(e) {
+        e.preventDefault();
+        var email = $('#testemail').val();
+        if (email === '') {
+            Swal.fire('Lütfen test e-mail adresini giriniz.', '', 'warning');
+            return false;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '<?= route_to('testMail') ?>',
+            data: {
+                'testemail': email
+            },
+            beforeSend: function() {
+                Swal.fire({
+                    title: 'Test e-mail gönderiliyor...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },success: function(data) {
+                if (data.result === true) {
+                    Swal.fire('Test e-mail başarıyla gönderildi.', '', 'success');
+                } else {
+                    Swal.fire('Test e-mail gönderilemedi. Lütfen ayarları kontrol ediniz.', '', 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Bir hata oluştu. Lütfen tekrar deneyiniz.', '', 'error');
+            }
         });
     });
 </script>

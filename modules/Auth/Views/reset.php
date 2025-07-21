@@ -6,7 +6,7 @@
 <div class="login-box">
     <div class="card card-outline cbtn-success">
         <div class="card-header text-center">
-            <img src="<?= base_url('be-assets/img/kunduz-yazilim-logo.png') ?>" alt="" class="img-fluid">
+            <img src="<?= base_url('be-assets/img/bfo-logo.jpg') ?>" alt="" class="img-fluid">
         </div>
         <div class="card-body">
             <p class="login-box-msg">Yeni şifrenizden sadece bir adım uzaktasınız, şifrenizi şimdi oluşturun.</p>

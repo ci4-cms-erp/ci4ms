@@ -92,7 +92,7 @@
                                                                 else echo '';
                                                             } ?>">
                                             <i class="nav-icon <?= $nav->symbol ?>"></i>
-                                            <p><?= lang('Backend.' . $nav->pagename) ?><?= ($nav->hasChild == true) ? '<i class="right fas fa-angle-left"></i>' : '' ?></p>
+                                            <p><?= lang($nav->pagename) ?><?= ($nav->hasChild == true) ? '<i class="right fas fa-angle-left"></i>' : '' ?></p>
                                         </a>
                                         <?php if ($nav->hasChild == true): ?>
                                             <ul class="nav nav-treeview">

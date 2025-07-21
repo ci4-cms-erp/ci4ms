@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noimageindex, nofollow, nosnippet">
 
-    <?=link_tag("be-assets/img/kunduz-yazilim-icon.png","shortcut icon", "image/x-icon")?>
+    <?=link_tag("be-assets/img/favicon.ico","shortcut icon", "image/x-icon")?>
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">

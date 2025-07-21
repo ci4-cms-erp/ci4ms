@@ -48,11 +48,11 @@
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Sınıf Adı</label>
-                    <input type="text" name="className" class="form-control" required>
+                    <input type="text" name="className" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Metot adı</label>
-                    <input type="text" name="methodName" class="form-control" required>
+                    <input type="text" name="methodName" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Seflink</label>
@@ -78,19 +78,19 @@
                 </div>
                 <div class="form-group col-md-4">
                     <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input" name="inNavigation" type="checkbox" id="inNavigation">
+                        <input class="custom-control-input" value="1" name="inNavigation" type="checkbox" id="inNavigation">
                         <label for="inNavigation" class="custom-control-label">Menüde mi ?</label>
                     </div>
                 </div>
                 <div class="form-group col-md-4">
                     <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input" name="isBackoffice" type="checkbox" id="isBackoffice" checked>
+                        <input class="custom-control-input" value="1" name="isBackoffice" type="checkbox" id="isBackoffice" checked>
                         <label for="isBackoffice" class="custom-control-label">Panelde mi ?</label>
                     </div>
                 </div>
                 <div class="form-group col-md-4">
                     <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input" name="hasChild" type="checkbox" id="hasChild">
+                        <input class="custom-control-input" value="1" name="hasChild" type="checkbox" id="hasChild">
                         <label for="hasChild" class="custom-control-label">Alt sayfası var mı ?</label>
                     </div>
                 </div>

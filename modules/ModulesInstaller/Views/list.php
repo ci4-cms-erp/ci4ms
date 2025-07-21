@@ -1,7 +1,7 @@
 <?= $this->extend('Modules\Backend\Views\base') ?>
 
 <?= $this->section('title') ?>
-<?= lang('Backend.' . $title->pagename) ?>
+<?= lang($title->pagename) ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('head') ?>
@@ -19,7 +19,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang('Backend.' . $title->pagename) ?></h1>
+                <h1><?= lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -40,7 +40,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang('Backend.' . $title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?= lang( $title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -262,7 +262,7 @@
             [25, 50, 100, "Tümü"]
         ],
         ajax: {
-            url: '<?= route_to('products') ?>',
+            url: '<?= route_to('modulesInstaller') ?>',
             type: 'post'
         },
         columns: [{

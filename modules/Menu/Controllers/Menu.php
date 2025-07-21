@@ -115,6 +115,7 @@ class Menu extends \Modules\Backend\Controllers\BaseController
             $this->commonModel->edit('menu', $data, ['id' => $d['id']]);
             $i++;
         }
+        cache()->delete('menus');
     }
 
     public function queue_ajax()

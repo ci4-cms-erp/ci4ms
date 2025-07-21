@@ -9,7 +9,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 class CommonLibrary
 {
     protected $config;
-    protected $commonModelİ;
+    protected $commonModel;
 
     public function __construct()
     {
@@ -35,12 +35,13 @@ class CommonLibrary
     public function phpMailer(string $setFromMail, string $setFromName, array $addAddresses, string $addReplyToMail, string $addReplyToName, string $subject, string $body, string $altBody = '', array $addCCs = [], array $addBCCs = [], array $addAttachments = [],)
     {
         $settings = (object)cache('settings');
+        $encrypter= \Config\Services::encrypter();
         $this->config->mailConfig = [
             'protocol' => $settings->mail->protocol,
             'SMTPHost' => $settings->mail->server,
             'SMTPPort' => $settings->mail->port,
             'SMTPUser' => $settings->mail->address,
-            'SMTPPass' => $settings->mail->password,
+            'SMTPPass' => $encrypter->decrypt(base64_decode($settings->mail->password)),
             'charset' => 'UTF-8',
             'mailtype' => 'html',
             'wordWrap' => 'true',

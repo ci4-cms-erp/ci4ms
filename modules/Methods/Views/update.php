@@ -48,11 +48,11 @@
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Sınıf Adı</label>
-                    <input type="text" name="className" class="form-control" value="<?=$method->className?>" required>
+                    <input type="text" name="className" class="form-control" value="<?=$method->className?>">
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Metot adı</label>
-                    <input type="text" name="methodName" class="form-control" value="<?=$method->methodName?>" required>
+                    <input type="text" name="methodName" class="form-control" value="<?=$method->methodName?>">
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Seflink</label>

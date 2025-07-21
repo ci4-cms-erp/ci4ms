@@ -42,8 +42,6 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'pagename' => ['label' => '', 'rules' => 'required'],
-                'className' => ['label' => '', 'rules' => 'required'],
-                'methodName' => ['label' => '', 'rules' => 'required'],
                 'sefLink' => ['label' => '', 'rules' => 'required'],
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required'],
             ]);
@@ -51,15 +49,15 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             if ($this->commonModel->create('auth_permissions_pages', [
                 'pagename' => $this->request->getPost('pagename'),
                 'description' => $this->request->getPost('description') ?? '',
-                'className' => $this->request->getPost('className'),
-                'methodName' => $this->request->getPost('methodName'),
+                'className' => $this->request->getPost('className')??'',
+                'methodName' => $this->request->getPost('methodName')??'',
                 'sefLink' => $this->request->getPost('sefLink'),
                 'hasChild' => $this->request->getPost('hasChild') ?? 0,
-                'pageSort' => $this->request->getPost('pageSort') ?? NULL,
+                'pageSort' => !empty($this->request->getPost('pageSort')) ?$this->request->getPost('pageSort'): NULL,
                 'parent_pk' => $this->request->getPost('parent_pk') ?? NULL,
-                'symbol' => $this->request->getPost('symbol') ?? NULL,
+                'symbol' => !empty($this->request->getPost('symbol')) ?$this->request->getPost('symbol'): NULL,
                 'inNavigation' => $this->request->getPost('inNavigation') ?? 0,
-                'isBackoffice' => $this->request->getPost('isBackoffice') ?? NULL,
+                'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
                 'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
             ])) {
                 $id = $this->defData['logged_in_user']->id;
@@ -76,8 +74,6 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'pagename' => ['label' => '', 'rules' => 'required'],
-                'className' => ['label' => '', 'rules' => 'required'],
-                'methodName' => ['label' => '', 'rules' => 'required'],
                 'sefLink' => ['label' => '', 'rules' => 'required'],
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required']
             ]);
@@ -85,8 +81,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             if ($this->commonModel->edit('auth_permissions_pages', [
                 'pagename' => $this->request->getPost('pagename'),
                 'description' => $this->request->getPost('description') ?? '',
-                'className' => $this->request->getPost('className'),
-                'methodName' => $this->request->getPost('methodName'),
+                'className' => $this->request->getPost('className')??'',
+                'methodName' => $this->request->getPost('methodName')??'',
                 'sefLink' => $this->request->getPost('sefLink'),
                 'hasChild' => (bool)$this->request->getPost('hasChild') == true ? 1 : 0,
                 'pageSort' => $this->request->getPost('pageSort') ?? 0,

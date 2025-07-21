@@ -2,6 +2,21 @@
 
 namespace Modules\Media\Controllers;
 
+/**
+ * Media Controller for handling media management and elFinder integration.
+ *
+ * This controller extends the BaseController from the Backend module and provides
+ * functionalities for displaying the media view and managing file operations via elFinder.
+ *
+ * Methods:
+ * - index(): Renders the media view page.
+ * - elfinderConnection(): Configures and initializes elFinder file manager with custom settings,
+ *   including allowed file types, trash management, and optional WebP conversion for image uploads.
+ * - elfinderAccess($attr, $path, $data, $volume, $isDir, $relpath): Access control callback for elFinder,
+ *   restricting access to files/folders starting with a dot ('.').
+ *
+ * @package Modules\Media\Controllers
+ */
 class Media extends \Modules\Backend\Controllers\BaseController
 {
     public function index()
@@ -40,34 +55,27 @@ class Media extends \Modules\Backend\Controllers\BaseController
                     'uploadAllow' => (array)$allowedFiles, // Same as above
                     'uploadOrder' => array('deny', 'allow'),      // Same as above
                     'accessControl' => array($this, 'elfinderAccess')                   // Same as above
-                ),
+                )
+            ),
+            'bind' => array(
+                'upload.presave' => array(function (&$thash, &$name, $tmpname, $elfinder, $volume) {
+                    $convertWebp = (bool)$this->defData['settings']->elfinderConvertWebp->scalar;
+                    if ($convertWebp) {
+                        $char_map = ['.jpg' => '.webp', '.png' => '.webp', '.jpeg' => '.webp'];
+                        $ext = strtolower(strrchr($name, '.'));
+                        if (in_array($ext, array('.jpg', '.jpeg', '.png'))) {
+                            $webpName = str_replace(array_keys($char_map), $char_map, $name);
+                            $webpPath = dirname($tmpname) . DIRECTORY_SEPARATOR . $webpName;
+                            $img = new \claviska\SimpleImage();
+                            $img->fromFile($tmpname)->toFile($webpPath, 'image/webp', ['quality' => 80]);
+                            $name = $webpName;
+                            $tmpname = $webpPath;
+                        }
+                    }
+                })
             )
         );
 
-        $char_map = ['.jpg' => '.webp', '.png' => '.webp', '.jpeg' => '.webp'];
-        if ((bool)$this->defData['settings']->elfinderConvertWebp->scalar === true && $this->request->getFileMultiple('upload')) {
-            $webp_converter = new \claviska\SimpleImage();
-            foreach ($this->request->getFileMultiple('upload') as $file) {
-                $file_type = $file->getClientMimeType();
-                // Dosya uzantısı kontrolü ve dönüştürme
-                if (
-                    $file_type == 'image/gif' || $file_type == 'image/jpg' || $file_type == 'image/jpeg'
-                    || $file_type == 'image/png' || $file_type == 'image/bmp'
-                ) {
-                    $file_name = $file->getName();
-                    $file_path = ROOTPATH . 'public/uploads/media/' . $file_name;
-                    if ($file->isValid() && !$file->hasmoved() && $file->move(ROOTPATH . '/public/uploads/media/', $file_name)) {
-                        $nImg = ROOTPATH . 'public/uploads/media/' . str_replace(array_keys($char_map), $char_map, $file_name);
-                        $webp_converter
-                            ->fromFile($file_path)
-                            ->toFile($nImg, 'image/webp', ['quality' => 80]);
-                        @unlink($file_path);
-                    }
-                }
-            }
-        }
-
-        // ELFinder'ı başlatın
         $elfinder = new \elFinderConnector(new \elFinder($opts));
         $elfinder->run();
     }
