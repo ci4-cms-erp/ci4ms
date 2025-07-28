@@ -116,3 +116,7 @@
 .dd-handle span{
     font-size:1.2em !important;
 }
+
+body:not(.layout-fixed) .main-sidebar {
+  z-index: 9999 !important;
+}

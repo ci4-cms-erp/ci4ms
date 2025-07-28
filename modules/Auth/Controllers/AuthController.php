@@ -105,9 +105,9 @@ class AuthController extends BaseController
         $this->commonModel->updateOne('users', ['id' => $user->_id], ['reset_hash' => $this->authLib->generateActivateHash(), 'reset_expires' => date('Y-m-d H:i:s', time() + $this->config->resetTime)]);
         $user = $this->commonModel->getOne('users', ['id' => $user->_id]);
         $commonLibrary = new CommonLibrary();
-        $mailResult = $commonLibrary->phpMailer('noreply@ci4ms.com', 'noreply@ci4ms.com',
+        $mailResult = $commonLibrary->phpMailer('noreply@'.$_SERVER['HTTP_HOST'], 'noreply@'.$_SERVER['HTTP_HOST'],
             ['mail' => $user->email],
-            'noreply@ci4ms.com', 'Information',
+            'noreply@'.$_SERVER['HTTP_HOST'], 'Information',
             'Üyelik Şifre Sıfırlama',
             'Üyeliğiniz şifre sıfırlaması gerçekleştirildi. Şifre yenileme isteğiniz ' . date('d-m-Y H:i:s', strtotime($user->reset_expires)) . ' tarihine kadar geçerlidir. Lütfen yeni şifrenizi belirlemek için <a href="' . site_url('backend/reset-password/' . $user->reset_hash) . '"><b>buraya</b></a> tıklayınız.'
         );

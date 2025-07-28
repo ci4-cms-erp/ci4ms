@@ -44,6 +44,6 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
         'backendAfterLoginFilter' => ['before' => [
             'backend','backend/officeWorker/*','backend/settings','backend/settings/*',
             'backend/tagify','backend/checkSeflink','backend/isActive',
-            'backend/maintenance','backend/locked','backend/profile'
+            'backend/maintenance','backend/locked/*','backend/profile',
         ]]];
 }

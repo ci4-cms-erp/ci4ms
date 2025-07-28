@@ -2,6 +2,8 @@
 
 namespace Modules\Methods\Controllers;
 
+use CodeIgniter\Commands\Utilities\Routes\FilterFinder;
+
 class Methods extends \Modules\Backend\Controllers\BaseController
 {
     public function index()
@@ -49,13 +51,13 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             if ($this->commonModel->create('auth_permissions_pages', [
                 'pagename' => $this->request->getPost('pagename'),
                 'description' => $this->request->getPost('description') ?? '',
-                'className' => $this->request->getPost('className')??'',
-                'methodName' => $this->request->getPost('methodName')??'',
+                'className' => $this->request->getPost('className') ?? '',
+                'methodName' => $this->request->getPost('methodName') ?? '',
                 'sefLink' => $this->request->getPost('sefLink'),
                 'hasChild' => $this->request->getPost('hasChild') ?? 0,
-                'pageSort' => !empty($this->request->getPost('pageSort')) ?$this->request->getPost('pageSort'): NULL,
+                'pageSort' => !empty($this->request->getPost('pageSort')) ? $this->request->getPost('pageSort') : NULL,
                 'parent_pk' => $this->request->getPost('parent_pk') ?? NULL,
-                'symbol' => !empty($this->request->getPost('symbol')) ?$this->request->getPost('symbol'): NULL,
+                'symbol' => !empty($this->request->getPost('symbol')) ? $this->request->getPost('symbol') : NULL,
                 'inNavigation' => $this->request->getPost('inNavigation') ?? 0,
                 'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
                 'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
@@ -81,8 +83,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             if ($this->commonModel->edit('auth_permissions_pages', [
                 'pagename' => $this->request->getPost('pagename'),
                 'description' => $this->request->getPost('description') ?? '',
-                'className' => $this->request->getPost('className')??'',
-                'methodName' => $this->request->getPost('methodName')??'',
+                'className' => $this->request->getPost('className') ?? '',
+                'methodName' => $this->request->getPost('methodName') ?? '',
                 'sefLink' => $this->request->getPost('sefLink'),
                 'hasChild' => (bool)$this->request->getPost('hasChild') == true ? 1 : 0,
                 'pageSort' => $this->request->getPost('pageSort') ?? 0,
@@ -101,5 +103,149 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         $this->defData['method'] = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pk]);
         $this->defData['methods'] = $this->commonModel->lists('auth_permissions_pages', '*', ['id!=' => $pk]);
         return view('Modules\Methods\Views\update', $this->defData);
+    }
+
+    public function moduleScan()
+    {
+        return _printr($this->getModuleRoutesArray());
+        if ($this->request->isAJAX()) {
+            \_printr($this->getModuleRoutesArray());
+        } else return $this->failForbidden();
+    }
+
+    /*private function getModuleRoutesArray($modulesPath = ROOTPATH . 'modules/')
+    {
+        $result = [];
+
+        foreach (scandir($modulesPath) as $module) {
+            if ($module === '.' || $module === '..') continue;
+            $routesFile = $modulesPath . $module . '/Config/Routes.php';
+            if (!is_file($routesFile)) continue;
+
+            $routes = [];
+            $content = file_get_contents($routesFile);
+
+            // Route satırlarını yakala (örnek: $routes->get(...), $routes->post(...))
+            preg_match_all('/\$routes->(get|post|match)\s*\(\s*[\'"]([^\'"]+)[\'"]\s*,\s*[\'"]([^\'"]+)::([^\'"]+)[\'"]\s*,\s*(\[.*?\])?\s*\)/', $content, $matches, PREG_SET_ORDER);
+            foreach ($matches as $match) {
+                _printrDie($match);
+                $method = $match[1];
+                $url = $match[2];
+                $controller = explode('::', $match[3])[0];
+                $action = $match[4];
+
+                // as parametresini yakala
+                $as = null;
+                if (!empty($match[5])) {
+                    if (preg_match('/\'as\'\s*=>\s*[\'"]([^\'"]+)[\'"]/', $match[5], $asMatch)) {
+                        $as = $asMatch[1];
+                    }
+                }
+
+                $filterFinder = new FilterFinder();
+                $filter = $filterFinder->find(lcfirst($controller) . '/' . \str_replace('index', '', str_replace('$1', '1', $action)));
+                _printr('backend/' . $controller . '/' . str_replace('$1', '1', $action));
+                _printr($url);
+                _printr($filter);
+                /*foreach ($filter['before'] as $f) {
+                    if (!empty($f) && $f == 'backendAfterLoginFilter') {
+                        $routes[] = [
+                            'namespace' => "Modules\\$module\\Controllers",
+                            'as' => $as,
+                            'method' => $action,
+                            'controller' => $controller
+                        ];
+                    }
+                }
+            }
+
+            if ($routes) {
+                $result[$module] = $routes;
+            }
+        }
+
+        return $result;
+    }*/
+
+    private function getModuleRoutesArray($modulesPath = ROOTPATH . 'modules/')
+    {
+        $result = [];
+
+        foreach (scandir($modulesPath) as $module) {
+            if ($module === '.' || $module === '..') continue;
+            $routesFile = $modulesPath . $module . '/Config/Routes.php';
+            if (!is_file($routesFile)) continue;
+
+            $content = file_get_contents($routesFile);
+            $routes = $this->parseRoutesContent($content, $module);
+            if ($routes) {
+                $result[$module] = $routes;
+            }
+        }
+
+        return $result;
+    }
+
+    private function parseRoutesContent($content, $module)
+    {
+        $routes = [];
+        $stack = [];
+        $currentGroup = [
+            'uri' => '',
+            'options' => [],
+            'content' => $content
+        ];
+
+        while ($currentGroup) {
+            // Grupları bul
+            preg_match_all('/\$routes->group\(\s*([\'"]([^\'"]+)[\'"]|\s*\[\s*\])\s*,\s*(\[[^)]+\])\s*,\s*function\s*\(\s*\$routes\s*\)\s*{(.*?)}\s*\)\s*;/s', $currentGroup['content'], $groupMatches, PREG_SET_ORDER);
+
+            foreach ($groupMatches as $match) {
+                $groupUri = isset($match[2]) ? $match[2] : '';
+                $groupOptions = eval('return ' . $match[3] . ';');
+                $groupContent = $match[4];
+
+                $stack[] = [
+                    'uri' => trim($currentGroup['uri'] . '/' . $groupUri, '/'),
+                    'options' => array_merge($currentGroup['options'], $groupOptions),
+                    'content' => $groupContent
+                ];
+            }
+
+            // Rotaları bul
+            preg_match_all('/\$routes->(get|post|put|patch|delete|match|cli|options|add)\s*\(\s*[\'"]([^\'"]+)[\'"]\s*,\s*[\'"]([^\'"]+)::([^\'"]+)[\'"]\s*(?:,\s*(\[[^)]+\]))?\s*\)\s*;/s', $currentGroup['content'], $routeMatches, PREG_SET_ORDER);
+
+            foreach ($routeMatches as $route) {
+                $httpMethod = $route[1];
+                $uri = $route[2];
+                $controller = $route[3];
+                $action = $route[4];
+                $options = isset($route[5]) ? eval('return ' . $route[5] . ';') : [];
+
+                // Tam URI'yi oluştur
+                $fullUri = trim($currentGroup['uri'] . '/' . $uri, '/');
+                $fullUri = str_replace('//', '/', $fullUri);
+
+                // Filtreleri birleştir
+                $filters = array_merge(
+                    (array)($currentGroup['options']['filter'] ?? []),
+                    (array)($options['filter'] ?? [])
+                );
+
+                $routes[] = [
+                    'namespace' => $currentGroup['options']['namespace'] ?? "Modules\\{$module}\\Controllers",
+                    'as' => $options['as'] ?? null,
+                    'method' => $action,
+                    'controller' => $controller,
+                    'uri' => $fullUri,
+                    'httpMethod' => $httpMethod,
+                    'filters' => implode(',', array_unique($filters))
+                ];
+            }
+
+            $currentGroup = array_pop($stack) ?? null;
+        }
+
+        return $routes;
     }
 }
