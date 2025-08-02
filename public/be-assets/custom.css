@@ -118,5 +118,11 @@
 }
 
 body:not(.layout-fixed) .main-sidebar {
-  z-index: 9999 !important;
+  z-index: 1040 !important;
+}
+
+@media (max-width: 767px) {
+  .elfinder.ui-widget.ui-widget-content {
+    z-index: 1030 !important;
+  }
 }

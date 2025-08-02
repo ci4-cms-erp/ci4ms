@@ -294,7 +294,7 @@ class InstallService
             ['option' => 'slogan', 'content' => $args['slogan'] ?? 'My First Ci4MS Project'],
             ['option' => 'socialNetwork', 'content' => '[{"smName":"facebook","link":"https:\\/\\/facebook.com\\/bertugfahriozer"},{"smName":"twitter","link":"https:\\/\\/twitter.com\\/bertugfahriozer"},{"smName":"github","link":"https:\\/\\/github.com\\/bertugfahriozer.com"}]'],
             ['option' => 'company', 'content' => '{"address":"Bal\\u0131kesir \\/ Turkey","phone":"+905000000000","email":"info@ci4ms.com"}'],
-            ['option' => 'mail', 'content' => '{"protocol": "smtp","server": "ssl://smtp.gmail.com","port": "465","address": "simple@gmail.com","password": "'.$encrypter->encrypt(base64_encode('123456789')).'","tls": "0"}'],
+            ['option' => 'mail', 'content' => '{"protocol": "smtp","server": "ssl://smtp.gmail.com","port": "465","address": "simple@gmail.com","password": "' . base64_encode($encrypter->encrypt('123456789')) . '","tls": "0"}'],
             ['option' => 'map_iframe', 'content' => NULL],
             ['option' => 'locked', 'content' => '{"isActive": 1,"userNotification": 0,"adminNotification": 0,"min": 15,"try": 4,"record": 3,"notificationLimitLoginAttempts": ""}'],
             ['option' => 'templateInfos', 'content' => '{"path":"default","name":null,"widgets":{"sidebar":{"searchWidget":"true","categoriesWidget":"true"}}}'],

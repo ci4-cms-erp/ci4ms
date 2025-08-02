@@ -24,8 +24,7 @@ class Validation extends BaseConfig
         Rules::class,
         FormatRules::class,
         FileRules::class,
-        CreditCardRules::class,
-        //\Modules\Backend\Validation\CustomRules::class
+        CreditCardRules::class
     ];
 
     /**
@@ -77,9 +76,9 @@ class Validation extends BaseConfig
                     $validationDir = $this->themesPath . $settings->templateInfos->path . '/';
                     if (is_dir($validationDir)) {
                         foreach (glob($validationDir . '*.php') as $file) {
-                            $className = APPPATH . "Validation\\templates\\" . $settings->templateInfos->path . "\\" . basename($file, '.php');
-                            if (!in_array($className, $this->ruleSets)) {
-                                $className .= '::class';
+
+                            $className =  "\\App\\Validation\\templates\\" . $settings->templateInfos->path . "\\" . basename($file, '.php');
+                            if (!in_array($className, $this->ruleSets) && class_exists($className)) {
                                 $this->ruleSets[] = $className;
                             }
                         }

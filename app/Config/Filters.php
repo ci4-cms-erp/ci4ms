@@ -138,7 +138,10 @@ class Filters extends BaseFilters
                     $mods[] = ROOTPATH . 'modules/' . $module . '/Filters';
             }
         }
-        if(!empty($settings)) $mods[] = APPPATH . 'Filters/templates/' . $settings->templateInfos->path;
+
+        if (!empty($settings) && isset($settings->templateInfos) && isset($settings->templateInfos->path))
+            $mods[] = APPPATH . 'Filters/templates/' . $settings->templateInfos->path;
+
         // Filtre klasörünü tara
         $this->loadDynamicFilters($mods);
 
