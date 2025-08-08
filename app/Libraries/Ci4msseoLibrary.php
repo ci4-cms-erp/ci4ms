@@ -6,37 +6,53 @@ use Melbahja\Seo\MetaTags;
 use Melbahja\Seo\Schema;
 use Melbahja\Seo\Schema\Thing;
 
+/**
+ * Class Ci4msseoLibrary
+ *
+ * Provides SEO functionality for CodeIgniter 4 applications.
+ * Includes methods for generating meta tags and JSON-LD structured data.
+ */
 class Ci4msseoLibrary
 {
     /**
-     * @param $title
-     * @param $description
-     * @param string $url
-     * @param array $metatags
-     * @param string $coverImage
-     * @return MetaTags
+     * Generates meta tags for SEO optimization.
+     *
+     * @param string $title The page title
+     * @param string $description The page description
+     * @param string $url The canonical URL
+     * @param array $metatagsArray Additional meta tags (keywords, author, etc.)
+     * @param string $coverImage Optional cover image URL
+     * @param string $robots Robots meta tag value (default: 'index, follow')
+     * @return MetaTags Configured MetaTags instance
      */
-    public function metaTags($title, $description, string $url, array $metatagsArray = [], string $coverImage = '')
+    public function metaTags($title, $description, string $url, array $metatagsArray = [], string $coverImage = '', $robots = 'index, follow')
     {
-        $metatags = new MetaTags();
-        $metatags->title($title);
-        $metatags->description($description);
-        if (!empty($coverImage)) $metatags->image($coverImage);
-        if (is_array($metatagsArray['keywords']) && !empty($metatagsArray['keywords'])) {
-            $keywords = '';
-            foreach ($metatagsArray['keywords'] as $tag) {
-                $keywords .= $tag . ', ';
-            }
-            $metatags->meta('keywords', substr($keywords, 0, -2));
+        $metatags = (new MetaTags())
+            ->title($title)
+            ->description($description)
+            ->meta('robots', $robots);
+        if (!empty($coverImage)) {
+            $metatags->image($coverImage);
         }
-        if (!empty($metatagsArray['author'])) $metatags->meta('author', $metatagsArray['author']);
+
+        if (!empty($metatagsArray['keywords'])) {
+            $keywords = implode(', ', $metatagsArray['keywords']);
+            $metatags->meta('keywords', $keywords);
+        }
+
+        if (!empty($metatagsArray['author'])) {
+            $metatags->meta('author', $metatagsArray['author']);
+        }
         $metatags->canonical(site_url($url));
+
         return $metatags;
     }
 
     /**
-     * @param string $type
-     * @param array $data
+     * Generates JSON-LD structured data for SEO.
+     *
+     * @param string $type The type of schema.org thing
+     * @param array $data The data for the schema.org thing
      * The arrangement of the data to be added to the data array should be as follows
      *        [
      *            'url' => 'https://ci4ms/blog/test',
@@ -75,15 +91,16 @@ class Ci4msseoLibrary
      *              ...
      *        ]
      * @return Schema
-     *
      */
-    public function ldPlusJson(string $type, array $data)
+    public function ldPlusJson(string $type, array $data): Schema
     {
         if (!empty($data['children'])) {
-            $data = array_merge($data, array_reduce(array_keys($data['children']), function ($acc, $key) use ($data) {
-                $acc[lcfirst($key)] = new Thing(array_key_first($data['children'][$key]), $data['children'][$key][array_key_first($data['children'][$key])]);
+            $children = array_reduce(array_keys($data['children']), function ($acc, $key) use ($data) {
+                $childType = array_key_first($data['children'][$key]);
+                $acc[lcfirst($key)] = new Thing($childType, $data['children'][$key][$childType]);
                 return $acc;
-            }, []));
+            }, []);
+            $data = array_merge($data, $children);
             unset($data['children']);
         }
         return new Schema(new Thing($type, $data));

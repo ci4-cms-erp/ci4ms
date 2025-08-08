@@ -97,13 +97,13 @@ class AuthController extends BaseController
 
         if ($this->config->activeResetter === false) return redirect()->route('login')->with('error', lang('Auth.forgotDisabled'));
 
-        $user = $this->commonModel->getOne('users', ['email' => $this->request->getPost('email')]);
+        $user = $this->commonModel->selectOne('users', ['email' => $this->request->getPost('email')]);
 
         if (is_null($user)) return redirect()->back()->with('error', lang('Auth.forgotNoUser'));
 
         // Save the reset hash /
-        $this->commonModel->updateOne('users', ['id' => $user->_id], ['reset_hash' => $this->authLib->generateActivateHash(), 'reset_expires' => date('Y-m-d H:i:s', time() + $this->config->resetTime)]);
-        $user = $this->commonModel->getOne('users', ['id' => $user->_id]);
+        $this->commonModel->edit('users', ['reset_hash' => $this->authLib->generateActivateHash(), 'reset_expires' => date('Y-m-d H:i:s', time() + $this->config->resetTime)], ['id' => $user->_id]);
+        $user = $this->commonModel->selectOne('users', ['id' => $user->_id]);
         $commonLibrary = new CommonLibrary();
         $mailResult = $commonLibrary->phpMailer('noreply@'.$_SERVER['HTTP_HOST'], 'noreply@'.$_SERVER['HTTP_HOST'],
             ['mail' => $user->email],
@@ -192,11 +192,11 @@ class AuthController extends BaseController
 
         if ($throttler->check($this->request->getIPAddress(), 2, MINUTE) === false) return $this->response->setStatusCode(429)->setBody(lang('Auth.tooManyRequests', [$throttler->getTokentime()]));
 
-        $user = $this->commonModel->getOne('users', ['activate_hash' => $token, 'status' => 'deactive']);
+        $user = $this->commonModel->selectOne('users', ['activate_hash' => $token, 'status' => 'deactive']);
 
         if (is_null($user)) return redirect()->route('login')->with('error', lang('Auth.activationNoUser'));
 
-        $this->commonModel->update('users',  ['status' => 'active', 'activate_hash' => null],['id' => $user->id]);
+        $this->commonModel->edit('users',  ['status' => 'active', 'activate_hash' => null],['id' => $user->id]);
 
         return redirect()->route('login')->with('message', lang('Auth.registerSuccess'));
     }
@@ -216,11 +216,11 @@ class AuthController extends BaseController
 
         if ($throttler->check($this->request->getIPAddress(), 2, MINUTE) === false) return $this->response->setStatusCode(429)->setBody(lang('Auth.tooManyRequests', [$throttler->getTokentime()]));
 
-        $user = $this->commonModel->getOne('users', ['activate_hash' => $token, 'status' => 'deactive']);
+        $user = $this->commonModel->selectOne('users', ['activate_hash' => $token, 'status' => 'deactive']);
 
         if (is_null($user)) return redirect()->route('login')->with('error', lang('Auth.activationNoUser'));
 
-        $this->commonModel->update('users', ['status' => 'active', 'activate_hash' => null], ['id' => $user->id]);
+        $this->commonModel->edit('users', ['status' => 'active', 'activate_hash' => null], ['id' => $user->id]);
 
         return redirect()->route('login')->with('message', lang('Auth.emailActivationuccess'));
     }

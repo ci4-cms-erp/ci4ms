@@ -84,7 +84,7 @@ class UserController extends BaseController
                     'update_r' => true,
                     'read_r' => true,
                     'delete_r' => true,
-                    'who_perm' => null,
+                    'who_perm' => !empty($this->defData['logged_in_user']->id)?$this->defData['logged_in_user']->id:NULL,
                     'created_at' => new Time('now'),
                     'user_id' => $result
                 ],
@@ -94,7 +94,7 @@ class UserController extends BaseController
                     'update_r' => true,
                     'read_r' => true,
                     'delete_r' => true,
-                    'who_perm' => null,
+                    'who_perm' => !empty($this->defData['logged_in_user']->id)?$this->defData['logged_in_user']->id:NULL,
                     'created_at' => new Time('now'),
                     'user_id' => $result
                 ],
@@ -104,7 +104,7 @@ class UserController extends BaseController
                     'update_r' => true,
                     'read_r' => true,
                     'delete_r' => true,
-                    'who_perm' => null,
+                    'who_perm' => !empty($this->defData['logged_in_user']->id)?$this->defData['logged_in_user']->id:NULL,
                     'created_at' => new Time('now'),
                     'user_id' => $result
                 ]

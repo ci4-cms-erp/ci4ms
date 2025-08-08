@@ -12,10 +12,8 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
     // Users Module
     $routes->group('officeWorker', function ($routes) {
         $routes->get('(:num)', 'UserController::officeWorker/$1', ['as' => 'officeWorker']);
-        $routes->get('create_user', 'UserController::create_user', ['as' => 'create_user']);
-        $routes->post('create_user', 'UserController::create_user_post', []);
-        $routes->get('update_user/(:any)', 'UserController::update_user/$1', ['as' => 'update_user']);
-        $routes->post('update_user/(:any)', 'UserController::update_user_post/$1', []);
+        $routes->match(['GET','POST'],'create_user', 'UserController::create_user', ['as' => 'create_user']);
+        $routes->match(['GET','POST'],'update_user/(:any)', 'UserController::update_user/$1', ['as' => 'update_user']);
         $routes->get('user_del/(:any)', 'UserController::user_del/$1', ['as' => 'user_del']);
         $routes->post('blackList', 'UserController::ajax_blackList_post', ['as' => 'blackList']);
         $routes->post('removeFromBlacklist', 'UserController::ajax_remove_from_blackList_post', []);

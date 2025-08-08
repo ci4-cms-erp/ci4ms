@@ -25,7 +25,7 @@
     <div class="card card-outline card-shl">
         <div class="card-body">
             <?= view('Modules\Auth\Views\_message_block') ?>
-            <form action="<?= route_to('createUserPost') ?>" method="post" class="form-row">
+            <form action="<?= route_to('create_user') ?>" method="post" class="form-row">
                 <?= csrf_field() ?>
                 <div class="col-md-6">
                     <div class="form-group">
