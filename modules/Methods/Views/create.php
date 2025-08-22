@@ -1,6 +1,6 @@
 <?= $this->extend('Modules\Backend\Views\base') ?>
 <?= $this->section('title') ?>
-<?= lang('Backend.' . $title->pagename) ?>
+<?= lang($title->pagename) ?>
 <?= $this->endSection() ?>
 <?= $this->section('head') ?>
 <?= link_tag("be-assets/plugins/select2/css/select2.min.css") ?>
@@ -13,7 +13,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang('Backend.' . $title->pagename) ?></h1>
+                <h1><?= lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right"></ol>
@@ -26,7 +26,7 @@
 <section class="content">
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang('Backend.' . $title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?= lang($title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -74,21 +74,33 @@
                     <label for="">Üst Sayfası</label>
                     <select name="parent_pk" id="parentPk" class="form-control select2">
                         <option value="" disabled selected>Üst sayfa seçin</option>
+                        <?php foreach ($permPages as $page): ?>
+                            <option value="<?= $page->id ?>"><?= lang($page->pagename) ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
+                    <label for="">Hangi Modüle Ait</label>
+                    <select name="moduleName" id="moduleName" class="form-control select2">
+                        <option value="" disabled selected>Seçiniz</option>
+                        <?php foreach ($modules as $module) : ?>
+                            <option value="<?= $module->id ?>"><?= $module->name ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
                     <div class="custom-control custom-checkbox">
                         <input class="custom-control-input" value="1" name="inNavigation" type="checkbox" id="inNavigation">
                         <label for="inNavigation" class="custom-control-label">Menüde mi ?</label>
                     </div>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <div class="custom-control custom-checkbox">
                         <input class="custom-control-input" value="1" name="isBackoffice" type="checkbox" id="isBackoffice" checked>
                         <label for="isBackoffice" class="custom-control-label">Panelde mi ?</label>
                     </div>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <div class="custom-control custom-checkbox">
                         <input class="custom-control-input" value="1" name="hasChild" type="checkbox" id="hasChild">
                         <label for="hasChild" class="custom-control-label">Alt sayfası var mı ?</label>

@@ -33,6 +33,20 @@ class BackendAfterLoginFilter implements FilterInterface
 				break;
 			}
 		}
+		if (empty(cache('settings'))) {
+			$commonModel = new \ci4commonmodel\Models\CommonModel();
+			$settings = $commonModel->lists('settings');
+			$set = [];
+			$formatRules = new \CodeIgniter\Validation\FormatRules();
+			foreach ($settings as $setting) {
+				if ($formatRules->valid_json($setting->content) === true)
+					$set[$setting->option] = (object)json_decode($setting->content, JSON_UNESCAPED_UNICODE);
+				else
+					$set[$setting->option] = $setting->content;
+			}
+			cache()->save('settings', $set, 86400);
+			$settings = (object)$set;
+		} else $settings = (object)cache('settings');
 
 		$authLib = new AuthLibrary();
 		if (!$authLib->check()) return redirect()->route('logout');

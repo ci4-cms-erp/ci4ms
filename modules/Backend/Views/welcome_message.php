@@ -28,7 +28,7 @@
                 <div class="inner">
                     <h3><?=$item->count?></h3>
 
-                    <p><?= lang('Backend.'.$item->lang); ?></p>
+                    <p><?= $item->lang ?></p>
                 </div>
                 <div class="icon">
                     <?=$item->icon?>

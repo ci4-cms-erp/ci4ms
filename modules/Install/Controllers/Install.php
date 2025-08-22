@@ -24,7 +24,7 @@ class Install extends Controller
                 'email' => ['label' => '', 'rules' => 'required'],
                 'siteName' => ['label' => '', 'rules' => 'required']
             ]);
-            if ($this->validate($valData) == false) return \_printR($this->validator->getErrors()); // redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors',$this->validator->getErrors()); // redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
             $this->copyEnvFile();
             $updates = [

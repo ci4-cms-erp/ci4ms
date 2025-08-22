@@ -24,14 +24,14 @@ class UserModel extends Model
         if ($cached = cache("{$userId}_permissions")) return (object) $cached;
 
         $permissions = $this->db->table('auth_groups_permissions')
-            ->select('auth_permissions_pages.id, auth_permissions_pages.pagename, auth_permissions_pages.pageSort, auth_permissions_pages.hasChild, auth_permissions_pages.symbol, auth_permissions_pages.sefLink, auth_permissions_pages.parent_pk, auth_permissions_pages.inNavigation, auth_permissions_pages.className, auth_permissions_pages.methodName, auth_permissions_pages.typeOfPermissions, auth_groups_permissions.create_r, auth_groups_permissions.read_r, auth_groups_permissions.update_r, auth_groups_permissions.delete_r')
+            ->select('auth_permissions_pages.id, auth_permissions_pages.pagename, auth_permissions_pages.pageSort, auth_permissions_pages.hasChild, auth_permissions_pages.symbol, auth_permissions_pages.sefLink, auth_permissions_pages.parent_pk, auth_permissions_pages.inNavigation, auth_permissions_pages.className, auth_permissions_pages.methodName, auth_permissions_pages.typeOfPermissions, auth_groups_permissions.create_r, auth_groups_permissions.read_r, auth_groups_permissions.update_r, auth_groups_permissions.delete_r,auth_permissions_pages.isActive')
             ->join('auth_permissions_pages', 'auth_permissions_pages.id = auth_groups_permissions.page_id')
-            ->where('group_id', $groupId)
+            ->where(['group_id' => $groupId, 'auth_permissions_pages.isActive' => 1])
             ->unionAll(
                 $this->db->table('auth_users_permissions')
-                    ->select('auth_permissions_pages.id, auth_permissions_pages.pagename, auth_permissions_pages.pageSort, auth_permissions_pages.hasChild, auth_permissions_pages.symbol, auth_permissions_pages.sefLink, auth_permissions_pages.parent_pk, auth_permissions_pages.inNavigation, auth_permissions_pages.className, auth_permissions_pages.methodName, auth_permissions_pages.typeOfPermissions, auth_users_permissions.create_r, auth_users_permissions.read_r, auth_users_permissions.update_r, auth_users_permissions.delete_r')
+                    ->select('auth_permissions_pages.id, auth_permissions_pages.pagename, auth_permissions_pages.pageSort, auth_permissions_pages.hasChild, auth_permissions_pages.symbol, auth_permissions_pages.sefLink, auth_permissions_pages.parent_pk, auth_permissions_pages.inNavigation, auth_permissions_pages.className, auth_permissions_pages.methodName, auth_permissions_pages.typeOfPermissions, auth_users_permissions.create_r, auth_users_permissions.read_r, auth_users_permissions.update_r, auth_users_permissions.delete_r,auth_permissions_pages.isActive')
                     ->join('auth_permissions_pages', 'auth_permissions_pages.id = auth_users_permissions.page_id')
-                    ->where('auth_users_permissions.user_id', $userId)
+                    ->where(['auth_users_permissions.user_id' => $userId, 'auth_permissions_pages.isActive' => 1])
             )
             ->orderBy('pageSort', 'ASC')
             ->get()

@@ -1,6 +1,6 @@
 <?= $this->extend('Modules\Backend\Views\base') ?>
 <?= $this->section('title') ?>
-<?=lang('Backend.'.$title->pagename)?>
+<?=lang($title->pagename)?>
 <?= $this->endSection() ?>
 <?= $this->section('head') ?>
 <?=link_tag("be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css")?>
@@ -11,7 +11,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?=lang('Backend.'.$title->pagename)?></h1>
+                <h1><?=lang($title->pagename)?></h1>
             </div>
             <div class="col-sm-6">
                 <a href="<?= route_to('pageCreate') ?>" class="btn btn-outline-success float-right"><?=lang('Backend.add')?></a>
@@ -24,7 +24,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?=lang('Backend.'.$title->pagename)?></h3>
+            <h3 class="card-title font-weight-bold"><?=lang($title->pagename)?></h3>
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                     <i class="fas fa-minus"></i>
@@ -51,7 +51,7 @@
                             <input type="checkbox" name="my-checkbox" class="bswitch" <?=((bool)$page->isActive===true)?'checked':''?> data-id="<?=$page->id?>" data-off-color="danger" data-on-color="success">
                         </td>
                         <td class="col-md-2">
-                            
+
                             <a href="<?= route_to('pageUpdate', $page->id) ?>"
                                class="btn btn-outline-info btn-sm"><?=lang('Backend.update')?></a>
                             <a href="<?= route_to('pageDelete', $page->id) ?>"

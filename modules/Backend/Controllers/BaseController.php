@@ -7,7 +7,7 @@ use Modules\Auth\Libraries\AuthLibrary;
 use Modules\Auth\Config\AuthConfig;
 use CodeIgniter\Controller;
 use Modules\Backend\Config\BackendConfig;
-use Modules\Backend\Models\UserscrudModel;
+use Modules\Users\Models\UserscrudModel;
 use CodeIgniter\API\ResponseTrait;
 
 class BaseController extends Controller
@@ -74,7 +74,6 @@ class BaseController extends Controller
             'settings' => (object)cache('settings'),
             'encrypter' => $this->encrypter
         ];
-        //\_printrDie($this->encrypter->decrypt(base64_decode($this->defData['settings']->pass)));
         $this->config->mailConfig = [
             'protocol' => $this->defData['settings']->mail->protocol,
             'SMTPHost' => $this->defData['settings']->mail->server,

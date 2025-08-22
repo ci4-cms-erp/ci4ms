@@ -510,18 +510,21 @@ class AuthLibrary
         else return (int)$settings->locked->try - 1;
     }
 
-    public function has_perm(string $module, string $method = ''): bool
+    public function has_perm(string $module, string $method = ''): mixed
     {
         if ($method == 'error_403') return true;
         $cache = (array)$this->userModel->getPermissionsForUser(session()->get($this->config->logged_in), session()->get('group_id'));
         if (empty($cache)) return false;
         $searchValues = [str_replace('\\', '-', $module), $method];
         $perms = array_filter($cache, function ($item) use ($searchValues) {
-            return $item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1];
+            return $item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1] && (bool)$item['isActive'] === true;
         });
         $perms = reset($perms);
+        if ($perms === false) return false;
+        if (empty($perms['typeOfPermissions'])) return redirect()->route('backend_404');
         $typeOfPermissions = (array)json_decode($perms['typeOfPermissions']);
         $intersect = array_intersect_assoc($typeOfPermissions, $perms);
+
         if (!empty($intersect)) return true;
         else return false;
     }

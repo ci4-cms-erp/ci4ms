@@ -5,6 +5,8 @@ class MenuConfig extends \CodeIgniter\Config\BaseConfig
     public $csrfExcept = [
         'backend/Menu',
         'backend/Menu/*',
+        'backend/menu/deleteMenuAjax',
+        'backend/menu/queueMenuAjax',
     ];
 
     public $filters = [

@@ -16,7 +16,8 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
     //--------------------------------------------------------------------
 
     public $views = [
-        '403' => 'Modules\Backend\Views\errors\html\error_403'
+        '403' => 'Modules\Backend\Views\errors\html\error_403',
+        '404' => 'Modules\Backend\Views\errors\html\error_404'
     ];
 
     //--------------------------------------------------------------------
@@ -25,24 +26,16 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
     public $viewLayout = 'Modules\Backend\Views\base';
 
     public $csrfExcept = [
-        'backend/officeWorker/blackList',
-        'backend/officeWorker/removeFromBlackList',
-        'backend/officeWorker/forceResetPassword',
-        'backend/menu/deleteMenuAjax',
-        'backend/menu/queueMenuAjax',
         'backend/tagify',
         'backend/checkSeflink',
         'backend/isActive',
         'backend/maintenance',
-        'backend/summary/summary_render',
-        'backend/settings/setTemplate',
-        'backend/settings/elfinderConvertWebp',
-        'backend/settings/testMail',
+        'backend/summary/summary_render'
     ];
 
-    public $filters=['backendAuthFilter' => ['before' => ['backend/login', 'backend/activate-account', 'backend/forgot', 'backend/reset-password']],
+    public $filters=[
         'backendAfterLoginFilter' => ['before' => [
-            'backend','backend/officeWorker/*','backend/settings','backend/settings/*',
+            'backend',
             'backend/tagify','backend/checkSeflink','backend/isActive',
             'backend/maintenance','backend/locked/*','backend/profile',
         ]]];

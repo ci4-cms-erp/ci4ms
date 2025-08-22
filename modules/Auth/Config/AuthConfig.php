@@ -1,11 +1,13 @@
-<?php namespace Modules\Auth\Config;
+<?php
+
+namespace Modules\Auth\Config;
 
 use CodeIgniter\Config\BaseConfig;
 
 class AuthConfig extends BaseConfig
 {
-    public $logged_in='logged_in';
-    public $userTable='users';
+    public $logged_in = 'logged_in';
+    public $userTable = 'users';
     //--------------------------------------------------------------------
     // Views used by Auth Controllers
     //--------------------------------------------------------------------
@@ -26,7 +28,8 @@ class AuthConfig extends BaseConfig
     //--------------------------------------------------------------------
     // Fields that are available to be used as credentials for login.
     public $validFields = [
-        'email', 'username'
+        'email',
+        'username'
     ];
 
     //--------------------------------------------------------------------
@@ -105,7 +108,7 @@ class AuthConfig extends BaseConfig
     // solution.
     //
     public $allowRemembering = true;
-    public $rememberCookie='remember';
+    public $rememberCookie = 'remember';
 
     //--------------------------------------------------------------------
     // Remember Length
@@ -187,7 +190,8 @@ class AuthConfig extends BaseConfig
     //--------------------------------------------------------------------
     // Mail config array.
     //--------------------------------------------------------------------
-    public $mailConfig = ['protocol' => 'smtp',
+    public $mailConfig = [
+        'protocol' => 'smtp',
         'SMTPHost' => 'smtp.yandex.com.tr',
         'SMTPPort' => '465',
         'SMTPUser' => '',
@@ -196,6 +200,22 @@ class AuthConfig extends BaseConfig
         'mailtype' => 'html',
         'wordWrap' => 'true',
         'SMTPCrypto' => 'tls',
-        'TLS'=>true,
-        'newline' => "\r\n"];
+        'TLS' => true,
+        'newline' => "\r\n"
+    ];
+
+    public $csrfExcept = [
+        'backend/users/blackList',
+        'backend/users/removeFromBlackList',
+        'backend/users/forceResetPassword'
+    ];
+    
+    public $filters = [
+        'backendAuthFilter' => ['before' => [
+            'backend/login',
+            'backend/activate-account',
+            'backend/forgot',
+            'backend/reset-password'
+        ]]
+    ];
 }

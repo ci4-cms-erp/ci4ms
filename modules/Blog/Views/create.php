@@ -1,7 +1,7 @@
 <?= $this->extend('Modules\Backend\Views\base') ?>
 
 <?= $this->section('title') ?>
-<?=lang('Backend.'.$title->pagename)?>
+<?=lang($title->pagename)?>
 <?= $this->endSection() ?>
 
 <?= $this->section('head') ?>
@@ -23,7 +23,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?=lang('Backend.'.$title->pagename)?></h1>
+                <h1><?=lang($title->pagename)?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -40,7 +40,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang('Backend.' . $title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?= lang( $title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -79,7 +79,7 @@
                         </div>
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?=lang('Backend.author')?></label>
+                        <label for=""><?=lang('Blog.author')?></label>
                         <select name="author" class="form-control" required>
                             <option value=""><?=lang('Backend.select')?></option>
                             <?php foreach($authors as $author): ?>
@@ -97,7 +97,7 @@
                         </div>
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?=lang('Backend.categories')?></label>
+                        <label for=""><?=lang('Blog.categories')?></label>
                         <select name="categories[]" id="" class="form-control select2bs4" multiple="multiple" data-placeholder="Select categories">
                             <?php foreach($categories as $category): ?>
                             <option value="<?=$category->id?>"><?=$category->title?></option>

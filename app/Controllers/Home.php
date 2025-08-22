@@ -7,7 +7,7 @@ use App\Models\Ci4ms;
 use CodeIgniter\I18n\Time;
 use Gregwar\Captcha\CaptchaBuilder;
 use Modules\Backend\Models\AjaxModel;
-use Modules\Backend\Models\UserscrudModel;
+use Modules\Users\Models\UserscrudModel;
 
 class Home extends BaseController
 {

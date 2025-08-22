@@ -70,12 +70,18 @@ if (!function_exists('seflink')) {
 
         // Turkish character map
         $turkishMap = [
-            'ş' => 's', 'Ş' => 's',
-            'ı' => 'i', 'İ' => 'i',
-            'ç' => 'c', 'Ç' => 'c',
-            'ü' => 'u', 'Ü' => 'u',
-            'ö' => 'o', 'Ö' => 'o',
-            'ğ' => 'g', 'Ğ' => 'g'
+            'ş' => 's',
+            'Ş' => 's',
+            'ı' => 'i',
+            'İ' => 'i',
+            'ç' => 'c',
+            'Ç' => 'c',
+            'ü' => 'u',
+            'Ü' => 'u',
+            'ö' => 'o',
+            'Ö' => 'o',
+            'ğ' => 'g',
+            'Ğ' => 'g'
         ];
         $str = str_replace(array_keys($turkishMap), $turkishMap, $str);
 
@@ -137,8 +143,10 @@ if (!function_exists('menu')) {
 }
 
 if (!function_exists('_printr')) {
-    function _printr($data)
+    function _printr($data, $title = '')
     {
+        if (!empty($title))
+            echo '<h1>' . $title . '</h1>';
         echo '<pre>';
         print_r($data);
         echo '</pre>';
@@ -146,8 +154,10 @@ if (!function_exists('_printr')) {
 }
 
 if (!function_exists('_printrDie')) {
-    function _printrDie($data)
+    function _printrDie($data, $title = '')
     {
+        if (!empty($title))
+            echo '<h1>' . $title . '</h1>';
         echo '<pre>';
         print_r($data);
         echo '</pre>';

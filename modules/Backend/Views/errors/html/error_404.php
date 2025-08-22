@@ -1,7 +1,7 @@
 <?= $this->extend('Modules\Backend\Views\base') ?>
 
 <?= $this->section('head') ?>
-<title>Soar <?= $config->vers ?> | 404 File Not Found</title>
+<title>Ci4ms <?= $config->vers ?> | 404 File Not Found</title>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>

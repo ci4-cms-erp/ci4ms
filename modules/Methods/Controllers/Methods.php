@@ -2,40 +2,23 @@
 
 namespace Modules\Methods\Controllers;
 
-use CodeIgniter\Commands\Utilities\Routes\FilterFinder;
-
 class Methods extends \Modules\Backend\Controllers\BaseController
 {
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = $data['search']['value'];
-            $l = [];
-            if (!empty($like)) $l = ['pagename' => $like, 'className' => $like, 'methodName' => $like, 'sefLink' => $like];
-            $results = $this->commonModel->lists('auth_permissions_pages', '*', [], 'id ' . (!empty($data['order'][0]['dir']) ? $data['order'][0]['dir'] : 'asc'), ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
-            $totalRecords = $this->commonModel->count('auth_permissions_pages');
-            $totalDisplayRecords = $totalRecords;
-            foreach ($results as $result) {
-                $result->actions = '<a href="' . route_to('methodUpdate', $result->id) . '" class="btn btn-default btn-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                </svg>
-            </a> <a href="' . route_to('methodDelete', $result->id) . '" class="btn btn-default btn-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash2-fill" viewBox="0 0 16 16">
-  <path d="M2.037 3.225A.7.7 0 0 1 2 3c0-1.105 2.686-2 6-2s6 .895 6 2a.7.7 0 0 1-.037.225l-1.684 10.104A2 2 0 0 1 10.305 15H5.694a2 2 0 0 1-1.973-1.671zm9.89-.69C10.966 2.214 9.578 2 8 2c-1.58 0-2.968.215-3.926.534-.477.16-.795.327-.975.466.18.14.498.307.975.466C5.032 3.786 6.42 4 8 4s2.967-.215 3.926-.534c.477-.16.795-.327.975-.466-.18-.14-.498-.307-.975-.466z"/>
-</svg>
-        </a>';
+            $flag = false;
+            if (!empty($this->request->getPost('module_id')) && $this->commonModel->edit('modules', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['id' => $this->request->getPost('module_id')]) && $this->commonModel->edit('auth_permissions_pages', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['module_id' => $this->request->getPost('module_id')]))
+                $flag = true;
+            if (!empty($this->request->getPost('page_id')) && $this->commonModel->edit('auth_permissions_pages', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['id' => $this->request->getPost('page_id')]))
+                $flag = true;
+            if ($flag == true) {
+                cache()->delete("{$this->defData['logged_in_user']->id}_permissions");
+                return $this->respond(['success' => 'success'], 200);
             }
-            $data = [
-                'draw' => intval($data['draw']),
-                'iTotalRecords' => $totalRecords,
-                'iTotalDisplayRecords' => $totalDisplayRecords,
-                'aaData' => $results,
-            ];
-            return $this->respond($data, 200);
         }
+        $methodsModel = new \Modules\Methods\Models\MethodsModel();
+        $this->defData['modules'] = $methodsModel->getModules();
         return view('Modules\Methods\Views\list', $this->defData);
     }
 
@@ -68,6 +51,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             } else
                 return redirect()->back()->withInput()->with('error', 'Kayıt eklenirken bir hata oluştu');
         }
+        $this->defData['modules'] = $this->commonModel->lists('modules');
+        $this->defData['permPages'] = $this->commonModel->lists('auth_permissions_pages');
         return view('Modules\Methods\Views\create', $this->defData);
     }
 
@@ -107,145 +92,212 @@ class Methods extends \Modules\Backend\Controllers\BaseController
 
     public function moduleScan()
     {
-        return _printr($this->getModuleRoutesArray());
-        if ($this->request->isAJAX()) {
-            \_printr($this->getModuleRoutesArray());
-        } else return $this->failForbidden();
-    }
+        $sortByHandler = $this->request->getGet('sortBy') === 'handler';
+        $host = $this->request->getGet('host');
 
-    /*private function getModuleRoutesArray($modulesPath = ROOTPATH . 'modules/')
-    {
-        $result = [];
-
-        foreach (scandir($modulesPath) as $module) {
-            if ($module === '.' || $module === '..') continue;
-            $routesFile = $modulesPath . $module . '/Config/Routes.php';
-            if (!is_file($routesFile)) continue;
-
-            $routes = [];
-            $content = file_get_contents($routesFile);
-
-            // Route satırlarını yakala (örnek: $routes->get(...), $routes->post(...))
-            preg_match_all('/\$routes->(get|post|match)\s*\(\s*[\'"]([^\'"]+)[\'"]\s*,\s*[\'"]([^\'"]+)::([^\'"]+)[\'"]\s*,\s*(\[.*?\])?\s*\)/', $content, $matches, PREG_SET_ORDER);
-            foreach ($matches as $match) {
-                _printrDie($match);
-                $method = $match[1];
-                $url = $match[2];
-                $controller = explode('::', $match[3])[0];
-                $action = $match[4];
-
-                // as parametresini yakala
-                $as = null;
-                if (!empty($match[5])) {
-                    if (preg_match('/\'as\'\s*=>\s*[\'"]([^\'"]+)[\'"]/', $match[5], $asMatch)) {
-                        $as = $asMatch[1];
-                    }
-                }
-
-                $filterFinder = new FilterFinder();
-                $filter = $filterFinder->find(lcfirst($controller) . '/' . \str_replace('index', '', str_replace('$1', '1', $action)));
-                _printr('backend/' . $controller . '/' . str_replace('$1', '1', $action));
-                _printr($url);
-                _printr($filter);
-                /*foreach ($filter['before'] as $f) {
-                    if (!empty($f) && $f == 'backendAfterLoginFilter') {
-                        $routes[] = [
-                            'namespace' => "Modules\\$module\\Controllers",
-                            'as' => $as,
-                            'method' => $action,
-                            'controller' => $controller
-                        ];
-                    }
-                }
-            }
-
-            if ($routes) {
-                $result[$module] = $routes;
-            }
+        if ($host !== null) {
+            $request = service('request');
+            $_SERVER = $request->getServer();
+            $_SERVER['HTTP_HOST'] = $host;
+            $request->setGlobal('server', $_SERVER);
         }
 
-        return $result;
-    }*/
+        $collection = service('routes')->loadRoutes();
 
-    private function getModuleRoutesArray($modulesPath = ROOTPATH . 'modules/')
-    {
-        $result = [];
+        if ($host !== null) unset($_SERVER['HTTP_HOST']);
 
-        foreach (scandir($modulesPath) as $module) {
-            if ($module === '.' || $module === '..') continue;
-            $routesFile = $modulesPath . $module . '/Config/Routes.php';
-            if (!is_file($routesFile)) continue;
+        $methods = \CodeIgniter\Router\Router::HTTP_METHODS;
+        $tbody = [];
+        $uriGenerator = new \CodeIgniter\Commands\Utilities\Routes\SampleURIGenerator();
+        $filterCollector = new \CodeIgniter\Commands\Utilities\Routes\FilterCollector();
 
-            $content = file_get_contents($routesFile);
-            $routes = $this->parseRoutesContent($content, $module);
-            if ($routes) {
-                $result[$module] = $routes;
-            }
+        $definedRouteCollector = new \CodeIgniter\Router\DefinedRouteCollector($collection);
+        $findFilter = ['backendAfterLoginFilter'];
+        foreach ($definedRouteCollector->collect() as $route) {
+            if ($route['route'] === '__hot-reload') continue;
+            $filters   = $filterCollector->get($route['method'], $uriGenerator->get($route['route']));
+            if (count(array_intersect($findFilter, $filters['before'])) < 1) continue;
+            preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $route['handler'], $m);
+            $routeName = ($route['route'] === $route['name']) ? '' : $route['name'];
+            $role = $collection->getRoutesOptions(ltrim($route['route'], '\\'), $route['method'])['role'];
+            $roles = explode(',', $role);
+            $r = [
+                'create_r' => in_array('create', $roles),
+                'update_r' => in_array('update', $roles),
+                'read_r' => in_array('read', $roles),
+                'delete_r' => in_array('delete', $roles),
+            ];
+            $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
+            $tbody[] = [
+                'method' => $route['method'],
+                'route' => $route['route'],
+                'seflink' => !empty($routeName) ? $routeName : 'backend',
+                'pagename' => $m[1] . '.' . $routeName,
+                'handler' => $route['handler'],
+                'className' => str_replace('\\', '-', preg_replace('/::.*$/', '', $route['handler'])),
+                'module' => $m[1],
+                'methodName'    =>  $m[2],
+                'role' => $role,
+                'typeOfPermissions' => $roles,
+                'isBackoffice' => 1
+            ];
         }
 
-        return $result;
-    }
-
-    private function parseRoutesContent($content, $module)
-    {
-        $routes = [];
-        $stack = [];
-        $currentGroup = [
-            'uri' => '',
-            'options' => [],
-            'content' => $content
-        ];
-
-        while ($currentGroup) {
-            // Grupları bul
-            preg_match_all('/\$routes->group\(\s*([\'"]([^\'"]+)[\'"]|\s*\[\s*\])\s*,\s*(\[[^)]+\])\s*,\s*function\s*\(\s*\$routes\s*\)\s*{(.*?)}\s*\)\s*;/s', $currentGroup['content'], $groupMatches, PREG_SET_ORDER);
-
-            foreach ($groupMatches as $match) {
-                $groupUri = isset($match[2]) ? $match[2] : '';
-                $groupOptions = eval('return ' . $match[3] . ';');
-                $groupContent = $match[4];
-
-                $stack[] = [
-                    'uri' => trim($currentGroup['uri'] . '/' . $groupUri, '/'),
-                    'options' => array_merge($currentGroup['options'], $groupOptions),
-                    'content' => $groupContent
-                ];
-            }
-
-            // Rotaları bul
-            preg_match_all('/\$routes->(get|post|put|patch|delete|match|cli|options|add)\s*\(\s*[\'"]([^\'"]+)[\'"]\s*,\s*[\'"]([^\'"]+)::([^\'"]+)[\'"]\s*(?:,\s*(\[[^)]+\]))?\s*\)\s*;/s', $currentGroup['content'], $routeMatches, PREG_SET_ORDER);
-
-            foreach ($routeMatches as $route) {
-                $httpMethod = $route[1];
-                $uri = $route[2];
-                $controller = $route[3];
-                $action = $route[4];
-                $options = isset($route[5]) ? eval('return ' . $route[5] . ';') : [];
-
-                // Tam URI'yi oluştur
-                $fullUri = trim($currentGroup['uri'] . '/' . $uri, '/');
-                $fullUri = str_replace('//', '/', $fullUri);
-
-                // Filtreleri birleştir
-                $filters = array_merge(
-                    (array)($currentGroup['options']['filter'] ?? []),
-                    (array)($options['filter'] ?? [])
+        // 2) Auto routes (if enabled)
+        if ($collection->shouldAutoRoute()) {
+            $autoRoutesImproved = (config(\Config\Feature::class)->autoRoutesImproved ?? false) === true;
+            if ($autoRoutesImproved) {
+                $autoRouteCollector = new \CodeIgniter\Commands\Utilities\Routes\AutoRouterImproved\AutoRouteCollector(
+                    $collection->getDefaultNamespace(),
+                    $collection->getDefaultController(),
+                    $collection->getDefaultMethod(),
+                    $methods,
+                    $collection->getRegisteredControllers('*')
+                );
+                $autoRoutes = $autoRouteCollector->get();
+                $routingConfig = config(\Config\Routing::class);
+                if ($routingConfig instanceof \Config\Routing) {
+                    foreach ($routingConfig->moduleRoutes as $uri => $namespace) {
+                        $autoRouteCollector = new \CodeIgniter\Commands\Utilities\Routes\AutoRouterImproved\AutoRouteCollector(
+                            $namespace,
+                            $collection->getDefaultController(),
+                            $collection->getDefaultMethod(),
+                            $methods,
+                            $collection->getRegisteredControllers('*'),
+                            $uri
+                        );
+                        $autoRoutes = [...$autoRoutes, ...$autoRouteCollector->get()];
+                    }
+                }
+                foreach ($autoRoutes as $row) {
+                    // $row: [Method, Route, Name, Handler, Before Filters, After Filters]
+                    if ($row[1] === '__hot-reload') continue;
+                    $filters = $filterCollector->get($row[0], $uriGenerator->get($row[1]));
+                    if (count(array_intersect($findFilter, $row[4])) < 1) continue;
+                    preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $row[4], $m);
+                    $role = $collection->getRoutesOptions(ltrim($row[1], '\\'), $row[0])['role'];
+                    $roles = explode(',', $role);
+                    $r = [
+                        'create_r' => in_array('create', $roles),
+                        'update_r' => in_array('update', $roles),
+                        'read_r' => in_array('read', $roles),
+                        'delete_r' => in_array('delete', $roles),
+                    ];
+                    $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
+                    $tbody[] = [
+                        'method' => $row[0],
+                        'route' => $row[1],
+                        'pagename' => $m[1] . '.' . $row[2],
+                        'seflink' => !empty($row[2]) ? $row[2] : 'backend',
+                        'handler' => $row[3],
+                        'className' => str_replace('\\', '-', preg_replace('/::.*$/', '', $row[3])),
+                        'module' => $m[1],
+                        'methodName' => $m[2],
+                        'role' => $role,
+                        'typeOfPermissions' => $roles,
+                        'isBackoffice' => 1
+                    ];
+                }
+            } else {
+                $autoRouteCollector = new \CodeIgniter\Commands\Utilities\Routes\AutoRouteCollector(
+                    $collection->getDefaultNamespace(),
+                    $collection->getDefaultController(),
+                    $collection->getDefaultMethod()
                 );
 
-                $routes[] = [
-                    'namespace' => $currentGroup['options']['namespace'] ?? "Modules\\{$module}\\Controllers",
-                    'as' => $options['as'] ?? null,
-                    'method' => $action,
-                    'controller' => $controller,
-                    'uri' => $fullUri,
-                    'httpMethod' => $httpMethod,
-                    'filters' => implode(',', array_unique($filters))
-                ];
-            }
+                $autoRoutes = $autoRouteCollector->get();
 
-            $currentGroup = array_pop($stack) ?? null;
+                foreach ($autoRoutes as $routes) {
+                    if ($routes[1] === '__hot-reload') continue;
+                    // There is no `AUTO` method, but it is intentional not to get route filters.
+                    $filters   = $filterCollector->get($route[0], $uriGenerator->get($route[1]));
+                    if (count(array_intersect($findFilter, $filters['before'])) < 1) continue;
+                    preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $routes[4], $m);
+                    $role = $collection->getRoutesOptions(ltrim($routes[1], '\\'), $routes[0])['role'];
+                    $roles = explode(',', $role);
+                    $r = [
+                        'create_r' => in_array('create', $roles),
+                        'update_r' => in_array('update', $roles),
+                        'read_r' => in_array('read', $roles),
+                        'delete_r' => in_array('delete', $roles),
+                    ];
+                    $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
+                    $tbody[] = [
+                        'method' => $routes[0],
+                        'route' => $routes[1],
+                        'pagename' => $m[1] . '.' . $routes[2],
+                        'seflink' => !empty($routes[2]) ? $routes[2] : 'backend',
+                        'handler' => $routes[3],
+                        'className' => str_replace('\\', '-', preg_replace('/::.*$/', '', $routes[3])),
+                        'module' => $m[1],
+                        'methodName' => $m[2],
+                        'role' => $role,
+                        'typeOfPermissions' => $roles,
+                        'isBackoffice' => 1
+                    ];
+                }
+            }
+        }
+        $seen = [];
+        $tbody = array_values(array_filter($tbody, function ($row) use (&$seen) {
+            $key = strtolower($row['handler']);
+            if (isset($seen[$key])) {
+                return false;
+            }
+            $seen[$key] = true;
+            return true;
+        }));
+        if ($sortByHandler) {
+            usort($tbody, static function ($a, $b) {
+                return strcmp($a['handler'], $b['handler']);
+            });
+        }
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        $this->response->setHeader('Content-Type', 'application/json; charset=utf-8');
+        $pages = $this->commonModel->lists('auth_permissions_pages');
+
+        $existingKeys = array_flip(
+            array_map(
+                fn($page) => $page->className . '\0' . $page->methodName,
+                $pages
+            )
+        );
+        $newKeys = [];
+        foreach ($tbody as $index => $row) {
+            $key = $row['className'] . '\0' . $row['methodName'];
+            $newKeys[$key] = $index;
         }
 
-        return $routes;
+        $uniqueKeys = array_diff_key($newKeys, $existingKeys);
+        $uniquePages = [];
+        foreach ($uniqueKeys as $key => $index) {
+            $uniquePages[] = $tbody[$index];
+        }
+        $insertBach = [];
+        if (!empty($uniqueKeys)) {
+            foreach ($uniqueKeys as $uniqueKey) {
+                $module_id = $this->commonModel->selectOne('modules', ['name' => $uniqueKey['module'], 'id']);
+                if (empty($module_id)) {
+                    $module_id->id = $this->commonModel->create('modules', [
+                        'name' => $uniqueKey['module'],
+                        'isActive' => true
+                    ]);
+                }
+                $insertBach[] = [
+                    'pagename' => $uniqueKey['pagename'],
+                    'className' => $uniqueKey['className'],
+                    'methodName' => $uniqueKey['methodName'],
+                    'seflink' => $uniqueKey['seflink'],
+                    'typeOfPermissions' => $uniqueKey['typeOfPermissions'],
+                    'module_id' => $module_id->id,
+                    'isBackoffice' => 1,
+                    'isActive' => 1
+                ];
+            }
+            $this->commonModel->createMany('auth_permissions_pages', $insertBach);
+            return $this->respondCreated(['result' => true]);
+        } else return $this->respond(['result' => false]);
     }
 }
