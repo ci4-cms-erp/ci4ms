@@ -18,39 +18,33 @@ class Locked extends Migration
             ],
             'type' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'ip_address' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 39
             ],
             'username' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'locked_at' => [
-                'type' => 'DATETIME',
-                'null' => true
+                'type' => 'DATETIME'
             ],
             'expiry_date' => [
-                'type' => 'DATETIME',
-                'null' => true
+                'type' => 'DATETIME'
             ],
             'isLocked' => [
                 'type' => 'TINYINT',
-                'constraint' => 1,
-                'null' => true
+                'constraint' => 1
             ],
             'counter' => [
                 'type' => 'TINYINT',
-                'constraint' => 1,
-                'null' => true
+                'constraint' => 1
             ]
         ]);
         $this->forge->addKey('id',true);
+        $this->forge->addKey('ip_address');
         $this->forge->createTable('locked');
     }
 

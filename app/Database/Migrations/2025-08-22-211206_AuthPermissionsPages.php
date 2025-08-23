@@ -17,32 +17,26 @@ class AuthPermissionsPages extends Migration
             ],
             'pagename' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'description' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'className' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'methodName' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'sefLink' => [
-                'type' => 'TEXT',
-                'null' => true
+                'type' => 'TEXT'
             ],
             'hasChild' => [
                 'type' => 'TINYINT',
-                'constraint' => 1,
-                'null' => true
+                'constraint' => 1
             ],
             'pageSort' => [
                 'type' => 'INT',
@@ -58,22 +52,18 @@ class AuthPermissionsPages extends Migration
             ],
             'symbol' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'inNavigation' => [
                 'type' => 'TINYINT',
-                'constraint' => 1,
-                'null' => true
+                'constraint' => 1
             ],
             'isBackoffice' => [
                 'type' => 'TINYINT',
-                'constraint' => 1,
-                'null' => true
+                'constraint' => 1
             ],
             'typeOfPermissions' => [
-                'type' => 'LONGTEXT',
-                'null' => true
+                'type' => 'LONGTEXT'
             ],
             'module_id' => [
                 'type' => 'INT',

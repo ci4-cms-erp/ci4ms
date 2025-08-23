@@ -17,7 +17,7 @@ class AuthLogins extends Migration
             ],
             'ip_address'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
+                'constraint'=>39,
                 'null'=>true
             ],
             'email'=>[
@@ -46,7 +46,7 @@ class AuthLogins extends Migration
             ],
             'counter'=>[
                 'type'=>'TINYINT',
-                'constraint'=>4,
+                'constraint'=>2,
                 'null'=>true
             ],
             'username'=>[
@@ -56,6 +56,10 @@ class AuthLogins extends Migration
             ]
         ]);
         $this->forge->addKey('id',true);
+        $this->forge->addKey(['ip_address','email']);
+        $this->forge->addKey('user_agent');
+        $this->forge->addKey('session_id');
+        $this->forge->addKey('username');
         $this->forge->createTable('auth_logins');
     }
 

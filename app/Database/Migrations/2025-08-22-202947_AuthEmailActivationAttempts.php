@@ -17,22 +17,18 @@ class AuthEmailActivationAttempts extends Migration
             ],
             'created_at'=>[
                 'type'=>'DATETIME',
-                'null'=>true
             ],
             'ip_address'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>39,
             ],
             'token'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>100,
             ],
             'user_agent'=>[
                 'type'=>'VARCHAR',
                 'constraint'=>255,
-                'null'=>true
             ]
         ]);
         $this->forge->addKey('id', true);

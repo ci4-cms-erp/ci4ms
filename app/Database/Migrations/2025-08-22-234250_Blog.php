@@ -17,49 +17,47 @@ class Blog extends Migration
                 'auto_increment' => true
             ],
             'isActive' => [
-                'type'=>'TINYINT',
-                'constraint'=>1,
-                'null'=>true
+                'type' => 'TINYINT',
+                'constraint' => 1
             ],
             'created_at' => [
-                'type'=>'DATETIME',
-                'default'=>new RawSql('CURRENT_TIMESTAMP')
+                'type' => 'DATETIME',
+                'default' => new RawSql('CURRENT_TIMESTAMP')
             ],
             'inMenu' => [
-                'type'=>'TINYINT',
-                'constraint'=>1,
-                'null'=>true
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => 0
             ],
             'author' => [
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true,
-                'null'=>true
+                'unsigned' => true
             ],
             'title' => [
-                'type'=>'TEXT',
-                'null'=>true
+                'type' => 'VARCHAR',
+                'constraint' => 255
             ],
             'seflink' => [
-                'type'=>'TEXT',
-                'null'=>true
+                'type' => 'VARCHAR',
+                'constraint' => 255
             ],
             'content' => [
-                'type'=>'LONGTEXT',
-                'null'=>true
+                'type' => 'LONGTEXT'
             ],
             'inXML' => [
-                'type'=>'TINYINT',
-                'constraint'=>1,
-                'null'=>true
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => 1
             ],
             'seo' => [
-                'type'=>'LONGTEXT',
-                'null'=>true
+                'type' => 'LONGTEXT'
             ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('author','users','id');
+        $this->forge->addKey('title');
+        $this->forge->addUniqueKey('seflink');
+        $this->forge->addForeignKey('author',  'users', 'id', 'CASCADE', 'SET_NULL', 'blog_users_id_fk');
         $this->forge->createTable('blog');
     }
 

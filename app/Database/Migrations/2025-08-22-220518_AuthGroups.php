@@ -18,8 +18,7 @@ class AuthGroups extends Migration
             ],
             'name' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'updated_at' => [
                 'type' => 'DATETIME',
@@ -27,13 +26,11 @@ class AuthGroups extends Migration
             ],
             'description' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'seflink' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'created_at' => [
                 'type' => 'DATETIME',
@@ -47,7 +44,7 @@ class AuthGroups extends Migration
             ]
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('who_created', 'users', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addKey(['name','seflink']);
         $this->forge->createTable('auth_groups');
     }
 

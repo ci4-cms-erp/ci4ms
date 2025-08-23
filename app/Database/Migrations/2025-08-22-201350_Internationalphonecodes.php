@@ -17,21 +17,19 @@ class Internationalphonecodes extends Migration
             ],
             'code' => [
                 'type' => 'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'dial_code' => [
                 'type' => 'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'name' => [
                 'type' => 'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ]
         ]);
         $this->forge->addKey('id',true);
+        $this->forge->addKey(['code','dial_code','name']);
         $this->forge->createTable('international_phone_codes');
     }
 

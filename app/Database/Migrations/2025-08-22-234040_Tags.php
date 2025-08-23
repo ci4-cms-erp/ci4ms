@@ -17,16 +17,15 @@ class Tags extends Migration
             ],
             'tag' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'seflink' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
         ]);
         $this->forge->addKey('id', true);
+        $this->forge->addKey(['tag','seflink']);
         $this->forge->createTable('tags');
     }
 

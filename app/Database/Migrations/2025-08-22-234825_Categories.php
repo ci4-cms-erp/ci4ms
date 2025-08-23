@@ -16,31 +16,33 @@ class Categories extends Migration
                 'auto_increment' => true
             ],
             'isActive' => [
-                'type'=>'TINYINT',
-                'constraint'=>1,
-                'default'=>0
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => 0
             ],
             'title' => [
-                'type'=>'TEXT',
-                'null'=>true
+                'type' => 'VARCHAR',
+                'constraint' => 255
             ],
             'seflink' => [
-                'type'=>'TEXT',
-                'null'=>true
+                'type' => 'VARCHAR',
+                'constraint' => 255
             ],
             'parent' => [
                 'type' => 'INT',
                 'constraint' => 11,
                 'unsigned' => true,
-                'null'=>true
+                'null' => true
             ],
             'seo' => [
-                'type'=>'LONGTEXT',
-                'null'=>true
+                'type' => 'LONGTEXT',
+                'null' => true
             ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('parent','categories','id','CASCADE','SET NULL');
+        $this->forge->addKey('title');
+        $this->forge->addUniqueKey('seflink');
+        $this->forge->addForeignKey('parent', 'categories', 'id', 'CASCADE', 'SET NULL');
         $this->forge->createTable('categories');
     }
 

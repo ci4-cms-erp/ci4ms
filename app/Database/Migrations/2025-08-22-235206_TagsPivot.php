@@ -18,19 +18,16 @@ class TagsPivot extends Migration
             'tag_id' => [
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true,
-                'null'=>true
+                'unsigned' => true
             ],
             'piv_id' => [
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true,
-                'null'=>true
+                'unsigned' => true
             ],
             'tagType' => [
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
         ]);
         $this->forge->addKey('id', true);

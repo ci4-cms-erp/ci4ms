@@ -27,24 +27,24 @@ class AuthUsersPermissions extends Migration
                 'unsigned' => true
             ],
             'create_r' => [
-                'type'=>'TINYINT',
-                'constraint'=>1,
-                'null'=>true
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => false
             ],
             'update_r' => [
-                'type'=>'TINYINT',
-                'constraint'=>1,
-                'null'=>true
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => false
             ],
             'read_r' => [
-                'type'=>'TINYINT',
-                'constraint'=>1,
-                'null'=>true
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => false
             ],
             'delete_r' => [
-                'type'=>'TINYINT',
-                'constraint'=>1,
-                'null'=>true
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => false
             ],
             'who_perm' => [
                 'type' => 'INT',
@@ -53,14 +53,14 @@ class AuthUsersPermissions extends Migration
                 'null' => true
             ],
             'created_at' => [
-                'type'=>'DATETIME',
-                'default'=>new RawSql('CURRENT_TIMESTAMP')
+                'type' => 'DATETIME',
+                'default' => new RawSql('CURRENT_TIMESTAMP')
             ]
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('page_id', 'auth_permissions_pages', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('user_id','users','id','CASCADE','CASCADE');
-        $this->forge->addForeignKey('who_perm','users','id','SET NULL','SET NULL');
+        $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('who_perm', 'users', 'id', 'SET NULL', 'SET NULL');
         $this->forge->createTable('auth_users_permissions');
     }
 

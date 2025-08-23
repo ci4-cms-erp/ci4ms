@@ -19,8 +19,7 @@ class Comments extends Migration
             'blog_id' => [
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true,
-                'null'=>true
+                'unsigned' => true
             ],
             'isApproved' => [
                 'type'=>'TINYINT',
@@ -33,17 +32,14 @@ class Comments extends Migration
             ],
             'comFullName' => [
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'comEmail' => [
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'comMessage' => [
-                'type'=>'LONGTEXT',
-                'null'=>true
+                'type'=>'LONGTEXT'
             ],
             'isThereAnReply' => [
                 'type'=>'TINYINT',
@@ -58,6 +54,7 @@ class Comments extends Migration
             ],
         ]);
         $this->forge->addKey('id', true);
+        $this->forge->addKey(['comFullName','comEmail']);
         $this->forge->addForeignKey('blog_id','blog','id','CASCADE','CASCADE');
         $this->forge->addForeignKey('parent_id','comments','id','CASCADE','CASCADE');
         $this->forge->createTable('comments');

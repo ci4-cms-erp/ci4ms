@@ -18,17 +18,14 @@ class Pages extends Migration
             ],
             'title'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'content'=>[
-                'type'=>'LONGTEXT',
-                'null'=>true
+                'type'=>'LONGTEXT'
             ],
             'seflink'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'creationDate'=>[
                 'type'=>'DATETIME',
@@ -36,12 +33,10 @@ class Pages extends Migration
             ],
             'isActive'=>[
                 'type'=>'TINYINT',
-                'constraint'=>1,
-                'null'=>true
+                'constraint'=>1
             ],
             'seo'=>[
-                'type'=>'LONGTEXT',
-                'null'=>true
+                'type'=>'LONGTEXT'
             ],
             'inMenu'=>[
                 'type'=>'TINYINT',
@@ -50,6 +45,8 @@ class Pages extends Migration
             ]
         ]);
         $this->forge->addKey('id', true);
+        $this->forge->addKey('title');
+        $this->forge->addUniqueKey('seflink');
         $this->forge->createTable('pages');
     }
 

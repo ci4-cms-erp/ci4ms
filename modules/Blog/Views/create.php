@@ -166,11 +166,21 @@
 <?=script_tag("be-assets/plugins/moment/moment.min.js")?>
 <?=script_tag("be-assets/plugins/inputmask/jquery.inputmask.min.js")?>
 <script>
-    $.post('<?=route_to('tagify')?>', {
-        "<?=csrf_token()?>": "<?=csrf_hash()?>",
-        "type": 'blogs'
-    }, 'json').done(function (data) {
-        tags(data);
+    $.ajax({
+        method: "POST",
+        url: "<?= route_to('tagify') ?>",
+        data: {
+            "<?= csrf_token() ?>": "<?= csrf_hash() ?>",
+            "type": 'blogs'
+        },
+        statusCode: {
+            404: function() {
+                tags([]);
+            }
+        },
+        success:function(data){
+            tags(data);
+        }
     });
 
     $('.ptitle').on('change', function () {

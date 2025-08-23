@@ -9,23 +9,23 @@ class Settings extends Migration
     public function up()
     {
         $this->forge->addField([
-            'id'=>[
-                'type'=>'INT',
-                'constraint'=>11,
-                'unsigned'=>true,
-                'auto_increment'=>true
+            'id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'auto_increment' => true
             ],
-            'option'=>[
-                'type'=>'VARCHAR',
-                'constraint'=>255
+            'option' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255
             ],
-            'content'=>[
-                'type'=>'LONGTEXT',
-                'null'=>true
+            'content' => [
+                'type' => 'LONGTEXT',
+                'null' => true
             ]
         ]);
-        $this->forge->addKey('id',true);
-        $this->forge->addKey('option');
+        $this->forge->addKey('id', true);
+        $this->forge->addUniqueKey('option');
         $this->forge->createTable('settings');
     }
 

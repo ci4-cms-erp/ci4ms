@@ -17,20 +17,16 @@ class LoginRules extends Migration
             ],
             'type' => [
                 'type' => 'VARCHAR',
-                'constraint' => 11,
-                'null' => true
+                'constraint' => 255
             ],
             'range' => [
-                'type' => 'LONGTEXT',
-                'null' => true
+                'type' => 'LONGTEXT'
             ],
             'line' => [
-                'type' => 'LONGTEXT',
-                'null' => true
+                'type' => 'LONGTEXT'
             ],
             'username' => [
-                'type' => 'LONGTEXT',
-                'null' => true
+                'type' => 'LONGTEXT'
             ]
         ]);
         $this->forge->addKey('id', true);

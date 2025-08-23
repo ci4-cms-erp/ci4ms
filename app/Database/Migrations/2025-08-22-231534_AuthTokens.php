@@ -17,26 +17,23 @@ class AuthTokens extends Migration
             ],
             'selector'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'hashedValidator'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'user_id'=>[
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true,
-                'null'=>true
+                'unsigned' => true
             ],
             'expires'=>[
-                'type'=>'DATETIME',
-                'null'=>true
+                'type'=>'DATETIME'
             ],
         ]);
         $this->forge->addKey('id', true);
+        $this->forge->addKey(['selector','hashedValidator']);
         $this->forge->addForeignKey('user_id','users','id','CASCADE','CASCADE');
         $this->forge->createTable('auth_tokens');
     }

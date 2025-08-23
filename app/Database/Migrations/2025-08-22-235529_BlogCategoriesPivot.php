@@ -18,14 +18,12 @@ class BlogCategoriesPivot extends Migration
             'blog_id' => [
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true,
-                'null'=>true
+                'unsigned' => true
             ],
             'categories_id' => [
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true,
-                'null'=>true
+                'unsigned' => true
             ]
         ]);
         $this->forge->addKey('id', true);

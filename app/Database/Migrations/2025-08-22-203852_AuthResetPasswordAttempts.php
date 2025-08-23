@@ -22,22 +22,18 @@ class AuthResetPasswordAttempts extends Migration
             ],
             'ip_address' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'user_agent' => [
                 'type' => 'INT',
-                'constraint' => 11,
-                'null' => true
+                'constraint' => 11
             ],
             'token' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255,
-                'null' => true
+                'constraint' => 255
             ],
             'created_at' => [
-                'type' => 'DATETIME',
-                'null' => true
+                'type' => 'DATETIME'
             ]
         ]);
         $this->forge->addKey('id', true);

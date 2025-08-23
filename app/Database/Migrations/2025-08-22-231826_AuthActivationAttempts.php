@@ -18,30 +18,26 @@ class AuthActivationAttempts extends Migration
             'user_id'=>[
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true,
-                'null'=>true
+                'unsigned' => true
             ],
             'ip_address'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'user_agent'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'token'=>[
                 'type'=>'VARCHAR',
-                'constraint'=>255,
-                'null'=>true
+                'constraint'=>255
             ],
             'created_at'=>[
-                'type'=>'DATETIME',
-                'null'=>true
+                'type'=>'DATETIME'
             ],
         ]);
         $this->forge->addKey('id',true);
+        $this->forge->addUniqueKey('token');
         $this->forge->addForeignKey('user_id','users','id','CASCADE','CASCADE');
         $this->forge->createTable('auth_activation_attempts');
     }
