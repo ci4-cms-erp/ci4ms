@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class Ci4msMenu extends Migration
+class Menu extends Migration
 {
     public function up()
     {
@@ -31,40 +31,38 @@ class Ci4msMenu extends Migration
                 'type' => 'INT',
                 'constraint' => 11,
                 'unsigned' => true,
+                'null'=>true
             ],
             'urlType' => [
-                'type' => 'ENUM',
-                'constraint' => ['pages', 'blogs', 'url'],
+                'type'=>'ENUM',
+                'constraint'=>['pages','blogs','url'],
+                'null'=>true
             ],
             'title' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255
+                'type'=>'TEXT',
+                'null'=>true
             ],
             'seflink' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255
+                'type'=>'TEXT',
+                'null'=>true
             ],
             'target' => [
-                'type' => 'ENUM',
-                'constraint' => ['_blank', '_self', '_parent', '_top'],
+                'type'=>'ENUM',
+                'constraint'=>['_blank','_self','_parent','_top'],
                 'null'=>true
             ],
             'hasChildren' => [
-                'type' => 'BOOLEAN',
-                'default' => false
-            ]
+                'type'=>'TINYINT',
+                'constraint'=>1,
+                'default'=>0
+            ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey('title');
-        $this->forge->addKey('seflink');
-        $this->forge->addKey('queue');
-        $this->forge->addForeignKey('pages_id', 'pages', 'id', 'CASCADE', 'CASCADE', 'ci4ms_menu_ibfk_1');
-        $this->forge->addForeignKey('parent',  'menu', 'id', 'CASCADE', 'SET_NULL', 'ci4ms_menu_ibfk_2');
-        $this->forge->createTable( 'menu');
+        $this->forge->createTable('menu');
     }
 
     public function down()
     {
-        $this->forge->dropTable( 'menu');
+        $this->forge->dropTable('menu');
     }
 }

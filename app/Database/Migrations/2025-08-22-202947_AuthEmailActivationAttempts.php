@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class Ci4msAuthEmailActivationAttemps extends Migration
+class AuthEmailActivationAttempts extends Migration
 {
     public function up()
     {
@@ -15,20 +15,24 @@ class Ci4msAuthEmailActivationAttemps extends Migration
                 'unsigned' => true,
                 'auto_increment' => true
             ],
-            'created_at' => [
-                'type' => 'DATETIME'
+            'created_at'=>[
+                'type'=>'DATETIME',
+                'null'=>true
             ],
-            'ip_address' => [
-                'type' => 'VARCHAR',
-                'constraint' => 39
+            'ip_address'=>[
+                'type'=>'VARCHAR',
+                'constraint'=>255,
+                'null'=>true
             ],
-            'token' => [
-                'type' => 'VARCHAR',
-                'constraint' => 100
+            'token'=>[
+                'type'=>'VARCHAR',
+                'constraint'=>255,
+                'null'=>true
             ],
-            'user_agent' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255
+            'user_agent'=>[
+                'type'=>'VARCHAR',
+                'constraint'=>255,
+                'null'=>true
             ]
         ]);
         $this->forge->addKey('id', true);

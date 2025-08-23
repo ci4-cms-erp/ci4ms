@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class Ci4msTags extends Migration
+class Tags extends Migration
 {
     public function up()
     {
@@ -18,20 +18,20 @@ class Ci4msTags extends Migration
             'tag' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
+                'null' => true
             ],
             'seflink' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
-            ]
+                'null' => true
+            ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey('tag');
-        $this->forge->addKey('seflink');
-        $this->forge->createTable( 'tags');
+        $this->forge->createTable('tags');
     }
 
     public function down()
     {
-        $this->forge->dropTable( 'tags');
+        $this->forge->dropTable('tags');
     }
 }

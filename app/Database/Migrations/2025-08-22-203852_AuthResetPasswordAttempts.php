@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class Ci4msAuthActivationAttempts extends Migration
+class AuthResetPasswordAttempts extends Migration
 {
     public function up()
     {
@@ -15,35 +15,37 @@ class Ci4msAuthActivationAttempts extends Migration
                 'unsigned' => true,
                 'auto_increment' => true
             ],
-            'user_id' => [
-                'type' => 'INT',
-                'constraint' => 11,
-                'unsigned' => true,
+            'email' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+                'null' => true
             ],
             'ip_address' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint' => 255,
+                'null' => true
             ],
             'user_agent' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255
+                'type' => 'INT',
+                'constraint' => 11,
+                'null' => true
             ],
             'token' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint' => 255,
+                'null' => true
             ],
             'created_at' => [
-                'type' => 'DATETIME'
+                'type' => 'DATETIME',
+                'null' => true
             ]
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey('token');
-        $this->forge->addForeignKey('user_id',  'users', 'id', 'CASCADE', 'CASCADE', 'ci4ms_auth_activation_attempts_ibfk_1');
-        $this->forge->createTable( 'auth_activation_attempts');
+        $this->forge->createTable('auth_reset_password_attempts');
     }
 
     public function down()
     {
-        $this->forge->dropTable( 'auth_activation_attempts');
+        $this->forge->dropTable('auth_reset_password_attempts');
     }
 }

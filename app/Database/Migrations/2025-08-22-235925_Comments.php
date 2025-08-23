@@ -5,7 +5,7 @@ namespace App\Database\Migrations;
 use CodeIgniter\Database\Migration;
 use CodeIgniter\Database\RawSql;
 
-class Ci4msComments extends Migration
+class Comments extends Migration
 {
     public function up()
     {
@@ -19,48 +19,52 @@ class Ci4msComments extends Migration
             'blog_id' => [
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true
+                'unsigned' => true,
+                'null'=>true
             ],
             'isApproved' => [
-                'type' => 'BOOLEAN',
-                'default'=>false
+                'type'=>'TINYINT',
+                'constraint'=>1,
+                'default'=>1
             ],
             'created_at' => [
-                'type' => 'DATETIME',
-                'default' => new RawSql('CURRENT_TIMESTAMP')
+                'type'=>'DATETIME',
+                'default'=>new RawSql('CURRENT_TIMESTAMP')
             ],
             'comFullName' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255
+                'type'=>'VARCHAR',
+                'constraint'=>255,
+                'null'=>true
             ],
             'comEmail' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255
+                'type'=>'VARCHAR',
+                'constraint'=>255,
+                'null'=>true
             ],
             'comMessage' => [
-                'type' => 'LONGTEXT'
+                'type'=>'LONGTEXT',
+                'null'=>true
             ],
             'isThereAnReply' => [
-                'type' => 'BOOLEAN',
-                'default' => false
+                'type'=>'TINYINT',
+                'constraint'=>1,
+                'default'=>0
             ],
             'parent_id' => [
                 'type' => 'INT',
                 'constraint' => 11,
                 'unsigned' => true,
                 'null'=>true
-            ]
+            ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey('comFullName');
-        $this->forge->addKey('comEmail');
-        $this->forge->addForeignKey('blog_id', 'blog', 'id', 'CASCADE', 'CASCADE', 'comments_blog_id_fk');
-        $this->forge->addForeignKey('parent_id', 'comments', 'id', 'CASCADE', 'CASCADE', 'comments_comments_id_fk');
-        $this->forge->createTable( 'comments');
+        $this->forge->addForeignKey('blog_id','blog','id','CASCADE','CASCADE');
+        $this->forge->addForeignKey('parent_id','comments','id','CASCADE','CASCADE');
+        $this->forge->createTable('comments');
     }
 
     public function down()
     {
-        $this->forge->dropTable( 'comments');
+        $this->forge->dropTable('comments');
     }
 }

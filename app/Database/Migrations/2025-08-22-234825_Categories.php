@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class Ci4msCategories extends Migration
+class Categories extends Migration
 {
     public function up()
     {
@@ -16,16 +16,17 @@ class Ci4msCategories extends Migration
                 'auto_increment' => true
             ],
             'isActive' => [
-                'type' => 'BOOLEAN',
-                'default' => false
+                'type'=>'TINYINT',
+                'constraint'=>1,
+                'default'=>0
             ],
             'title' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255
+                'type'=>'TEXT',
+                'null'=>true
             ],
             'seflink' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255
+                'type'=>'TEXT',
+                'null'=>true
             ],
             'parent' => [
                 'type' => 'INT',
@@ -34,18 +35,17 @@ class Ci4msCategories extends Migration
                 'null'=>true
             ],
             'seo' => [
-                'type' => 'LONGTEXT',
+                'type'=>'LONGTEXT',
                 'null'=>true
-            ]
+            ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey('title');
-        $this->forge->addKey('seflink');
-        $this->forge->createTable( 'categories');
+        $this->forge->addForeignKey('parent','categories','id','CASCADE','SET NULL');
+        $this->forge->createTable('categories');
     }
 
     public function down()
     {
-        $this->forge->dropTable( 'categories');
+        $this->forge->dropTable('categories');
     }
 }

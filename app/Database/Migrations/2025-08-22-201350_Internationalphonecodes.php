@@ -4,34 +4,34 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class Ci4msInternationalPhoneCodes extends Migration
+class Internationalphonecodes extends Migration
 {
     public function up()
     {
         $this->forge->addField([
             'id' => [
-                'type'           => 'INT',
-                'constraint'     => 11,
-                'unsigned'       => true,
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
                 'auto_increment' => true
             ],
             'code' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint'=>255,
+                'null'=>true
             ],
             'dial_code' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint'=>255,
+                'null'=>true
             ],
             'name' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint'=>255,
+                'null'=>true
             ]
         ]);
-        $this->forge->addKey('id', true);
-        $this->forge->addKey('code');
-        $this->forge->addKey('dial_code');
-        $this->forge->addKey('name');
+        $this->forge->addKey('id',true);
         $this->forge->createTable('international_phone_codes');
     }
 
