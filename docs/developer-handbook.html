@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CI4MS Developer Handbook</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5faf6;
+      --card-bg: #ffffff;
+      --text: #123a49;
+      --muted: #4f7a82;
+      --accent: #2da592;
+      --accent-soft: rgba(45, 165, 146, 0.16);
+      --border: rgba(18, 58, 73, 0.08);
+      --shadow: 0 20px 40px rgba(18, 58, 73, 0.08);
+      --code-bg: rgba(18, 58, 73, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #123a49;
+        --card-bg: #184f59;
+        --text: #f5faf6;
+        --muted: rgba(139, 203, 183, 0.85);
+        --accent: #8bcbb7;
+        --accent-soft: rgba(139, 203, 183, 0.28);
+        --border: rgba(139, 203, 183, 0.3);
+        --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+        --code-bg: rgba(18, 58, 73, 0.45);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, rgba(18, 58, 73, 0.05) 45%);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 1920px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 4rem 0 3rem;
+    }
+
+    header h1 {
+      margin: 0 0 1.25rem;
+      font-size: clamp(2.5rem, 4vw, 3.5rem);
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 0 auto;
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    section {
+      margin-bottom: 3rem;
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 2.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(45, 165, 146, 0.18), transparent 55%);
+      pointer-events: none;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      font-size: 1.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    .panel p { margin: 0 0 1rem; }
+    .panel ul { margin: 0 0 1rem 1.25rem; padding: 0; }
+    .panel ol { margin: 0 0 1rem 1.25rem; padding: 0; }
+
+    pre {
+      background: var(--code-bg);
+      color: var(--text);
+      border-radius: 18px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 0.95rem;
+    }
+
+    code {
+      font-family: "Fira Code", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: rgba(245, 250, 246, 0.35);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    table thead {
+      background: rgba(45, 165, 146, 0.16);
+      color: var(--text);
+    }
+
+    th, td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .cta {
+      background: linear-gradient(135deg, #2da592 0%, #123a49 100%);
+      border-radius: 28px;
+      padding: 3rem;
+      color: #f5faf6;
+      text-align: center;
+      box-shadow: 0 40px 60px rgba(18, 58, 73, 0.28);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta::before, .cta::after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: rgba(139, 203, 183, 0.3);
+      pointer-events: none;
+    }
+
+    .cta::before { top: -120px; right: -60px; }
+    .cta::after { bottom: -140px; left: -120px; }
+
+    .cta h2 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 1rem; }
+    .cta p { margin: 0 auto 2rem; max-width: 540px; font-size: 1.05rem; opacity: 0.92; }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.8rem 1.6rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn.primary { background: #f5faf6; color: #123a49; box-shadow: 0 12px 32px rgba(18, 58, 73, 0.18); }
+    .btn.secondary { background: rgba(245, 250, 246, 0.22); color: #f5faf6; border: 1px solid rgba(139, 203, 183, 0.45); backdrop-filter: blur(24px); }
+    .btn:hover { transform: translateY(-2px); opacity: 0.95; }
+
+    footer {
+      text-align: center;
+      padding: 3rem 0 2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">CI4MS Engineering</span>
+      <h1>Developer Handbook</h1>
+      <p>Reference this guide whenever you onboard, ship features, or maintain CI4MS. It merges environment requirements, coding conventions, workflow tips, and deployment best practices into a single companion for the engineering team.</p>
+    </header>
+
+    <section class="panel">
+      <h2>1. System Requirements</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Required</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>PHP</td>
+            <td>8.1+</td>
+            <td>Enable intl, json, mbstring, gd, curl, openssl. Matches <code>composer.json</code> platform.</td>
+          </tr>
+          <tr>
+            <td>Composer</td>
+            <td>2.5+</td>
+            <td>Manage PHP dependencies.</td>
+          </tr>
+          <tr>
+            <td>Node.js</td>
+            <td>18 LTS</td>
+            <td>Needed if you maintain <code>public/be-assets</code>.</td>
+          </tr>
+          <tr>
+            <td>npm</td>
+            <td>8+</td>
+            <td>Package manager for backend assets.</td>
+          </tr>
+          <tr>
+            <td>Database</td>
+            <td>MySQL/MariaDB</td>
+            <td>Any CodeIgniter-supported driver works. Configure via <code>.env</code>.</td>
+          </tr>
+          <tr>
+            <td>Web server</td>
+            <td>Apache/Nginx/CI4 spark</td>
+            <td>Point document root to <code>public/</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>2. Repository Layout Highlights</h2>
+      <pre><code>app/                 Application code (controllers, config, libraries, filters)
+modules/             Feature modules (Auth, Backend, Blog, etc.)
+public/
+  index.php          Front controller
+  be-assets/         Admin UI build artifacts (CSS/JS)
+  templates/         Front-end themes (default shipped)
+  uploads/           Media storage (ensure writable)
+writable/            Cache, logs, temporary files (must be writable)
+vendor/              Composer packages</code></pre>
+      <p>Essential configuration files include <code>composer.json</code>, the contents of <code>app/Config</code>, and the environment overrides stored in <code>.env</code>.</p>
+    </section>
+
+    <section class="panel">
+      <h2>3. Getting Started</h2>
+      <ol>
+        <li>
+          <strong>Clone &amp; install</strong>
+          <pre><code>git clone &lt;repo-url&gt; ci4ms
+cd ci4ms
+composer install</code></pre>
+        </li>
+        <li>
+          <strong>Prepare the environment</strong>
+          <pre><code>cp env .env
+php spark env development</code></pre>
+          <p>Set <code>app.baseURL</code>, <code>database.default.*</code>, mail credentials, and security options.</p>
+        </li>
+        <li>
+          <strong>Migrate &amp; seed</strong>
+          <pre><code>php spark migrate
+php spark db:seed Ci4msDefaultsSeeder  # prompts for admin account details
+php spark key:generate
+php spark create:route</code></pre>
+        </li>
+        <li>
+          <strong>Serve locally</strong>
+          <pre><code>php spark serve</code></pre>
+          <p>Visit <code>http://localhost:8080</code> for the front-end and <code>/backend</code> for the admin.</p>
+        </li>
+      </ol>
+      <p><em>Tip:</em> Re-running the seeder on a populated database can duplicate data. Truncate first if needed.</p>
+    </section>
+
+    <section class="panel">
+      <h2>4. Dependency Management</h2>
+      <div class="grid two">
+        <div>
+          <h3>Composer</h3>
+          <p>Core packages include <code>ci4commonmodel</code>, <code>sql2migration</code>, <code>ext_module_generator</code>, <code>gregwar/captcha</code>, <code>melbahja/seo</code>, <code>phpmailer/phpmailer</code>, and <code>studio-42/elfinder</code>.</p>
+          <pre><code>composer install
+composer update vendor/package
+composer outdated</code></pre>
+        </div>
+        <div>
+          <h3>Node (Admin assets)</h3>
+          <p>The admin panel pulls JS dependencies from <code>public/be-assets</code> (Tagify, Monaco editor, elFinder theme, etc.).</p>
+          <pre><code>cd public/be-assets
+npm install
+# add build/watch scripts if you introduce a bundler</code></pre>
+          <p>Document any new build tooling in this handbook when added.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>5. Coding Guidelines</h2>
+      <ul>
+        <li><strong>Namespaces:</strong> PSR-4 via Composer. Modules live under <code>Modules\&lt;Name&gt;</code>, app code under <code>App\</code>.</li>
+        <li><strong>Controllers:</strong> Backend controllers extend <code>Modules\Backend\Controllers\BaseController</code>; frontend extends <code>App\Controllers\BaseController</code>.</li>
+        <li><strong>Views:</strong> Stored per module (<code>Modules\Blog\Views\list</code> etc.).</li>
+        <li><strong>Helpers/Filters:</strong> Keep helpers/filters modular; <code>app/Config/Filters</code> discovers them dynamically.</li>
+        <li><strong>Configuration:</strong> Module-specific configs live in <code>modules/&lt;Module&gt;/Config</code>.</li>
+        <li><strong>Translations:</strong> Use <code>modules/&lt;Module&gt;/Language/&lt;locale&gt;</code>.</li>
+        <li><strong>Testing:</strong> Run <code>composer test</code>; add linting tooling if desired.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>6. Modules &amp; Permissions</h2>
+      <p>Permissions are stored in <code>auth_permissions_pages</code> (CRUD JSON flags) and <code>auth_users_permissions</code> (overrides). The <code>Modules\Methods\Controllers\Methods::moduleScan()</code> command inspects routes and helps keep permissions in sync.</p>
+      <p><strong>Workflow for a new module:</strong></p>
+      <ol>
+        <li>Scaffold with <code>php spark module:create &lt;Name&gt;</code>.</li>
+        <li>Define routes in <code>modules/&lt;Name&gt;/Config/Routes.php</code> with <code>role</code> metadata.</li>
+        <li>Implement controllers, models, views.</li>
+        <li>Update permissions (run module scan or insert records manually).</li>
+        <li>Create migrations/seeds for new tables if required.</li>
+      </ol>
+      <p>Clear cached permissions with <code>php spark cache:clear</code> or <code>cache()->delete("{userId}_permissions")</code>.</p>
+    </section>
+
+    <section class="panel">
+      <h2>7. Configuration &amp; Settings Cache</h2>
+      <ul>
+        <li><strong>Settings:</strong> Stored in the <code>settings</code> table and cached for 24h. Clear via <code>cache()->delete('settings')</code>.</li>
+        <li><strong>Menus:</strong> Cached as <code>menus</code>; automatically refreshed when editing via the Menu module.</li>
+        <li><strong>Mail credentials:</strong> Encrypted (base64 + CI encrypter); use <code>CommonLibrary::phpMailer()</code> for retrieval.</li>
+        <li><strong>Maintenance mode:</strong> Controlled by <code>settings.maintenanceMode</code>; triggers redirect in <code>App\Filters\Ci4ms</code>.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>8. Media, File, &amp; Theme Handling</h2>
+      <div class="grid two">
+        <div>
+          <h3>Media Manager</h3>
+          <ul>
+            <li>elFinder config in <code>Modules\Media\Controllers\Media::elfinderConnection()</code>.</li>
+            <li>Allowed MIME types from <code>settings.allowedFiles</code>.</li>
+            <li>Optional WebP conversion via <code>claviska/simpleimage</code>.</li>
+            <li>Storage: <code>public/uploads/media/</code> (ensure writable, include <code>.trash</code> folder).</li>
+          </ul>
+        </div>
+        <div>
+          <h3>File Editor &amp; Themes</h3>
+          <ul>
+            <li><strong>Fileeditor:</strong> Uses <code>realpath</code> guards; limit use to trusted roles.</li>
+            <li><strong>Themes:</strong> Located in <code>public/templates/&lt;theme&gt;</code>; uploads unzip to <code>writable/tmp</code> before install.</li>
+            <li>Required theme files: <code>info.xml</code>, <code>screenshot.png</code> (checked by backend filter).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>9. Public Assets &amp; Front Controller</h2>
+      <ul>
+        <li><code>public/index.php</code> bootstraps CodeIgniter; production servers should expose only <code>public/</code>.</li>
+        <li><code>public/maintenance/</code> serves the maintenance splash when enabled.</li>
+        <li><code>public/be-assets/</code> houses admin CSS/JS, images, plugins, and package manifests.</li>
+        <li><code>public/uploads/</code> contains uploaded media (include in backups).</li>
+        <li><code>public/templates/default/</code> is the bundled theme—use it as a blueprint for custom themes.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>10. Testing &amp; QA</h2>
+      <ul>
+        <li>Tests live under <code>tests/</code>; namespace under <code>Tests\Support</code> is autoloaded.</li>
+        <li>Add integration tests for auth, CRUD operations, and menu updates as coverage grows.</li>
+        <li>Use maintenance mode to hide upcoming changes during manual QA.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>11. Debugging Tips</h2>
+      <ul>
+        <li>Enable the debug toolbar via <code>CI_ENVIRONMENT=development</code>.</li>
+        <li>Logs reside in <code>writable/logs/</code>; ensure permissions allow writing.</li>
+        <li>Clear cache via <code>php spark cache:clear</code> or delete contents of <code>writable/cache/</code>.</li>
+        <li>Migration issues? Check logs and the <code>ci_migrations</code> table for batch sync.</li>
+        <li>Mail issues? Trigger the AJAX <em>Test Mail</em> button in Settings after configuring SMTP.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>12. Deployment Checklist</h2>
+      <ol>
+        <li>Switch to <code>CI_ENVIRONMENT=production</code>.</li>
+        <li>Set the public <code>app.baseURL</code>.</li>
+        <li>Point the web server root to <code>public/</code>; restrict other directories.</li>
+        <li>Run migrations/seeds (<code>php spark migrate --all</code>, relevant seeders).</li>
+        <li>Optional cache warm-up via scripted requests.</li>
+        <li>Disable the debug toolbar in production.</li>
+        <li>Set secure permissions (775/664 depending on user/group).</li>
+        <li>Back up uploads, database, and <code>.env</code> before major upgrades.</li>
+      </ol>
+    </section>
+
+    <section class="panel">
+      <h2>13. Contribution Workflow</h2>
+      <ul>
+        <li><strong>Branching:</strong> Prefix with scope (e.g., <code>feature/blog-scheduling</code>).</li>
+        <li><strong>Commits:</strong> Reference modules/issues (<code>[Blog] Add scheduling support</code>).</li>
+        <li><strong>Pull requests:</strong> Note migrations, env vars, npm steps.</li>
+        <li><strong>Reviews:</strong> Highlight permission changes, cache impacts, asset updates.</li>
+        <li><strong>Changelog:</strong> Maintain if releasing versions.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>14. Further Reading &amp; Resources</h2>
+      <ul>
+        <li><a href="https://codeigniter4.github.io/userguide/" target="_blank" rel="noopener">CodeIgniter 4 Documentation</a></li>
+        <li><a href="https://getcomposer.org/doc/" target="_blank" rel="noopener">Composer Docs</a></li>
+        <li><a href="./architecture.md" target="_blank" rel="noopener">CI4MS Architecture Guide (Markdown)</a></li>
+        <li><a href="./user-guide.html" target="_blank" rel="noopener">CI4MS User Guide (HTML)</a></li>
+      </ul>
+      <p>Update this handbook whenever the stack or workflows evolve so the team always has a current source of truth.</p>
+    </section>
+
+    <section class="cta">
+      <h2>Ship with Confidence</h2>
+      <p>CI4MS is engineered for extensibility. Keep this page bookmarked, share it with the team, and iterate responsibly.</p>
+      <div class="action-buttons">
+        <a class="btn primary" href="../README.md" target="_blank" rel="noopener">Project README</a>
+        <a class="btn secondary" href="./architecture.html" target="_blank" rel="noopener">Architecture Companion</a>
+      </div>
+    </section>
+  </div>
+  <footer>
+    Crafted for the CI4MS engineering team · Questions? Reach out to the maintainers.
+  </footer>
+</body>
+</html>

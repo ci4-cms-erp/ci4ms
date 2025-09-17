@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CI4MS User Guide</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5faf6;
+      --card-bg: #ffffff;
+      --text: #123a49;
+      --muted: #4f7a82;
+      --accent: #2da592;
+      --accent-soft: rgba(45, 165, 146, 0.16);
+      --border: rgba(18, 58, 73, 0.08);
+      --shadow: 0 20px 40px rgba(18, 58, 73, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #123a49;
+        --card-bg: #184f59;
+        --text: #f5faf6;
+        --muted: rgba(139, 203, 183, 0.85);
+        --accent: #8bcbb7;
+        --accent-soft: rgba(139, 203, 183, 0.28);
+        --border: rgba(139, 203, 183, 0.3);
+        --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, rgba(18, 58, 73, 0.05) 45%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .container {
+      max-width: 1920px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    header {
+      padding: 4rem 0 3rem;
+      text-align: center;
+    }
+
+    header h1 {
+      margin-bottom: 1rem;
+      font-size: clamp(2.5rem, 4vw, 3.5rem);
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 0 auto;
+      max-width: 640px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    section {
+      margin-bottom: 3.5rem;
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 1.75rem;
+    }
+
+    @media (min-width: 768px) {
+      .card-grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .card-grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 2rem;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(45, 165, 146, 0.18), transparent 55%);
+      pointer-events: none;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 1.35rem;
+      letter-spacing: -0.01em;
+    }
+
+    .meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .steps {
+      counter-reset: step;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1.25rem;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .step:last-child {
+      border-bottom: none;
+    }
+
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .step h4 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .pill {
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.45rem 0.95rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .cta {
+      background: linear-gradient(135deg, #2da592 0%, #123a49 100%);
+      border-radius: 28px;
+      padding: 3rem;
+      color: #f5faf6;
+      text-align: center;
+      box-shadow: 0 40px 60px rgba(18, 58, 73, 0.28);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta::before, .cta::after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: rgba(139, 203, 183, 0.3);
+      filter: blur(0px);
+      pointer-events: none;
+    }
+
+    .cta::before {
+      top: -120px;
+      right: -60px;
+    }
+
+    .cta::after {
+      bottom: -140px;
+      left: -120px;
+    }
+
+    .cta h2 {
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      margin: 0 0 1rem;
+    }
+
+    .cta p {
+      margin: 0 auto 2rem;
+      max-width: 540px;
+      font-size: 1.05rem;
+      opacity: 0.92;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.8rem 1.6rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn.primary {
+      background: #f5faf6;
+      color: #123a49;
+      box-shadow: 0 12px 32px rgba(18, 58, 73, 0.18);
+    }
+
+    .btn.secondary {
+      background: rgba(245, 250, 246, 0.22);
+      color: #f5faf6;
+      border: 1px solid rgba(139, 203, 183, 0.45);
+      backdrop-filter: blur(24px);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      opacity: 0.95;
+    }
+
+    ul, ol {
+      margin: 0 0 1rem 1.25rem;
+      padding: 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 3rem 0 2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style></style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">Welcome to CI4MS</span>
+      <h1>Your Modern Control Center</h1>
+      <p>This guide is written for content editors and site managers. Whether you are publishing a page, staging new media, or tuning site settings, the sections below walk you through every essential task inside the CI4MS dashboard.</p>
+    </header>
+
+    <section>
+      <h2>First-Time Checklist</h2>
+      <div class="card-grid two">
+        <article class="card">
+          <h3>1. Sign in securely</h3>
+          <p>Open <strong>/backend</strong> in your browser and enter the administrator credentials you received from your developer. If you forget your password, use the “Forgot Password” link—CI4MS will email you a secure reset link.</p>
+        </article>
+        <article class="card">
+          <h3>2. Personalize your profile</h3>
+          <p>Click your avatar in the top-right corner to update your display name, profile picture, and password. Keeping this information current helps your team identify who changed what.</p>
+        </article>
+        <article class="card">
+          <h3>3. Review dashboard insights</h3>
+          <p>The dashboard highlights page and blog counts, latest activity, and quick links. Use it to understand site health at a glance.</p>
+        </article>
+        <article class="card">
+          <h3>4. Pin critical modules</h3>
+          <p>Use the sidebar to favorite modules you rely on most—Pages, Blog, Menu, Media, Settings—so they always stay within one click.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Everyday Workflows</h2>
+      <div class="card-grid two">
+        <article class="card">
+          <div class="meta">Pages → Create or edit static pages</div>
+          <h3>Publish a page</h3>
+          <ol>
+            <li>Navigate to <strong>Pages</strong> and choose “Create”.</li>
+            <li>Write your content with the rich text editor or paste HTML snippets.</li>
+            <li>Add SEO metadata (title, description, keywords) and optional cover imagery.</li>
+            <li>Toggle visibility to “Published” and click <strong>Save</strong>.</li>
+          </ol>
+          <p>Tips: Use keywords to improve discoverability, and attach the page to menus if it should appear in navigation.</p>
+        </article>
+
+        <article class="card">
+          <div class="meta">Blog → Articles, categories, tags</div>
+          <h3>Share news and updates</h3>
+          <ol>
+            <li>Select <strong>Blog ▸ Create</strong>.</li>
+            <li>Add your article content, hero image, optional gallery, and author.</li>
+            <li>Assign categories and tags to keep things organized.</li>
+            <li>Schedule the publish date or click <strong>Publish now</strong>.</li>
+          </ol>
+          <p>Comments arrive in moderation by default—approve or reply within the <strong>Comments</strong> tab.</p>
+        </article>
+
+        <article class="card">
+          <div class="meta">Menu → Navigation tree</div>
+          <h3>Curate navigation</h3>
+          <ol>
+            <li>Head to <strong>Menu</strong> to view the drag-and-drop tree.</li>
+            <li>Use <em>Add</em> to insert pages, blogs, or external links.</li>
+            <li>Drag items to reorder or nest under parents.</li>
+            <li>Click <strong>Save structure</strong> to publish changes instantly.</li>
+          </ol>
+          <p>Nested items automatically render as dropdowns on the front-end.</p>
+        </article>
+
+        <article class="card">
+          <div class="meta">Media → Asset hub</div>
+          <h3>Manage media intelligently</h3>
+          <ol>
+            <li>Open <strong>Media</strong> for the file manager.</li>
+            <li>Upload images, videos, or documents (WebP conversion is automatic when enabled).</li>
+            <li>Copy URLs or drag files directly into the editor.</li>
+            <li>Use the trash bin for safe cleanup—restore if needed.</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Fine-Tune Your Site</h2>
+      <div class="card-grid two">
+        <article class="card">
+          <div class="meta">Settings → Company, branding, email</div>
+          <h3>Keep details accurate</h3>
+          <ul>
+            <li><strong>Company Info:</strong> Update address, phone, map embed, and slogan.</li>
+            <li><strong>Branding:</strong> Upload your logo and pick a theme.</li>
+            <li><strong>Mail:</strong> Configure SMTP to ensure password resets and notifications reach inboxes.</li>
+            <li><strong>Maintenance:</strong> Enable maintenance mode during major redesigns.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <div class="meta">Users → Roles & permissions</div>
+          <h3>Collaborate safely</h3>
+          <ul>
+            <li>Create new users and assign them to roles (e.g., Editor, Author, Manager).</li>
+            <li>Force password resets or deactivate accounts with one click.</li>
+            <li>Review permission sets to ensure the <em>least privilege</em> best practice.</li>
+          </ul>
+          <p class="pill-list">
+            <span class="pill">Granular access control</span>
+            <span class="pill">Audit trail</span>
+            <span class="pill">Secure collaboration</span>
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Quick Reference</h2>
+      <div class="card-grid three">
+        <article class="card">
+          <h3>Keyboard boosters</h3>
+          <ul>
+            <li><strong>Ctrl/Cmd + S</strong> — Save current form (where supported).</li>
+            <li><strong>Ctrl/Cmd + B / I</strong> — Bold / italic in the editor.</li>
+            <li><strong>Shift + ?</strong> — Reveal module-specific shortcuts.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Content best practices</h3>
+          <ul>
+            <li>Keep headlines concise and action-oriented.</li>
+            <li>Use alt text on every image for accessibility.</li>
+            <li>Preview before publishing to verify layout and links.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Need assistance?</h3>
+          <ul>
+            <li>Check the inline help tooltips within each module.</li>
+            <li>Review the developer README for technical details.</li>
+            <li>Contact your engineering team if a setting is locked.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>Stay confident, stay creative</h2>
+      <p>CI4MS lets you move fast without breaking things. Bookmark this guide, share it with your teammates, and keep building great experiences for your visitors.</p>
+      <div class="action-buttons">
+        <a class="btn secondary" href="./developer-handbook.html" target="_blank" rel="noopener">Developer Handbook</a>
+      </div>
+    </section>
+  </div>
+  <footer>
+    Crafted with care for CI4MS editors · Need help? Reach out to your platform administrator.
+  </footer>
+</body>
+</html>

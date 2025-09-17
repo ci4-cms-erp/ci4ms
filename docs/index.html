@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CI4MS Documentation Portal</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5faf6;
+      --card-bg: #ffffff;
+      --text: #123a49;
+      --muted: #4f7a82;
+      --accent: #2da592;
+      --accent-soft: rgba(45, 165, 146, 0.16);
+      --border: rgba(18, 58, 73, 0.08);
+      --shadow: 0 20px 40px rgba(18, 58, 73, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #123a49;
+        --card-bg: #184f59;
+        --text: #f5faf6;
+        --muted: rgba(139, 203, 183, 0.85);
+        --accent: #8bcbb7;
+        --accent-soft: rgba(139, 203, 183, 0.28);
+        --border: rgba(139, 203, 183, 0.3);
+        --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, rgba(18, 58, 73, 0.05) 45%);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 1920px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 4rem 0 3rem;
+    }
+
+    header h1 {
+      margin: 0 0 1.25rem;
+      font-size: clamp(2.6rem, 4vw, 3.7rem);
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 0 auto;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1.75rem;
+      margin-bottom: 3.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid.cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 767px) {
+      .grid.cards { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 2.25rem;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(45, 165, 146, 0.18), transparent 55%);
+      pointer-events: none;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1.7rem;
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .card .cta-link {
+      margin-top: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 0.65rem 1.1rem;
+      border-radius: 999px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .card .cta-link:hover {
+      transform: translateY(-2px);
+      opacity: 0.88;
+    }
+
+    .section-title {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+      font-size: 0.85rem;
+    }
+
+    .stacked {
+      display: grid;
+      gap: 1.5rem;
+      margin-bottom: 2rem !important;
+    }
+
+    .panel {
+      background: #123a49;
+      border-radius: 20px;
+      border: 1px solid rgba(45, 165, 146, 0.18);
+      padding: 1.85rem;
+    }
+
+    .panel h3 {
+      margin-top: 0;
+      font-size: 1.35rem;
+    }
+
+    .panel ul { margin: 0.75rem 0 0 1.25rem; padding: 0; }
+
+    .cta {
+      background: linear-gradient(135deg, #2da592 0%, #123a49 100%);
+      border-radius: 28px;
+      padding: 3.2rem;
+      color: #f5faf6;
+      text-align: center;
+      box-shadow: 0 40px 60px rgba(18, 58, 73, 0.28);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta::before, .cta::after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: rgba(139, 203, 183, 0.3);
+      pointer-events: none;
+    }
+
+    .cta::before { top: -120px; right: -60px; }
+    .cta::after { bottom: -140px; left: -120px; }
+
+    .cta h2 { font-size: clamp(2rem, 4vw, 2.85rem); margin: 0 0 1rem; }
+    .cta p { margin: 0 auto 2rem; max-width: 520px; font-size: 1.05rem; opacity: 0.92; }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.8rem 1.6rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn.primary { background: #f5faf6; color: #123a49; box-shadow: 0 12px 32px rgba(18, 58, 73, 0.18); }
+    .btn.secondary { background: rgba(245, 250, 246, 0.22); color: #f5faf6; border: 1px solid rgba(139, 203, 183, 0.45); backdrop-filter: blur(24px); }
+    .btn:hover { transform: translateY(-2px); opacity: 0.95; }
+
+    footer {
+      text-align: center;
+      padding: 3rem 0 2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">CI4MS Documentation</span>
+      <h1>All the Guides in One Place</h1>
+      <p>Choose the guide that fits your role—content editor, engineer, or architect. Every page uses the same clean CI4MS visual language, so you can move between them without losing context.</p>
+    </header>
+
+    <section>
+      <div class="section-title">Featured Guides</div>
+      <div class="grid cards">
+        <article class="card">
+          <h2>User Guide</h2>
+          <p>Modern, editor-friendly walkthrough covering page publishing, blog workflows, media handling, and quick tips.</p>
+          <a class="cta-link" href="./user-guide.html" target="_blank" rel="noopener">Open User Guide →</a>
+        </article>
+        <article class="card">
+          <h2>Developer Handbook</h2>
+          <p>Environment setup, dependency management, coding standards, module/permission workflow, deployment checklist, and more.</p>
+          <a class="cta-link" href="./developer-handbook.html" target="_blank" rel="noopener">Open Developer Handbook →</a>
+        </article>
+        <article class="card">
+          <h2>Architecture Guide</h2>
+          <p>High-level overview of request lifecycle, module structure, caching, theme/media systems, and CLI automation.</p>
+          <a class="cta-link" href="./architecture.html" target="_blank" rel="noopener">Open Architecture Guide →</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="stacked">
+      <div class="section-title">Quick Links</div>
+      <div class="panel">
+        <h3>Primary References</h3>
+        <ul>
+          <li><a href="../README.md" target="_blank" rel="noopener">Project README (root)</a> — installation commands, module overview.</li>
+          <li><a href="../docs/developer-handbook.md" target="_blank" rel="noopener">Developer Handbook (Markdown)</a> — plain text version if you prefer.</li>
+          <li><a href="../docs/architecture.md" target="_blank" rel="noopener">Architecture Guide (Markdown)</a> — raw reference for quick scanning.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Support &amp; Feedback</h3>
+        <ul>
+          <li>Need edits? Open an issue or PR referencing the relevant guide.</li>
+          <li>Keep palette and typography consistent when adding new pages (see CSS in this file).</li>
+          <li>For urgent docs updates, coordinate with the platform admins.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>Ready to Dive In?</h2>
+      <p>Bookmark this portal to stay aligned across teams. The CI4MS docs collection grows as your product evolves—check back often.</p>
+      <div class="action-buttons">
+        <a class="btn primary" href="./user-guide.html" target="_blank" rel="noopener">Start with the User Guide</a>
+        <a class="btn secondary" href="../" target="_blank" rel="noopener">Back to Project Root</a>
+      </div>
+    </section>
+  </div>
+  <footer>
+    CI4MS Documentation Portal · Maintained by the project team.
+  </footer>
+</body>
+</html>

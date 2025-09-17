@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CI4MS Architecture Guide</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5faf6;
+      --card-bg: #ffffff;
+      --text: #123a49;
+      --muted: #4f7a82;
+      --accent: #2da592;
+      --accent-soft: rgba(45, 165, 146, 0.16);
+      --border: rgba(18, 58, 73, 0.08);
+      --shadow: 0 20px 40px rgba(18, 58, 73, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #123a49;
+        --card-bg: #184f59;
+        --text: #f5faf6;
+        --muted: rgba(139, 203, 183, 0.85);
+        --accent: #8bcbb7;
+        --accent-soft: rgba(139, 203, 183, 0.28);
+        --border: rgba(139, 203, 183, 0.3);
+        --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, rgba(18, 58, 73, 0.05) 45%);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 1920px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 4rem 0 3rem;
+    }
+
+    header h1 {
+      margin: 0 0 1.25rem;
+      font-size: clamp(2.5rem, 4vw, 3.5rem);
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 0 auto;
+      max-width: 740px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    section { margin-bottom: 3rem; }
+
+    .panel {
+      background: var(--card-bg);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 2.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(45, 165, 146, 0.18), transparent 55%);
+      pointer-events: none;
+    }
+
+    .panel h2 { margin-top: 0; font-size: 1.65rem; letter-spacing: -0.01em; }
+    .panel h3 { margin-top: 1.5rem; font-size: 1.2rem; }
+    .panel p { margin: 0 0 1rem; }
+    .panel ul { margin: 0 0 1rem 1.25rem; padding: 0; }
+    .panel ol { margin: 0 0 1rem 1.25rem; padding: 0; }
+
+    .grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .cta {
+      background: linear-gradient(135deg, #2da592 0%, #123a49 100%);
+      border-radius: 28px;
+      padding: 3rem;
+      color: #f5faf6;
+      text-align: center;
+      box-shadow: 0 40px 60px rgba(18, 58, 73, 0.28);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta::before, .cta::after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: rgba(139, 203, 183, 0.3);
+      pointer-events: none;
+    }
+
+    .cta::before { top: -120px; right: -60px; }
+    .cta::after { bottom: -140px; left: -120px; }
+
+    .cta h2 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 1rem; }
+    .cta p { margin: 0 auto 2rem; max-width: 540px; font-size: 1.05rem; opacity: 0.92; }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.8rem 1.6rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn.primary { background: #f5faf6; color: #123a49; box-shadow: 0 12px 32px rgba(18, 58, 73, 0.18); }
+    .btn.secondary { background: rgba(245, 250, 246, 0.22); color: #f5faf6; border: 1px solid rgba(139, 203, 183, 0.45); backdrop-filter: blur(24px); }
+    .btn:hover { transform: translateY(-2px); opacity: 0.95; }
+
+    footer {
+      text-align: center;
+      padding: 3rem 0 2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">CI4MS Architecture</span>
+      <h1>System Blueprint</h1>
+      <p>Understand the moving parts behind CI4MS—filters, routes, modules, caches, and tooling. Use this guide alongside the developer handbook when designing new features or debugging runtime behaviour.</p>
+    </header>
+
+    <section class="panel">
+      <h2>Application Bootstrap &amp; Request Lifecycle</h2>
+      <ul>
+        <li><strong>Filters:</strong> <code>app/Filters/Ci4ms.php</code> enforces install checks, maintenance redirects, and menu cache hydration in <code>after()</code>.</li>
+        <li><strong>Dynamic filter discovery:</strong> <code>app/Config/Filters.php</code> scans module and theme filter directories, then merges CSRF exceptions from <code>Modules\Backend\Config\BackendConfig</code>.</li>
+        <li><strong>Routing:</strong> <code>app/Config/Routes.php</code> preloads settings, attaches template routes, then imports every module’s <code>Config/Routes.php</code> before declaring front-end routes.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>CommonModel Abstraction</h2>
+      <p><code>bertugfahriozer/ci4commonmodel</code> powers the generic CRUD layer. Modules lean on helpers such as <code>lists</code>, <code>selectOne</code>, <code>create</code>, <code>createMany</code>, <code>edit</code>, <code>remove</code>, and <code>isHave</code>.</p>
+      <p>The backend <code>BaseController</code> instantiates <code>CommonModel</code> once, exposing it via <code>$this->commonModel</code> to child controllers.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Authentication &amp; Authorization</h2>
+      <ul>
+        <li><strong>AuthLibrary:</strong> Manages login/logout, remember-me cookies, lockouts, password resets, and notification emails. Stores session keys (<code>logged_in</code>, <code>redirect_url</code>) and caches user permissions.</li>
+        <li><strong>Backend filters:</strong> <code>Modules\Backend\Filters\BackendAfterLoginFilter</code> enforces authentication, verifies permissions, checks theme assets, and warms cached settings.</li>
+        <li><strong>BaseController duties:</strong> Resolves the logged-in user (<code>Modules\Users\Models\UserscrudModel::loggedUser()</code>), navigation (<code>AuthLibrary::sidebarNavigation()</code>), mail config, and <code>$this->defData</code>.</li>
+        <li><strong>Permission tables:</strong> <code>auth_permissions_pages</code> (module/page CRUD flags) and <code>auth_users_permissions</code> (user overrides). <code>Modules\Methods</code> provides scanning utilities to sync routes.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Module Pattern</h2>
+      <p>Each module under <code>modules/&lt;Name&gt;</code> typically includes:</p>
+      <ul>
+        <li><code>Config/Routes.php</code> – routes plus metadata (<code>role</code> options).</li>
+        <li><code>Config/*.php</code> – module-specific settings.</li>
+        <li><code>Controllers/</code> – usually extend the backend base controller.</li>
+        <li><code>Models/</code>, <code>Views/</code>, optional <code>Libraries/</code>, <code>Helpers/</code>, <code>Language/</code>, <code>Filters/</code>, <code>Database/</code>.</li>
+      </ul>
+      <p>Scaffold new modules with <code>php spark module:create Foo</code> and follow up with routes, implementation, and permissions.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Installation Flow</h2>
+      <div class="grid two">
+        <div>
+          <h3>Web Installer</h3>
+          <ul>
+            <li>Module: <code>Modules\Install</code>.</li>
+            <li>Copies <code>env</code> to <code>.env</code>, sets base configuration, runs migrations, and seeds defaults via <code>InstallService</code>.</li>
+            <li>Regenerates <code>app/Config/Routes.php</code> from the command template.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>CLI Seeder</h3>
+          <ul>
+            <li><code>Ci4msDefaultsSeeder</code> prompts for admin credentials.</li>
+            <li>Calls <code>InstallService::createDefaultData()</code> to seed modules, permissions, admin account, sample content, and settings.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Caching &amp; Configuration</h2>
+      <ul>
+        <li><strong>Settings:</strong> Stored as JSON/string in <code>settings</code>; cached for 24h.</li>
+        <li><strong>Menus:</strong> Cached for 24h; invalidated when menu structure updates.</li>
+        <li><strong>User permissions:</strong> Cached per user (<code>{userId}_permissions</code>); clear when updating roles.</li>
+        <li><strong>Mail settings:</strong> Encrypted array in <code>settings.mail</code>; decrypt through <code>CommonLibrary::phpMailer()</code> or backend base controller.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Theme System</h2>
+      <ul>
+        <li>Themes live in <code>public/templates/&lt;theme&gt;</code> with optional overrides in <code>app/Config</code>, <code>app/Controllers</code>, etc.</li>
+        <li><code>Modules\Theme</code> handles ZIP uploads, temporary extraction (<code>writable/tmp</code>), duplicate detection, and final installation.</li>
+        <li><code>BackendAfterLoginFilter</code> warns administrators if <code>info.xml</code> or <code>screenshot.png</code> is missing.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Content &amp; SEO</h2>
+      <ul>
+        <li><strong>Home controller:</strong> <code>App\Controllers\Home</code> renders front pages and blogs, parses inline shortcodes (<code>CommonLibrary::parseInTextFunctions()</code>), assembles meta tags (<code>Ci4msseoLibrary</code>), and loads categories, tags, authors, breadcrumbs, and comments.</li>
+        <li><strong>SEO fields:</strong> Blog and page records store JSON metadata (<code>coverImage</code>, <code>description</code>, <code>keywords</code>).</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Media &amp; File Management</h2>
+      <ul>
+        <li><code>Modules\Media</code> integrates elFinder with MIME allowlists, trash handling, and optional WebP conversion via <code>claviska/simpleimage</code>.</li>
+        <li><code>Modules\Fileeditor</code> offers in-project file browsing/editing secured by <code>realpath</code> checks.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>CLI &amp; Automation</h2>
+      <ul>
+        <li><code>app/Commands/*</code> contains module scaffolds (<code>ModuleCreate</code>), admin generators (<code>make:acontroller</code>, <code>make:amodel</code>, <code>make:abview</code>), and route regeneration (<code>create:route</code>).</li>
+        <li><code>Modules\Methods::moduleScan()</code> inspects the router and aligns permissions with available routes.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Development Tips</h2>
+      <ul>
+        <li>Extend the backend base controller for consistent session/config/view setup.</li>
+        <li>Update <code>Modules\Methods</code> whenever new secured routes are introduced.</li>
+        <li>Clear caches (<code>php spark cache:clear</code>) after modifying settings, menus, or permissions.</li>
+        <li>Keep theme directories synced with required assets (<code>info.xml</code>, <code>screenshot.png</code>).</li>
+        <li>Captcha auto-disables in development due to environment checks in the login controller.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Common Data Tables</h2>
+      <p>Frequent tables include <code>users</code>, <code>auth_groups</code>, <code>auth_permissions_pages</code>, <code>auth_users_permissions</code>, <code>modules</code>, <code>pages</code>, <code>blog</code>, <code>blog_categories_pivot</code>, <code>tags</code>, <code>tags_pivot</code>, <code>menu</code>, <code>settings</code>, <code>login_rules</code>, and others introduced by modules.</p>
+      <p>Consult module migrations for schema details.</p>
+    </section>
+
+    <section class="cta">
+      <h2>Design with Insight</h2>
+      <p>Use this architecture map to reason about dependencies and extension points. Pair it with the developer handbook and user guide for the full CI4MS story.</p>
+      <div class="action-buttons">
+        <a class="btn primary" href="./developer-handbook.html" target="_blank" rel="noopener">Developer Handbook</a>
+        <a class="btn secondary" href="./user-guide.html" target="_blank" rel="noopener">User Guide</a>
+      </div>
+    </section>
+  </div>
+  <footer>
+    Questions or improvements? Share them via the project issue tracker.
+  </footer>
+</body>
+</html>
