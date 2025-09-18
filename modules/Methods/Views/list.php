@@ -5,10 +5,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('head') ?>
-<?= link_tag("be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css") ?>
-<?= link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
-<?= link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
-<?= link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -20,18 +16,14 @@
                 <h1><?= lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li>
-                        <button class="btn btn-outline-info" id="moduleScan">
-                            <i class="fas fa-repeat"></i>Modül Tara
-                        </button>
-                    </li>
-                    <li>
-                        <a href="<?= route_to('methodCreate') ?>" class="btn btn-outline-success">
-                            <?= lang('Backend.add') ?>
-                        </a>
-                    </li>
-                </ol>
+                <div class="btn-group float-sm-right" role="group" aria-label="Basic example">
+                    <button class="btn btn-outline-info" id="moduleScan">
+                        <i class="fas fa-recycle"></i> Modül Tara
+                    </button>
+                    <a href="<?= route_to('methodCreate') ?>" class="btn btn-outline-success">
+                        <?= lang('Backend.add') ?>
+                    </a>
+                </div>
             </div>
         </div>
     </div><!-- /.container-fluid -->
@@ -212,6 +204,7 @@
                                             <label class="toggle-switch page-toggle">
                                                 <input type="checkbox" <?= $page->isActive ? 'checked' : '' ?>>
                                                 <span class="toggle-slider"></span>
+                                                <a href="<?= route_to('methodUpdate', $page->id) ?>" class="btn btn-info float-right mt-3 btn-sm"><?= lang('Backend.update') ?></a>
                                             </label>
                                         </div>
                                 <?php endforeach;
@@ -231,16 +224,11 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('javascript') ?>
-<?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
 <script>
     $('#moduleScan').on('click', function() {
         $.ajax({
             url: '<?= route_to('moduleScan') ?>',
             type: 'POST',
-            data: {
-                page_id: pageItem.data('page-id'),
-                status: this.checked ? 'active' : 'inactive'
-            },
             beforeSend: function() {
                 Swal.fire({
                     title: 'Modüller yükleniyor...',
@@ -252,9 +240,11 @@
             },
             success: function(response) {
                 if (response.result === true) {
-                    Swal.fire('Modüller başarı ile yüklendi.', '', 'success');
+                    Swal.fire('Modüller başarı ile yüklendi.', '', 'success').then((result) => {
+                        if (result.isConfirmed) location.reload();
+                    });;
                 } else {
-                    Swal.fire('Modüller yüklenemedi', '', 'error');
+                    Swal.fire('Yeni Modül Bulunamadı', 'Yeni modül bulunmadığı için ekleme yapılmadı.', 'warning');
                 }
             },
             error: function() {

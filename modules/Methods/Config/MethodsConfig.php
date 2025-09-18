@@ -11,6 +11,7 @@ class MethodsConfig extends \CodeIgniter\Config\BaseConfig{
         'backend/methods/createFolder',
         'backend/methods/moveFileOrFolder',
         'backend/methods/deleteFileOrFolder',
+        'backend/methods/moduleScan',
     ];
 
     public $filters=[

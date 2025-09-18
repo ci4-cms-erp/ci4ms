@@ -8,7 +8,6 @@
 <?= link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
 <?= link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
 <?= link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
-<?= link_tag("be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css") ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -76,7 +75,6 @@
 <?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
 <?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
 <?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
-<?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
 <script>
     let isApprove = true;
     var table = $("#example1").DataTable({

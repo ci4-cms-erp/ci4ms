@@ -13,6 +13,7 @@
         href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- Font Awesome -->
     <?= link_tag("be-assets/plugins/fontawesome-free/css/all.min.css") ?>
+    <?= link_tag('be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') ?>
     <!-- Theme style -->
     <?= link_tag("be-assets/css/adminlte.min.css") ?>
     <?= link_tag("be-assets/custom.css") ?>
@@ -142,6 +143,7 @@
     <?= script_tag("be-assets/js/adminlte.min.js") ?>
     <!-- AdminLTE for demo purposes -->
     <?= script_tag("be-assets/js/demo.js") ?>
+    <?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
     <?= $this->renderSection('javascript') ?>
 </body>
 

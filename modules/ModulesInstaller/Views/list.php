@@ -22,11 +22,14 @@
                 <h1><?= lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
+                <div class="btn-group float-sm-right" role="group" aria-label="Basic example">
+                    <a href="<?= route_to('uploadModule') ?>" class="btn btn-outline-success" data-toggle="modal" data-target="#modal-default">
+                        <i class="fas fa-plus"></i> Modül Ekle
+                    </a>
+                </div>
                 <ol class="breadcrumb float-sm-right">
                     <li>
-                        <a href="<?= route_to('uploadModule') ?>" class="btn btn-outline-success" data-toggle="modal" data-target="#modal-default">
-                            <i class="fas fa-plus"></i> Modül Ekle
-                        </a>
+
                     </li>
                 </ol>
             </div>
@@ -40,7 +43,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang( $title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?= lang($title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">

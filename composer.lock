@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ab4e5463035971f05621beca95cfdb50",
+    "content-hash": "79a414d1c50d5594214a8a2affdf6f05",
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
@@ -48,6 +48,123 @@
                 "source": "https://github.com/bertugfahriozer/ci4mongodblibrary"
             },
             "time": "2025-05-26T20:07:27+00:00"
+        },
+        {
+            "name": "bertugfahriozer/sql2migration",
+            "version": "v1.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bertugfahriozer/sql2migration.git",
+                "reference": "673353dd75339444e88eccca8c2d2fa12308d21d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bertugfahriozer/sql2migration/zipball/673353dd75339444e88eccca8c2d2fa12308d21d",
+                "reference": "673353dd75339444e88eccca8c2d2fa12308d21d",
+                "shasum": ""
+            },
+            "require": {
+                "codeigniter4/framework": "^4.0",
+                "php": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "codeigniter": {
+                    "commands": [
+                        "bertugfahriozer\\sql2migration\\Commands\\SqlToMigration"
+                    ],
+                    "namespace": "bertugfahriozer\\sql2migration"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "sql2migration\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bertuğ Fahri ÖZER",
+                    "email": "bertugfahriozer@gmail.com",
+                    "homepage": "https://bertugfahriozer.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Spark command for CodeIgniter 4 that generates migration files from an SQL file, with support for foreign keys, triggers, and DB prefix.",
+            "homepage": "https://github.com/bertugfahriozer/sql2migration",
+            "keywords": [
+                "codeigniter4",
+                "migration",
+                "spark",
+                "sql-to-migration"
+            ],
+            "support": {
+                "issues": "https://github.com/bertugfahriozer/sql2migration/issues",
+                "source": "https://github.com/bertugfahriozer/sql2migration/tree/v1.0.3"
+            },
+            "time": "2025-09-17T05:41:41+00:00"
+        },
+        {
+            "name": "ci4-cms-erp/ext_module_generator",
+            "version": "v1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ci4-cms-erp/ext_module_generator.git",
+                "reference": "9d397e616f7ae217a2a55660a31a131e6a81f1e8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ci4-cms-erp/ext_module_generator/zipball/9d397e616f7ae217a2a55660a31a131e6a81f1e8",
+                "reference": "9d397e616f7ae217a2a55660a31a131e6a81f1e8",
+                "shasum": ""
+            },
+            "require": {
+                "codeigniter4/framework": "^4.0",
+                "php": "^8.1"
+            },
+            "type": "library",
+            "extra": {
+                "codeigniter": {
+                    "commands": [
+                        "ci4-cms-erp\\ext_module_generator\\Commands\\ModuleGenerator"
+                    ],
+                    "namespace": "ci4-cms-erp\\ext_module_generator"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ext_module_generator\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bertuğ Fahri ÖZER",
+                    "email": "bertugfahriozer@gmail.com",
+                    "homepage": "https://bertugfahriozer.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Spark command for CodeIgniter 4 that generates a modular structure for the ci4ms framework, including controllers, views, routes, and language files.",
+            "homepage": "https://github.com/ci4-cms-erp/ext_module_generator",
+            "keywords": [
+                "ci4ms",
+                "codeigniter4",
+                "module",
+                "module-generator",
+                "spark"
+            ],
+            "support": {
+                "issues": "https://github.com/ci4-cms-erp/ext_module_generator/issues",
+                "source": "https://github.com/ci4-cms-erp/ext_module_generator/tree/v1.1.1"
+            },
+            "time": "2025-09-17T22:20:22+00:00"
         },
         {
             "name": "claviska/simpleimage",
@@ -646,6 +763,57 @@
                 "source": "https://github.com/php-fig/log/tree/3.0.2"
             },
             "time": "2024-09-11T13:17:53+00:00"
+        },
+        {
+            "name": "seunmatt/codeigniter-log-viewer",
+            "version": "2.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/SeunMatt/codeigniter-log-viewer.git",
+                "reference": "043b5c58bac65eeb9c536216c8d8d97b82abf08c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/SeunMatt/codeigniter-log-viewer/zipball/043b5c58bac65eeb9c536216c8d8d97b82abf08c",
+                "reference": "043b5c58bac65eeb9c536216c8d8d97b82abf08c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "CILogViewer\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Miguel Martinez",
+                    "email": "rodilla@gmail.com"
+                },
+                {
+                    "name": "Seun Matt",
+                    "email": "smatt382@gmail.com"
+                }
+            ],
+            "description": "This is a simple Log Viewer for viewing CodeIgniter log files on the browser",
+            "keywords": [
+                "CI4",
+                "Code Igniter",
+                "Code Igniter 4",
+                "log viewer",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/SeunMatt/codeigniter-log-viewer/issues",
+                "source": "https://github.com/SeunMatt/codeigniter-log-viewer/tree/2.0.1"
+            },
+            "time": "2022-10-09T06:17:17+00:00"
         },
         {
             "name": "studio-42/elfinder",

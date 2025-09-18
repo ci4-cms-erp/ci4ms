@@ -31,6 +31,14 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required'],
             ]);
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            $roles = $this->request->getPost('typeOfPermissions');
+            $r = [
+                'create_r' => in_array('create', $roles),
+                'update_r' => in_array('update', $roles),
+                'read_r' => in_array('read', $roles),
+                'delete_r' => in_array('delete', $roles),
+            ];
+            $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
             if ($this->commonModel->create('auth_permissions_pages', [
                 'pagename' => $this->request->getPost('pagename'),
                 'description' => $this->request->getPost('description') ?? '',
@@ -65,6 +73,14 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required']
             ]);
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            $roles = $this->request->getPost('typeOfPermissions');
+            $r = [
+                'create_r' => in_array('create', $roles),
+                'update_r' => in_array('update', $roles),
+                'read_r' => in_array('read', $roles),
+                'delete_r' => in_array('delete', $roles),
+            ];
+            $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
             if ($this->commonModel->edit('auth_permissions_pages', [
                 'pagename' => $this->request->getPost('pagename'),
                 'description' => $this->request->getPost('description') ?? '',
@@ -77,7 +93,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'symbol' => $this->request->getPost('symbol') ?? NULL,
                 'inNavigation' => (bool)$this->request->getPost('inNavigation') == true ? 1 : 0,
                 'isBackoffice' => (bool)$this->request->getPost('isBackoffice') == true ? 1 : 0,
-                'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
+                'typeOfPermissions' => $roles
             ], ['id' => $pk])) {
                 $id = $this->defData['logged_in_user']->id;
                 cache()->delete("{$id}_permissions");
@@ -86,12 +102,15 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 return redirect()->back()->withInput()->with('error', 'Kayıt eklenirken bir hata oluştu');
         }
         $this->defData['method'] = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pk]);
-        $this->defData['methods'] = $this->commonModel->lists('auth_permissions_pages', '*', ['id!=' => $pk]);
+        $this->defData['methods'] = $this->commonModel->lists('auth_permissions_pages', '*', ['id!=' => $pk,'inNavigation'=>true],'pagename ASC');
+        $this->defData['modules'] = $this->commonModel->lists('modules');
+        $this->defData['permPages'] = $this->commonModel->lists('auth_permissions_pages');
         return view('Modules\Methods\Views\update', $this->defData);
     }
 
     public function moduleScan()
     {
+        if (!$this->request->isAJAX()) return $this->failForbidden();
         $sortByHandler = $this->request->getGet('sortBy') === 'handler';
         $host = $this->request->getGet('host');
 
@@ -277,20 +296,21 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
         $insertBach = [];
         if (!empty($uniqueKeys)) {
+            $module_id=null;
             foreach ($uniqueKeys as $uniqueKey) {
-                $module_id = $this->commonModel->selectOne('modules', ['name' => $uniqueKey['module'], 'id']);
-                if (empty($module_id)) {
+                $module_id = $this->commonModel->selectOne('modules', ['name' => $tbody[$uniqueKey]['module']],'id');
+                if (empty($module_id->id)) {
                     $module_id->id = $this->commonModel->create('modules', [
-                        'name' => $uniqueKey['module'],
+                        'name' => $tbody[$uniqueKey]['module'],
                         'isActive' => true
                     ]);
                 }
                 $insertBach[] = [
-                    'pagename' => $uniqueKey['pagename'],
-                    'className' => $uniqueKey['className'],
-                    'methodName' => $uniqueKey['methodName'],
-                    'seflink' => $uniqueKey['seflink'],
-                    'typeOfPermissions' => $uniqueKey['typeOfPermissions'],
+                    'pagename' => $tbody[$uniqueKey]['pagename'],
+                    'className' => $tbody[$uniqueKey]['className'],
+                    'methodName' => $tbody[$uniqueKey]['methodName'],
+                    'seflink' => $tbody[$uniqueKey]['seflink'],
+                    'typeOfPermissions' => $tbody[$uniqueKey]['typeOfPermissions'],
                     'module_id' => $module_id->id,
                     'isBackoffice' => 1,
                     'isActive' => 1

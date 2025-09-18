@@ -16,7 +16,9 @@
                 <h1><?= lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right"></ol>
+                <ol class="breadcrumb float-sm-right">
+                    <a href="<?= route_to('list') ?>" class="btn btn-outline-info"><?=lang('Backend.backToList')?></a>
+                </ol>
             </div>
         </div>
     </div><!-- /.container-fluid -->
@@ -47,7 +49,7 @@
                     <input type="text" name="description" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Sınıf Adı</label>
+                    <label for="">Kontrolcü</label>
                     <input type="text" name="className" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
@@ -63,12 +65,25 @@
                     <input type="number" name="pageSort" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Sembol <small>(FontAwesome 5)</small></label>
+                    <label for="">Sembol <small><a href="https://fontawesome.com/v5/icons#packs" target="_blank">(FontAwesome 5)</a></small></label>
                     <input type="text" name="symbol" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Yetki</label>
-                    <input type="text" name="typeOfPermissions" class="form-control" required>
+                    <div class="w-100 btn-group btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-outline-success">
+                            <input type="checkbox" name="typeOfPermissions[]" value="create" autocomplete="off"> Create
+                        </label>
+                        <label class="btn btn-outline-secondary">
+                            <input type="checkbox" name="typeOfPermissions[]" value="read" autocomplete="off"> Read
+                        </label>
+                        <label class="btn btn-outline-info">
+                            <input type="checkbox" name="typeOfPermissions[]" value="update" autocomplete="off"> Update
+                        </label>
+                        <label class="btn btn-outline-danger">
+                            <input type="checkbox" name="typeOfPermissions[]" value="delete" autocomplete="off"> Delete
+                        </label>
+                    </div>
                 </div>
                 <div class="form-group col-md-4">
                     <label for="">Üst Sayfası</label>
@@ -88,22 +103,17 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="form-group col-md-3">
-                    <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input" value="1" name="inNavigation" type="checkbox" id="inNavigation">
-                        <label for="inNavigation" class="custom-control-label">Menüde mi ?</label>
-                    </div>
-                </div>
-                <div class="form-group col-md-3">
-                    <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input" value="1" name="isBackoffice" type="checkbox" id="isBackoffice" checked>
-                        <label for="isBackoffice" class="custom-control-label">Panelde mi ?</label>
-                    </div>
-                </div>
-                <div class="form-group col-md-3">
-                    <div class="custom-control custom-checkbox">
-                        <input class="custom-control-input" value="1" name="hasChild" type="checkbox" id="hasChild">
-                        <label for="hasChild" class="custom-control-label">Alt sayfası var mı ?</label>
+                <div class="form-group col-md-9 d-flex align-items-end">
+                    <div class="w-100 btn-group btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-outline-primary">
+                            <input class="custom-control-input" value="1" name="inNavigation" type="checkbox" id="inNavigation"> Menüde mi ?
+                        </label>
+                        <label class="btn btn-outline-primary active">
+                            <input class="custom-control-input" value="1" name="isBackoffice" type="checkbox" id="isBackoffice" checked> Panelde mi ?
+                        </label>
+                        <label class="btn btn-outline-primary">
+                            <input class="custom-control-input" value="1" name="hasChild" type="checkbox" id="hasChild"> Alt sayfası var mı ?
+                        </label>
                     </div>
                 </div>
                 <div class="form-group col-md-12">
@@ -119,7 +129,7 @@
 <?= $this->section('javascript') ?>
 <?= script_tag('be-assets/plugins/select2/js/select2.full.min.js') ?>
 <script>
-    $('#parentPk').select2({
+    $('.select2').select2({
         theme: 'bootstrap4'
     });
 </script>
