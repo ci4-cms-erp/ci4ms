@@ -79,7 +79,9 @@ Key config files:
 The project depends on CodeIgniter 4 and several packages that power key features:
 - `bertugfahriozer/ci4commonmodel` – Database abstraction helpers used across modules.
 - `bertugfahriozer/sql2migration` – CLI tooling for migrations.
-- `ci4-cms-erp/ext_module_generator` – Module scaffolding support.
+- `ci4-cms-erp/ext_module_generator` – Module scaffolding support exposed as `php spark make:module`.
+- `claviska/simpleimage` – Image manipulation utilities for media uploads and WebP conversion.
+- `seunmatt/codeigniter-log-viewer` – Backend log viewer integration.
 - `gregwar/captcha`, `jasongrimes/paginator`, `melbahja/seo`, `phpmailer/phpmailer`, `studio-42/elfinder` – Authentication visuals, pagination, SEO metadata, mail transport, media manager.
 
 Install/update:
@@ -131,7 +133,7 @@ Add a linter (PHP-CS-Fixer, Pint) if you need formatting automation.
 - Clear cached permission keys (`{userId}_permissions`) after changes: `php spark cache:clear` or `cache()->delete("{$id}_permissions")`.
 
 Recommended workflow when adding a module:
-1. Scaffold with `php spark module:create <Name>`.
+1. Scaffold with `php spark make:module <Name>` (provided by `ci4-cms-erp/ext_module_generator`).
 2. Add routes in `modules/<Name>/Config/Routes.php` (include `role` metadata).
 3. Implement controllers/models/views.
 4. Register permissions (module scan or manual).
@@ -190,7 +192,7 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 ## 11. Debugging Tips
 
 - Enable the toolbar in development via `.env`: `CI_ENVIRONMENT = development`.
-- Logs reside in `writable/logs/`. Always confirm the directory is writable; check the daily log file for stack traces.
+- Logs reside in `writable/logs/`. Always confirm the directory is writable; check the daily log file for stack traces or use the backend log viewer at `/backend/logs`.
 - Cache issues? Clear with `php spark cache:clear` or delete cache files in `writable/cache/`.
 - Database migrations failing? Inspect `writable/logs/` and confirm the migration batch table `ci_migrations` is in sync.
 - Mail issues? Use the `Modules\Settings\Controllers\Settings::testMail()` endpoint (AJAX) after configuring SMTP.

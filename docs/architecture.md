@@ -42,7 +42,7 @@ Each module (under `modules/<Name>/`) includes:
 - `Views/` for backend UI templates.
 - Optional `Libraries/`, `Helpers/`, `Language/`, `Filters/`, `Database/` directories.
 
-Use `php spark module:create Foo` to scaffold a new module skeleton.
+Use `php spark make:module Foo` (provided by `ci4-cms-erp/ext_module_generator`) to scaffold a new module skeleton.
 
 ## Installation flow
 - **Web installer** (`Modules\Install`):
@@ -69,12 +69,14 @@ Use `php spark module:create Foo` to scaffold a new module skeleton.
   - Loads categories/tags, authors, breadcrumbs, and comment data.
 - Blog/Pages modules store SEO data as JSON (`coverImage`, `description`, `keywords`).
 
-## Media & file management
+## Media, file management & logs
 - `Modules\Media` integrates elFinder, with MIME allowlist from settings and optional WebP conversion (`claviska/simpleimage`).
 - `Modules\Fileeditor` provides project-level file browse/edit operations with `realpath` guardrails.
+- `Modules\Logs` wraps `seunmatt/codeigniter-log-viewer` so administrators can inspect `writable/logs/` from `/backend/logs` without shell access.
 
 ## CLI & automation
-- `app/Commands/*` includes module scaffolding (`ModuleCreate`), backend generators (`make:acontroller`, etc.), and route regeneration (`create:route`).
+- `app/Commands/*` includes backend generators (`make:acontroller`, etc.) and route regeneration (`create:route`).
+- Module scaffolding is provided by the Composer package `ci4-cms-erp/ext_module_generator` via `php spark make:module`.
 - `Modules\Methods::moduleScan()` inspects the router to align routes with permission records.
 
 ## Development tips

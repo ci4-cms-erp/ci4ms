@@ -323,7 +323,7 @@ php spark create:route</code></pre>
       <div class="grid two">
         <div>
           <h3>Composer</h3>
-          <p>Core packages include <code>ci4commonmodel</code>, <code>sql2migration</code>, <code>ext_module_generator</code>, <code>gregwar/captcha</code>, <code>melbahja/seo</code>, <code>phpmailer/phpmailer</code>, and <code>studio-42/elfinder</code>.</p>
+          <p>Core packages include <code>ci4commonmodel</code>, <code>sql2migration</code>, <code>ext_module_generator</code> (exposes <code>php spark make:module</code>), <code>claviska/simpleimage</code>, <code>seunmatt/codeigniter-log-viewer</code>, <code>gregwar/captcha</code>, <code>melbahja/seo</code>, <code>phpmailer/phpmailer</code>, and <code>studio-42/elfinder</code>.</p>
           <pre><code>composer install
 composer update vendor/package
 composer outdated</code></pre>
@@ -357,7 +357,7 @@ npm install
       <p>Permissions are stored in <code>auth_permissions_pages</code> (CRUD JSON flags) and <code>auth_users_permissions</code> (overrides). The <code>Modules\Methods\Controllers\Methods::moduleScan()</code> command inspects routes and helps keep permissions in sync.</p>
       <p><strong>Workflow for a new module:</strong></p>
       <ol>
-        <li>Scaffold with <code>php spark module:create &lt;Name&gt;</code>.</li>
+        <li>Scaffold with <code>php spark make:module &lt;Name&gt;</code> (provided by <code>ext_module_generator</code>).</li>
         <li>Define routes in <code>modules/&lt;Name&gt;/Config/Routes.php</code> with <code>role</code> metadata.</li>
         <li>Implement controllers, models, views.</li>
         <li>Update permissions (run module scan or insert records manually).</li>
@@ -423,7 +423,7 @@ npm install
       <h2>11. Debugging Tips</h2>
       <ul>
         <li>Enable the debug toolbar via <code>CI_ENVIRONMENT=development</code>.</li>
-        <li>Logs reside in <code>writable/logs/</code>; ensure permissions allow writing.</li>
+        <li>Logs reside in <code>writable/logs/</code>; ensure permissions allow writing or inspect them via the backend viewer at <code>/backend/logs</code>.</li>
         <li>Clear cache via <code>php spark cache:clear</code> or delete contents of <code>writable/cache/</code>.</li>
         <li>Migration issues? Check logs and the <code>ci_migrations</code> table for batch sync.</li>
         <li>Mail issues? Trigger the AJAX <em>Test Mail</em> button in Settings after configuring SMTP.</li>
@@ -470,7 +470,7 @@ npm install
       <h2>Ship with Confidence</h2>
       <p>CI4MS is engineered for extensibility. Keep this page bookmarked, share it with the team, and iterate responsibly.</p>
       <div class="action-buttons">
-        <a class="btn primary" href="../README.md" target="_blank" rel="noopener">Project README</a>
+        <a class="btn primary" href="https://github.com/ci4-cms-erp/ci4ms/blob/master/README.md" target="_blank" rel="noopener">Project README</a>
         <a class="btn secondary" href="./architecture.html" target="_blank" rel="noopener">Architecture Companion</a>
       </div>
     </section>

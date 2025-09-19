@@ -218,7 +218,7 @@
         <li><code>Controllers/</code> – usually extend the backend base controller.</li>
         <li><code>Models/</code>, <code>Views/</code>, optional <code>Libraries/</code>, <code>Helpers/</code>, <code>Language/</code>, <code>Filters/</code>, <code>Database/</code>.</li>
       </ul>
-      <p>Scaffold new modules with <code>php spark module:create Foo</code> and follow up with routes, implementation, and permissions.</p>
+      <p>Scaffold new modules with <code>php spark make:module Foo</code> (from <code>ci4-cms-erp/ext_module_generator</code>) and follow up with routes, implementation, and permissions.</p>
     </section>
 
     <section class="panel">
@@ -270,20 +270,22 @@
     </section>
 
     <section class="panel">
-      <h2>Media &amp; File Management</h2>
+      <h2>Media, File Management &amp; Logs</h2>
       <ul>
         <li><code>Modules\Media</code> integrates elFinder with MIME allowlists, trash handling, and optional WebP conversion via <code>claviska/simpleimage</code>.</li>
         <li><code>Modules\Fileeditor</code> offers in-project file browsing/editing secured by <code>realpath</code> checks.</li>
+        <li><code>Modules\Logs</code> wraps <code>seunmatt/codeigniter-log-viewer</code> so admins can inspect <code>writable/logs/</code> from <code>/backend/logs</code> without shell access.</li>
       </ul>
     </section>
 
     <section class="panel">
       <h2>CLI &amp; Automation</h2>
       <ul>
-        <li><code>app/Commands/*</code> contains module scaffolds (<code>ModuleCreate</code>), admin generators (<code>make:acontroller</code>, <code>make:amodel</code>, <code>make:abview</code>), and route regeneration (<code>create:route</code>).</li>
+        <li><code>app/Commands/*</code> contains admin generators (<code>make:acontroller</code>, <code>make:amodel</code>, <code>make:abview</code>) and route regeneration (<code>create:route</code>).</li>
+        <li>Module scaffolding is provided by the Composer package <code>ci4-cms-erp/ext_module_generator</code> via <code>php spark make:module</code>.</li>
         <li><code>Modules\Methods::moduleScan()</code> inspects the router and aligns permissions with available routes.</li>
-      </ul>
-    </section>
+     </ul>
+   </section>
 
     <section class="panel">
       <h2>Development Tips</h2>

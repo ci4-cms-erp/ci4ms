@@ -6,9 +6,9 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - Authentication & RBAC: `Modules\Auth` handles user login, lockouts, and password resets, while permissions map to `auth_permissions_pages` records.
 - Modular backend: Each feature ships as an independent module (Blog, Pages, Menu, Media, Users, Settings, Theme, etc.) under `modules/*`.
 - Flexible content management: Page and blog entries include SEO metadata, categories, tags, and full comment workflows.
-- Media & files: Includes elFinder-powered media management and a built-in file editor.
+- Media & files: Includes elFinder-powered media management, a built-in file editor, and an in-panel log viewer.
 - Theme system: The `public/templates/*` structure and the `Modules\Theme` module enable installing or upgrading themes from ZIP packages.
-- Setup & automation: Offers a web-based installer (`/install`) plus CLI commands for default data seeding, automatic route generation, and module scaffolding.
+- Setup & automation: Offers a web-based installer (`/install`) plus CLI commands for default data seeding, automatic route generation, and module scaffolding via `php spark make:module`.
 - SEO helpers: `Ci4msseoLibrary` builds meta tags and JSON-LD, while `CommonLibrary` centralizes email, breadcrumbs, and inline shortcode utilities.
 
 ## Requirements
@@ -17,7 +17,10 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - MySQL/MariaDB (or any CodeIgniter 4-supported driver)
 - Writable directories: `writable/`, `public/uploads/`, optionally `public/templates/`
 
-See `composer.json` for the full dependency list (e.g. `bertugfahriozer/ci4commonmodel`, `gregwar/captcha`, `jasongrimes/paginator`, `melbahja/seo`, `studio-42/elfinder`, `phpmailer/phpmailer`).
+See `composer.json` for the full dependency list (e.g. `bertugfahriozer/ci4commonmodel`, `bertugfahriozer/sql2migration`, `ci4-cms-erp/ext_module_generator`, `claviska/simpleimage`, `seunmatt/codeigniter-log-viewer`, `gregwar/captcha`, `jasongrimes/paginator`, `melbahja/seo`, `studio-42/elfinder`, `phpmailer/phpmailer`).
+
+# 🪴 Project Activity
+![Alt](https://repobeats.axiom.co/api/embed/9f2631ce1dcfae3db84f5113fea08ac0c7ae8d29.svg "Repobeats analytics image")
 
 ## Installation
 ### Fresh Project (recommended)
@@ -63,7 +66,7 @@ Access the backend via: `https://<domain>/backend`
 ## Directory Layout
 - `app/Controllers/Home.php` — Handles front-end pages, blog listings, details, and comments.
 - `app/Libraries/` — Shared helpers (email, SEO, shortcodes).
-- `app/Commands/` — CLI tooling (`module:create`, `make:a*`, `create:route`).
+- `app/Commands/` — CLI tooling (`make:a*`, `create:route`).
 - `app/Filters/Ci4ms.php` — Install guard, maintenance mode redirect, menu cache.
 - `modules/*` — Each module includes its own `Config/Routes.php`, `Controllers`, `Models`, `Views`, `Language`, `Libraries`, `Filters`.
 - `public/templates/` — Theme assets; each theme requires `info.xml` and `screenshot.png`.
@@ -82,6 +85,7 @@ Access the backend via: `https://<domain>/backend`
 | Settings | System configuration | Company/social/mail settings, encrypted SMTP password |
 | Users | User & role management | Group-based permissions, reset tracking |
 | Methods | Route → permission mapping | Module toggling, router scan |
+| Logs | Log viewer | Browses CodeIgniter log files inside the backend |
 | ModulesInstaller | Module ZIP installer | Upload + cache invalidation |
 | Theme | Theme manager | ZIP upload, duplicate folder checks |
 | Install | Web installer | Creates `.env`, triggers migrations |
@@ -89,7 +93,7 @@ Access the backend via: `https://<domain>/backend`
 See `docs/architecture.md` for deeper architectural notes.
 
 ## CLI Commands
-- `php spark module:create Blog` — Scaffolds a module (`Controllers`, `Models`, `Views`, `Config/Routes.php`).
+- `php spark make:module Blog` — Scaffolds a module (`Config`, `Controllers`, `Views`, language files, etc.).
 - `php spark make:acontroller Example` — Generates a backend controller template.
 - `php spark make:amodel Example` — Generates a backend model (with options for table, return type).
 - `php spark make:abview dashboard` — Generates a backend view from the AdminLTE template.
@@ -99,7 +103,7 @@ See `docs/architecture.md` for deeper architectural notes.
 ## Developer Notes
 - **Cache keys**: `settings` (24h), `menus` (menu tree, 24h), `{userId}_permissions`. Clear with `php spark cache:clear` or `cache()->delete()`.
 - **Base controller**: Extend `Modules\Backend\Controllers\BaseController` for new backend controllers; it prepares session user, navigation, mail settings, and shared data.
-- **Permissions**: Remember to register new secured routes in `Modules\Methods` (or via the database) so the permission filter recognizes them.
+- **Permissions**: Remember to register new secured routes in `Modules\Methods` (or via the database) so the permission filter recognizes them. The backend log viewer lives under `/backend/logs` and follows the same permission model.
 - **Slug generation**: `seflink()` handles transliteration (including Turkish characters).
 - **Form security**: Global CSRF is enabled; backend AJAX endpoints opt out via `BackendConfig::$csrfExcept`.
 - **Comment moderation**: `CommonLibrary::commentBadwordFiltering` handles bad word filtering and moderation rules.
