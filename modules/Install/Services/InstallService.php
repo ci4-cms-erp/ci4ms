@@ -40,7 +40,8 @@ class InstallService
             array('id' => '8', 'name' => 'Pages', 'isActive' => '1', 'icon' => 'fas fa-file-alt'),
             array('id' => '9', 'name' => 'Settings', 'isActive' => '1', 'icon' => 'fas fa-cog'),
             array('id' => '10', 'name' => 'Theme', 'isActive' => '1', 'icon' => 'fas fa-palette'),
-            array('id' => '11', 'name' => 'Users', 'isActive' => '1', 'icon' => 'fas fa-users')
+            array('id' => '11', 'name' => 'Users', 'isActive' => '1', 'icon' => 'fas fa-users'),
+            array('id' => '12', 'name' => 'Logs', 'isActive' => '1', 'icon' => 'fas fa-file-alt')
         ));
 
         $commonModel->createMany(
