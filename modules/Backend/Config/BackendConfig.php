@@ -35,7 +35,7 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
 
     public $filters=[
         'backendAfterLoginFilter' => ['before' => [
-            'backend','backend/test',
+            'backend',
             'backend/tagify','backend/checkSeflink','backend/isActive',
             'backend/maintenance','backend/locked/*','backend/profile',
         ]]];

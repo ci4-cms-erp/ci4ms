@@ -10,6 +10,6 @@ $routes->group('backend/settings', ['namespace' => 'Modules\Settings\Controllers
     $routes->post('saveAllowedFiles', 'Settings::saveAllowedFiles', ['as' => 'saveAllowedFiles','role'=>'update']);
     $routes->get('templateSettings', 'Settings::templateSettings', ['as' => 'templateSettings','role'=>'update']);
     $routes->post('templateSettings_post', 'Settings::templateSettings_post', ['as' => 'templateSettings_post','role'=>'update']);
-    $routes->post('elfinderConvertWebp', 'AJAX::elfinderConvertWebp', ['as' => 'elfinderConvertWebp','role'=>'update']);
+    $routes->post('elfinderConvertWebp', 'Settings::elfinderConvertWebp', ['as' => 'elfinderConvertWebp','role'=>'update']);
     $routes->post('testMail', 'Settings::testMail', ['as' => 'testMail','role'=>'read']);
 });

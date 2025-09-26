@@ -109,23 +109,24 @@ class Filters extends BaseFilters
 
     private string $modulesPath = ROOTPATH . 'modules/';
     private $commonModel;
+    private $settings;
     public function __construct()
     {
         parent::__construct();
         if (file_exists(ROOTPATH . '.env')) {
             $this->commonModel = new CommonModel();
             if (empty(cache('settings')) && $this->commonModel->db->tableExists('settings')) {
-                $settings = $this->commonModel->lists('settings');
+                $this->settings = $this->commonModel->lists('settings');
                 $set = [];
                 $formatRules = new \CodeIgniter\Validation\FormatRules();
-                foreach ($settings as $setting) {
+                foreach ($this->settings as $setting) {
                     if ($formatRules->valid_json($setting->content) === true)
                         $set[$setting->option] = (object)json_decode($setting->content, JSON_UNESCAPED_UNICODE);
                     else $set[$setting->option] = $setting->content;
                 }
                 cache()->save('settings', $set, 86400);
-                $settings = (object)$set;
-            } else $settings = (object)cache('settings');
+                $this->settings = (object)$set;
+            } else $this->settings = (object)cache('settings');
         }
 
         $modules = array_filter(scandir($this->modulesPath), function ($module) {
@@ -139,8 +140,8 @@ class Filters extends BaseFilters
             }
         }
 
-        if (!empty($settings) && isset($settings->templateInfos) && isset($settings->templateInfos->path))
-            $mods[] = APPPATH . 'Filters/templates/' . $settings->templateInfos->path;
+        if (!empty($this->settings) && isset($this->settings->templateInfos) && isset($this->settings->templateInfos->path))
+            $mods[] = APPPATH . 'Filters/templates/' . $this->settings->templateInfos->path;
 
         // Filtre klasörünü tara
         $this->loadDynamicFilters($mods);
@@ -234,10 +235,9 @@ class Filters extends BaseFilters
         $this->filters = array_merge($this->filters, $allFilters);
         $this->mergeCsrfExcept($allCsrfExcept);
         if (file_exists(ROOTPATH . '.env') && $this->commonModel->db->tableExists('settings')) {
-            $settings = (object) cache('settings');
-            $themeConfigPath = APPPATH . 'Config/templates/' . $settings->templateInfos->path;
-            if (file_exists($themeConfigPath) && is_file($themeConfigPath . '/' . ucfirst($settings->templateInfos->path) . 'Config.php')) {
-                $className = '\\Config\\templates\\' . $settings->templateInfos->path . '\\' . ucfirst($settings->templateInfos->path) . 'Config';
+            $themeConfigPath = APPPATH . 'Config/templates/' . $this->settings->templateInfos->path;
+            if (file_exists($themeConfigPath) && is_file($themeConfigPath . '/' . ucfirst($this->settings->templateInfos->path) . 'Config.php')) {
+                $className = '\\Config\\templates\\' . $this->settings->templateInfos->path . '\\' . ucfirst($this->settings->templateInfos->path) . 'Config';
                 $themeConfig = new $className();
 
                 if (!empty($themeConfig->csrfExcept)) {

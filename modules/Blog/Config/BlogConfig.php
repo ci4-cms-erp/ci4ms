@@ -3,7 +3,8 @@
 class BlogConfig extends \CodeIgniter\Config\BaseConfig
 {
     public $csrfExcept = [
-        'backend/blogs/comments/commentResponse'
+        'backend/blogs',
+        'backend/blogs/*'
     ];
 
     public $filters = ['backendAfterLoginFilter' => ['before' => [

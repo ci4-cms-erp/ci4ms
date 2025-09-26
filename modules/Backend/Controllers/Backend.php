@@ -13,9 +13,4 @@ class Backend extends BaseController
         ];
         return view('Modules\Backend\Views\welcome_message', $this->defData);
     }
-
-    public function test()
-    {
-        return 'çalışıyor';
-    }
 }

@@ -79,7 +79,7 @@ class BaseController extends Controller
             'SMTPHost' => $this->defData['settings']->mail->server,
             'SMTPPort' => $this->defData['settings']->mail->port,
             'SMTPUser' => $this->defData['settings']->mail->address,
-            'SMTPPass' => $this->encrypter->decrypt(base64_decode($this->defData['settings']->mail->password)),
+            //'SMTPPass' => $this->encrypter->decrypt(base64_decode($this->defData['settings']->mail->password)),
             'charset' => 'UTF-8',
             'mailtype' => 'html',
             'wordWrap' => 'true',

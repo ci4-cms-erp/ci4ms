@@ -133,8 +133,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             'tls' => false
         ];
         if ($this->request->getPost('mTls')) $data['tls'] = true;
+        cache()->delete('settings');
         $result = $this->commonModel->edit('settings', ['content' => json_encode($data)], ['option' => 'mail']);
-        cache()->save('settings', $this->commonModel->lists('settings'));
         if ((bool)$result === false) return redirect()->back()->withInput()->with('error', 'Mail Bilgileri Güncellenemedi.');
         else return redirect()->back()->with('message', 'Mail Bilgileri Güncellendi.');
     }
@@ -274,5 +274,20 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             cache()->delete('settings');
             return redirect()->back()->with('success', 'Tema Ayarları kayıt edildi.');
         } else return redirect()->back()->with('error', 'Tema Ayarları kayıt edilemedi');
+    }
+
+    public function elfinderConvertWebp()
+    {
+        if ($this->request->isAJAX()) {
+            $valData = ([
+                'isActive' => ['label' => 'isActive', 'rules' => 'required']
+            ]);
+            if ($this->validate($valData) == false) return redirect('403');
+            if ($this->commonModel->edit('settings', ['content' => (int)$this->request->getPost('isActive')], ['option' => 'elfinderConvertWebp'])){
+                cache()->delete('settings');
+                return $this->respond(['result' => (bool)$this->request->getPost('isActive')], 200);
+            } else
+                return $this->fail(['pr' => false]);
+        } else return $this->failForbidden();
     }
 }

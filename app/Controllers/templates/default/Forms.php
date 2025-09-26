@@ -30,32 +30,37 @@ class Forms extends \App\Controllers\BaseController
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $result = [];
-        $term=$this->request->getPost('term');
+        $term = $this->request->getPost('term');
         $results = $this->commonModel->lists('pages', '*', [], 'title ASC', 0, 0, ['title' => $this->request->getGet('term'), 'content' => $this->request->getGet('term')]);
-        $isTermOnlyInComments = function ($content, $term) {
-        // Yorumları bul
-        preg_match_all('/<!--(.*?)-->/s', $content, $matches);
-        $comments = implode(' ', $matches[1]); // Tüm yorumları birleştir
-
-        // Yorumları içerikten çıkar
-        $contentWithoutComments = preg_replace('/<!--.*?-->/s', '', $content);
-
-        // Eğer terim yalnızca yorumlarda varsa ve içerikte başka bir yerde yoksa
-        return stripos($comments, $term) !== false && stripos($contentWithoutComments, $term) === false;
-    };
-        if (!empty($results)) {
-            $results = array_filter($results, function ($page) use ($removeHtmlComments, $term) {
-                // Yorumları kaldır ve içeriği kontrol et
-                $cleanContent = $removeHtmlComments($page->content);
-                return stripos($cleanContent, $term) !== false; // Arama terimi temizlenmiş içerikte varsa
-            });
-            $pages = array_filter($results, function ($page) use ($isTermOnlyInComments, $term) {
-            // Eğer terim yalnızca yorumlarda varsa, bu veriyi yoksay
-            if ($isTermOnlyInComments($page->content, $term)) {
-                return false; // Yorumlarda bulundu, bu veriyi dahil etme
+        $filtered = array_values(array_filter($results, static function ($row) use ($term) {
+            $html = $row->content ?? '';         // HTML veriniz
+            if ($term === '') {
+                return true;                       // Boş terimde hepsini tut
             }
-            return true; // Yorumlarda bulunmadı veya içerikte de bulundu, bu veriyi dahil et
-        });
+
+            $commentPattern = '/<!--[\s\S]*?-->/';
+            preg_match_all($commentPattern, $html, $commentMatches);
+
+            $termInComments = false;
+            foreach ($commentMatches[0] ?? [] as $comment) {
+                if (stripos($comment, $term) !== false) {
+                    $termInComments = true;
+                    break;
+                }
+            }
+
+            $withoutComments = preg_replace($commentPattern, '', $html);
+            $termOutside     = stripos($withoutComments, $term) !== false;
+
+            return $termOutside || ! $termInComments;
+        }));
+        if (!empty($filtered)) {
+            $pages = array_map(function ($page) {
+                return [
+                    'value' => $page->title,
+                    'url' => '/' . $page->seflink
+                ];
+            }, $filtered);
             $result = array_merge($result, $pages);
         }
 
@@ -85,7 +90,7 @@ class Forms extends \App\Controllers\BaseController
         if (!empty($results)) {
             $tags = array_map(function ($page) {
                 return [
-                    'value' => '[kategori] ' . $page->tag,
+                    'value' => '[kategori] ' . $page->title,
                     'url' => '/category/' . $page->seflink
                 ];
             }, $results);
