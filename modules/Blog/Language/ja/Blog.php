@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'blog' => 'ブログモジュール',
+    'blogs' => '投稿',
+    'blogCreate' => 'ブログを作成する',
+    'blogUpdate' => 'ブログを更新',
+    'categories' => 'カテゴリー',
+    'categoryCreate' => 'カテゴリの作成',
+    'categoryUpdate' => 'カテゴリを更新する',
+    'parentCategory' => '親カテゴリ',
+    'commentList' => 'コメント',
+    'comment' => 'コメント',
+    'displayComment' => 'コメントを見る',
+    'badwords' => '禁止用語リスト',
+    'author' => '著者',
+    'tags' => 'タグ',
+    'tagCreate' => 'タグの作成',
+    'tagUpdate' => 'タグの更新',
+    'enableFiltering' => 'フィルタリングを有効にする',
+    'autoReject' => '自動拒否',
+    'autoAccept' => '自動承認',
+    'commentPublished' => 'ID #{0,number} のコメントが公開されました。',
+    'commentPublishError' => 'コメントは公開できません。もう一度試すか、ログを確認してください。',
+];

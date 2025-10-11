@@ -43,11 +43,11 @@
                     <thead>
                     <tr>
                         <th></th>
-                        <th>Name Surname</th>
-                        <th>E-mail</th>
-                        <th>Created At</th>
-                        <th>Status</th>
-                        <th>Process</th>
+                        <th><?=lang('Backend.fullName')?></th>
+                        <th><?=lang('Backend.email')?></th>
+                        <th><?=lang('Backend.createdAt')?></th>
+                        <th><?=lang('Backend.status')?></th>
+                        <th><?=lang('Backend.transactions')?></th>
                     </tr>
                     </thead>
                     <tbody>

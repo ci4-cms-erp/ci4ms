@@ -49,21 +49,21 @@ class Blog extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'title' => ['label' => 'Sayfa Başlığı', 'rules' => 'required'],
-                'seflink' => ['label' => 'Sayfa URL', 'rules' => 'required'],
-                'content' => ['label' => 'İçerik', 'rules' => 'required'],
-                'isActive' => ['label' => 'Yayın veya taslak', 'rules' => 'required'],
-                'categories' => ['label' => 'Kategoriler', 'rules' => 'required'],
-                'author' => ['label' => 'Yazar', 'rules' => 'required'],
-                'created_at' => ['label' => 'Oluşturulma Tarihi', 'rules' => 'required|valid_date[d.m.Y H:i:s]']
+                'title' => ['label' => lang('Backend.title'), 'rules' => 'required'],
+                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required'],
+                'content' => ['label' => lang('Backend.content'), 'rules' => 'required'],
+                'isActive' => ['label' => lang('Backend.publish').' / '.lang('Backend.draft'), 'rules' => 'required'],
+                'categories' => ['label' => lang('Blog.categories'), 'rules' => 'required'],
+                'author' => ['label' => lang('Blog.author'), 'rules' => 'required'],
+                'created_at' => ['label' => lang('Backend.createdAt'), 'rules' => 'required|valid_date[d.m.Y H:i:s]']
             ]);
             if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
-                $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
-                $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageimg'] = ['label' => lang('Backend.coverImage'), 'rules' => 'required'];
+                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => 'Seo Açıklaması', 'rules' => 'required'];
-            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => 'Seo Anahtar Kelimeleri', 'rules' => 'required'];
+            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
+            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
             if ($this->commonModel->isHave('blog', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
 
@@ -85,7 +85,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 }
                 if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', (string)$insertID, 'tags');
                 return redirect()->route('blogs', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı blog oluşturuldu.');
-            } else return redirect()->back()->withInput()->with('error', 'Blog oluşturulamadı.');
+            } else return redirect()->back()->withInput()->with('error', lang('Backend.created',[$data['title']]));
         }
         $this->defData['categories'] = $this->commonModel->lists('categories');
         $this->defData['authors'] = $this->commonModel->lists('users', '*', ['status' => 'active']);
@@ -100,21 +100,21 @@ class Blog extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'title' => ['label' => 'Sayfa Başlığı', 'rules' => 'required'],
-                'seflink' => ['label' => 'Sayfa URL', 'rules' => 'required'],
-                'content' => ['label' => 'İçerik', 'rules' => 'required'],
-                'isActive' => ['label' => 'Yayın veya taslak', 'rules' => 'required'],
-                'categories' => ['label' => 'Kategoriler', 'rules' => 'required'],
-                'author' => ['label' => 'Yazar', 'rules' => 'required'],
-                'created_at' => ['label' => 'Oluşturulma Tarihi', 'rules' => 'required|valid_date[d.m.Y H:i:s]']
+                'title' => ['label' => lang('Backend.title'), 'rules' => 'required'],
+                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required'],
+                'content' => ['label' => lang('Backend.content'), 'rules' => 'required'],
+                'isActive' => ['label' => lang('Backend.publish').' / '.lang('Backend.draft'), 'rules' => 'required'],
+                'categories' => ['label' => lang('Blog.categories'), 'rules' => 'required'],
+                'author' => ['label' => lang('Blog.author'), 'rules' => 'required'],
+                'created_at' => ['label' => lang('Backend.createdAt'), 'rules' => 'required|valid_date[d.m.Y H:i:s]']
             ]);
             if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
-                $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
-                $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageimg'] = ['label' => lang('Backend.coverImage'), 'rules' => 'required'];
+                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => 'Seo Açıklaması', 'rules' => 'required'];
-            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => 'Seo Anahtar Kelimeleri', 'rules' => 'required'];
+            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
+            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
             $info = $this->commonModel->selectOne('blog', ['id' => $id]);
             if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
@@ -136,8 +136,8 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                         $this->commonModel->create('blog_categories_pivot', ['blog_id' => $id, 'categories_id' => $item]);
                     }
                 }
-                return redirect()->route('blogs', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı blog güncellendi.');
-            } else return redirect()->back()->withInput()->with('error', 'Blog güncellenmedi.');
+                return redirect()->route('blogs', [1])->with('message', lang('Backend.updated',[$data['title']]));
+            } else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated',[$data['title']]));
         }
         $this->defData['tags'] = $this->model->limitTags_ajax(['tags_pivot.tagType' => 'blogs', 'tags_pivot.piv_id' => $id]);
         $t = [];
@@ -219,8 +219,8 @@ class Blog extends \Modules\Backend\Controllers\BaseController
 
     public function commentRemove(int $id)
     {
-        if ($this->commonModel->remove('comments', ['id' => $id])) return redirect()->route('comments')->with('warning', "The comment with an id of <strong>{$id}</strong> has been removed.");
-        else return redirect()->back()->withInput()->with('error', 'Comment cannot be removed. Please try again or check logs.');
+        if ($this->commonModel->remove('comments', ['id' => $id])) return redirect()->route('comments')->with('warning', lang('Backend.deleted',['#'.$id]));
+        else return redirect()->back()->withInput()->with('error', lang('Backend.notDeleted',['#'.$id]));
     }
 
     public function displayComment(int $id)
@@ -239,19 +239,17 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         $isApproved = (int)$this->request->getPost('options');
         if ($isApproved === 1) {
             if ($this->commonModel->edit('comments', ['isApproved' => $isApproved], ['id' => $id])) {
-                $message = "The comment with an id of {$id} has been published.";
-                return redirect()->route('comments')->with('message', $message);
+                $message = ;
+                return redirect()->route('comments')->with('message', lang('Blog.commentPublished',[$id]));
             } else {
-                $error = 'Comment cannot be published. Please try again or check logs.';
-                return redirect()->back()->withInput()->with('error', $error);
+                $error = ;
+                return redirect()->back()->withInput()->with('error', lang('Blog.commentPublishError'));
             }
         } else {
             if ($this->commonModel->remove('comments', ['id' => $id])) {
-                $message = "The comment with an id of {$id} has been removed.";
-                return redirect()->route('comments')->with('warning', $message);
+                return redirect()->route('comments')->with('warning', lang('Backend.deleted', ['#' . $id]));
             } else {
-                $error = 'Comment cannot be removed. Please try again or check logs.';
-                return redirect()->back()->withInput()->with('error', $error);
+                return redirect()->back()->withInput()->with('error', lang('Backend.notDeleted',['#'.$id]));
             }
         }
     }
@@ -287,10 +285,9 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             )],
             ['option' => 'badwords']
         ))
-            return redirect()->route('badwords')->with('message', "Bad word list updated.");
+            return redirect()->route('badwords')->with('message', lang('Backend.updated'));
         else return redirect()->back()->withInput()->with(
-            'error',
-            "Bad word list cannot updated. Please try again or check logs."
+            'error',lang('Backend.notUpdated')
         );
     }
 }

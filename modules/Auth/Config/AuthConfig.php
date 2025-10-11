@@ -209,7 +209,7 @@ class AuthConfig extends BaseConfig
         'backend/users/removeFromBlackList',
         'backend/users/forceResetPassword'
     ];
-    
+
     public $filters = [
         'backendAuthFilter' => ['before' => [
             'backend/login',

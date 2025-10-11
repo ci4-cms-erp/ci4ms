@@ -13,7 +13,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
     public function upload()
     {
         $valData = ([
-            'theme' => ['label' => 'Tema', 'rules' => 'uploaded[theme]|ext_in[theme,zip]|mime_in[theme,application/x-zip,application/zip,application/x-zip-compressed,application/s-compressed,multipart/x-zip]'],
+            'theme' => ['label' => lang('Theme.backendTheme'), 'rules' => 'uploaded[theme]|ext_in[theme,zip]|mime_in[theme,application/x-zip,application/zip,application/x-zip-compressed,application/s-compressed,multipart/x-zip]'],
         ]);
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $file = $this->request->getFile('theme');
@@ -23,7 +23,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
             $zip->extractTo($tempPath);
             $zip->close();
         } else {
-            return redirect()->back()->withInput()->with('errors', ['ZIP dosyası açılamadı']);
+            return redirect()->back()->withInput()->with('errors', [lang('Theme.zipOpenFailed')]);
         }
 
         $themeName = str_replace('.zip', '', $file->getName());
@@ -38,11 +38,11 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         helper('Modules\Theme\Helpers\themes');
         $duplicates = findDuplicateSubfolders($paths);
         if (!empty($duplicates)) {
-            echo "<h3>Aynı isme sahip klasörler:</h3>";
+            echo lang('Theme.foldersWithSameNameHeader');
             foreach ($duplicates as $folder => $dirs) {
-                echo "<strong>$folder</strong> aşağıdaki klasörlerde var:<ul>";
+                echo lang('Theme.foldersWithSameNameMessage',[$folder]);
                 foreach ($dirs as $dir) {
-                    echo "<li>$dir</li>";
+                    echo lang('Install.foldersWithSameNameListItem', [$dir]);
                 }
                 echo "</ul>";
             }

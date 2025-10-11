@@ -30,7 +30,6 @@
                     </tr>
                 </thead>
                 <tbody>
-
                     <?php foreach ($logs as $key => $log): ?>
                         <tr data-display="stack<?= $key; ?>">
 
@@ -66,8 +65,7 @@
                     <span class="far fa-download"></span>
                     Download file
                 </a>
-                <a id="delete-log" href="?del=<?= base64_encode($currentFile); ?>" class="btn btn-light"><span
-                        class="far fa-trash"></span> Delete file</a>
+                <a id="delete-log" href="?del=<?= base64_encode($currentFile); ?>" class="btn btn-light"><?=lang('Backend.delete')?></a>
                 <?php if (count($files) > 1): ?>
                     <a id="delete-all-log" href="?del=<?= base64_encode("all"); ?>" class="btn btn-light"><span class="far fa-trash"></span> Delete all files</a>
                 <?php endif; ?>

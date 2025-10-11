@@ -50,7 +50,7 @@ class BaseController extends Controller
         $this->authLib = new AuthLibrary();
         $this->commonModel = new CommonModel();
         $userModel = new UserscrudModel();
-        $this->logged_in_user = $userModel->loggedUser(0, 'users.id,firstname,name,sirname,username', ['users.id' => session()->get($this->config->logged_in)]);
+        $this->logged_in_user = $userModel->loggedUser(0, 'users.id,firstname,name,surname,username', ['users.id' => session()->get($this->config->logged_in)]);
         $this->logged_in_user = reset($this->logged_in_user);
         $uri = '';
         if ($this->request->getUri()->getTotalSegments() > 1) {

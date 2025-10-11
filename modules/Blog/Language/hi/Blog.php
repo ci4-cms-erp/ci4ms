@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'blog' => 'ब्लॉग मॉड्यूल',
+    'blogs' => 'पदों',
+    'blogCreate' => 'ब्लॉग बनाएं',
+    'blogUpdate' => 'ब्लॉग अपडेट करें',
+    'categories' => 'श्रेणियाँ',
+    'categoryCreate' => 'श्रेणी बनाएं',
+    'categoryUpdate' => 'श्रेणी अद्यतन करें',
+    'parentCategory' => 'जनक श्रेणी',
+    'commentList' => 'टिप्पणियाँ',
+    'comment' => 'टिप्पणी',
+    'displayComment' => 'टिप्पणी देखें',
+    'badwords' => 'प्रतिबंधित शब्द सूची',
+    'author' => 'लेखक',
+    'tags' => 'टैग',
+    'tagCreate' => 'टैग बनाएं',
+    'tagUpdate' => 'टैग अपडेट करें',
+    'enableFiltering' => 'फ़िल्टरिंग सक्षम करें',
+    'autoReject' => 'स्वत: अस्वीकृत',
+    'autoAccept' => 'स्वतः स्वीकार करें',
+    'commentPublished' => '#{0,number} की आईडी के साथ टिप्पणी प्रकाशित की गई है।',
+    'commentPublishError' => 'टिप्पणी प्रकाशित नहीं की जा सकती. कृपया पुनः प्रयास करें या लॉग जाँचें।',
+];

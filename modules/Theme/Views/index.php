@@ -4,9 +4,6 @@
 <?= lang('Theme.' . $title->pagename) ?>
 <?= $this->endSection() ?>
 
-<?= $this->section('head') ?>
-<?= $this->endSection() ?>
-
 <?= $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -40,14 +37,14 @@
                 <?= csrf_field() ?>
                 <div class="col-12">
                     <div class="form-group">
-                        <label for="exampleInputFile">File input</label>
+                        <label for="exampleInputFile"><?= lang('Backend.fileInput') ?></label>
                         <div class="input-group">
                             <div class="custom-file">
                                 <input type="file" name="theme" class="custom-file-input" accept="application/x-zip,application/zip,application/x-zip-compressed,application/s-compressed,multipart/x-zip" id="exampleInputFile">
-                                <label class="custom-file-label" for="exampleInputFile">Choose file</label>
+                                <label class="custom-file-label" for="exampleInputFile"><?= lang('Backend.chooseFile') ?></label>
                             </div>
                             <div class="input-group-append">
-                                <button type="submit" class="input-group-text" id="uploadTheme">Upload</button>
+                                <button type="submit" class="input-group-text" id="uploadTheme"><?= lang('Backend.upload') ?></button>
                             </div>
                         </div>
                     </div>

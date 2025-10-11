@@ -103,7 +103,7 @@
                     </div>
                     <div class="form-group col-md-12">
                         <label for=""><?=lang('Backend.seoKeywords')?></label>
-                        <textarea name="keywords" class="keywords" placeholder="write some tags"><?=!empty($pageInfo->seo->keywords)?json_encode($pageInfo->seo->keywords):''?></textarea>
+                        <textarea name="keywords" class="keywords" placeholder="<?=lang('Backend.tagPlaceholder')?>"><?=!empty($pageInfo->seo->keywords)?json_encode($pageInfo->seo->keywords):''?></textarea>
                     </div>
                 </div>
                 <div class="form-group col-md-12">

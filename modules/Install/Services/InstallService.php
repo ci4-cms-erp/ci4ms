@@ -21,7 +21,7 @@ class InstallService
         $commonModel->create('users', [
             'id' => 1,
             'firstname' => $args['fname'],
-            'sirname' => $args['sname'],
+            'surname' => $args['sname'],
             'username' => $args['username'],
             'email' => $args['email'],
             'status' => 'active',

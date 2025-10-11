@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.1",
         "bertugfahriozer/ci4commonmodel": "^1.2",
+        "bertugfahriozer/ci4seopro": "^0.1.1",
         "bertugfahriozer/sql2migration": "^1.0",
         "ci4-cms-erp/ext_module_generator": "^1.1",
         "claviska/simpleimage": "4.0.6",

@@ -55,9 +55,9 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             ])) {
                 $id = $this->defData['logged_in_user']->id;
                 cache()->delete("{$id}_permissions");
-                return redirect()->route('list')->with('success', 'Kayıt başarılı bir şekilde eklendi');
+                return redirect()->route('list')->with('success', lang('Backend.created',[$this->request->getPost('pagename')]));
             } else
-                return redirect()->back()->withInput()->with('error', 'Kayıt eklenirken bir hata oluştu');
+                return redirect()->back()->withInput()->with('error', lang('Backend.notCreated',[$this->request->getPost('pagename')]));
         }
         $this->defData['modules'] = $this->commonModel->lists('modules');
         $this->defData['permPages'] = $this->commonModel->lists('auth_permissions_pages');
@@ -97,9 +97,9 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             ], ['id' => $pk])) {
                 $id = $this->defData['logged_in_user']->id;
                 cache()->delete("{$id}_permissions");
-                return redirect()->route('list')->with('success', 'Kayıt başarılı bir şekilde eklendi');
+                return redirect()->route('list')->with('success', lang('Backend.updated',[$this->request->getPost('pagename')]));
             } else
-                return redirect()->back()->withInput()->with('error', 'Kayıt eklenirken bir hata oluştu');
+                return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated',[$this->request->getPost('pagename')]));
         }
         $this->defData['method'] = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pk]);
         $this->defData['methods'] = $this->commonModel->lists('auth_permissions_pages', '*', ['id!=' => $pk,'inNavigation'=>true],'pagename ASC');

@@ -52,7 +52,7 @@
                     <div class="info w-100">
                         <button class="btn btn-light w-100" type="button" data-toggle="collapse"
                             data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                            <?= $logged_in_user->firstname . ' ' . $logged_in_user->sirname ?> <br>
+                            <?= $logged_in_user->firstname . ' ' . $logged_in_user->surname ?> <br>
                             <small class="text-success font-weight-bold">{ <?= $logged_in_user->name ?>
                                 }</small>
                         </button>

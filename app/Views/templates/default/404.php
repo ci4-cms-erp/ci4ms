@@ -1,6 +1,6 @@
 <?= $this->extend('Views/templates/default/base') ?>
 <?= $this->section('head') ?>
-<link href="<?= site_url('templates/default/assets/404.css') ?>" rel="stylesheet" />
+<?=link_tag('templates/default/assets/404.css')?>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
 <section class="page_404">
@@ -19,7 +19,7 @@
                         <?php if (empty($referer)) : ?>
                             <a href="/" class="link_404">Go to Home</a>
                         <?php else : ?>
-                            <a href="<?= $referer ?>" class="link_404">Go Back</a>
+                            <a href="<?= esc($referer) ?>" class="link_404">Go Back</a>
                         <?php endif; ?>
                     </div>
                 </div>

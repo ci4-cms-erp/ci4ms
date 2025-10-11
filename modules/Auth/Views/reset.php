@@ -9,7 +9,7 @@
             <img src="<?= base_url('be-assets/img/bfo-logo.jpg') ?>" alt="" class="img-fluid">
         </div>
         <div class="card-body">
-            <p class="login-box-msg">Yeni şifrenizden sadece bir adım uzaktasınız, şifrenizi şimdi oluşturun.</p>
+            <p class="login-box-msg"><?=lang('Auth.generatePasswordMessage')?></p>
             <?= view('Modules\Auth\Views\_message_block') ?>
             <form action="<?= route_to('reset-password', $token) ?>" method="post">
                 <?= csrf_field() ?>
@@ -49,7 +49,7 @@
             </form>
 
             <p class="mt-3 mb-1">
-                <a href="<?= base_url('backend/login') ?>"><i class="fas fa-arrow-left"></i> Giriş Yap</a>
+                <a href="<?= base_url('backend/login') ?>"><i class="fas fa-arrow-left"></i> <?=lang('Auth.loginAction')?></a>
             </p>
         </div>
         <!-- /.login-card-body -->

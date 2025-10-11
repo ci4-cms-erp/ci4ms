@@ -41,19 +41,19 @@
             <form action="<?= route_to('methodUpdate',$method->id) ?>" method="post" class="form-row">
                 <?= csrf_field() ?>
                 <div class="form-group col-md-4">
-                    <label for="">Sayfa Adı</label>
+                    <label for=""><?=lang('Methods.pageName')?></label>
                     <input type="text" name="pagename" class="form-control" value="<?= $method->pagename ?>" required>
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Açıklama</label>
+                    <label for=""><?=lang('Methods.description')?></label>
                     <input type="text" name="description" class="form-control" value="<?= $method->description ?>">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Sınıf Adı</label>
+                    <label for=""><?=lang('Methods.controller')?></label>
                     <input type="text" name="className" class="form-control" value="<?= $method->className ?>">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Metot adı</label>
+                    <label for=""><?=lang('Methods.methodName')?></label>
                     <input type="text" name="methodName" class="form-control" value="<?= $method->methodName ?>">
                 </div>
                 <div class="form-group col-md-4">
@@ -61,15 +61,15 @@
                     <input type="text" name="sefLink" class="form-control" value="<?= $method->sefLink ?>" required>
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Sayfa Sırası</label>
+                    <label for=""><?=lang('Methods.pageOrder')?></label>
                     <input type="number" name="pageSort" class="form-control" value="<?= $method->pageSort ?>">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Sembol <small>(FontAwesome 5)</small></label>
+                    <label for=""><?=lang('Methods.symbol')?> <small><a href="https://fontawesome.com/v5/icons#packs" target="_blank">(FontAwesome 5)</a></small></label>
                     <input type="text" name="symbol" class="form-control" value="<?= $method->symbol ?>">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Yetki</label>
+                    <label for=""><?=lang('Users.perms')?></label>
                     <div class="w-100 btn-group btn-group-toggle" data-toggle="buttons">
                         <?php $method->typeOfPermissions = (array)json_decode($method->typeOfPermissions); ?>
                         <label class="btn btn-outline-success">
@@ -87,18 +87,18 @@
                     </div>
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Üst Sayfası</label>
+                    <label for=""><?=lang('Methods.parentPage')?></label>
                     <select name="parent_pk" id="parentPk" class="form-control select2">
-                        <option value="" disabled selected>Üst sayfa seçin</option>
+                        <option value="" disabled selected><?=lang('Backend.selectOption',[lang('Methods.parentPage')])?></option>
                         <?php foreach ($methods as $methd): ?>
                             <option value="<?= $methd->id ?>" <?= $method->parent_pk == $methd->id ? 'selected' : '' ?>><?= lang($methd->pagename) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group col-md-3">
-                    <label for="">Hangi Modüle Ait</label>
+                    <label for=""><?=lang('Methods.module')?></label>
                     <select name="moduleName" id="moduleName" class="form-control select2">
-                        <option value="" disabled selected>Seçiniz</option>
+                        <option value="" disabled selected><?=lang('Backend.select')?></option>
                         <?php foreach ($modules as $module) : ?>
                             <option value="<?= $module->id ?>" <?= $method->module_id == $module->id ? 'selected' : '' ?>><?= $module->name ?></option>
                         <?php endforeach; ?>

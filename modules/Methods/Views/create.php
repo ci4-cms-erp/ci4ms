@@ -41,19 +41,19 @@
             <form action="<?= route_to('methodCreate') ?>" method="post" class="form-row">
                 <?= csrf_field() ?>
                 <div class="form-group col-md-4">
-                    <label for="">Sayfa Adı</label>
+                    <label for=""><?=lang('Methods.pageName')?></label>
                     <input type="text" name="pagename" class="form-control" required>
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Açıklama</label>
+                    <label for=""><?=lang('Methods.description')?></label>
                     <input type="text" name="description" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Kontrolcü</label>
+                    <label for=""><?=lang('Methods.controller')?></label>
                     <input type="text" name="className" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Metot adı</label>
+                    <label for=""><?=lang('Methods.methodName')?></label>
                     <input type="text" name="methodName" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
@@ -61,15 +61,15 @@
                     <input type="text" name="sefLink" class="form-control" required>
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Sayfa Sırası</label>
+                    <label for=""><?=lang('Methods.pageOrder')?></label>
                     <input type="number" name="pageSort" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Sembol <small><a href="https://fontawesome.com/v5/icons#packs" target="_blank">(FontAwesome 5)</a></small></label>
+                    <label for=""><?=lang('Methods.symbol')?> <small><a href="https://fontawesome.com/v5/icons#packs" target="_blank">(FontAwesome 5)</a></small></label>
                     <input type="text" name="symbol" class="form-control">
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Yetki</label>
+                    <label for=""><?=lang('Users.perms')?></label>
                     <div class="w-100 btn-group btn-group-toggle" data-toggle="buttons">
                         <label class="btn btn-outline-success">
                             <input type="checkbox" name="typeOfPermissions[]" value="create" autocomplete="off"> Create
@@ -86,18 +86,18 @@
                     </div>
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="">Üst Sayfası</label>
+                    <label for=""><?=lang('Methods.parentPage')?></label>
                     <select name="parent_pk" id="parentPk" class="form-control select2">
-                        <option value="" disabled selected>Üst sayfa seçin</option>
+                        <option value="" disabled selected><?=lang('Backend.selectOption',[lang('Methods.parentPage')])?></option>
                         <?php foreach ($permPages as $page): ?>
                             <option value="<?= $page->id ?>"><?= lang($page->pagename) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group col-md-3">
-                    <label for="">Hangi Modüle Ait</label>
+                    <label for=""><?=lang('Methods.module')?></label>
                     <select name="moduleName" id="moduleName" class="form-control select2">
-                        <option value="" disabled selected>Seçiniz</option>
+                        <option value="" disabled selected><?=lang('Backend.select')?></option>
                         <?php foreach ($modules as $module) : ?>
                             <option value="<?= $module->id ?>"><?= $module->name ?></option>
                         <?php endforeach; ?>
@@ -106,13 +106,13 @@
                 <div class="form-group col-md-9 d-flex align-items-end">
                     <div class="w-100 btn-group btn-group-toggle" data-toggle="buttons">
                         <label class="btn btn-outline-primary">
-                            <input class="custom-control-input" value="1" name="inNavigation" type="checkbox" id="inNavigation"> Menüde mi ?
+                            <input class="custom-control-input" value="1" name="inNavigation" type="checkbox" id="inNavigation"> <?=lang('Methods.inMenu')?>
                         </label>
                         <label class="btn btn-outline-primary active">
-                            <input class="custom-control-input" value="1" name="isBackoffice" type="checkbox" id="isBackoffice" checked> Panelde mi ?
+                            <input class="custom-control-input" value="1" name="isBackoffice" type="checkbox" id="isBackoffice" checked> <?=lang('Methods.inPanel')?>
                         </label>
                         <label class="btn btn-outline-primary">
-                            <input class="custom-control-input" value="1" name="hasChild" type="checkbox" id="hasChild"> Alt sayfası var mı ?
+                            <input class="custom-control-input" value="1" name="hasChild" type="checkbox" id="hasChild"> <?=lang('Methods.hasChildPages')?>
                         </label>
                     </div>
                 </div>

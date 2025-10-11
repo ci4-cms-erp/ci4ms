@@ -22,19 +22,19 @@ class Tags extends \Modules\Backend\Controllers\BaseController
 
     public function create()
     {
-        $valData = (['title' => ['label' => 'Etiket Başlığı', 'rules' => 'required'], 'seflink' => ['label' => 'Etiket URL', 'rules' => 'required'],]);
+        $valData = (['title' => ['label' => lang('Backend.title'), 'rules' => 'required'], 'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required'],]);
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        if ($this->commonModel->create('tags', ['tag'=>$this->request->getPost('title'),'seflink'=>$this->request->getPost('seflink')])) return redirect()->route('tags', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı etiket Oluşturuldu.');
-        else return redirect()->back()->withInput()->with('error', 'Etiket oluşturulamadı.');
+        if ($this->commonModel->create('tags', ['tag'=>$this->request->getPost('title'),'seflink'=>$this->request->getPost('seflink')])) return redirect()->route('tags', [1])->with('message', lang('Backend.created',[$this->request->getPost('title')]));
+        else return redirect()->back()->withInput()->with('error', lang('Backend.notCreated',[$this->request->getPost('title')]));
     }
 
     public function edit(int $id)
     {
         if($this->request->is('post')){
-            $valData = (['title' => ['label' => 'Etiket Başlığı', 'rules' => 'required'], 'seflink' => ['label' => 'Etiket URL', 'rules' => 'required'],]);
+            $valData = (['title' => ['label' => lang('Backend.title'), 'rules' => 'required'], 'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required'],]);
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-            if ($this->commonModel->edit('tags', ['tag'=>$this->request->getPost('title'),'seflink'=>$this->request->getPost('seflink')],['id'=>$id])) return redirect()->route('tags', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı etiket güncellendi.');
-            else return redirect()->back()->withInput()->with('error', 'Etiket güncellenemedi.');
+            if ($this->commonModel->edit('tags', ['tag'=>$this->request->getPost('title'),'seflink'=>$this->request->getPost('seflink')],['id'=>$id])) return redirect()->route('tags', [1])->with('message', lang('Backend.updated',[$this->request->getPost('title')]));
+            else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated',[$this->request->getPost('title')]));
         }
         $this->defData['infos']=$this->commonModel->selectOne('tags',['id'=>$id]);
         return view('Modules\Blog\Views\tags\update',$this->defData);
@@ -42,7 +42,7 @@ class Tags extends \Modules\Backend\Controllers\BaseController
 
     public function delete(string $id)
     {
-        if ($this->commonModel->remove('tags',['id'=>$id])) return redirect()->route('tags', [1])->with('message', 'Etiket silindi.');
-        else return redirect()->back()->withInput()->with('error', 'Etiket silinemedi.');
+        if ($this->commonModel->remove('tags',['id'=>$id])) return redirect()->route('tags', [1])->with('message', lang('Backend.deleted',['#'.$id]));
+        else return redirect()->back()->withInput()->with('error', lang('Backend.notDeleted',['#'.$id]));
     }
 }

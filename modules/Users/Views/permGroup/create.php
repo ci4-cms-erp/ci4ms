@@ -74,13 +74,13 @@
 
                                 <div class="w-100 text-right">
                                     <div class="module-toggle float-right">
-                                        <span class="badge bg-primary"><?= count($module->pages) ?> adet metot</span>
+                                        <span class="badge bg-primary"><?= lang('Methods.methodCount',[count($module->pages)]) ?></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="card-body row">
                                 <?php if (empty($module->pages)): ?>
-                                    <div class="alert alert-warning">Bu modül için tanımlanmış sayfa bulunamadı</div>
+                                    <div class="alert alert-warning"><?=lang('Methods.noPagesFound')?></div>
                                     <?php else:
                                     foreach ($module->pages as $page): ?>
                                         <div class="page-item col-md-4 border" data-page-id="<?= $page->id ?>" data-status="inactive" data-content="<?= htmlspecialchars($page->description) ?>">
@@ -98,10 +98,10 @@
                                                     <?= htmlspecialchars($page->sefLink) ?>
                                                 </div>
                                                 <?php if ($page->inNavigation): ?>
-                                                    <span class="ml-2 badge bg-info d-flex align-items-center">Navigation</span>
+                                                    <span class="ml-2 badge bg-info d-flex align-items-center"><?=lang('Methods.inNavigation')?></span>
                                                 <?php endif; ?>
                                                 <?php if ($page->hasChild): ?>
-                                                    <span class="ml-2 badge bg-warning d-flex align-items-center">Alt Sayfa Var</span>
+                                                    <span class="ml-2 badge bg-warning d-flex align-items-center"><?=lang('Methods.hasChildPages')?></span>
                                                 <?php endif; ?>
                                             </div>
                                             <label class="toggle-switch page-toggle">

@@ -4,9 +4,6 @@
 <?= lang($title->pagename) ?>
 <?= $this->endSection() ?>
 
-<?= $this->section('head') ?>
-<?= $this->endSection() ?>
-
 <?= $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -18,7 +15,7 @@
             <div class="col-sm-6">
                 <div class="btn-group float-sm-right" role="group" aria-label="Basic example">
                     <button class="btn btn-outline-info" id="moduleScan">
-                        <i class="fas fa-recycle"></i> Modül Tara
+                        <i class="fas fa-recycle"></i> <?=lang('Methods.scanModules')?>
                     </button>
                     <a href="<?= route_to('methodCreate') ?>" class="btn btn-outline-success">
                         <?= lang('Backend.add') ?>
@@ -51,7 +48,7 @@
                         <span class="info-box-icon bg-primary"><i class="fas fa-cubes"></i></span>
 
                         <div class="info-box-content">
-                            <span class="info-box-text">Toplam Modül</span>
+                            <span class="info-box-text"><?=lang('Methods.totalModules')?></span>
                             <span class="info-box-number"><?= count($modules) ?></span>
                         </div>
                         <!-- /.info-box-content -->
@@ -64,7 +61,7 @@
                         <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
 
                         <div class="info-box-content">
-                            <span class="info-box-text">Aktif Modül</span>
+                            <span class="info-box-text"><?=lang('Methods.activeModules')?></span>
                             <span class="info-box-number"><?= count(array_filter($modules, fn($m) => $m->active)) ?></span>
                         </div>
                         <!-- /.info-box-content -->
@@ -77,7 +74,7 @@
                         <span class="info-box-icon bg-warning"><i class="fas fa-file-alt text-light"></i></span>
 
                         <div class="info-box-content">
-                            <span class="info-box-text">Toplam Sayfa</span>
+                            <span class="info-box-text"><?=lang('Methods.totalPages')?></span>
                             <span class="info-box-number"><?= array_sum(array_map(fn($m) => count($m->pages), $modules)) ?></span>
                         </div>
                         <!-- /.info-box-content -->
@@ -90,7 +87,7 @@
                         <span class="info-box-icon bg-info"><i class="fas fa-sitemap"></i></span>
 
                         <div class="info-box-content">
-                            <span class="info-box-text">Navigasyonda Olanlar</span>
+                            <span class="info-box-text"><?=lang('Methods.inNavigation')?></span>
                             <span class="info-box-number"><?php
                                                             $navCount = 0;
                                                             foreach ($modules as $module) {
@@ -112,33 +109,33 @@
                 <div class="col-12 card filter-section">
                     <div class="row card-body g-3">
                         <div class="col-md-4 form-group">
-                            <label class="form-label">Modül Adı</label>
+                            <label class="form-label"><?=lang('Methods.moduleName')?></label>
                             <select class="form-control" id="moduleFilter">
-                                <option value="">Tüm Modüller</option>
+                                <option value=""><?=lang('Methods.allModules')?></option>
                                 <?php foreach ($modules as $module) { ?>
                                     <option value="<?= $module->id ?>"><?= $module->name ?></option>
                                 <?php } ?>
                             </select>
                         </div>
                         <div class="col-md-4 form-group">
-                            <label class="form-label">Sayfa Adı</label>
-                            <input type="text" class="form-control" id="pageFilter" placeholder="Ara...">
+                            <label class="form-label"><?=lang('Methods.pageName')?></label>
+                            <input type="text" class="form-control" id="pageFilter" placeholder="<?=lang('Backend.search')?>">
                         </div>
                         <div class="col-md-4 form-group">
-                            <label class="form-label">Durum</label>
+                            <label class="form-label"><?=lang('Backend.status')?></label>
                             <select class="form-control" id="statusFilter">
-                                <option value="">Tümü</option>
-                                <option value="active">Aktif</option>
-                                <option value="inactive">Pasif</option>
+                                <option value=""><?=lang('Backend.select')?></option>
+                                <option value="active"><?=lang('Backend.active')?></option>
+                                <option value="inactive"><?=lang('Backend.passive')?></option>
                             </select>
                         </div>
                         <div class="col-12 form-group">
                             <div class="d-flex justify-content-end">
                                 <button id="resetFilters" class="btn btn-outline-secondary me-2">
-                                    <i class="fas fa-undo me-1"></i> Sıfırla
+                                    <i class="fas fa-undo me-1"></i> <?=lang('Backend.reset')?>
                                 </button>
                                 <button id="applyFilters" class="btn btn-primary">
-                                    <i class="fas fa-filter me-1"></i> Filtrele
+                                    <i class="fas fa-filter me-1"></i> <?=lang('Backend.filter')?>
                                 </button>
                             </div>
                         </div>
@@ -156,14 +153,14 @@
                                         <div>
                                             <h5 class="mb-0"><?= htmlspecialchars($module->name) ?></h5>
                                             <small class="text-muted"><?= date('d.m.Y', strtotime($module->created)) ?></small>
-                                            <span class="badge bg-primary"><?= count($module->pages) ?> adet metot</span>
+                                            <span class="badge bg-primary"><?=lang('Methods.methodCount',[count($module->pages)])?></span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="w-100 text-right">
                                     <div class="module-toggle float-right">
-                                        <span class="module-toggle-label"><?= $module->active ? 'Aktif' : 'Pasif' ?></span>
+                                        <span class="module-toggle-label"><?= $module->active ? lang('Backend.active') : lang('Backend.passive') ?></span>
                                         <label class="toggle-switch">
                                             <input type="checkbox" class="module-toggle-input" <?= $module->active ? 'checked' : '' ?>>
                                             <span class="toggle-slider"></span>
@@ -173,21 +170,21 @@
                             </div>
                             <div class="card-body p-0">
                                 <?php if (empty($module->pages)): ?>
-                                    <div class="alert alert-warning">Bu modül için tanımlanmış sayfa bulunamadı</div>
+                                    <div class="alert alert-warning"><?=lang('Methods.noPagesFound')?></div>
                                     <?php else:
                                     foreach ($module->pages as $page): ?>
                                         <div class="page-item" data-page-id="<?= $page->id ?>" data-status="<?= $page->isActive ? 'active' : 'inactive' ?>" data-content="<?= htmlspecialchars($page->description) ?>">
                                             <div class="d-flex">
                                                 <div class="page-name w-100 d-flex"><?= htmlspecialchars($page->pagename) ?>
                                                     <?php if ($page->inNavigation): ?>
-                                                        <span class="ml-2 badge bg-info d-flex align-items-center">Navigation</span>
+                                                        <span class="ml-2 badge bg-info d-flex align-items-center"><?=lang('Methods.navigation')?></span>
                                                     <?php endif; ?>
                                                     <?php if ($page->hasChild): ?>
-                                                        <span class="ml-2 badge bg-warning d-flex align-items-center">Alt Sayfa Var</span>
+                                                        <span class="ml-2 badge bg-warning d-flex align-items-center"><?=lang('Methods.hasChildPages')?></span>
                                                     <?php endif; ?>
                                                 </div>
                                                 <div class="text-right w-100">
-                                                    <span class="status-badge status-<?= $page->isActive == true ? 'active' : 'inactive' ?>"><?= $page->isActive == true ? 'Aktif' : 'Pasif' ?></span>
+                                                    <span class="status-badge status-<?= $page->isActive == true ? 'active' : 'inactive' ?>"><?= $page->isActive == true ? lang('Backend.active') : lang('Backend.passive') ?></span>
                                                 </div>
                                             </div>
                                             <div class="page-description"><?= htmlspecialchars($page->description) ?></div>
@@ -231,7 +228,7 @@
             type: 'POST',
             beforeSend: function() {
                 Swal.fire({
-                    title: 'Modüller yükleniyor...',
+                    title: '<?=lang('Methods.modulesLoading')?>',
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
@@ -240,15 +237,15 @@
             },
             success: function(response) {
                 if (response.result === true) {
-                    Swal.fire('Modüller başarı ile yüklendi.', '', 'success').then((result) => {
+                    Swal.fire('<?=lang('Methods.modulesLoaded')?>', '', 'success').then((result) => {
                         if (result.isConfirmed) location.reload();
-                    });;
+                    });
                 } else {
-                    Swal.fire('Yeni Modül Bulunamadı', 'Yeni modül bulunmadığı için ekleme yapılmadı.', 'warning');
+                    Swal.fire('<?=lang('Methods.noNewModules')?>', '<?=lang('Methods.noNewModulesError')?>', 'warning');
                 }
             },
             error: function() {
-                Swal.fire('Modüller yüklenirken sorun oluştu.', '', 'error');
+                Swal.fire('<?=lang('Methods.modulesLoadError')?>', '', 'error');
             }
         });
     });
@@ -317,7 +314,7 @@
         // Sonuç yoksa mesaj göster
         if (!hasResults) {
             if ($('#noResultsMessage').length === 0) {
-                $('#modulesContainer').append('<div id="noResultsMessage" class="no-results">Filtre kriterlerinize uygun sonuç bulunamadı.</div>');
+                $('#modulesContainer').append('<div id="noResultsMessage" class="no-results"><?=lang('Methods.noResults')?></div>');
             }
         } else {
             $('#noResultsMessage').remove();
@@ -352,19 +349,19 @@
 
         if (this.checked) {
             moduleCard.removeClass('inactive');
-            moduleStatusLabel.text('Aktif');
+            moduleStatusLabel.text('<?=lang('Backend.active')?>');
             moduleCard.find('.page-toggle input').each(function() {
                 $(this).prop('checked', true);
                 $(this).closest('.page-item').removeClass('inactive');
-                $(this).closest('.page-item').find('.status-badge').text('Aktif').attr('class', 'status-badge status-active');
+                $(this).closest('.page-item').find('.status-badge').text('<?=lang('Backend.active')?>').attr('class', 'status-badge status-active');
             });
         } else {
             moduleCard.addClass('inactive');
-            moduleStatusLabel.text('Pasif');
+            moduleStatusLabel.text('<?=lang('Backend.passive')?>');
             moduleCard.find('.page-toggle input').each(function() {
                 $(this).prop('checked', false);
                 $(this).closest('.page-item').addClass('inactive');
-                $(this).closest('.page-item').find('.status-badge').text('Pasif').attr('class', 'status-badge status-inactive');
+                $(this).closest('.page-item').find('.status-badge').text('<?=lang('Backend.passive')?>').attr('class', 'status-badge status-inactive');
             });
         }
 
@@ -379,26 +376,26 @@
             success: function(response) {
                 if (response.success) {
                     Swal.fire({
-                        title: 'Başarılı!',
-                        text: 'Modül durumu güncellendi.',
+                        title: '<?=lang('Backend.success')?>',
+                        text: '<?=lang('Methods.moduleStatusUpdated')?>',
                         icon: 'success',
-                        confirmButtonText: 'Tamam'
+                        confirmButtonText: '<?=lang('Backend.ok')?>'
                     });
                 } else {
                     Swal.fire({
-                        title: 'Hata!',
-                        text: 'Modül durumu güncellenemedi.',
+                        title: '<?=lang('Backend.error')?>',
+                        text: '<?=lang('Backend.moduleStatusUpdateFailed')?>',
                         icon: 'error',
-                        confirmButtonText: 'Tamam'
+                        confirmButtonText: '<?=lang('Backend.ok')?>'
                     });
                 }
             },
             error: function() {
                 Swal.fire({
-                    title: 'Hata!',
-                    text: 'Sunucuya bağlanırken bir hata oluştu.',
+                    title: '<?=lang('Backend.error')?>',
+                    text: '<?=lang('Backend.serverConnectionError')?>',
                     icon: 'error',
-                    confirmButtonText: 'Tamam'
+                    confirmButtonText: '<?=lang('Backend.ok')?>'
                 });
             }
         });
@@ -410,10 +407,10 @@
         const statusBadge = pageItem.find('.status-badge');
         if (this.checked) {
             pageItem.removeClass('inactive');
-            statusBadge.text('Aktif').attr('class', 'status-badge status-active');
+            statusBadge.text('<?=lang('Backend.active')?>').attr('class', 'status-badge status-active');
         } else {
             pageItem.addClass('inactive');
-            statusBadge.text('Pasif').attr('class', 'status-badge status-inactive');
+            statusBadge.text('<?=lang('Backend.passive')?>').attr('class', 'status-badge status-inactive');
         }
 
         // AJAX isteği gönder
@@ -427,26 +424,26 @@
             success: function(response) {
                 if (response.success) {
                     Swal.fire({
-                        title: 'Başarılı!',
-                        text: 'Sayfa durumu güncellendi.',
+                        title: '<?=lang('Backend.success')?>',
+                        text: '<?=lang('Methods.pageStatusUpdated')?>',
                         icon: 'success',
-                        confirmButtonText: 'Tamam'
+                        confirmButtonText: '<?=lang('Backend.ok')?>'
                     });
                 } else {
                     Swal.fire({
-                        title: 'Hata!',
-                        text: 'Sayfa durumu güncellenemedi.',
+                        title: '<?=lang('Backend.error')?>',
+                        text: '<?=lang('Methods.pageStatusUpdateFailed')?>',
                         icon: 'error',
-                        confirmButtonText: 'Tamam'
+                        confirmButtonText: '<?=lang('Backend.ok')?>'
                     });
                 }
             },
             error: function() {
                 Swal.fire({
-                    title: 'Hata!',
-                    text: 'Sunucuya bağlanırken bir hata oluştu.',
+                    title: '<?=lang('Backend.error')?>',
+                    text: '<?=lang('Methods.serverConnectionError')?>',
                     icon: 'error',
-                    confirmButtonText: 'Tamam'
+                    confirmButtonText: '<?=lang('Backend.ok')?>'
                 });
             }
         });

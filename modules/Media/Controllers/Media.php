@@ -26,10 +26,9 @@ class Media extends \Modules\Backend\Controllers\BaseController
 
     public function elfinderConnection()
     {
-        // ELFinder ayarlarını yapın
         $allowedFiles = $this->defData['settings']->allowedFiles;
         $opts = array(
-            // 'debug' => true,
+            'debug' => true,
             'roots' => array(
                 // Items volume
                 array(

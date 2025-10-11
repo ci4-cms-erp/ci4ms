@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <title>Maintenance page</title>
     <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
-    <link rel="stylesheet" href="<?=site_url('maintenance/style.css') ?>">
+    <link rel="stylesheet" href="/maintenance/style.css">
 </head>
 <body>
 <!-- partial:index.partial.html -->
 <div class="maintenance">
     <div class="maintenance_contain">
-        <img src="<?=site_url('maintenance/main-vector.png')?>" alt="maintenance">
+        <img src="/maintenance/main-vector.png" alt="maintenance">
         <span class="pp-infobox-title-prefix">WE ARE COMING SOON</span>
         <div class="pp-infobox-title-wrapper">
             <h3 class="pp-infobox-title">The website under maintenance!</h3>
@@ -24,8 +24,8 @@
                     $sn=(object)$sn;?>
 	<span class="pp-social-icon">
 		<link itemprop="url" href="#">
-		<a itemprop="sameAs" href="<?=$sn->link?>" target="_blank" title="<?=$sn->smName?>" aria-label="<?=$sn->smName?>" role="button">
-			<i class="fa fa-<?=$sn->smName?>"></i>
+		<a itemprop="sameAs" href="<?=esc($sn->link)?>" target="_blank" title="<?=esc($sn->smName)?>" aria-label="<?=esc($sn->smName)?>" role="button">
+			<i class="fa fa-<?=esc($sn->smName)?>"></i>
 		</a>
 	</span>
             <?php endforeach; endif; ?>

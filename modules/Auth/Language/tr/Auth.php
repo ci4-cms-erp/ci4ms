@@ -76,7 +76,6 @@ return [
     'email' => 'Email',
     'emailAddress' => 'Email Adresi',
     'sendInstructions' => 'Talimatları Gönder',
-    'loginTitle' => 'Giriş Yap',
     'loginAction' => 'Giriş Yap',
     'rememberMe' => 'Beni hatırla',
     'needAnAccount' => 'Bir hesaba mı ihtiyacınız var?',
@@ -95,5 +94,10 @@ return [
     'newPassword' => 'Yeni Parola',
     'newPasswordRepeat' => 'Yeni Parolayı Tekrarla',
     'resetPassword' => 'Parolayı Sıfırla',
-    'badCaptcha' => 'Doğrulama kodu yanlış.'
+    'badCaptcha' => 'Doğrulama kodu yanlış.',
+    'generatePasswordMessage' => 'Yeni şifrenizden sadece bir adım uzaktasınız, şifrenizi şimdi oluşturun.',
+    'forgotPasswordMessage' => 'Şifrenizi mi unuttunuz? Burada e-mail adresiniz ile kolayca yeni bir şifre alabilirsiniz.',
+    'loginMessage' => 'Oturumunuzu başlatmak için giriş yapın',
+    'membershipPasswordReset' => 'Membership Password Reset',
+    'passwordResetMessage' => 'Your membership password has been reset. Your password reset request is valid until {reset_expires}. Please click <a href="{reset_link}"><b>here</b></a> to set your new password.',
 ];

@@ -38,7 +38,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
         $this->defData['userLists'] = $this->userModel->userList(
             $itemsPerPage,
-            'users.id,email,firstname,sirname,status,auth_groups.name,black_list_users.notes,reset_expires',
+            'users.id,email,firstname,surname,status,auth_groups.name,black_list_users.notes,reset_expires',
             [/* 'group_id!=' => 1,  */'deleted_at' => null],
             $bpk
         );
@@ -53,7 +53,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'sirname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
+                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
                 'group' => ['label' => 'Yetkisi', 'rules' => 'required'],
                 'password' => ['label' => 'Şifre', 'rules' => 'required|min_length[8]']
@@ -65,7 +65,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             $data = [
                 'email' => $this->request->getPost('email'),
                 'firstname' => $this->request->getPost('firstname'),
-                'sirname' => $this->request->getPost('sirname'),
+                'surname' => $this->request->getPost('surname'),
                 'activate_hash' => $this->authLib->generateActivateHash(),
                 'password_hash' => $this->authLib->setPassword($this->request->getPost('password')),
                 'status' => 'deactive',
@@ -118,7 +118,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'Üyelik Aktivasyonu',
                 'Üyeliğiniz şirket yetkilisi tarafından oluşturuldu. Üyeliğinizi aktif etmek için lütfen <a href="' . site_url('backend/activate-account/' . $data['activate_hash']) . '"><b>buraya</b></a> tıklayınız. Tıkladıktan sonra sizinle paylaşılan <b>email</b> ve <b>şifre</b> ile giriş yapabilirsiniz.<br>E-mail adresi : ' . $this->request->getPost('email') . '<br>Şifreniz : ' . $this->request->getPost('password')
             );
-            if ($mailResult === true) return redirect()->route('users', [1])->with('message', 'Üyelik oluşturuldu. Aktiflik maili gönderildi.');
+            if ($mailResult === true) return redirect()->route('users', [1])->with('message', lang('Auth.activationSuccess'));
             else return redirect()->back()->withInput()->with('error', $mailResult);
         }
         $this->defData['groups'] = $this->commonModel->lists('auth_groups');
@@ -135,7 +135,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'sirname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
+                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
                 'group' => ['label' => 'Yetkisi', 'rules' => 'required']
             ]);
@@ -147,7 +147,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             $data = [
                 'email' => $this->request->getPost('email'),
                 'firstname' => $this->request->getPost('firstname'),
-                'sirname' => $this->request->getPost('sirname'),
+                'surname' => $this->request->getPost('surname'),
                 'status' => 'deactive',
                 'force_pass_reset' => false,
                 'group_id' => $this->request->getPost('group'),
@@ -183,7 +183,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'sirname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
+                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
             ]);
 
@@ -196,7 +196,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             $data = [
                 'email' => $this->request->getPost('email'),
                 'firstname' => $this->request->getPost('firstname'),
-                'sirname' => $this->request->getPost('sirname')
+                'surname' => $this->request->getPost('surname')
             ];
 
             if ($this->request->getPost('password')) $data['password_hash'] = $this->authLib->setPassword($this->request->getPost('password'));
@@ -228,7 +228,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             if ((bool)$result == false) return redirect()->back()->withInput()->with('error', 'Profil Güncellenemedi.');
             else return redirect()->back()->withInput()->with('message', 'Profil Güncellendi.');
         }
-        $this->defData['user'] = $this->commonModel->selectOne('users', ['id' => session()->get('logged_in')], 'email,firstname,sirname');
+        $this->defData['user'] = $this->commonModel->selectOne('users', ['id' => session()->get('logged_in')], 'email,firstname,surname');
         return view('Modules\Users\Views\usersCrud\profile', $this->defData);
     }
 

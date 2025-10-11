@@ -9,7 +9,17 @@ return [
     'categoryUpdate' => 'Kategori Güncelleme',
     'parentCategory' => 'Üst Kategori',
     'commentList' => 'Yorumlar',
+    'comment' => 'Yorum',
     'displayComment' => 'Yorumu Görüntüle',
     'badwords' => 'Kötü Söz listesi',
     'author' => 'Yazar',
+    'tags' => 'Etiketler',
+    'tagCreate' => 'Etiket Oluştur',
+    'tagUpdate' => 'Etiket Güncelle',
+    'enableFiltering' => 'Filtrelemeyi aktif et',
+    'autoReject' => 'Otomatik reddetme',
+    'autoAccept' => 'Otomatik Kabul Etme',
+    // Comment Publishing
+    'commentPublished' => 'ID numarası #{0,number} olan yorum yayınlandı.',
+    'commentPublishError' => 'Yorum yayınlanamadı. Lütfen tekrar deneyin veya günlükleri kontrol edin.',
 ];

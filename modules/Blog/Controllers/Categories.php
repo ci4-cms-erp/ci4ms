@@ -23,11 +23,11 @@ class Categories extends \Modules\Backend\Controllers\BaseController
     public function new()
     {
         if ($this->request->is('post')) {
-            $valData = (['title' => ['label' => 'Kategori Adı', 'rules' => 'required'], 'seflink' => ['label' => 'Kategori URL', 'rules' => 'required'],]);
+            $valData = (['title' => ['label' => lang('Backend.title'), 'rules' => 'required'], 'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required'],]);
             if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
-                $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
-                $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required'];
+                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
             if ($this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 0) {
@@ -40,9 +40,9 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 if (!empty($this->request->getPost('pageIMGHeight'))) $seo['IMGHeight'] = $this->request->getPost('pageIMGHeight');
                 if (!empty($this->request->getPost('keywords'))) $seo['keywords'] = json_decode($this->request->getPost('keywords'));
                 $data['seo'] = json_encode($seo, JSON_UNESCAPED_UNICODE);
-                if ($this->commonModel->create('categories', $data)) return redirect()->route('categories', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı kategori Oluşturuldu.');
-                else return redirect()->back()->withInput()->with('error', 'Kategori oluşturulamadı.');
-            } else return redirect()->back()->withInput()->with('error', 'Kategori seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
+                if ($this->commonModel->create('categories', $data)) return redirect()->route('categories', [1])->with('message', lang('Backend.created',[$data['title']]));
+                else return redirect()->back()->withInput()->with('error', lang('Backend.created',[$data['title']]));
+            } else return redirect()->back()->withInput()->with('error', lang('Backend.slugExists',[$this->request->getPost('seflink')]));
         }
         $this->defData['categories'] = $this->commonModel->lists('categories');
         return view('Modules\Blog\Views\categories\create', $this->defData);
@@ -51,15 +51,15 @@ class Categories extends \Modules\Backend\Controllers\BaseController
     public function edit(string $id)
     {
         if ($this->request->is('post')) {
-            $valData = (['title' => ['label' => 'Kategori Adı', 'rules' => 'required'], 'seflink' => ['label' => 'Kategori URL', 'rules' => 'required'],]);
+            $valData = (['title' => ['label' => lang('Backend.title'), 'rules' => 'required'], 'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required'],]);
         if (!empty($this->request->getPost('pageimg'))) {
-            $valData['pageimg'] = ['label' => 'Görsel URL', 'rules' => 'required'];
-            $valData['pageIMGWidth'] = ['label' => 'Görsel Genişliği', 'rules' => 'required|is_natural_no_zero'];
-            $valData['pageIMGHeight'] = ['label' => 'Görsel Yüksekliği', 'rules' => 'required|is_natural_no_zero'];
+            $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required'];
+            $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
+            $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
         }
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $info = $this->commonModel->selectOne('categories', ['id' => $id]);
-        if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->get_where(['seflink' => $this->request->getPost('seflink')], 'categories') === 1) return redirect()->back()->withInput()->with('error', 'Kategori seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
+        if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->get_where(['seflink' => $this->request->getPost('seflink')], 'categories') === 1) return redirect()->back()->withInput()->with('error', lang('Backend.slugExists',[$this->request->getPost('seflink')]));
         $data = ['title' => $this->request->getPost('title'), 'seflink' => $this->request->getPost('seflink'), 'isActive' => $this->request->getPost('isActive')];
         if (!empty($this->request->getPost('parent'))) $data['parent'] = $this->request->getPost('parent');
         $seo = [];
@@ -69,8 +69,8 @@ class Categories extends \Modules\Backend\Controllers\BaseController
         if (!empty($this->request->getPost('pageIMGHeight'))) $seo['IMGHeight'] = $this->request->getPost('pageIMGHeight');
         if (!empty($this->request->getPost('keywords'))) $seo['keywords'] = json_decode($this->request->getPost('keywords'));
         $data['seo'] = json_encode($seo, JSON_UNESCAPED_UNICODE);
-        if ($this->commonModel->edit('categories', $data, ['id' => $id])) return redirect()->route('categories', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı kategori güncellendi.');
-        else return redirect()->back()->withInput()->with('error', 'Kategori oluşturulamadı.');
+        if ($this->commonModel->edit('categories', $data, ['id' => $id])) return redirect()->route('categories', [1])->with('message', lang('Backend.updated',[$data['title']]));
+        else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated',[$data['title']]));
         }
         $this->defData = array_merge($this->defData, ['infos' => $this->commonModel->selectOne('categories', ['id' => $id]), 'categories' => $this->commonModel->lists('categories', '*', ['id!=' => $id])]);
         $this->defData['infos']->seo = json_decode($this->defData['infos']->seo);
@@ -80,7 +80,7 @@ class Categories extends \Modules\Backend\Controllers\BaseController
 
     public function delete(string $id)
     {
-        if ($this->commonModel->remove('categories', ['id' => $id])) return redirect()->route('categories', [1])->with('message', 'Kategori silindi.');
-        else return redirect()->route('categories', [1])->with('error', 'Kategori silinedi.');
+        if ($this->commonModel->remove('categories', ['id' => $id])) return redirect()->route('categories', [1])->with('message', lang('Backend.deleted',['#'.$id]));
+        else return redirect()->route('categories', [1])->with('error', lang('Backend.notDeleted',['#'.$id]));
     }
 }

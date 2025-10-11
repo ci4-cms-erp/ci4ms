@@ -65,7 +65,7 @@
                         <a class="nav-link" id="vert-tabs-media-tab" data-toggle="pill"
                             href="#vert-tabs-media"
                             role="tab" aria-controls="vert-tabs-media"
-                            aria-selected="false"><?= lang('Settings.media') ?></a>
+                            aria-selected="false"><?= lang('Media.media') ?></a>
                         <a class="nav-link" id="vert-tabs-login-tab" data-toggle="pill" href="#vert-tabs-login"
                             role="tab" aria-controls="vert-tabs-login"
                             aria-selected="false"><?= lang('Settings.lockedSettings') ?></a>
@@ -280,7 +280,7 @@
                                 <div class="col-md-6 form-group">
                                     <div class="input-group">
                                         <input type="text" id="testemail" name="testemail" class="form-control" placeholder="simple@domain.com">
-                                        <button class="btn btn-success" id="sendtest">Gönder</button>
+                                        <button class="btn btn-success" id="sendtest"><?=lang('Backend.send')?></button>
                                     </div>
                                 </div>
                                 <div class="col-md-6 form-group">

@@ -19,10 +19,10 @@
                     <li class="breadcrumb-item <?= (empty($breadcrumb['url'])) ? 'active' : '' ?>"
                         <?= (empty($breadcrumb['url'])) ? 'aria-current="page"' : '' ?>>
                         <?php if (empty($breadcrumb['url'])) { ?>
-                            <?= $breadcrumb['title'] ?>
+                            <?= esc($breadcrumb['title']) ?>
                         <?php } else { ?>
                             <a href="<?= site_url($breadcrumb['url']) ?>">
-                                <?= $breadcrumb['title'] ?>
+                                <?= esc($breadcrumb['title']) ?>
                             </a>
                         <?php } ?>
                     </li>
@@ -43,17 +43,17 @@
                             <div class="col-lg-6 mb-5">
                                 <div class="card h-100 shadow border-0">
                                     <img class="card-img-top"
-                                        src="<?= (!empty($blog->seo->coverImage)) ? $blog->seo->coverImage : 'https://dummyimage.com/600x350/ced4da/6c757d' ?>"
-                                        alt="<?= $blog->title ?>" />
+                                        src="<?= (!empty($blog->seo->coverImage)) ? esc($blog->seo->coverImage) : 'https://dummyimage.com/600x350/ced4da/6c757d' ?>"
+                                        alt="<?= esc($blog->title) ?>" />
                                     <div class="card-body p-4">
                                         <?php foreach ($blog->tags as $tag): ?>
-                                            <div class="badge bg-primary bg-gradient rounded-pill mb-2"><?= $tag->tag ?></div>
+                                            <div class="badge bg-primary bg-gradient rounded-pill mb-2"><?= esc($tag->tag) ?></div>
                                         <?php endforeach; ?>
                                         <a class="text-decoration-none link-dark stretched-link"
                                             href="<?= site_url('blog/' . $blog->seflink) ?>">
-                                            <div class="h5 card-title mb-3"><?= $blog->title ?></div>
+                                            <div class="h5 card-title mb-3"><?= esc($blog->title) ?></div>
                                         </a>
-                                        <p class="card-text mb-0"><?= $blog->seo->description ?></p>
+                                        <p class="card-text mb-0"><?= esc($blog->seo->description) ?></p>
                                     </div>
                                     <div class="card-footer p-4 pt-0 bg-transparent border-top-0">
                                         <div class="d-flex align-items-end justify-content-between">
@@ -61,7 +61,7 @@
                                                 <img class="rounded-circle me-3"
                                                     src="https://dummyimage.com/40x40/ced4da/6c757d" alt="..." />
                                                 <div class="small">
-                                                    <div class="fw-bold"><?= $blog->author->firstname . ' ' . $blog->author->sirname ?></div>
+                                                    <div class="fw-bold"><?= esc($blog->author->firstname) . ' ' . esc($blog->author->sirname) ?></div>
                                                     <div class="text-muted"><?= ($blog->created_at != '0000-00-00 00:00:00') ? $dateI18n::createFromTimestamp(strtotime($blog->created_at), app_timezone(), 'tr_TR')->toLocalizedString('dd MMMM yyyy HH:mm') : '' ?></div>
                                                 </div>
                                             </div>

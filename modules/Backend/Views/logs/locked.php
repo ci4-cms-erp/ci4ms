@@ -43,12 +43,12 @@ use CodeIgniter\I18n\Time;
         <div class="card-body">
             <form action="<?= route_to('locked/(:any)') ?>" class="form-row" method="get">
                 <div class="form-group col-md-6">
-                    <label for="email">Email</label>
+                    <label for="email"><?=lang('Backend.email')?></label>
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                         </div>
-                        <input type="text" name="email" class="form-control" placeholder="Email"
+                        <input type="text" name="email" class="form-control" placeholder="<?=lang('Backend.email')?>"
                                value="<?= $filteredData['email'] ?? null ?>">
                     </div>
                 </div>
@@ -76,23 +76,23 @@ use CodeIgniter\I18n\Time;
                 </div>
 
                 <div class="form-group col-md-6">
-                    <label>Durum</label>
+                    <label><?=lang('Backend.status')?></label>
                     <select class="form-control" name="status">
-                        <option value="">Seçin</option>
+                        <option value=""><?=lang('Backend.select')?></option>
                         <option <?= isset($filteredData['status']) && $filteredData['status'] === '1' ? 'selected' : '' ?>
-                                value="1">Aktive
+                                value="1"><?=lang('Backend.active')?>
                         </option>
                         <option <?= isset($filteredData['status']) && $filteredData['status'] === '0' ? 'selected' : '' ?>
-                                value="0">Pasif
+                                value="0"><?=lang('Backend.passive')?>
                         </option>
                     </select>
                 </div>
 
                 <div class="col-md-9 ">
-                    <a href="<?= route_to('locked',1) ?>" >Filtreyi Temizle</a>
+                    <a href="<?= route_to('locked',1) ?>" ><?=lang('Backend.clearFilter')?></a>
                 </div>
                 <div class="col-md-3 float-right">
-                    <button type="submit" class=" form-control btn btn-success">Ara</button>
+                    <button type="submit" class=" form-control btn btn-success"><?=lang('Backend.search')?></button>
                 </div>
             </form>
 

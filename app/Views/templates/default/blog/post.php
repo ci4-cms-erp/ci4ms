@@ -20,10 +20,10 @@
                                 <li class="breadcrumb-item <?= (empty($breadcrumb['url'])) ? 'active' : '' ?>"
                                     <?= (empty($breadcrumb['url'])) ? 'aria-current="page"' : '' ?>>
                                     <?php if (empty($breadcrumb['url'])) { ?>
-                                        <?= $breadcrumb['title'] ?>
+                                        <?= esc($breadcrumb['title']) ?>
                                     <?php } else { ?>
                                         <a href="<?= site_url($breadcrumb['url']) ?>">
-                                            <?= $breadcrumb['title'] ?>
+                                            <?= esc($breadcrumb['title']) ?>
                                         </a>
                                     <?php } ?>
                                 </li>
@@ -32,7 +32,7 @@
                     </nav>
                     <header class="mb-4">
                         <!-- Post title-->
-                        <h1 class="fw-bolder mb-1"><?= $infos->title ?></h1>
+                        <h1 class="fw-bolder mb-1"><?= esc($infos->title) ?></h1>
                         <!-- Post meta content-->
                         <? if ($infos->created_at != '0000-00-00 00:00:00'): ?>
                             <div class="text-muted fst-italic mb-2"><?= $dateI18n->createFromTimestamp(strtotime($infos->created_at), app_timezone(), 'tr_TR')->toFormattedDateString(); ?></div>
@@ -40,13 +40,13 @@
                         <!-- Post categories-->
                         <?php foreach ($tags as $tag): ?>
                             <a class="badge bg-secondary text-decoration-none link-light"
-                                href="<?= route_to('tag', $tag->seflink) ?>"><?= $tag->tag ?></a>
+                                href="<?= route_to('tag', $tag->seflink) ?>"><?= esc($tag->tag) ?></a>
                         <?php endforeach; ?>
                     </header>
                     <!-- Preview image figure-->
                     <figure class="mb-4">
-                        <img class="img-fluid rounded" src="<?= $infos->seo->coverImage ?>"
-                            alt="<?= $infos->title ?>" />
+                        <img class="img-fluid rounded" src="<?= esc($infos->seo->coverImage) ?>"
+                            alt="<?= esc($infos->title) ?>" />
                     </figure>
                     <!-- Post content-->
                     <section class="mb-5">
@@ -56,14 +56,14 @@
                     <div class="d-flex align-items-center mt-lg-5 mb-4">
                         <?php if (empty($authorInfo->profileIMG)): ?>
                             <img class="img-fluid rounded-circle" src="https://dummyimage.com/50x50/ced4da/6c757d.jpg"
-                                alt="<?= $authorInfo->firstname . ' ' . $authorInfo->sirname ?>" />
+                                alt="<?= esc($authorInfo->firstname) . ' ' . esc($authorInfo->sirname) ?>" />
                         <?php else: ?>
-                            <img class="img-fluid rounded-circle" src="<?= $authorInfo->profileIMG ?>"
-                                alt="<?= $authorInfo->firstname . ' ' . $authorInfo->sirname ?>" />
+                            <img class="img-fluid rounded-circle" src="<?= esc($authorInfo->profileIMG) ?>"
+                                alt="<?= esc($authorInfo->firstname) . ' ' . esc($authorInfo->sirname) ?>" />
                         <?php endif; ?>
                         <div class="ms-3">
-                            <div class="fw-bold"><?= $authorInfo->firstname . ' ' . $authorInfo->sirname ?></div>
-                            <div class="text-muted"><?= $authorInfo->groupName ?></div>
+                            <div class="fw-bold"><?= esc($authorInfo->firstname) . ' ' . esc($authorInfo->sirname) ?></div>
+                            <div class="text-muted"><?= esc($authorInfo->groupName) ?></div>
                         </div>
                     </div>
                 </article>

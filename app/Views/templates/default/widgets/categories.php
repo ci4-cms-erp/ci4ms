@@ -10,7 +10,7 @@
                     <ul class="list-unstyled mb-0">
                 <?php endif; ?>
                 <li>
-                    <a href="<?= site_url('category/' . $category->seflink) ?>"><?= $category->title ?></a>
+                    <a href="<?= site_url('category/' . $category->seflink) ?>"><?= esc($category->title) ?></a>
                 </li>
                 <?php if ($c == 0): ?>
                 </ul>

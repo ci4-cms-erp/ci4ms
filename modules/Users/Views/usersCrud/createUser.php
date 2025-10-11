@@ -33,8 +33,8 @@
                         <div class="input-group">
                             <input type="text" aria-label="<?= lang('Backend.name') ?>" name="firstname" class="form-control" placeholder="<?= lang('Backend.name') ?>"
                                 required>
-                            <input type="text" aria-label="<?= lang('Backend.sirname') ?>" name="sirname" class="form-control"
-                                placeholder="<?= lang('Backend.sirname') ?>" required>
+                            <input type="text" aria-label="<?= lang('Backend.surname') ?>" name="surname" class="form-control"
+                                placeholder="<?= lang('Backend.surname') ?>" required>
                         </div>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for=""><?= lang('Backend.password') ?> <?= lang('Backend.takeNotePassword') ?></label>
+                        <label for=""><?= lang('Auth.password') ?> <?= lang('Backend.takeNotePassword') ?></label>
                         <input type="text" class="form-control" name="password" minlength="8"
                             value="<?= $authLib->randomPassword() ?>" required>
                     </div>

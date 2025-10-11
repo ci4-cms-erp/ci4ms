@@ -19,7 +19,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang( $title->pagename) ?></h1>
+                <h1><?= lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right"></ol>
@@ -33,7 +33,7 @@
 
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang( $title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?= lang($title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -58,7 +58,7 @@
                 </div>
 
                 <div class="col-12 float-end">
-                    <button id="saveFile" class="btn btn-primary float-right">Kaydet</button>
+                    <button id="saveFile" class="btn btn-primary float-right"><?= lang('Backend.save') ?></button>
                 </div>
             </div>
         </div>
@@ -91,7 +91,7 @@
     require(['vs/editor/editor.main'], function() {
         editor = monaco.editor.create($('#editorContainer')[0], {
             value: "",
-            language: "php",
+            language: 'php',
             theme: "vs-dark",
             automaticLayout: true
         });
@@ -99,11 +99,34 @@
 
     const $saveButton = $('#saveFile');
 
+    function filterNodes(nodes) {
+        return nodes.filter(function(node) {
+            const title = node.title.toLowerCase(); // Küçük harfe dönüştür (case-insensitive)
+            // Gizli dosyaları/klasörleri filtrele ('.' ile başlar)
+            if (title.startsWith('.')) {
+                return false; // Gizle
+            }
+            // Özel filtre: .github klasörünü gizle
+            if (node.folder && title === '.github') {
+                return false; // Gizle
+            }
+            return true; // Göster
+        });
+    }
     // Load file list
     $('#fileTree').fancytree({
         source: {
             url: '<?= route_to("listfiles") ?>', // Endpoint to fetch file list
-            cache: false // Disable cache for live updates
+            cache: false, // Disable cache for live updates
+            postProcess: function(event, data) {
+                // Dönen veriyi filtrele
+                data.result = filterNodes(data.result);
+                data.result.sort(function(a, b) {
+                    return a.title.localeCompare(b.title, undefined, {
+                        sensitivity: 'base'
+                    });
+                });
+            }
         },
         extensions: ["edit", "filter", "dnd", "glyph"],
         quicksearch: true,
@@ -128,23 +151,32 @@
                 url: '<?= route_to("listfiles") ?>',
                 data: {
                     path: node.key
+                },
+                postProcess: function(event, data) {
+                    // Lazy load verisini de filtrele (alt klasörler için)
+                    data.result = filterNodes(data.result);
+                    data.result.sort(function(a, b) {
+                        return a.title.localeCompare(b.title, undefined, {
+                            sensitivity: 'base'
+                        });
+                    });
                 }
             };
         },
         activate: function(event, data) {
             const node = data.node;
             if (!node.folder) {
-                loadFileContent(node.key);
+                loadFileContent(node.key, node.title);
             }
         },
         init: function(event, data) {
+            const rootNode = data.tree.getRootNode();
+            rootNode.sortChildren(null, true); // null: varsayılan comparator (alfabetik), true:
             data.tree.visit(function(node) {
                 if (node.title === 'app' || node.title === 'modules' || node.title === 'public') {
                     if (node.title === 'modules') {
                         node.setExpanded(true).done(function() {
-                            console.log('modules children:', node.children);
                             $.each(node.children, function(i, child) {
-                                console.log('child:', child);
                                 child.setExpanded(true);
                             });
                         });
@@ -158,15 +190,6 @@
         },
         edit: {
             triggerStart: ["f2"],
-            beforeEdit: function(event, data) {
-                // Return false to prevent edit mode
-            },
-            edit: function(event, data) {
-                // Editor was opened (available as data.input)
-            },
-            beforeClose: function(event, data) {
-                // Return false to prevent cancel/save (data.input is available)
-            },
             save: function(event, data) {
                 // Save data.input.val() or return false to keep editor open
                 $.ajax({
@@ -178,13 +201,13 @@
                     },
                     success: function(response) {
                         if (response.success) {
-                            alert('Dosya adı başarıyla değiştirildi.');
+                            alert('<?= lang('Fileeditor.renameSuccess') ?>');
                         } else {
-                            alert('Dosya adı değiştirilemedi.');
+                            alert('<?= lang('Fileeditor.renameFailed') ?>');
                         }
                     },
                     error: function() {
-                        alert('Dosya adı değiştirilemedi.');
+                        alert('<?= lang('Fileeditor.renameFailed') ?>');
                     }
                 });
             },
@@ -219,11 +242,11 @@
                         if (response.success) {
                             data.otherNode.moveTo(node, data.hitMode);
                         } else {
-                            alert('Dosya veya klasör taşınamadı.');
+                            alert('<?= lang('Fileeditor.moveFailed') ?>');
                         }
                     },
                     error: function() {
-                        alert('Dosya veya klasör taşınamadı.');
+                        alert('<?= lang('Fileeditor.moveFailed') ?>');
                     }
                 });
             }
@@ -235,11 +258,11 @@
         selector: '#fileTree span.fancytree-title',
         items: {
             "createFile": {
-                name: "Yeni Dosya",
+                name: "<?= lang('Fileeditor.newFile') ?>",
                 icon: "file",
                 callback: function(key, opt) {
                     var node = $.ui.fancytree.getNode(opt.$trigger);
-                    var fileName = prompt("Yeni dosya adı:");
+                    var fileName = prompt("<?= lang('Fileeditor.newFileName') ?>");
                     if (fileName) {
                         $.ajax({
                             url: '<?= route_to("createFile") ?>',
@@ -255,20 +278,20 @@
                                         key: node.key + '/' + fileName,
                                         folder: false
                                     });
-                                    alert('Dosya başarıyla oluşturuldu.');
+                                    alert('<?= lang('Fileeditor.fileCreated') ?>');
                                 } else {
-                                    alert('Dosya oluşturulamadı.');
+                                    alert('<?= lang('Fileeditor.fileCreateFailed') ?>');
                                 }
                             },
                             error: function() {
-                                alert('Dosya oluşturulamadı.');
+                                alert('<?= lang('Fileeditor.fileCreateFailed') ?>');
                             }
                         });
                     }
                 }
             },
             "createFolder": {
-                name: "Yeni Klasör",
+                name: "<?= lang('Fileeditor.newFolder') ?>",
                 icon: "folder",
                 callback: function(key, opt) {
                     var node = $.ui.fancytree.getNode(opt.$trigger);
@@ -288,13 +311,13 @@
                                         key: node.key + '/' + folderName,
                                         folder: true
                                     });
-                                    alert('Klasör başarıyla oluşturuldu.');
+                                    alert('<?= lang('Fileeditor.folderCreated') ?>');
                                 } else {
-                                    alert('Klasör oluşturulamadı.');
+                                    alert('<?= lang('Fileeditor.folderCreateFailed') ?>');
                                 }
                             },
                             error: function() {
-                                alert('Klasör oluşturulamadı.');
+                                alert('<?= lang('Fileeditor.folderCreateFailed') ?>');
                             }
                         });
                     }
@@ -302,7 +325,7 @@
             },
             "sep1": "---------",
             "rename": {
-                name: "Yeniden Adlandır",
+                name: "<?= lang('Fileeditor.rename') ?>",
                 icon: "edit",
                 callback: function(key, opt) {
                     var node = $.ui.fancytree.getNode(opt.$trigger);
@@ -310,11 +333,11 @@
                 }
             },
             "delete": {
-                name: "Sil",
+                name: '<?= lang('Fileeditor.delete') ?>',
                 icon: "delete",
                 callback: function(key, opt) {
                     var node = $.ui.fancytree.getNode(opt.$trigger);
-                    if (confirm("Silmek istediğinize emin misiniz?")) {
+                    if (confirm("<?= lang('Fileeditor.confirmDelete') ?>")) {
                         $.ajax({
                             url: '<?= route_to("deleteFileOrFolder") ?>',
                             method: 'POST',
@@ -324,13 +347,13 @@
                             success: function(response) {
                                 if (response.success) {
                                     node.remove();
-                                    alert('Dosya veya klasör başarıyla silindi.');
+                                    alert('<?= lang('Fileeditor.deleteSuccess') ?>');
                                 } else {
-                                    alert('Dosya veya klasör silinemedi.');
+                                    alert('<?= lang('Fileeditor.deleteFailed') ?>');
                                 }
                             },
                             error: function() {
-                                alert('Dosya veya klasör silinemedi.');
+                                alert('<?= lang('Fileeditor.deleteFailed') ?>');
                             }
                         });
                     }
@@ -391,7 +414,7 @@
     });
 
     // Load file content
-    const loadFileContent = (path) => {
+    const loadFileContent = (path, fileName) => {
         $.ajax({
             url: `<?= route_to('readFile') ?>`,
             data: {
@@ -400,14 +423,27 @@
             dataType: 'json',
             success: function(data) {
                 if (data.content) {
-                    editor.setValue(data.content);
+                    const currentModel = editor.getModel();
+                    if (currentModel) {
+                        currentModel.dispose(); // Eski modeli temizle (hafıza yönetimi için)
+                    }
+
+                    // Yeni model: Dil undefined bırak, URI ile dosya adını ver (otomatik algılama için)
+                    const newModel = monaco.editor.createModel(
+                        data.content,
+                        undefined, // Dil otomatik algılansın (uzantıya göre)
+                        monaco.Uri.file(fileName) // Dosya adından uzantı algılanır
+                    );
+
+                    // Editör'e yeni modeli ata
+                    editor.setModel(newModel);
                     currentPath = path;
                 } else {
-                    alert('Dosya okunamadı.');
+                    alert('<?= lang('Fileeditor.fileReadFailed') ?>');
                 }
             },
             error: function() {
-                console.error('Dosya içeriği yüklenemedi.');
+                console.error('<?= lang('Fileeditor.fileContentLoadFailed') ?>');
             }
         });
     };
@@ -426,13 +462,13 @@
             dataType: 'json',
             success: function(data) {
                 if (data.success) {
-                    alert('Dosya başarıyla kaydedildi.');
+                    alert('<?= lang('Fileeditor.fileSaveSuccess') ?>');
                 } else {
-                    alert('Dosya kaydedilemedi.');
+                    alert('<?= lang('Fileeditor.fileSaveFailed') ?>');
                 }
             },
             error: function() {
-                console.error('Dosya kaydedilemedi.');
+                console.error('<?= lang('Fileeditor.fileSaveFailed') ?>');
             }
         });
     });

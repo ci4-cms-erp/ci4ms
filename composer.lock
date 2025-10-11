@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "79a414d1c50d5594214a8a2affdf6f05",
+    "content-hash": "63bb7ce66cca4a02fde595e7a6b0fbe7",
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
@@ -48,6 +48,82 @@
                 "source": "https://github.com/bertugfahriozer/ci4mongodblibrary"
             },
             "time": "2025-05-26T20:07:27+00:00"
+        },
+        {
+            "name": "bertugfahriozer/ci4seopro",
+            "version": "v0.1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bertugfahriozer/ci4seopro.git",
+                "reference": "1327bb486b2ee031f1c54e348c2ae9436ec7430a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bertugfahriozer/ci4seopro/zipball/1327bb486b2ee031f1c54e348c2ae9436ec7430a",
+                "reference": "1327bb486b2ee031f1c54e348c2ae9436ec7430a",
+                "shasum": ""
+            },
+            "require": {
+                "codeigniter4/framework": "^4.0",
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "extra": {
+                "codeigniter4": {
+                    "discover": {
+                        "psr4": [
+                            "bertugfahriozer\\ci4seopro"
+                        ],
+                        "routes": [
+                            "bertugfahriozer\\ci4seopro\\Config\\Routes"
+                        ],
+                        "helpers": [
+                            "seo"
+                        ],
+                        "commands": [
+                            "bertugfahriozer\\ci4seopro\\Commands\\PingSitemap",
+                            "bertugfahriozer\\ci4seopro\\Commands\\WarmCache"
+                        ]
+                    }
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Helpers/seo_helper.php"
+                ],
+                "psr-4": {
+                    "bertugfahriozer\\ci4seopro\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bertuğ Fahri ÖZER",
+                    "email": "bertugfahriozer@gmail.com"
+                }
+            ],
+            "description": "Professional SEO/AI indexing + Sitemap (index) + RSS + News/Image/Video sitemaps for CodeIgniter 4",
+            "keywords": [
+                "Sitemap",
+                "ai",
+                "codeigniter4",
+                "e-commerce",
+                "image",
+                "llms",
+                "news",
+                "robots.txt",
+                "rss",
+                "seo",
+                "video"
+            ],
+            "support": {
+                "issues": "https://github.com/bertugfahriozer/ci4seopro/issues",
+                "source": "https://github.com/bertugfahriozer/ci4seopro/tree/v0.1.1.0"
+            },
+            "time": "2025-10-01T23:25:06+00:00"
         },
         {
             "name": "bertugfahriozer/sql2migration",

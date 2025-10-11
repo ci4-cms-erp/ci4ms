@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'blog' => 'Module Blogue',
+    'blogs' => 'Messages',
+    'blogCreate' => 'Créer un blog',
+    'blogUpdate' => 'Mettre à jour le blog',
+    'categories' => 'Catégories',
+    'categoryCreate' => 'Créer une catégorie',
+    'categoryUpdate' => 'Catégorie de mise à jour',
+    'parentCategory' => 'Catégorie parente',
+    'commentList' => 'Commentaires',
+    'comment' => 'Commentaire',
+    'displayComment' => 'Afficher le commentaire',
+    'badwords' => 'Liste de mots interdits',
+    'author' => 'Auteur',
+    'tags' => 'Balises',
+    'tagCreate' => 'Créer une balise',
+    'tagUpdate' => 'Mettre à jour la balise',
+    'enableFiltering' => 'Activer le filtrage',
+    'autoReject' => 'Rejet automatique',
+    'autoAccept' => 'Acceptation automatique',
+    'commentPublished' => 'Le commentaire avec l\'identifiant #{0,number} a été publié.',
+    'commentPublishError' => 'Le commentaire ne peut pas être publié. Veuillez réessayer ou vérifier les journaux.',
+];

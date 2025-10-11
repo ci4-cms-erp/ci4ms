@@ -11,7 +11,7 @@ class Seo extends BaseController
     public function index()
     {
         $sitemap = new Sitemap(base_url('sitemapsXML'), ['save_path' => ROOTPATH . 'public/sitemapsXML']);
-        $sitemap->setIndexName('sitemaps.xml');
+        $sitemap->setIndexName('sitemap.xml');
         $sitemap->links(['name' => 'pages.xml', 'images' => true],
             function ($map) {
                 $pages = $this->commonModel->lists('pages', '*', ['isActive' => true]);
@@ -42,8 +42,8 @@ class Seo extends BaseController
         }
         if ($sitemap->save() === true) {
             $ping = new Ping();
-            $ping->send(base_url('sitemapsXML/sitemaps.xml'));
-            return redirect()->to('/sitemapsXML/sitemaps.xml');
+            $ping->send(base_url('sitemapsXML/sitemap.xml'));
+            return redirect()->to('/sitemapsXML/sitemap.xml');
         } else return show_404();
     }
 }

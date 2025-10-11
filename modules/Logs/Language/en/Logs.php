@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'logs' => 'Ci4 Logları',
+    'logs' => 'CI4 Logs',
 ];

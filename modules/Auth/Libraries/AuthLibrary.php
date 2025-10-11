@@ -29,7 +29,7 @@ class AuthLibrary
         $this->user = null;
         $this->config->userTable = 'users';
         $this->ipAddress = Services::request()->getIPAddress();
-        $this->now = Time::createFromFormat('Y-m-d H:i:s', (new Time('now'))->toDateTimeString(), 'Europe/Istanbul');
+        $this->now = Time::createFromFormat('Y-m-d H:i:s', (new Time('now'))->toDateTimeString(), getenv('app.appTimzezone'));
         $settings = (object)cache()->get('settings');
         if (empty($settings)) {
             $settings = $this->commonModel->lists('settings');

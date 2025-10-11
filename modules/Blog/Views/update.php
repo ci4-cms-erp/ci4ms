@@ -55,7 +55,7 @@
                 <div class="col-md-8 form-group row">
                     <div class="form-group col-md-12">
                         <label for=""><?= lang('Backend.title') ?></label>
-                        <input type="text" name="title" class="form-control ptitle" placeholder="Sayfa Başlığı"
+                        <input type="text" name="title" class="form-control ptitle" placeholder="<?= lang('Backend.title') ?>"
                                required value="<?= $infos->title ?>">
                     </div>
                     <div class="form-group col-md-12">
@@ -90,7 +90,7 @@
                         <select name="author" id="" class="form-control" required>
                             <option value=""><?= lang('Backend.author') ?></option>
                             <?php foreach ($authors as $author): ?>
-                                <option value="<?= $author->id ?>" <?= $author->id == $infos->author ? 'selected' : '' ?>><?= $author->firstname . ' ' . $author->sirname ?></option>
+                                <option value="<?= $author->id ?>" <?= $author->id == $infos->author ? 'selected' : '' ?>><?= $author->firstname . ' ' . $author->surname ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -107,7 +107,7 @@
                     <div class="col-md-12 form-group">
                         <label for=""><?= lang('Blog.categories') ?></label>
                         <select name="categories[]" id="" class="form-control select2bs4" multiple="multiple"
-                                data-placeholder="Select categories">
+                                data-placeholder="<?=lang('Backend.selectOption',[lang('Blog.categories')])?>">
                             <?php $selected = [];
                             if (!empty($infos->categories)):
                                 foreach ($infos->categories as $icategory):
@@ -160,7 +160,7 @@
                     </div>
                     <div class="form-group col-md-12">
                         <label for=""><?= lang('Backend.seoKeywords') ?></label>
-                        <textarea name="keywords" class="keywords" placeholder="write some tags"><?= $tags ?></textarea>
+                        <textarea name="keywords" class="keywords" placeholder="<?=lang('Backend.tagPlaceholder')?>"><?= $tags ?></textarea>
                     </div>
                 </div>
                 <div class="form-group col-md-12">

@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'blog' => 'وحدة المدونة',
+    'blogs' => 'دعامات',
+    'blogCreate' => 'إنشاء مدونة',
+    'blogUpdate' => 'تحديث المدونة',
+    'categories' => 'فئات',
+    'categoryCreate' => 'إنشاء فئة',
+    'categoryUpdate' => 'تحديث الفئة',
+    'parentCategory' => 'فئة الوالدين',
+    'commentList' => 'تعليقات',
+    'comment' => 'تعليق',
+    'displayComment' => 'عرض التعليق',
+    'badwords' => 'قائمة الكلمات المحظورة',
+    'author' => 'مؤلف',
+    'tags' => 'العلامات',
+    'tagCreate' => 'إنشاء علامة',
+    'tagUpdate' => 'تحديث العلامة',
+    'enableFiltering' => 'تمكين التصفية',
+    'autoReject' => 'الرفض التلقائي',
+    'autoAccept' => 'قبول تلقائي',
+    'commentPublished' => 'تم نشر التعليق بالمعرف #{0,number}.',
+    'commentPublishError' => 'لا يمكن نشر التعليق. يرجى المحاولة مرة أخرى أو التحقق من السجلات.',
+];

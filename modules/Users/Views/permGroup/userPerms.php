@@ -6,7 +6,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= $userInfos->firstname . ' ' . $userInfos->sirname ?> <?= lang('Users.permUpdate') ?></h1>
+                <h1><?= $userInfos->firstname . ' ' . $userInfos->surname ?> <?= lang('Users.permUpdate') ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -23,7 +23,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= $userInfos->firstname . ' ' . $userInfos->sirname ?> <?= lang('Users.permUpdate') ?></h3>
+            <h3 class="card-title font-weight-bold"><?= $userInfos->firstname . ' ' . $userInfos->surname ?> <?= lang('Users.permUpdate') ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -54,13 +54,13 @@
 
                                 <div class="w-100 text-right">
                                     <div class="module-toggle float-right">
-                                        <span class="badge bg-primary"><?= count($module->pages) ?> adet metot</span>
+                                        <span class="badge bg-primary"><?=lang('Methods.methodCount',[count($module->pages)])?></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="card-body row">
                                 <?php if (empty($module->pages)): ?>
-                                    <div class="alert alert-warning">Bu modül için tanımlanmış sayfa bulunamadı</div>
+                                    <div class="alert alert-warning"><?=lang('Methods.noPagesFound')?></div>
                                     <?php else:
                                     foreach ($module->pages as $key => $page):
                                         $groupPermPageIds = array_column($groupPerms, 'page_id');
@@ -84,10 +84,10 @@
                                                     <?= htmlspecialchars($page->sefLink) ?>
                                                 </div>
                                                 <?php if ($page->inNavigation): ?>
-                                                    <span class="ml-2 badge bg-info d-flex align-items-center">Navigation</span>
+                                                    <span class="ml-2 badge bg-info d-flex align-items-center"><?=lang('Methods.navigation')?></span>
                                                 <?php endif; ?>
                                                 <?php if ($page->hasChild): ?>
-                                                    <span class="ml-2 badge bg-warning d-flex align-items-center">Alt Sayfa Var</span>
+                                                    <span class="ml-2 badge bg-warning d-flex align-items-center"><?=lang('Methods.hasChildPages')?></span>
                                                 <?php endif; ?>
                                             </div>
                                             <label class="toggle-switch page-toggle">

@@ -36,7 +36,11 @@ return [
     'trustedIps' => 'Güvenilir IP Aralığını',
     'trustedIp' => 'Güvenilir Tekil Ip',
     'trustedUsername' => 'Güvenilir Kullanıcı Adı',
-    'media' => 'Medya',
     'templateSettings' => 'Tema Ayarları',
-    'elfinderConvertWebp' => 'webp formatına dönüştür'
+    'elfinderConvertWebp' => 'webp formatına dönüştür',
+    'socialMediaNameOrLinkRequired' => 'Sosyal medya adı veya linki boş bırakılamaz',
+    'socialMediaLinkMustBeUrl' => 'Sosyal Medya Linki URL olmalıdır!',
+    'socialMediaNameMustBeText' => 'Sosyal Medya Adı yazı değeri olmalıdır!',
+    'socialMediaNameRequired' => 'Sosyal Medya Adı boş bırakılamaz!',
+    'testEmailSent' => 'Test e-mail başarıyla gönderildi.',
 ];

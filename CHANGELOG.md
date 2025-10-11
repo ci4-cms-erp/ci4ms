@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.26.3.4] - 2025-09-27
+### Added
+- Delivered full translation packs for every module in Spanish, French, German, Chinese, Russian, Japanese, Arabic, Portuguese, and Hindi, including validation to preserve existing placeholders and HTML tokens.
+
 ## [0.26.3.3] - 2025-09-26
 ### Added
 - Seed missing default permissions for file editor actions, the backend theme manager, and the WebP toggle during installation.
@@ -57,6 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 ### Added
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.26.3.4]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.26.3.4
 [0.26.3.3]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.26.3.3
 [0.26.3.2]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.26.3.2
 [0.26.3.1]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.26.3.1

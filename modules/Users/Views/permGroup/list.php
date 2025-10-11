@@ -67,7 +67,7 @@
             <div class="card-footer clearfix">
                 <ul class="pagination pagination-sm m-0 float-right">
                     <?php if ($paginator->getPrevUrl()): ?>
-                        <li class="page-item"><a class="page-link" href="<?php echo $paginator->getPrevUrl(); ?>">&laquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="<?php echo $paginator->getPrevUrl(); ?>"></a></li>
                     <?php endif; ?>
 
                     <?php foreach ($paginator->getPages() as $page): ?>
@@ -81,7 +81,7 @@
                     <?php endforeach; ?>
 
                     <?php if ($paginator->getNextUrl()): ?>
-                        <li class="page-item"><a class="page-link" href="<?php echo $paginator->getNextUrl(); ?>">&raquo;</a></li>
+                        <li class="page-item"><a class="page-link" href="<?php echo $paginator->getNextUrl(); ?>"></a></li>
                     <?php endif; ?>
                 </ul>
             </div>

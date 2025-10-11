@@ -24,9 +24,9 @@
             <div class="container px-5">
                 <a class="navbar-brand" href="<?= base_url() ?>">
                     <?php if (empty($settings->logo)):
-                        echo $settings->siteName;
+                        echo esc($settings->siteName);
                     else: ?>
-                        <img src="<?= $settings->logo ?>" alt="<?= $settings->siteName ?>" class="img-fluid">
+                        <img src="<?= esc($settings->logo) ?>" alt="<?= esc($settings->siteName) ?>" class="img-fluid">
                     <?php endif; ?>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -52,7 +52,7 @@
         <div class="container px-5">
             <div class="row align-items-center justify-content-between flex-column flex-sm-row">
                 <div class="col-auto">
-                    <div class="small m-0 text-white">Copyright &copy; <?= $settings->siteName . ' ' . date('Y') ?> </div>
+                    <div class="small m-0 text-white">Copyright &copy; <?= esc($settings->siteName) . ' ' . date('Y') ?> </div>
                 </div>
                 <div class="col-auto">
                     <a class="link-light small" href="#!">Privacy</a>

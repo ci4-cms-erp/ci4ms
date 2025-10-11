@@ -43,17 +43,17 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     public function compInfosPost()
     {
         $valData = ([
-            'cName' => ['label' => 'Şirket Adı', 'rules' => 'required'],
-            'cUrl' => ['label' => 'Site Linki', 'rules' => 'required|valid_url'],
-            'cAddress' => ['label' => 'Şirket Adresi', 'rules' => 'required'],
-            'cPhone' => ['label' => 'Şirket Telefonu', 'rules' => 'required'],
-            'cMail' => ['label' => 'Şirket Maili', 'rules' => 'required|valid_email'],
+            'cName' => ['label' => lang('Settings.companyName'), 'rules' => 'required'],
+            'cUrl' => ['label' => lang('Settings.websiteUrl'), 'rules' => 'required|valid_url'],
+            'cAddress' => ['label' => lang('Settings.companyAddress'), 'rules' => 'required'],
+            'cPhone' => ['label' => lang('Settings.companyPhone'), 'rules' => 'required'],
+            'cMail' => ['label' => lang('Settings.companyEmail'), 'rules' => 'required|valid_email'],
         ]);
 
-        if (!empty($this->request->getPost('cSlogan'))) $valData['cSlogan'] = ['label' => 'Slogan', 'rules' => 'required'];
-        if (!empty($this->request->getPost('cGSM'))) $valData['cGSM'] = ['label' => 'Şirket GSM', 'rules' => 'required'];
-        if (!empty($this->request->getPost('cMap'))) $valData['cMap'] = ['label' => 'Google Map iframe linki', 'rules' => 'required'];
-        if (!empty($this->request->getPost('cLogo'))) $valData['cLogo'] = ['label' => 'Şirket Logosu', 'rules' => 'required'];
+        if (!empty($this->request->getPost('cSlogan'))) $valData['cSlogan'] = ['label' => lang('Settings.companySlogan'), 'rules' => 'required'];
+        if (!empty($this->request->getPost('cGSM'))) $valData['cGSM'] = ['label' => lang('Settings.companyGsm'), 'rules' => 'required'];
+        if (!empty($this->request->getPost('cMap'))) $valData['cMap'] = ['label' => lang('Settings.gmapIframe'), 'rules' => 'required'];
+        if (!empty($this->request->getPost('cLogo'))) $valData['cLogo'] = ['label' => lang('Settings.companyLogo'), 'rules' => 'required'];
 
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
@@ -72,8 +72,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
 
         if ($this->commonModel->edit('settings', ['content' => json_encode($data)], ['option' => 'company'])) {
             cache()->delete('settings');
-            return redirect()->back()->with('message', 'Şirket Bilgileri Güncellendi.');
-        } else return redirect()->back()->withInput()->with('error', 'Şirket Bilgileri Güncellenemedi.');
+            return redirect()->back()->with('message', lang('Backend.updated',[lang('Settings.companyInfos')]));
+        } else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated',[lang('Settings.companyInfos')]));
     }
 
     /**
@@ -81,23 +81,23 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function socialMediaPost()
     {
-        $valData = (['socialNetwork' => ['label' => 'Sosyal medya adı veya linki boş bırakılamaz', 'rules' => 'required']]);
+        $valData = (['socialNetwork' => ['label' => lang('Settings.socialMediaNameOrLinkRequired'), 'rules' => 'required']]);
         $error = [];
         $socialNetwork = $this->request->getPost('socialNetwork');
         foreach ($socialNetwork as $key => $item) {
             $socialNetwork[$key]['link'] = trim($item['link']);
             $socialNetwork[$key]['smName'] = strtolower(trim($item['smName']));
             if (filter_var($item['link'], FILTER_VALIDATE_URL) === false) {
-                $error['link'] = 'Sosyal Medya Linki URL olmalıdır !';
+                $error['link'] = lang('Settings.socialMediaLinkMustBeUrl');
                 unset($socialNetwork[$key]);
             }
             if (!empty($error)) return redirect()->back()->withInput()->with('errors', $error);
             if (!is_string($item['smName'])) {
-                $error['snName'] = 'Sosyal Medya Adı yazı değeri olmalıdır !';
+                $error['snName'] = lang('Settings.socialMediaNameMustBeText');
                 unset($socialNetwork[$key]);
             }
             if (empty($item['link']) || empty($item['smName'])) {
-                $error = ['Sosyal Medya Adı boş bırakılamaz !'];
+                $error = [lang('Settings.socialMediaNameRequired')];
                 unset($socialNetwork[$key]);
             }
         }
@@ -106,8 +106,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $result = $this->commonModel->edit('settings', ['content' => json_encode($socialNetwork, JSON_UNESCAPED_UNICODE)], ['option' => 'socialNetwork']);
         cache()->delete('settings');
-        if ((bool)$result === false) return redirect()->back()->withInput()->with('error', 'Şirket Sosyal Medya Bilgileri Güncellenemedi.');
-        else return redirect()->back()->with('message', 'Şirket Sosyal Medya Bilgileri Güncellendi.');
+        if ((bool)$result === false) return redirect()->back()->withInput()->with('error', lang('Backend.updated',[lang('Settings.socialMedia')]));
+        else return redirect()->back()->with('message', lang('Backend.notUpdated',[lang('Settings.socialMedia')]));
     }
 
     /**
@@ -118,8 +118,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         $valData = [
             'mServer' => ['label' => 'Mail Server', 'rules' => 'required'],
             'mPort' => ['label' => 'Mail Port', 'rules' => 'required|is_natural_no_zero'],
-            'mAddress' => ['label' => 'Mail Adresi', 'rules' => 'required|valid_email'],
-            'mPwd' => ['label' => 'Mail Şifresi', 'rules' => 'required']
+            'mAddress' => ['label' => lang('Settings.mailAddress'), 'rules' => 'required|valid_email'],
+            'mPwd' => ['label' => lang('Settings.mailPassword'), 'rules' => 'required']
         ];
 
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
@@ -135,8 +135,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         if ($this->request->getPost('mTls')) $data['tls'] = true;
         cache()->delete('settings');
         $result = $this->commonModel->edit('settings', ['content' => json_encode($data)], ['option' => 'mail']);
-        if ((bool)$result === false) return redirect()->back()->withInput()->with('error', 'Mail Bilgileri Güncellenemedi.');
-        else return redirect()->back()->with('message', 'Mail Bilgileri Güncellendi.');
+        if ((bool)$result === false) return redirect()->back()->withInput()->with('error', lang('Backend.updated',[lang('Settings.mailSettings')]));
+        else return redirect()->back()->with('message', lang('Backend.notUpdated',[lang('Settings.mailSettings')]));
     }
 
     public function testMail()
@@ -152,7 +152,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 'Test Mail',
                 'Mail working correctly.',
             );
-            if ($mailResult === true) return $this->response->setJSON(['result' => true, 'message' => 'Test e-mail başarıyla gönderildi.']);
+            if ($mailResult === true) return $this->response->setJSON(['result' => true, 'message' => lang('Settings.testEmailSent')]);
             else return $this->response->setJSON(['result' => false, 'message' => $mailResult]);
         }
     }
@@ -163,13 +163,13 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     public function loginSettingsPost()
     {
         $valData = [
-            'lockedRecord' => ['label' => 'Kilitleme Sayısı', 'rules' => 'required|is_natural_no_zero|less_than[10]|greater_than[1]'],
-            'lockedMin' => ['label' => 'Engellme Süresi', 'rules' => 'required|is_natural_no_zero|less_than[180]|greater_than[10]'],
-            'lockedTry' => ['label' => 'Deneme Sayısı', 'rules' => 'required|is_natural_no_zero|less_than[20]|greater_than[2]'],
-            'blackListRange' => ['label' => 'IP Aralığını Blokla', 'rules' => 'max_length[1000]|ipRangeControl'],
-            'blacklistLine' => ['label' => 'Tekil Ip Bloklama', 'rules' => 'max_length[1000]'],
-            'whitelistRange' => ['label' => 'Güvenilir IP Aralığını', 'rules' => 'max_length[1000]'],
-            'whitelistLine' => ['label' => 'Güvenilir Tekil Ip', 'rules' => 'max_length[1000]'],
+            'lockedRecord' => ['label' => lang('Settings.lockingCounter'), 'rules' => 'required|is_natural_no_zero|less_than[10]|greater_than[1]'],
+            'lockedMin' => ['label' => lang('Settings.blockedTime'), 'rules' => 'required|is_natural_no_zero|less_than[180]|greater_than[10]'],
+            'lockedTry' => ['label' => lang('Settings.tryCounter'), 'rules' => 'required|is_natural_no_zero|less_than[20]|greater_than[2]'],
+            'blackListRange' => ['label' => lang('Settings.blockIps'), 'rules' => 'max_length[1000]|ipRangeControl'],
+            'blacklistLine' => ['label' => lang('Settings.blockIp'), 'rules' => 'max_length[1000]'],
+            'whitelistRange' => ['label' => lang('Settings.trustedIps'), 'rules' => 'max_length[1000]'],
+            'whitelistLine' => ['label' => lang('Settings.trustedIp'), 'rules' => 'max_length[1000]'],
         ];
 
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
@@ -206,10 +206,10 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             $login_rules = $this->commonModel->selectOne('login_rules', ['type' => 'whitelist']);
             $result = $this->commonModel->edit('login_rules', $whitelist, ['id' => $login_rules->id]);
         }
-        if ((bool)$result === false) return redirect()->back()->withInput()->with('error', 'Giriş Ayarları Bilgileri Güncellenemedi.');
+        if ((bool)$result === false) return redirect()->back()->withInput()->with('error', lang('Backend.updated',[lang('Settings.lockedSettings')]));
         else {
             cache()->delete('settings');
-            return redirect()->back()->with('message', 'Giriş Ayarları Bilgileri Güncellendi.');
+            return redirect()->back()->with('message', lang('Backend.notUpdated',[lang('Settings.lockedSettings')]));
         }
     }
 
@@ -244,14 +244,14 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     public function saveAllowedFiles()
     {
         $valData = ([
-            'allowedFiles' => ['label' => 'Dosya Türleri', 'rules' => 'required'],
+            'allowedFiles' => ['label' => lang('Settings.fileTypes'), 'rules' => 'required'],
         ]);
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         $data = explode(',', $this->request->getPost('allowedFiles'));
         if ($this->commonModel->edit('settings', ['content' => json_encode($data, JSON_UNESCAPED_UNICODE)], ['option' => 'allowedFiles'])) {
             cache()->delete('settings');
-            return redirect()->back()->with('message', 'Dosya Türleri Güncellendi.');
-        } else return redirect()->back()->withInput()->with('error', 'Dosya Türleri Güncellenemedi.');
+            return redirect()->back()->with('message', lang('Backend.updated',[lang('Settings.fileTypes')]));
+        } else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated',[lang('Settings.fileTypes')]));
     }
 
     /**
@@ -272,8 +272,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         $data = array_merge((array)$this->defData['settings']->templateInfos, $this->request->getPost('settings'));
         if ($this->commonModel->edit('settings', ['content' => json_encode($data, JSON_UNESCAPED_UNICODE)], ['option' => 'templateInfos'])) {
             cache()->delete('settings');
-            return redirect()->back()->with('success', 'Tema Ayarları kayıt edildi.');
-        } else return redirect()->back()->with('error', 'Tema Ayarları kayıt edilemedi');
+            return redirect()->back()->with('success', lang('Backend.updated',[lang('Settings.templateSettings')]));
+        } else return redirect()->back()->with('error', lang('Backend.notUpdated',[lang('Settings.templateSettings')]));
     }
 
     public function elfinderConvertWebp()

@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'blog' => '博客模块',
+    'blogs' => '帖子',
+    'blogCreate' => '创建博客',
+    'blogUpdate' => '更新博客',
+    'categories' => '类别',
+    'categoryCreate' => '创建类别',
+    'categoryUpdate' => '更新类别',
+    'parentCategory' => '家长类别',
+    'commentList' => '评论',
+    'comment' => '评论',
+    'displayComment' => '查看评论',
+    'badwords' => '禁用词列表',
+    'author' => '作者',
+    'tags' => '标签',
+    'tagCreate' => '创建标签',
+    'tagUpdate' => '更新标签',
+    'enableFiltering' => '启用过滤',
+    'autoReject' => '自动拒绝',
+    'autoAccept' => '自动接受',
+    'commentPublished' => 'id 为 #{0,number} 的评论已发布。',
+    'commentPublishError' => '无法发表评论。请重试或检查日志。',
+];

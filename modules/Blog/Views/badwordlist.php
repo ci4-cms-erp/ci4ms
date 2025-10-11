@@ -41,27 +41,27 @@
                 <div class="col-12 form-group">
                     <div class="form-check form-check-inline">
                     <input type="checkbox" name="status" id="status" class="form-check-input" <?=(!empty($badwords->status) && (bool)$badwords->status===true)?'checked':''?>>
-                    <label for="status" class="form-check-label">Filtrelemeyi aktif et
+                    <label for="status" class="form-check-label"><?=lang('Blog.enableFiltering')?>
                     </label>
                     </div>
 
                     <div class="form-check form-check-inline">
                         <input type="checkbox" name="autoReject" id="autoReject" class="form-check-input" <?=(!empty($badwords->autoReject) && (bool)$badwords->autoReject===true)?'checked':''?>>
-                        <label for="autoReject" class="form-check-label">Otomatik reddetme
+                        <label for="autoReject" class="form-check-label"><?=lang('Blog.autoReject')?>
                         </label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input type="checkbox" name="autoAccept" id="autoAccept" class="form-check-input" <?=(!empty($badwords->autoAccept) && (bool)$badwords->autoAccept===true)?'checked':''?>>
-                        <label for="autoAccept" class="form-check-label">Otomatik Kabul Etme
+                        <label for="autoAccept" class="form-check-label"><?=lang('Blog.autoAccept')?>
                         </label>
                     </div>
                 </div>
                 <div class="col-12 form-group">
-                    <label for="">Kötü sözler</label>
+                    <label for=""><?=lang('')?></label>
                     <textarea name="badwords" id="" cols="30" rows="10" class="form-control"><?=$badwords->list?></textarea>
                 </div>
                 <div class="col-12 form-group">
-                    <button class="btn btn-success float-right" type="submit">Kaydet</button>
+                    <button class="btn btn-success float-right" type="submit"><?=lang('Backend.save')?></button>
                 </div>
             </form>
         </div>

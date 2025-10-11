@@ -15,7 +15,7 @@ return [
     // Registration
     'registerDisabled' => 'Sorry, new user accounts are not allowed at this time.',
     'registerSuccess' => 'Welcome aboard! Please login with your new credentials.',
-    'emailActivationuccess' => 'Tekrar hoşgeldin! E-postanızı onayladınız. Hesabına giriş yapabilirsin.', //translate
+    'emailActivationuccess' => 'Welcome back! Your email has been confirmed. You can now sign in.',
     'registerCLI' => 'New user created: {0}, #{1}',
 
     // Activation
@@ -33,7 +33,7 @@ return [
     'invalidPassword' => 'Unable to log you in. Please check your password.',
 
     // Forgotten Passwords
-    'forgotDisabled' => 'Resseting password option has been disabled.',
+    'forgotDisabled' => 'The password reset option has been disabled.',
     'forgotNoUser' => 'Unable to locate a user with that email.',
     'forgotSubject' => 'Password Reset Instructions',
     'resetSuccess' => 'Your password has been successfully changed. Please login with the new password.',
@@ -76,7 +76,6 @@ return [
     'email' => 'Email',
     'emailAddress' => 'Email Address',
     'sendInstructions' => 'Send Instructions',
-    'loginTitle' => 'Login',
     'loginAction' => 'Login',
     'rememberMe' => 'Remember me',
     'needAnAccount' => 'Need an account?',
@@ -96,15 +95,7 @@ return [
     'newPasswordRepeat' => 'Repeat New Password',
     'resetPassword' => 'Reset Password',
     'badCaptcha' => 'Captcha is wrong.',
-    'more_info' => 'More info <i class="fas fa-arrow-circle-right"></i>',
-    'sayfalar' => 'Sayfalar',
-    'Auth.resetPassword' => '',
-    'Auth.newPasswordRepeat' => '',
-    'Auth.newPassword' => '',
-    'Auth.email' => '',
-    'Backend.' => '',
-    'Backend.pageAdd' => '',
-    'Auth.forgotPassword' => '',
-    'Auth.loginAction' => '',
-    'Auth.rememberMe' => ''
+    'generatePasswordMessage' => 'You are just one step away from your new password, create your password now.',
+    'forgotPasswordMessage' => 'Forgot your password? You can easily get a new one here with your email address.',
+    'loginMessage' => 'Please log in to start your session',
 ];

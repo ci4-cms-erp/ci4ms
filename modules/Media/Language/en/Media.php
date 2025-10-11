@@ -1,4 +1,4 @@
 <?php
 return [
-    'media'=>'Medya'
+    'media' => 'Media'
 ];

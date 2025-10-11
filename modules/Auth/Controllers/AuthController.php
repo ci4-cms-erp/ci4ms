@@ -96,8 +96,8 @@ class AuthController extends BaseController
                 ['mail' => $user->email],
                 'noreply@' . $_SERVER['HTTP_HOST'],
                 'Information',
-                'Üyelik Şifre Sıfırlama',
-                'Üyeliğiniz şifre sıfırlaması gerçekleştirildi. Şifre yenileme isteğiniz ' . date('d-m-Y H:i:s', strtotime($user->reset_expires)) . ' tarihine kadar geçerlidir. Lütfen yeni şifrenizi belirlemek için <a href="' . site_url('backend/reset-password/' . $user->reset_hash) . '"><b>buraya</b></a> tıklayınız.'
+                lang('Auth.membershipPasswordReset'),
+                lang('passwordResetMessage',[date('d-m-Y H:i:s', strtotime($user->reset_expires)),site_url('backend/reset-password/' . $user->reset_hash)])
             );
             if ($mailResult === true) return redirect()->route('login')->with('message', lang('Auth.forgotEmailSent'));
             else return redirect()->back()->withInput()->with('error', $mailResult ?? lang('Auth.unknownError'));

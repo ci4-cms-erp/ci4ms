@@ -24,7 +24,7 @@
             <div class="col-sm-6">
                 <div class="btn-group float-sm-right" role="group" aria-label="Basic example">
                     <a href="<?= route_to('uploadModule') ?>" class="btn btn-outline-success" data-toggle="modal" data-target="#modal-default">
-                        <i class="fas fa-plus"></i> Modül Ekle
+                        <?=lang('Backend.add')?>
                     </a>
                 </div>
                 <ol class="breadcrumb float-sm-right">
@@ -62,7 +62,7 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Modül Yükle</h4>
+                    <h4 class="modal-title"><?=lang('Modules.uploadModule')?></h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -74,15 +74,15 @@
                                 <div class="btn-group w-100">
                                     <span class="btn btn-success col fileinput-button">
                                         <i class="fas fa-plus"></i>
-                                        <span>Add files</span>
+                                        <span><?=lang('Modules.addFiles')?></span>
                                     </span>
                                     <button type="submit" class="btn btn-primary col start">
                                         <i class="fas fa-upload"></i>
-                                        <span>Start upload</span>
+                                        <span><?=lang('Modules.startUpload')?></span>
                                     </button>
                                     <button type="reset" class="btn btn-warning col cancel">
                                         <i class="fas fa-times-circle"></i>
-                                        <span>Cancel upload</span>
+                                        <span><?=lang('Modules.cancelUpload')?></span>
                                     </button>
                                 </div>
                             </div>
@@ -115,15 +115,15 @@
                                     <div class="btn-group">
                                         <button class="btn btn-primary start">
                                             <i class="fas fa-upload"></i>
-                                            <span>Start</span>
+                                            <span><?=lang('Modules.start')?></span>
                                         </button>
                                         <button data-dz-remove class="btn btn-warning cancel">
                                             <i class="fas fa-times-circle"></i>
-                                            <span>Cancel</span>
+                                            <span><?=lang('Backend.cancel')?></span>
                                         </button>
                                         <button data-dz-remove class="btn btn-danger delete">
                                             <i class="fas fa-trash"></i>
-                                            <span>Delete</span>
+                                            <span><?=lang('Backend.delete')?></span>
                                         </button>
                                     </div>
                                 </div>
@@ -227,7 +227,7 @@
     let table = $("#example1").DataTable({
         buttons: ["pageLength", {
             extend: 'colvis',
-            text: 'Sütunlar'
+            text: '<?=lang('Backend.showColumns')?>'
         }],
         responsive: true,
         lengthChange: false,
@@ -237,32 +237,32 @@
         serverSide: true,
         language: {
             info: "",
-            sEmptyTable: "Tabloda herhangi bir veri mevcut değil",
-            sInfoEmpty: "Kayıt yok",
-            sLoadingRecords: "Yükleniyor...",
-            sProcessing: "İşleniyor...",
-            sSearch: "Ara:",
-            sZeroRecords: "Eşleşen kayıt bulunamadı",
+            sEmptyTable: "<?=lang('Backend.emptyTable')?>",
+            sInfoEmpty: "<?=lang('Backend.noRecords')?>",
+            sLoadingRecords: "<?=lang('Backend.loadingRecords')?>",
+            sProcessing: "<?=lang('Backend.processing')?>",
+            sSearch: "<?=lang('Backend.search')?>:",
+            sZeroRecords: "<?=lang('Backend.noRecords')?>",
             oPaginate: {
-                sFirst: "İlk",
-                sLast: "Son",
-                sNext: "Sonraki",
-                sPrevious: "Önceki"
+                sFirst: "<?=lang('Backend.first')?>",
+                sLast: "<?=lang('Backend.last')?>",
+                sNext: "<?=lang('Backend.next')?>",
+                sPrevious: "<?=lang('Backend.previous')?>"
             },
             oAria: {
-                sSortAscending: ": artan sütun sıralamasını aktifleştir",
-                sSortDescending: ": azalan sütun sıralamasını aktifleştir"
+                sSortAscending: ": <?=lang('Backend.sortAscending')?>",
+                sSortDescending: ": <?=lang('Backend.sortDescending')?>"
             },
             buttons: {
                 pageLength: {
-                    _: "%d Satır Göster",
-                    '-1': "Tümünü Göster"
+                    _: "<?=lang('Backend.showEntries')?>",
+                    '-1': "<?=lang('Backend.showAll')?>"
                 }
             }
         },
         lengthMenu: [
             [25, 50, 100, -1],
-            [25, 50, 100, "Tümü"]
+            [25, 50, 100, "<?=lang('Backend.showAll')?>"]
         ],
         ajax: {
             url: '<?= route_to('modulesInstaller') ?>',

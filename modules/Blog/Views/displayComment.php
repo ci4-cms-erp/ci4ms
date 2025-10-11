@@ -45,7 +45,7 @@
             <form action="<?=route_to('confirmComment',$commentInfo->id)?>" class="row" method="post">
                 <?=csrf_field()?>
                 <div class="col-md-6 form-group">
-                    <label for="">Created At</label>
+                    <label for=""><?=lang('Backend.createdAt')?></label>
                     <?=date('d-m-Y H-i-s',strtotime($commentInfo->created_at))?>
                 </div>
                 <div class="col-md-6 form-group">
@@ -55,28 +55,28 @@
                         </a>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons">
                             <label class="btn btn-outline-primary <?=((bool)$commentInfo->isApproved===true)?'checked':''?>">
-                                <input type="radio" name="options" value="1" id="option1" <?=((bool)$commentInfo->isApproved===true)?'checked':''?> required> Yayınla
+                                <input type="radio" name="options" value="1" id="option1" <?=((bool)$commentInfo->isApproved===true)?'checked':''?> required> <?=lqng('Blog.publish')?>
                             </label>
                             <label class="btn btn-outline-danger">
-                                <input type="radio" name="options" value="2" id="option2" required> Sil
+                                <input type="radio" name="options" value="2" id="option2" required> <?=lang('Backend.delete')?>
                             </label>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6 form-group">
-                    <label for="">Full Name</label>
+                    <label for=""><?=lang('Backend.fullName')?></label>
                     <input type="text" readonly value="<?=$commentInfo->comFullName?>" class="form-control">
                 </div>
                 <div class="col-md-6 form-group">
-                    <label for="">E-Mail</label>
+                    <label for=""><?=lang('Backend.email')?></label>
                     <input type="text" readonly value="<?=$commentInfo->comEmail?>" class="form-control">
                 </div>
                 <div class="col-md-12 form-group">
-                    <label for="">Comment</label>
+                    <label for=""><?=lang('Blog.comment')?></label>
                     <textarea name="" id="" cols="30" rows="10" class="form-control" readonly><?=$commentInfo->comMessage?></textarea>
                 </div>
                 <div class="col-md-12 form-group">
-                    <button class="btn btn-success float-right">Kaydet</button>
+                    <button class="btn btn-success float-right"><?=lang('Backend.save')?></button>
                 </div>
             </form>
         </div>

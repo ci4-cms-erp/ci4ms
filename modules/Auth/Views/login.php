@@ -10,7 +10,7 @@
             <img src="<?= base_url('be-assets/img/bfo-logo.jpg') ?>" alt="" class="img-fluid">
         </div>
         <div class="card-body">
-            <p class="login-box-msg">Oturumunuzu başlatmak için giriş yapın</p>
+            <p class="login-box-msg"><?=lang('Auth.loginMessage')?></p>
             <?= view('Modules\Auth\Views\_message_block') ?>
             <form action="<?= route_to('login') ?>" method="post">
                 <?= csrf_field() ?>
@@ -24,7 +24,7 @@
                     </div>
                 </div>
                 <div class="input-group mb-3">
-                    <input type="password" name="password" class="form-control" required placeholder="Password">
+                    <input type="password" name="password" class="form-control" required placeholder="<?=lang('Auth.password')?>">
                     <div class="input-group-append">
                         <div class="input-group-text">
                             <span class="fas fa-lock"></span>

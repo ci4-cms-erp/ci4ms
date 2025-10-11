@@ -24,7 +24,7 @@ class Install extends Controller
                 'email' => ['label' => '', 'rules' => 'required'],
                 'siteName' => ['label' => '', 'rules' => 'required']
             ]);
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors',$this->validator->getErrors()); // redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors',$this->validator->getErrors());
 
             $this->copyEnvFile();
             $updates = [
@@ -58,7 +58,11 @@ class Install extends Controller
                 'security.expires' => 7200,
                 'security.regenerate' => 'true',
                 'security.redirect' => 'false',
-                'security.samesite' => '\'Lax\''
+                'security.samesite' => '\'Lax\'',
+                'app.defaultLocale'=> '\'tr\'',
+                'app.supportedLocales'=> '[\'tr\',\'en\']',
+                'app.negotiateLocale'=> 'true',
+                'app.appTimzezone'=> '\'Europe/Istanbul\'',
             ];
             if ($this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 

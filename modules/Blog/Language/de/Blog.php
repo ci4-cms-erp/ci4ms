@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'blog' => 'Blog-Modul',
+    'blogs' => 'Beiträge',
+    'blogCreate' => 'Blog erstellen',
+    'blogUpdate' => 'Blog aktualisieren',
+    'categories' => 'Kategorien',
+    'categoryCreate' => 'Kategorie erstellen',
+    'categoryUpdate' => 'Kategorie aktualisieren',
+    'parentCategory' => 'Übergeordnete Kategorie',
+    'commentList' => 'Kommentare',
+    'comment' => 'Kommentar',
+    'displayComment' => 'Kommentar anzeigen',
+    'badwords' => 'Liste verbotener Wörter',
+    'author' => 'Autor',
+    'tags' => 'Schlagworte',
+    'tagCreate' => 'Tag erstellen',
+    'tagUpdate' => 'Tag aktualisieren',
+    'enableFiltering' => 'Filterung aktivieren',
+    'autoReject' => 'Automatische Ablehnung',
+    'autoAccept' => 'Automatische Annahme',
+    'commentPublished' => 'Der Kommentar mit der ID #{0,number} wurde veröffentlicht.',
+    'commentPublishError' => 'Kommentar kann nicht veröffentlicht werden. Bitte versuchen Sie es erneut oder überprüfen Sie die Protokolle.',
+];

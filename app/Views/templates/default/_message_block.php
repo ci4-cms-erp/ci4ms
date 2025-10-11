@@ -19,7 +19,7 @@
 <?php if (session()->has('errors')) : ?>
     <ul class="alert alert-danger list-unstyled">
         <?php foreach (session('errors') as $error) : ?>
-            <li><?= $error ?></li>
+            <li><?= esc($error) ?></li>
         <?php endforeach ?>
     </ul>
 <?php endif ?>

@@ -111,7 +111,7 @@
                     </div>
                     <div class="col-md-12 form-group">
                         <label for=""><?=lang('Backend.seoKeywords')?></label>
-                        <textarea name="keywords" class="keywords" placeholder="write some tags"></textarea>
+                        <textarea name="keywords" class="keywords" placeholder="<?=lang('Backend.tagPlaceholder')?>"></textarea>
                     </div>
                 </div>
                 <div class="form-group col-md-12">

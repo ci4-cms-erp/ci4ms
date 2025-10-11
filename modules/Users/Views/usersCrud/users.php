@@ -43,7 +43,7 @@
                     <tbody>
                         <?php foreach ($userLists as $userList) : ?>
                             <tr>
-                                <td><?= $userList->firstname ?> <?= $userList->sirname ?></td>
+                                <td><?= $userList->firstname ?> <?= $userList->surname ?></td>
                                 <td><?= $userList->email ?></td>
                                 <td class="text-center">
                                     <?= $userList->status ?>
@@ -220,7 +220,7 @@
             } else
                 Toast.fire({
                     icon: 'warning',
-                    title: 'İşlem Başarısız !'
+                    title: '<?=lang('Backend.operationFailed')?>'
                 }).then(function() {
                     $('.modal').modal('toggle');
                 });
@@ -242,7 +242,7 @@
             } else
                 Toast.fire({
                     icon: 'warning',
-                    title: 'İşlem Başarısız !'
+                    title: '<?=lang('Backend.operationFailed')?>'
                 }).then(function() {
                     $('.modal').modal('toggle');
                 });
