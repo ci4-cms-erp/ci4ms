@@ -2,8 +2,8 @@
 
 namespace App\Controllers;
 
-use App\Libraries\Ci4msseoLibrary;
 use ci4commonmodel\Models\CommonModel;
+use ci4seopro\Config\Seo;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
@@ -51,7 +51,8 @@ abstract class BaseController extends Controller
     /*Ci4ms*/
     public $defData;
     public $commonModel;
-    public $ci4msseoLibrary;
+    protected $seosearchService;
+    protected $seoConfigLoaded = false;
 
     /**
      * @return void
@@ -64,9 +65,29 @@ abstract class BaseController extends Controller
 
         // E.g.: $this->session = \Config\Services::session();
         $this->commonModel = new CommonModel();
-        $this->ci4msseoLibrary = new Ci4msseoLibrary();
+        $this->defData = $this->getDefaultData();
+    }
+
+    protected function getDefaultData(): array
+    {
         if (empty(cache('menus'))) $menus = $this->commonModel->lists('menu', '*', [], 'queue ASC');
         else $menus = (object)cache('menus');
-        $this->defData = ['settings' => (object)cache('settings'), 'menus' => $menus, 'agent' => $this->request->getUserAgent()];
+        $defData = [
+            'settings' => (object)cache('settings'),
+            'menus' => $menus,
+            'agent' => $this->request->getUserAgent(),
+            'seoConfig' => new Seo()
+        ];
+        $defData['seoConfig']->siteName = $defData['settings']->siteName;
+
+        return $defData;
+    }
+
+    protected function seo()
+    {
+        if (!$this->seosearchService) {
+            $this->seosearchService = service('seosearch', $this->defData['seoConfig']);
+        }
+        return $this->seosearchService;
     }
 }

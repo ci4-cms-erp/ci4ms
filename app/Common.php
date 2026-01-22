@@ -49,6 +49,13 @@ if (!function_exists('show_404')) {
     }
 }
 
+if (!function_exists('show_403')) {
+    function show_403()
+    {
+        throw new \CodeIgniter\HTTP\Exceptions\HTTPException('Forbidden', 403);
+    }
+}
+
 if (!function_exists('seflink')) {
     /**
      * Generates a slug from a given string.
@@ -147,9 +154,9 @@ if (!function_exists('_printr')) {
     {
         if (!empty($title))
             echo '<h1>' . $title . '</h1>';
-        echo '<pre>';
+        echo '<pre><h4><strong><font color="red">|========================================|<i><font color="darkblue" face ="thoma">\n';
         print_r($data);
-        echo '</pre>';
+        echo '</font></i><br>|========================================|</font></strong></h4></pre>';
     }
 }
 
@@ -158,9 +165,9 @@ if (!function_exists('_printrDie')) {
     {
         if (!empty($title))
             echo '<h1>' . $title . '</h1>';
-        echo '<pre>';
+        echo '<pre><h4><strong><font color="red">|========================================|<i><font color="darkblue" face ="thoma">\n';
         print_r($data);
-        echo '</pre>';
+        echo '</font></i><br>|========================================|</font></strong></h4></pre>';
         die();
     }
 }

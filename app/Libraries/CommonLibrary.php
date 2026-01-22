@@ -35,7 +35,7 @@ class CommonLibrary
     public function phpMailer(string $setFromMail, string $setFromName, array $addAddresses, string $addReplyToMail, string $addReplyToName, string $subject, string $body, string $altBody = '', array $addCCs = [], array $addBCCs = [], array $addAttachments = [],)
     {
         $settings = (object)cache('settings');
-        $encrypter= \Config\Services::encrypter();
+        $encrypter = \Config\Services::encrypter();
         $this->config->mailConfig = [
             'protocol' => $settings->mail->protocol,
             'SMTPHost' => $settings->mail->server,
@@ -76,7 +76,7 @@ class CommonLibrary
                 if (!empty($addCC['name'])) $mail->addAddress($addCC['mail'], $addCC['name']);  // Name is optional
                 $mail->addCC($addCC['mail']);
             }
-            foreach ($addBCCs as $addBCC){
+            foreach ($addBCCs as $addBCC) {
                 if (!empty($addBCC['name'])) $mail->addAddress($addBCC['mail'], $addBCC['name']);  // Name is optional
                 $mail->addBCC($addBCC['mail']);
             }
@@ -161,11 +161,12 @@ class CommonLibrary
     }
 
     /**
-     * @param string $comment
+     *
      */
     private function getHomepageBreadcrumb()
     {
-        $menus = (object)cache('menus');
+        if (empty(cache('menus'))) $menus = $this->commonModel->lists('menu', '*', [], 'queue ASC');
+        else $menus = (object)cache('menus');
         $homepage = array_filter((array) $menus, function ($menu) {
             return $menu->seflink == '/';
         });
@@ -204,12 +205,10 @@ class CommonLibrary
                 return $menu->seflink == $id;
             });
         $current_page = reset($current_page);
-        // Mevcut sayfa veya anasayfa boş ise breadcrumb'ları boş döndürün
         if (!$current_page || !$homepage) return array();
 
-        $breadcrumbs = [['title' => $homepage->title, 'url' => $homepage->seflink]];
+        $breadcrumbs = [['title' => $homepage->title, 'url' => base_url()]];
         $tmpCurrentPage = $current_page;
-        // Sayfanın mevcut parent_id'si olana kadar döngüye girin ve breadcrumb'ları diziye ekleyin
         while ($tmpCurrentPage->parent) {
             $parent_pages = array_filter((array) $menus, function ($menu) use ($tmpCurrentPage) {
                 return $menu->id == $tmpCurrentPage->parent && $menu->seflink != '/';
@@ -221,8 +220,7 @@ class CommonLibrary
                 $tmpCurrentPage = $parent_page;
             }
         }
-        // Son olarak, mevcut sayfanın bileşenlerini de breadcrumb'lar dizisine ekleyin
-        array_push($breadcrumbs, ['title' => $current_page->title, 'url' => '']);
+        array_push($breadcrumbs, ['title' => $current_page->title, 'url' => current_url()]);
 
         return $breadcrumbs;
     }
@@ -230,7 +228,7 @@ class CommonLibrary
     private function getBlogBreadcrumbs($id)
     {
         $homepage = $this->getHomepageBreadcrumb();
-        $breadcrumbs = [['title' => $homepage->title, 'url' => $homepage->seflink]];
+        $breadcrumbs = [['title' => $homepage->title, 'url' => site_url($homepage->seflink)]];
         $blog = $this->commonModel->selectOne('blog', ['id' => $id]);
         $category = $this->commonModel->lists('categories', 'categories.*', ['blog_categories_pivot.blog_id' => $id], 'id ASC', 0, 0, [], [], [
             [
@@ -240,9 +238,9 @@ class CommonLibrary
             ]
         ]);
         if ($blog) {
-            $breadcrumbs[] = ['title' => 'Blog', 'url' => 'blog'];
-            $breadcrumbs[] = ['title' => $category[0]->title, 'url' => 'category/' . $category[0]->seflink];
-            $breadcrumbs[] = ['title' => $blog->title, 'url' => ''];
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
+            $breadcrumbs[] = ['title' => $category[0]->title, 'url' => site_url('category/' . $category[0]->seflink)];
+            $breadcrumbs[] = ['title' => $blog->title, 'url' => current_url()];
         }
         return $breadcrumbs;
     }
@@ -250,11 +248,11 @@ class CommonLibrary
     private function getCategoryBreadcrumbs($id)
     {
         $homepage = $this->getHomepageBreadcrumb();
-        $breadcrumbs = [['title' => $homepage->title, 'url' => $homepage->seflink]];
+        $breadcrumbs = [['title' => $homepage->title, 'url' => site_url($homepage->seflink)]];
         $category = $this->commonModel->selectOne('categories', ['id' => $id]);
         if ($category) {
-            $breadcrumbs[] = ['title' => 'Blog', 'url' => 'blog'];
-            $breadcrumbs[] = ['title' => $category->title, 'url' => ''];
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
+            $breadcrumbs[] = ['title' => $category->title, 'url' => current_url()];
         }
         return $breadcrumbs;
     }
@@ -262,11 +260,11 @@ class CommonLibrary
     private function getTagBreadcrumbs($id)
     {
         $homepage = $this->getHomepageBreadcrumb();
-        $breadcrumbs = [['title' => $homepage->title, 'url' => $homepage->seflink]];
+        $breadcrumbs = [['title' => $homepage->title, 'url' => site_url($homepage->seflink)]];
         $tag = $this->commonModel->selectOne('tags', ['id' => $id]);
         if ($tag) {
-            $breadcrumbs[] = ['title' => 'Blog', 'url' => 'blog'];
-            $breadcrumbs[] = ['title' => $tag->tag, 'url' => ''];
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
+            $breadcrumbs[] = ['title' => $tag->tag, 'url' => current_url()];
         }
         return $breadcrumbs;
     }

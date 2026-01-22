@@ -149,7 +149,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
         $this->defData['perms'] = $this->commonModel->lists('auth_users_permissions', '*', ['user_id' => $id]);
         $this->defData['groupPerms'] = $this->commonModel->lists('users', 'auth_groups_permissions.*', ['users.id' => $id], 'id ASC', 0, 0, [], [], [
             ['table' => 'auth_groups', 'cond' => 'users.group_id = auth_groups.id', 'type' => 'left'],
-            ['table' => 'ci4ms_auth_groups_permissions', 'cond' => 'ci4ms_auth_groups_permissions.group_id = auth_groups.id', 'type' => 'left']
+            ['table' => 'auth_groups_permissions', 'cond' => 'auth_groups_permissions.group_id = auth_groups.id', 'type' => 'left']
         ]);
         return view('Modules\Users\Views\permGroup\userPerms', $this->defData);
     }

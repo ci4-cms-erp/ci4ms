@@ -24,7 +24,7 @@ class Users extends Migration
                 'type' => 'VARCHAR',
                 'constraint' => 255
             ],
-            'sirname' => [
+            'surname' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255
             ],
@@ -92,7 +92,11 @@ class Users extends Migration
                 'constraint' => 11,
                 'unsigned' => true,
                 'null' => true
-            ]
+            ],
+            'profileIMG' => [
+                'type' => 'text',
+                'default'=>'https://dummyimage.com/50x50/ced4da/6c757d.jpg'
+            ],
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addUniqueKey(['email', 'username']);

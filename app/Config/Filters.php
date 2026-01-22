@@ -2,6 +2,8 @@
 
 namespace Config;
 
+use ci4seopro\Filters\AiHeaderFilter;
+use ci4seopro\Filters\SearchSeoFilter;
 use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
@@ -35,6 +37,8 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         //'pagecache'     => PageCache::class,
         //'performance'   => PerformanceMetrics::class,
+        'seofilter' => SearchSeoFilter::class,
+        'aifilter' => AiHeaderFilter::class,
     ];
 
     /**
@@ -59,6 +63,8 @@ class Filters extends BaseFilters
             //'pagecache',   // Web Page Caching
             //'performance', // Performance Metrics
             'toolbar',     // Debug Toolbar
+            'seofilter',
+            'aifilter'
         ],
     ];
 

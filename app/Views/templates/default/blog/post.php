@@ -1,6 +1,5 @@
 <?= $this->extend('Views/templates/default/base') ?>
 <?= $this->section('metatags') ?>
-<?= $seo ?>
 <?= $this->endSection() ?>
 <?= $this->section('head') ?>
 <?= link_tag('templates/' . $settings->templateInfos->path . '/assets/node_modules/sweetalert2/dist/sweetalert2.min.css') ?>
@@ -17,12 +16,12 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <?php foreach ($breadcrumbs as $breadcrumb) { ?>
-                                <li class="breadcrumb-item <?= (empty($breadcrumb['url'])) ? 'active' : '' ?>"
+                                <li class="breadcrumb-item<?= ($breadcrumb['url'] == current_url()) ? ' active' : '' ?>"
                                     <?= (empty($breadcrumb['url'])) ? 'aria-current="page"' : '' ?>>
-                                    <?php if (empty($breadcrumb['url'])) { ?>
+                                    <?php if ($breadcrumb['url'] == site_url('blog/'.esc($infos->seflink))) { ?>
                                         <?= esc($breadcrumb['title']) ?>
                                     <?php } else { ?>
-                                        <a href="<?= site_url($breadcrumb['url']) ?>">
+                                        <a href="<?= esc($breadcrumb['url']) ?>">
                                             <?= esc($breadcrumb['title']) ?>
                                         </a>
                                     <?php } ?>
@@ -45,8 +44,8 @@
                     </header>
                     <!-- Preview image figure-->
                     <figure class="mb-4">
-                        <img class="img-fluid rounded" src="<?= esc($infos->seo->coverImage) ?>"
-                            alt="<?= esc($infos->title) ?>" />
+                        <?php if (!empty($infos->seo->coverImage)) { ?><img class="img-fluid rounded" src="<?= esc($infos->seo->coverImage) ?>"
+                                alt="<?= esc($infos->title) ?>" /><?php } ?>
                     </figure>
                     <!-- Post content-->
                     <section class="mb-5">
@@ -54,16 +53,16 @@
                     </section>
                     <hr>
                     <div class="d-flex align-items-center mt-lg-5 mb-4">
-                        <?php if (empty($authorInfo->profileIMG)): ?>
+                        <?php if (empty($infos->profileIMG)): ?>
                             <img class="img-fluid rounded-circle" src="https://dummyimage.com/50x50/ced4da/6c757d.jpg"
-                                alt="<?= esc($authorInfo->firstname) . ' ' . esc($authorInfo->sirname) ?>" />
+                                alt="<?= esc($infos->author) ?>" />
                         <?php else: ?>
-                            <img class="img-fluid rounded-circle" src="<?= esc($authorInfo->profileIMG) ?>"
-                                alt="<?= esc($authorInfo->firstname) . ' ' . esc($authorInfo->sirname) ?>" />
+                            <img class="img-fluid rounded-circle" src="<?= esc($infos->profileIMG) ?>"
+                                alt="<?= esc($infos->author) ?>" />
                         <?php endif; ?>
                         <div class="ms-3">
-                            <div class="fw-bold"><?= esc($authorInfo->firstname) . ' ' . esc($authorInfo->sirname) ?></div>
-                            <div class="text-muted"><?= esc($authorInfo->groupName) ?></div>
+                            <div class="fw-bold"><?= esc($infos->author) ?></div>
+                            <div class="text-muted"><?= esc($infos->groupName) ?></div>
                         </div>
                     </div>
                 </article>

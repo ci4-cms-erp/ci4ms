@@ -14,7 +14,7 @@
     <link href="/templates/default/assets/ci4ms.css" rel="stylesheet" />
     <link href="/be-assets/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />
     <?= $this->renderSection('head') ?>
-    <?= (!empty($schema)) ? $schema : '' ?>
+    
 </head>
 
 <body class="d-flex flex-column h-100">

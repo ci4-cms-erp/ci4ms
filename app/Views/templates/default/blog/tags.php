@@ -1,6 +1,5 @@
 <?= $this->extend('Views/templates/default/base') ?>
 <?= $this->section('metatags') ?>
-<? /*= $seo */ ?>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
 <header class="py-5 bg-light border-bottom mb-4">
@@ -57,7 +56,7 @@
                                                 <img class="rounded-circle me-3"
                                                     src="https://dummyimage.com/40x40/ced4da/6c757d" alt="..." />
                                                 <div class="small">
-                                                    <div class="fw-bold"><?= esc($blog->author->firstname) . ' ' . esc($blog->author->sirname) ?></div>
+                                                    <div class="fw-bold"><?= esc($blog->author->firstname) . ' ' . esc($blog->author->surname) ?></div>
                                                     <div class="text-muted"><?= $dateI18n->createFromTimestamp(strtotime($blog->created_at), app_timezone(), 'tr_TR')->toFormattedDateString(); ?></div>
                                                 </div>
                                             </div>

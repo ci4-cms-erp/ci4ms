@@ -11,7 +11,7 @@ class Ci4msDefaultsSeeder extends Seeder
     public function run()
     {
         $fname = CLI::prompt('Please enter your name');
-        $sname = CLI::prompt('Please enter your sirname');
+        $sname = CLI::prompt('Please enter your surname');
         $username = CLI::prompt('Please enter your username');
         $email = CLI::prompt('Please enter your E-mail');
         $password = CLI::prompt('Please enter your password');

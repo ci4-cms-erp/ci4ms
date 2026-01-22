@@ -52,7 +52,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 'title' => ['label' => lang('Backend.title'), 'rules' => 'required'],
                 'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required'],
                 'content' => ['label' => lang('Backend.content'), 'rules' => 'required'],
-                'isActive' => ['label' => lang('Backend.publish').' / '.lang('Backend.draft'), 'rules' => 'required'],
+                'isActive' => ['label' => lang('Backend.publish') . ' / ' . lang('Backend.draft'), 'rules' => 'required'],
                 'categories' => ['label' => lang('Blog.categories'), 'rules' => 'required'],
                 'author' => ['label' => lang('Blog.author'), 'rules' => 'required'],
                 'created_at' => ['label' => lang('Backend.createdAt'), 'rules' => 'required|valid_date[d.m.Y H:i:s]']
@@ -67,7 +67,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
             if ($this->commonModel->isHave('blog', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
 
-            $data = ['title' => $this->request->getPost('title'), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => $this->request->getPost('seflink'), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' =>date('Y-m-d H:i:s',strtotime($this->request->getPost('created_at')))];
+            $data = ['title' => $this->request->getPost('title'), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => $this->request->getPost('seflink'), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
 
             if (!empty($this->request->getPost('pageimg'))) {
                 $data['seo']['coverImage'] = $this->request->getPost('pageimg');
@@ -85,7 +85,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 }
                 if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', (string)$insertID, 'tags');
                 return redirect()->route('blogs', [1])->with('message', '<b>' . $this->request->getPost('title') . '</b> adlı blog oluşturuldu.');
-            } else return redirect()->back()->withInput()->with('error', lang('Backend.created',[$data['title']]));
+            } else return redirect()->back()->withInput()->with('error', lang('Backend.created', [$data['title']]));
         }
         $this->defData['categories'] = $this->commonModel->lists('categories');
         $this->defData['authors'] = $this->commonModel->lists('users', '*', ['status' => 'active']);
@@ -103,7 +103,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 'title' => ['label' => lang('Backend.title'), 'rules' => 'required'],
                 'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required'],
                 'content' => ['label' => lang('Backend.content'), 'rules' => 'required'],
-                'isActive' => ['label' => lang('Backend.publish').' / '.lang('Backend.draft'), 'rules' => 'required'],
+                'isActive' => ['label' => lang('Backend.publish') . ' / ' . lang('Backend.draft'), 'rules' => 'required'],
                 'categories' => ['label' => lang('Blog.categories'), 'rules' => 'required'],
                 'author' => ['label' => lang('Blog.author'), 'rules' => 'required'],
                 'created_at' => ['label' => lang('Backend.createdAt'), 'rules' => 'required|valid_date[d.m.Y H:i:s]']
@@ -118,7 +118,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
             $info = $this->commonModel->selectOne('blog', ['id' => $id]);
             if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
-            $data = ['title' => $this->request->getPost('title'), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => $this->request->getPost('seflink'), 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s',strtotime($this->request->getPost('created_at')))];
+            $data = ['title' => $this->request->getPost('title'), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => $this->request->getPost('seflink'), 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
 
             if (!empty($this->request->getPost('pageimg'))) {
                 $data['seo']['coverImage'] = $this->request->getPost('pageimg');
@@ -129,15 +129,16 @@ class Blog extends \Modules\Backend\Controllers\BaseController
 
             if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
             if ($this->commonModel->edit('blog', $data, ['id' => $id])) {
-                if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', $id, 'tags', true);
+                if (!empty($this->request->getPost('keywords')))
+                    $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', $id, 'tags', true);
                 if (!empty($this->request->getPost('categories'))) {
                     $this->commonModel->remove('blog_categories_pivot', ['blog_id' => $id]);
                     foreach ($this->request->getPost('categories') as $item) {
                         $this->commonModel->create('blog_categories_pivot', ['blog_id' => $id, 'categories_id' => $item]);
                     }
                 }
-                return redirect()->route('blogs', [1])->with('message', lang('Backend.updated',[$data['title']]));
-            } else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated',[$data['title']]));
+                return redirect()->route('blogs', [1])->with('message', lang('Backend.updated', [$data['title']]));
+            } else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$data['title']]));
         }
         $this->defData['tags'] = $this->model->limitTags_ajax(['tags_pivot.tagType' => 'blogs', 'tags_pivot.piv_id' => $id]);
         $t = [];
@@ -219,8 +220,8 @@ class Blog extends \Modules\Backend\Controllers\BaseController
 
     public function commentRemove(int $id)
     {
-        if ($this->commonModel->remove('comments', ['id' => $id])) return redirect()->route('comments')->with('warning', lang('Backend.deleted',['#'.$id]));
-        else return redirect()->back()->withInput()->with('error', lang('Backend.notDeleted',['#'.$id]));
+        if ($this->commonModel->remove('comments', ['id' => $id])) return redirect()->route('comments')->with('warning', lang('Backend.deleted', ['#' . $id]));
+        else return redirect()->back()->withInput()->with('error', lang('Backend.notDeleted', ['#' . $id]));
     }
 
     public function displayComment(int $id)
@@ -239,17 +240,17 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         $isApproved = (int)$this->request->getPost('options');
         if ($isApproved === 1) {
             if ($this->commonModel->edit('comments', ['isApproved' => $isApproved], ['id' => $id])) {
-                $message = ;
-                return redirect()->route('comments')->with('message', lang('Blog.commentPublished',[$id]));
+                //$message = ;
+                return redirect()->route('comments')->with('message', lang('Blog.commentPublished', [$id]));
             } else {
-                $error = ;
+                //$error = ;
                 return redirect()->back()->withInput()->with('error', lang('Blog.commentPublishError'));
             }
         } else {
             if ($this->commonModel->remove('comments', ['id' => $id])) {
                 return redirect()->route('comments')->with('warning', lang('Backend.deleted', ['#' . $id]));
             } else {
-                return redirect()->back()->withInput()->with('error', lang('Backend.notDeleted',['#'.$id]));
+                return redirect()->back()->withInput()->with('error', lang('Backend.notDeleted', ['#' . $id]));
             }
         }
     }
@@ -287,7 +288,8 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         ))
             return redirect()->route('badwords')->with('message', lang('Backend.updated'));
         else return redirect()->back()->withInput()->with(
-            'error',lang('Backend.notUpdated')
+            'error',
+            lang('Backend.notUpdated')
         );
     }
 }

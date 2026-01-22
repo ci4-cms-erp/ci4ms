@@ -9,7 +9,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - Media & files: Includes elFinder-powered media management, a built-in file editor, and an in-panel log viewer.
 - Theme system: The `public/templates/*` structure and the `Modules\Theme` module enable installing or upgrading themes from ZIP packages.
 - Setup & automation: Offers a web-based installer (`/install`) plus CLI commands for default data seeding, automatic route generation, and module scaffolding via `php spark make:module`.
-- SEO helpers: `Ci4msseoLibrary` builds meta tags and JSON-LD, while `CommonLibrary` centralizes email, breadcrumbs, and inline shortcode utilities.
+- SEO helpers: `ci4seopro` builds meta tags and JSON-LD, while `CommonLibrary` centralizes email, breadcrumbs, and inline shortcode utilities.
 
 ## Requirements
 - PHP 8.1 or newer (intl, json, mbstring, gd, curl, openssl recommended)
@@ -17,7 +17,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - MySQL/MariaDB (or any CodeIgniter 4-supported driver)
 - Writable directories: `writable/`, `public/uploads/`, optionally `public/templates/`
 
-See `composer.json` for the full dependency list (e.g. `bertugfahriozer/ci4commonmodel`, `bertugfahriozer/sql2migration`, `ci4-cms-erp/ext_module_generator`, `claviska/simpleimage`, `seunmatt/codeigniter-log-viewer`, `gregwar/captcha`, `jasongrimes/paginator`, `melbahja/seo`, `studio-42/elfinder`, `phpmailer/phpmailer`).
+See `composer.json` for the full dependency list (e.g. `bertugfahriozer/ci4commonmodel`, `bertugfahriozer/sql2migration`, `ci4-cms-erp/ext_module_generator`, `claviska/simpleimage`, `seunmatt/codeigniter-log-viewer`, `gregwar/captcha`, `jasongrimes/paginator`, `studio-42/elfinder`, `phpmailer/phpmailer`).
 
 # 🪴 Project Activity
 ![Alt](https://repobeats.axiom.co/api/embed/9f2631ce1dcfae3db84f5113fea08ac0c7ae8d29.svg "Repobeats analytics image")

@@ -7,7 +7,7 @@ use App\Models\Ci4ms;
 use CodeIgniter\I18n\Time;
 use Gregwar\Captcha\CaptchaBuilder;
 use Modules\Backend\Models\AjaxModel;
-use Modules\Users\Models\UserscrudModel;
+use ci4seopro\Libraries\Seo\Search\SchemaPreset;
 
 class Home extends BaseController
 {
@@ -26,31 +26,37 @@ class Home extends BaseController
         if (!empty($page)) {
             $this->defData['pageInfo'] = $page;
             $this->defData['pageInfo']->content = $this->commonLibrary->parseInTextFunctions($this->defData['pageInfo']->content);
-            $keywords = [];
             $this->defData['pageInfo']->seo = json_decode($this->defData['pageInfo']->seo);
             $this->defData['pageInfo']->seo = (object)$this->defData['pageInfo']->seo;
             if (!empty($this->defData['pageInfo']->seo->keywords)) {
-                foreach ($this->defData['pageInfo']->seo->keywords as $keyword) {
-                    $keywords[] = $keyword->value;
-                }
+                $keywords = array_column($this->defData['pageInfo']->seo->keywords, 'value');
+                $this->seo()->keywords($keywords);
             }
-            $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['pageInfo']->title, (!empty($this->defData['pageInfo']->seo->description)) ? $this->defData['pageInfo']->seo->description : '', $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['pageInfo']->seo->coverImage) ? $this->defData['pageInfo']->seo->coverImage : '');
-            $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('Organization', [
-                'url' => site_url(),
-                'logo' => $this->defData['settings']->logo,
-                'name' => $this->defData['settings']->siteName,
-                'children' => [
-                    'ContactPoint' =>
+            $this->seo()->set('title', $this->defData['pageInfo']->title)
+                ->set('excerpt', $this->defData['pageInfo']->seo->description)
+                ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
+                ->addSchema(
                     [
-                        'ContactPoint' => [
+                        '@context' => 'https://schema.org',
+                        '@type' => 'Organization',
+                        'url' => site_url(),
+                        'logo' => $this->defData['settings']->logo,
+                        'name' => $this->defData['settings']->siteName,
+                        'ContactPoint' =>
+                        [
+                            '@type' => 'ContactPoint',
                             'telephone' => $this->defData['settings']->company->phone,
                             'contactType' => 'customer support'
-                        ]
+                        ],
+                        'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
                     ]
-                ],
-                'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
-            ]);
-            if ($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id, 'page');
+                );
+            if (!empty($this->defData['pageInfo']->seo->coverImage))
+                $this->seo()->set('image', $this->defData['pageInfo']->seo->coverImage ? site_url($this->defData['pageInfo']->seo->coverImage) : '');
+            if ($seflink != '/') {
+                $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id, 'page')));
+                $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id, 'page');
+            }
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
         } else return show_404();
     }
@@ -61,9 +67,8 @@ class Home extends BaseController
         return view('maintenance', $this->defData);
     }
 
-    public function blog()
+    public function blog(int $page = 1)
     {
-        $this->defData['seo'] = $this->ci4msseoLibrary->metaTags('Blog', 'blog listesi', 'blog', ['keywords' => ["value" => "blog listesi"]]);
         $perPage = 12;
         $page = $this->request->getUri()->getSegment(2, 1);
         $offset = ($page - 1) * $perPage;
@@ -76,24 +81,29 @@ class Home extends BaseController
         $modelTag = new AjaxModel();
         foreach ($this->defData['blogs'] as $key => $blog) {
             $this->defData['blogs'][$key]->tags = $modelTag->limitTags_ajax(['tags_pivot.piv_id' => $blog->id]);
-            $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,sirname');
+            $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,surname');
         }
         $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
-        $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('Organization', [
-            'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
-            'logo' => $this->defData['settings']->logo,
-            'name' => $this->defData['settings']->siteName,
-            'children' => [
-                'ContactPoint' =>
+        $this->seo()->set('title', 'Blog')
+            ->set('excerpt', 'Blog Posts')
+            ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
+            ->addSchema(
                 [
-                    'ContactPoint' => [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Organization',
+                    'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
+                    'logo' => $this->defData['settings']->logo,
+                    'name' => $this->defData['settings']->siteName,
+                    'ContactPoint' =>
+                    [
+                        '@type' => 'ContactPoint',
                         'telephone' => $this->defData['settings']->company->phone,
                         'contactType' => 'customer support'
-                    ]
+                    ],
+                    'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
                 ]
-            ],
-            'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
-        ]);
+            );
+        $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs('/blog/1', 'page')));
         $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs('/blog/1', 'page');
         return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
     }
@@ -101,58 +111,74 @@ class Home extends BaseController
     public function blogDetail(string $seflink)
     {
         if ($this->commonModel->isHave('blog', ['seflink' => $seflink, 'isActive' => true]) === 1) {
-            $this->defData['infos'] = $this->commonModel->selectOne('blog', ['seflink' => $seflink]);
-            $userModel = new UserscrudModel();
-            $this->defData['authorInfo'] = $userModel->loggedUser(0, 'users.*,auth_groups.name as groupName', ['users.id' => $this->defData['infos']->author]);
-            $this->defData['authorInfo'] = $this->defData['authorInfo'][0];
+            $this->defData['infos'] = $this->commonModel->lists(
+                'blog',
+                'blog.*,
+                GROUP_CONCAT(' . getenv('database.default.DBPrefix') . 'categories.title SEPARATOR \',\') as categories,
+                CONCAT(' . getenv('database.default.DBPrefix') . 'users.firstname,\' \',' . getenv('database.default.DBPrefix') . 'users.surname) as author,
+                users.profileIMG,
+                auth_groups.name as groupName',
+                ['blog.seflink' => $seflink],
+                'id ASC',
+                0,
+                0,
+                [],
+                [],
+                [
+                    ['table' => 'blog_categories_pivot', 'cond' => 'blog_categories_pivot.blog_id = blog.id', 'type' => 'left'],
+                    ['table' => 'categories', 'cond' => 'categories.id = blog_categories_pivot.categories_id', 'type' => 'left'],
+                    ['table' => 'users', 'cond' => 'users.id = blog.author', 'type' => 'left'],
+                    ['table' => 'auth_groups', 'cond' => 'auth_groups.id = users.group_id', 'type' => 'left']
+                ],
+                ['isReset' => true]
+            );
             $this->defData['dateI18n'] = new Time();
             $modelTag = new AjaxModel();
             $this->defData['tags'] = $modelTag->limitTags_ajax(['piv_id' => $this->defData['infos']->id]);
-            $keywords = [];
             if (!empty($this->defData['tags'])) {
-                foreach ($this->defData['tags'] as $tag) {
-                    $keywords[] = $tag->tag;
-                }
+                $keywords = array_column($this->defData['tags'], 'tag');
+                $this->seo()->keywords($keywords);
             }
             helper('templates/' . $this->defData['settings']->templateInfos->path . '/funcs');
             $this->defData['comments'] = $this->commonModel->lists('comments', '*', ['blog_id' => $this->defData['infos']->id], 'id ASC', 5);
             $this->defData['infos']->seo = json_decode($this->defData['infos']->seo);
             $this->defData['infos']->seo = (object)$this->defData['infos']->seo;
-            $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['infos']->title, $this->defData['infos']->seo->description, 'blog/' . $seflink, $metatags = ['keywords' => $keywords, 'author' => $this->defData['authorInfo']->firstname . ' ' . $this->defData['authorInfo']->sirname], $this->defData['infos']->seo->coverImage);
             $this->defData['categories'] = $this->commonModel->lists('categories');
-            $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('BlogPosting', [
-                'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
-                'logo' => $this->defData['settings']->logo,
-                'name' => $this->defData['settings']->siteName,
-                'headline' => $this->defData['infos']->title,
-                'image' => $this->defData['infos']->seo->coverImage,
-                'description' => $this->defData['infos']->seo->description,
-                'datePublished' => $this->defData['infos']->created_at,
-                //'dateModified' => $this->defData['infos']->seo->description,
-                'children' => [
-                    'mainEntityOfPage' => [
-                        'WebPage' => []
-                    ],
-                    'ContactPoint' =>
+            $this->seo()->set('title', $this->defData['infos']->title)
+                ->set('excerpt', $this->defData['infos']->title)
+                ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
+                ->set('author', $this->defData['infos']->author)
+                ->set('image', $this->defData['infos']->seo->coverImage ?? '')
+                ->addSchema(SchemaPreset::article(
                     [
-                        'ContactPoint' => [
+                        'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
+                        'logo' => $this->defData['settings']->logo,
+                        'name' => $this->defData['settings']->siteName,
+                        'title' => $this->defData['infos']->title,
+                        'image' => $this->defData['infos']->seo->coverImage ?? '',
+                        'description' => $this->defData['infos']->seo->description ?? '',
+                        'date' => $this->defData['infos']->created_at,
+                        'author' => $this->defData['infos']->author,
+                        'section' => $this->defData['infos']->categories,
+                        'ContactPoint' =>
+                        [
+                            '@type' => 'ContactPoint',
                             'telephone' => $this->defData['settings']->company->phone,
                             'contactType' => 'customer support'
-                        ]
+                        ],
+                        'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
                     ]
-                ],
-                'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
-            ]);
+                ));
+            $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs((int)$this->defData['infos']->id, 'blog')));
             $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['infos']->id, 'blog');
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/post', $this->defData);
         } else return show_404();
     }
 
-    public function tagList(string $seflink)
+    public function tagList(string $seflink, int $page = 1)
     {
         if ($this->commonModel->isHave('tags', ['seflink' => $seflink]) === 1) {
             $perPage = 12;
-            $page = $this->request->getUri()->getSegment(3, 1);
             $offset = ($page - 1) * $perPage;
             $this->defData['blogs'] = $this->ci4msModel->taglist(['tags.seflink' => $seflink, 'blog.isActive' => true], $perPage, $offset, 'blog.*');
             $totalBlogs = count($this->defData['blogs']);
@@ -163,45 +189,45 @@ class Home extends BaseController
             $modelTag = new AjaxModel();
             foreach ($this->defData['blogs'] as $key => $blog) {
                 $this->defData['blogs'][$key]->tags = $modelTag->limitTags_ajax(['piv_id' => $blog->id]);
-                $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,sirname');
+                $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,surname');
             }
             $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
             $this->defData['tagInfo'] = $this->commonModel->selectOne('tags', ['seflink' => $seflink]);
+            $this->seo()->set('title', $this->defData['tagInfo']->tag)
+                ->set('excerpt', $this->defData['tagInfo']->tag)
+                ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
+                ->addSchema(
+                    [
+                        '@context' => 'https://schema.org',
+                        '@type' => 'Organization',
+                        'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
+                        'logo' => $this->defData['settings']->logo,
+                        'name' => $this->defData['settings']->siteName,
+                        'ContactPoint' =>
+                        [
+                            '@type' => 'ContactPoint',
+                            'telephone' => $this->defData['settings']->company->phone,
+                            'contactType' => 'customer support'
+                        ],
+                        'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
+                    ]
+                );
+            $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs($this->defData['tagInfo']->id, 'tag')));
             $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['tagInfo']->id, 'tag');
-            return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/tags', $this->defData);
+            return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
         } else return show_404();
     }
 
-    public function category($seflink)
+    public function category(string $seflink, int $page = 1)
     {
         $this->defData['category'] = $this->commonModel->selectOne('categories', ['seflink' => $seflink]);
-        $keywords = [];
         $this->defData['category']->seo = json_decode($this->defData['category']->seo);
         $this->defData['category']->seo = (object)$this->defData['category']->seo;
         if (!empty($this->defData['category']->seo->keywords)) {
-            foreach ($this->defData['category']->seo->keywords as $keyword) {
-                $keywords[] = $keyword->value;
-            }
+            $keywords = array_column($this->defData['category']->seo->keywords, 'value');
+            $this->seo()->keywords($keywords);
         }
-        $this->defData['seo'] = $this->ci4msseoLibrary->metaTags($this->defData['category']->title, (!empty($this->defData['category']->seo->description)) ? $this->defData['category']->seo->description : '', $seflink, $metatags = ['keywords' => $keywords], !empty($this->defData['category']->seo->coverImage) ? $this->defData['category']->seo->coverImage : '');
-        $this->defData['schema'] = $this->ci4msseoLibrary->ldPlusJson('Organization', [
-            'url' => site_url(),
-            'logo' => $this->defData['settings']->logo,
-            'name' => $this->defData['settings']->siteName,
-            'children' => [
-                'ContactPoint' =>
-                [
-                    'ContactPoint' => [
-                        'telephone' => $this->defData['settings']->company->phone,
-                        'contactType' => 'customer support'
-                    ]
-                ]
-            ],
-            'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
-        ]);
-        if ($seflink != '/') $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['category']->id, 'category');
         $perPage = 12;
-        $page = $this->request->getUri()->getSegment(3, 1);
         $offset = ($page - 1) * $perPage;
         $this->defData['blogs'] = $this->ci4msModel->categoryList(['categories_id' => $this->defData['category']->id, 'isActive' => true], $perPage, $offset);
         $totalBlogs = count($this->defData['blogs']);
@@ -212,9 +238,30 @@ class Home extends BaseController
         $modelTag = new AjaxModel();
         foreach ($this->defData['blogs'] as $key => $blog) {
             $this->defData['blogs'][$key]->tags = $modelTag->limitTags_ajax(['tags_pivot.piv_id' => $blog->id]);
-            $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,sirname');
+            $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,surname');
         }
         $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
+        $this->seo()->set('title', $this->defData['category']->title)
+            ->set('excerpt', $this->defData['category']->seo->description ?? '')
+            ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
+            ->set('image', !empty($this->defData['category']->seo->coverImage) ? site_url($this->defData['category']->seo->coverImage) : '')
+            ->addSchema(
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Organization',
+                    'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
+                    'logo' => $this->defData['settings']->logo,
+                    'name' => $this->defData['settings']->siteName,
+                    'ContactPoint' =>
+                    [
+                        '@type' => 'ContactPoint',
+                        'telephone' => $this->defData['settings']->company->phone,
+                        'contactType' => 'customer support'
+                    ],
+                    'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
+                ]
+            );
+        $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs($this->defData['category']->id, 'category')));
         $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['category']->id, 'category');
         return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
     }

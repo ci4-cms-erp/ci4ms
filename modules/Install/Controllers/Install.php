@@ -59,8 +59,8 @@ class Install extends Controller
                 'security.regenerate' => 'true',
                 'security.redirect' => 'false',
                 'security.samesite' => '\'Lax\'',
-                'app.defaultLocale'=> '\'tr\'',
-                'app.supportedLocales'=> '[\'tr\',\'en\']',
+                'app.defaultLocale'=> '\'en\'',
+                'app.supportedLocales'=> '[\'ar\',\'de\',\'en\',\'es\',\'fr\',\'hi\',\'ja\',\'pt\',\'ru\',\'tr\',\'zh\']',
                 'app.negotiateLocale'=> 'true',
                 'app.appTimzezone'=> '\'Europe/Istanbul\'',
             ];

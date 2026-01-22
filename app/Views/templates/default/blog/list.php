@@ -1,6 +1,5 @@
 <?= $this->extend('Views/templates/default/base') ?>
 <?= $this->section('metatags') ?>
-<?= $seo ?>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
 <header class="py-5 bg-light border-bottom mb-4">
@@ -16,12 +15,12 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <?php foreach ($breadcrumbs as $breadcrumb) { ?>
-                    <li class="breadcrumb-item <?= (empty($breadcrumb['url'])) ? 'active' : '' ?>"
+                    <li class="breadcrumb-item <?= ($breadcrumb['url']==current_url()) ? 'active' : '' ?>"
                         <?= (empty($breadcrumb['url'])) ? 'aria-current="page"' : '' ?>>
-                        <?php if (empty($breadcrumb['url'])) { ?>
+                        <?php if ($breadcrumb['url'] == current_url()) { ?>
                             <?= esc($breadcrumb['title']) ?>
                         <?php } else { ?>
-                            <a href="<?= site_url($breadcrumb['url']) ?>">
+                            <a href="<?= esc($breadcrumb['url']) ?>">
                                 <?= esc($breadcrumb['title']) ?>
                             </a>
                         <?php } ?>
@@ -53,7 +52,7 @@
                                             href="<?= site_url('blog/' . $blog->seflink) ?>">
                                             <div class="h5 card-title mb-3"><?= esc($blog->title) ?></div>
                                         </a>
-                                        <p class="card-text mb-0"><?= esc($blog->seo->description) ?></p>
+                                        <?php if (!empty($blog->seo->description)) { ?><p class="card-text mb-0"><?= esc($blog->seo->description) ?></p> <?php } ?>
                                     </div>
                                     <div class="card-footer p-4 pt-0 bg-transparent border-top-0">
                                         <div class="d-flex align-items-end justify-content-between">
@@ -61,7 +60,7 @@
                                                 <img class="rounded-circle me-3"
                                                     src="https://dummyimage.com/40x40/ced4da/6c757d" alt="..." />
                                                 <div class="small">
-                                                    <div class="fw-bold"><?= esc($blog->author->firstname) . ' ' . esc($blog->author->sirname) ?></div>
+                                                    <div class="fw-bold"><?= esc($blog->author->firstname) . ' ' . esc($blog->author->surname) ?></div>
                                                     <div class="text-muted"><?= ($blog->created_at != '0000-00-00 00:00:00') ? $dateI18n::createFromTimestamp(strtotime($blog->created_at), app_timezone(), 'tr_TR')->toLocalizedString('dd MMMM yyyy HH:mm') : '' ?></div>
                                                 </div>
                                             </div>

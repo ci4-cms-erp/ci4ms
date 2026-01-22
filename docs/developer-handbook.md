@@ -79,10 +79,11 @@ Key config files:
 The project depends on CodeIgniter 4 and several packages that power key features:
 - `bertugfahriozer/ci4commonmodel` – Database abstraction helpers used across modules.
 - `bertugfahriozer/sql2migration` – CLI tooling for migrations.
+- `bertugfahriozer/ci4seopro` – CI4 SEO + AI Library (Drop-in) + FEEDS
 - `ci4-cms-erp/ext_module_generator` – Module scaffolding support exposed as `php spark make:module`.
 - `claviska/simpleimage` – Image manipulation utilities for media uploads and WebP conversion.
 - `seunmatt/codeigniter-log-viewer` – Backend log viewer integration.
-- `gregwar/captcha`, `jasongrimes/paginator`, `melbahja/seo`, `phpmailer/phpmailer`, `studio-42/elfinder` – Authentication visuals, pagination, SEO metadata, mail transport, media manager.
+- `gregwar/captcha`, `jasongrimes/paginator`, `phpmailer/phpmailer`, `studio-42/elfinder` – Authentication görselleri, pagination, mail gönderimi, medya yöneticisi. SEO meta yönetimi proje içindeki yerleşik servisler ile sağlanır.
 
 Install/update:
 ```bash

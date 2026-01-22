@@ -52,10 +52,10 @@ class CommonTagsLibrary
                             }
                         }
                     $addedTagID = $this->commonModel->create('tags', ['tag' => $item->value, 'seflink' => $link]);
-                    $this->commonModel->selectOne('tags_pivot', ['tag_id' => $addedTagID, 'tagType' => 'page', 'piv_id' => $insertedID]);
+                    $this->commonModel->selectOne('tags_pivot', ['tag_id' => $addedTagID, 'tagType' => $type, 'piv_id' => $insertedID]);
                 } else {
                     $tag = $this->commonModel->selectOne('tags', ['tag' => $item->value]);
-                    $this->commonModel->create('tags_pivot', ['tag_id' => $tag->id, 'tagType' => 'page', 'piv_id' => $insertedID]);
+                    $this->commonModel->create('tags_pivot', ['tag_id' => $tag->id, 'tagType' => $type, 'piv_id' => $insertedID]);
                 }
             }
         }

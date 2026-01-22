@@ -1,6 +1,5 @@
 <?= $this->extend('Views/templates/default/base') ?>
 <?= $this->section('metatags') ?>
-<?= $seo ?>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
 <?php if ($pageInfo->seflink != '/'): ?>
@@ -13,9 +12,9 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <?php foreach ($breadcrumbs as $breadcrumb) { ?>
-                        <li class="breadcrumb-item <?= (empty($breadcrumb['url'])) ? 'active' : '' ?>"
+                        <li class="breadcrumb-item<?= ($breadcrumb['url'] == site_url(esc($pageInfo->seflink))) ? ' active' : '' ?>"
                             <?= (empty($breadcrumb['url'])) ? 'aria-current="page"' : '' ?>>
-                            <?php if (empty($breadcrumb['url'])) { ?>
+                            <?php if ($breadcrumb['url'] == site_url(esc($pageInfo->seflink))) { ?>
                                 <?= esc($breadcrumb['title']) ?>
                             <?php } else { ?>
                                 <a href="<?= site_url($breadcrumb['url']) ?>">
