@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b1684e0c4417c89fabb7cf247aed23e2",
+    "content-hash": "f8ec00c38bab2f2afcb65ae99472fdc6",
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
@@ -183,16 +183,16 @@
         },
         {
             "name": "ci4-cms-erp/ext_module_generator",
-            "version": "v1.1.2",
+            "version": "v1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ci4-cms-erp/ext_module_generator.git",
-                "reference": "0d542b24949e97fa3f35ab144686e2395cea12e1"
+                "reference": "0443a745cc24a4033428e730bcc143b8914a9cc5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ci4-cms-erp/ext_module_generator/zipball/0d542b24949e97fa3f35ab144686e2395cea12e1",
-                "reference": "0d542b24949e97fa3f35ab144686e2395cea12e1",
+                "url": "https://api.github.com/repos/ci4-cms-erp/ext_module_generator/zipball/0443a745cc24a4033428e730bcc143b8914a9cc5",
+                "reference": "0443a745cc24a4033428e730bcc143b8914a9cc5",
                 "shasum": ""
             },
             "require": {
@@ -201,7 +201,7 @@
             },
             "type": "library",
             "extra": {
-                "codeigniter": {
+                "codeigniter4": {
                     "commands": [
                         "ci4-cms-erp\\ext_module_generator\\Commands\\ModuleGenerator"
                     ],
@@ -236,9 +236,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ci4-cms-erp/ext_module_generator/issues",
-                "source": "https://github.com/ci4-cms-erp/ext_module_generator/tree/v1.1.2"
+                "source": "https://github.com/ci4-cms-erp/ext_module_generator/tree/v1.2.1"
             },
-            "time": "2025-09-18T18:21:49+00:00"
+            "time": "2026-01-29T15:13:36+00:00"
         },
         {
             "name": "claviska/simpleimage",
@@ -295,22 +295,22 @@
         },
         {
             "name": "codeigniter4/framework",
-            "version": "v4.6.0",
+            "version": "v4.6.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/codeigniter4/framework.git",
-                "reference": "96a1e603b9a0f022b0febb2e249eab6971a7e0d5"
+                "reference": "e4d3702037a34549582453dbf59b7b67877ae82e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/codeigniter4/framework/zipball/96a1e603b9a0f022b0febb2e249eab6971a7e0d5",
-                "reference": "96a1e603b9a0f022b0febb2e249eab6971a7e0d5",
+                "url": "https://api.github.com/repos/codeigniter4/framework/zipball/e4d3702037a34549582453dbf59b7b67877ae82e",
+                "reference": "e4d3702037a34549582453dbf59b7b67877ae82e",
                 "shasum": ""
             },
             "require": {
                 "ext-intl": "*",
                 "ext-mbstring": "*",
-                "laminas/laminas-escaper": "^2.14",
+                "laminas/laminas-escaper": "^2.17",
                 "php": "^8.1",
                 "psr/log": "^3.0"
             },
@@ -318,11 +318,11 @@
                 "codeigniter/coding-standard": "^1.7",
                 "fakerphp/faker": "^1.24",
                 "friendsofphp/php-cs-fixer": "^3.47.1",
-                "kint-php/kint": "^6.0",
+                "kint-php/kint": "^6.1",
                 "mikey179/vfsstream": "^1.6.12",
                 "nexusphp/cs-config": "^3.6",
                 "phpunit/phpunit": "^10.5.16 || ^11.2",
-                "predis/predis": "^1.1 || ^2.3"
+                "predis/predis": "^3.0"
             },
             "suggest": {
                 "ext-curl": "If you use CURLRequest class",
@@ -365,7 +365,7 @@
                 "slack": "https://codeigniterchat.slack.com",
                 "source": "https://github.com/codeigniter4/CodeIgniter4"
             },
-            "time": "2025-01-19T18:31:34+00:00"
+            "time": "2025-12-12T10:37:42+00:00"
         },
         {
             "name": "codeigniter4/translations",
@@ -475,55 +475,6 @@
                 "source": "https://github.com/Gregwar/Captcha/tree/v1.3.0"
             },
             "time": "2025-06-23T12:25:54+00:00"
-        },
-        {
-            "name": "jasongrimes/paginator",
-            "version": "1.0.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/jasongrimes/php-paginator.git",
-                "reference": "3411e3cd0c6479a0b514f26e4358f0273552f221"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/jasongrimes/php-paginator/zipball/3411e3cd0c6479a0b514f26e4358f0273552f221",
-                "reference": "3411e3cd0c6479a0b514f26e4358f0273552f221",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "~4.2"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "JasonGrimes": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jason Grimes",
-                    "email": "jason@grimesit.com"
-                }
-            ],
-            "description": "A lightweight PHP paginator, for generating pagination controls in the style of Stack Overflow and Flickr. The 'first' and 'last' page links are shown inline as page numbers, and excess page numbers are replaced by ellipses.",
-            "homepage": "http://github.com/jasongrimes/php-paginator",
-            "keywords": [
-                "pager",
-                "pagination",
-                "paginator"
-            ],
-            "support": {
-                "issues": "https://github.com/jasongrimes/php-paginator/issues",
-                "source": "https://github.com/jasongrimes/php-paginator/tree/master"
-            },
-            "time": "2018-07-11T18:11:49+00:00"
         },
         {
             "name": "laminas/laminas-escaper",
@@ -831,16 +782,16 @@
         },
         {
             "name": "studio-42/elfinder",
-            "version": "2.1.65",
+            "version": "2.1.66",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Studio-42/elFinder.git",
-                "reference": "5535a8677558c44a20c19ff9b97ec37702f9c44d"
+                "reference": "78488951e44d69e8b9e4e849f8268df408632a6c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Studio-42/elFinder/zipball/5535a8677558c44a20c19ff9b97ec37702f9c44d",
-                "reference": "5535a8677558c44a20c19ff9b97ec37702f9c44d",
+                "url": "https://api.github.com/repos/Studio-42/elFinder/zipball/78488951e44d69e8b9e4e849f8268df408632a6c",
+                "reference": "78488951e44d69e8b9e4e849f8268df408632a6c",
                 "shasum": ""
             },
             "require": {
@@ -887,7 +838,7 @@
             "homepage": "http://elfinder.org",
             "support": {
                 "issues": "https://github.com/Studio-42/elFinder/issues",
-                "source": "https://github.com/Studio-42/elFinder/tree/2.1.65"
+                "source": "https://github.com/Studio-42/elFinder/tree/2.1.66"
             },
             "funding": [
                 {
@@ -895,7 +846,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-01-05T05:01:39+00:00"
+            "time": "2025-08-28T11:51:22+00:00"
         },
         {
             "name": "symfony/finder",

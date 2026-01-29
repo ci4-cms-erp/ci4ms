@@ -42,9 +42,8 @@
             </div>
         </div>
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
             <div class="table-responsive">
-                <table class="table table-striped table-bordered">
+                <table id="example1" class="table table-bordered table-striped">
                     <thead>
                         <tr>
                             <th><?= lang('Blog.tags') ?></th>
@@ -52,46 +51,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($tags as $tag): ?>
-                            <tr>
-                                <td><?= $tag->tag ?></td>
-                                <td>
-                                    <a href="<?= route_to('tagUpdate', $tag->id) ?>"
-                                        class="btn btn-outline-info btn-sm"><?= lang('Backend.update') ?></a>
-                                    <a href="<?= route_to('tagDelete', $tag->id) ?>"
-                                        class="btn btn-outline-danger btn-sm"><?= lang('Backend.delete') ?></a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
-            <?php if ($paginator->getNumPages() > 1): ?>
-                <div class="card-footer clearfix">
-                    <ul class="pagination pagination-sm m-0 float-right">
-                        <?php if ($paginator->getPrevUrl()): ?>
-                            <li class="page-item"><a class="page-link" href="<?php echo $paginator->getPrevUrl(); ?>">&laquo;</a>
-                            </li>
-                        <?php endif; ?>
-
-                        <?php foreach ($paginator->getPages() as $page): ?>
-                            <?php if ($page['url']): ?>
-                                <li class="page-item <?php echo $page['isCurrent'] ? 'active' : ''; ?>">
-                                    <a class="page-link"
-                                        href="<?php echo $page['url']; ?>"><?php echo $page['num']; ?></a>
-                                </li>
-                            <?php else: ?>
-                                <li class="disabled page-item"><span><?php echo $page['num']; ?></span></li>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-
-                        <?php if ($paginator->getNextUrl()): ?>
-                            <li class="page-item"><a class="page-link" href="<?php echo $paginator->getNextUrl(); ?>">&raquo;</a>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
         </div>
         <!-- /.card-body -->
     </div>
@@ -135,7 +97,18 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('javascript') ?>
-<?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
+<?= script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
+<?= script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
+<?= script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
+<?= script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
 <script>
     $('.ptitle').on('change', function() {
         $.post('<?= route_to('checkSeflink') ?>', {
@@ -155,6 +128,45 @@
         }, 'json').done(function(data) {
             $('.seflink').val(data.seflink);
         });
+    });
+    let isApprove = true;
+    var table = $("#example1").DataTable({
+        responsive: true,
+        lengthChange: false,
+        autoWidth: false,
+        buttons: ["pageLength", {
+            text: "Refresh",
+            className: "btn btn-teal",
+            action: function(e, dt, node, config) {
+                dt.ajax.reload();
+            }
+        }],
+        processing: true,
+        pageLength: 10,
+        serverSide: true,
+        ordering: false,
+        lengthMenu: [10, 25, 50, {
+            label: 'All',
+            value: -1
+        }],
+        ajax: {
+            url: '<?= route_to('tags') ?>',
+            type: 'POST',
+            data: {
+                isApproved: isApprove
+            }
+        },
+        columns: [{
+                data: 'tag'
+            },
+            {
+                data: 'actions'
+            }
+        ],
+        initComplete: function() {
+            table.buttons().container()
+                .appendTo($('.col-md-6:eq(0)', table.table().container()));
+        }
     });
 </script>
 <?= $this->endSection() ?>

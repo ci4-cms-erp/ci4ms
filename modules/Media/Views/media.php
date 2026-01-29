@@ -65,7 +65,7 @@
                         // 1st Arg - options
                         {
                             cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme.css'],
-                            baseUrl: 'uploads/media/',                    // Base URL to css/*, js/*
+                            baseUrl: 'media/',                    // Base URL to css/*, js/*
                             url: '/backend/media/elfinderConnection',  // connector URL (REQUIRED)
                             height: 768,
                             workerBaseUrl:"/be-assets/plugins/elFinder/js/worker",

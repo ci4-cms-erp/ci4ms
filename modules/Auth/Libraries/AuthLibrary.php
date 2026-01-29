@@ -52,7 +52,7 @@ class AuthLibrary
             return false;
         }
         $this->user = $user;
-        $groupSefLink = $this->commonModel->selectOne('auth_groups', ['id' => $this->user->group_id], 'seflink');
+        $groupSefLink = $this->commonModel->selectOne('auth_groups', ['id' => $this->user->group_id], 'name,seflink');
 
 
         $where_or = ['username' => $user->email, 'ip_address' => $this->ipAddress];
@@ -64,7 +64,15 @@ class AuthLibrary
         session()->set([
             'redirect_url' => $groupSefLink->seflink,
             $this->config->logged_in => $this->user->id,
-            'group_id' => $this->user->group_id
+            'group_id' => $this->user->group_id,
+            'userInfos' => [
+                'firstname' => $this->user->firstname,
+                'surname' => $this->user->surname,
+                'username' => $this->user->username,
+                'email' => $this->user->email,
+                'name' => $groupSefLink->name,
+                'profileIMG' => $this->user->profileIMG
+            ]
         ]);
 
         Services::response()->noCache();

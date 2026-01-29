@@ -2,7 +2,6 @@
 
 namespace Modules\Blog\Controllers;
 
-use JasonGrimes\Paginator;
 use Modules\Backend\Libraries\CommonTagsLibrary;
 use Modules\Backend\Models\AjaxModel;
 
@@ -31,14 +30,31 @@ class Blog extends \Modules\Backend\Controllers\BaseController
      */
     public function index()
     {
-        $totalItems = $this->commonModel->count('categories', []);
-        $itemsPerPage = 20;
-        $currentPage = $this->request->getUri()->getSegment(3, 1);
-        $urlPattern = '/backend/blogs/(:num)';
-        $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
-        $paginator->setMaxPagesToShow(5);
-        $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
-        $this->defData = array_merge($this->defData, ['paginator' => $paginator, 'blogs' => $this->commonModel->lists('blog', '*', [], 'id ASC', $itemsPerPage, $bpk)]);
+        if ($this->request->is('post') && $this->request->isAJAX()) {
+            $data = clearFilter($this->request->getPost());
+            $like = $data['search']['value'];
+            $l = [];
+            $postData = [];
+            if (!empty($like)) $l = ['title' => $like];
+            $results=$this->commonModel->lists('blog', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
+            $totalRecords = $this->commonModel->count('blog', $postData, $l);
+            foreach ($results as $result) {
+                $result->isActive='<input type="checkbox" name="my-checkbox"
+                                       class="bswitch"'.((bool)$result->isActive === true) ? 'checked' : '' .'
+                                       data-id="'. $$result->id .'" data-off-color="danger" data-on-color="success">';
+                $result->actions='<a href="'.route_to('blogUpdate', $result->id) .'"
+                                   class="btn btn-outline-info btn-sm">'.lang('Backend.update').'</a>
+                                <a href="'. route_to('blogDelete', $result->id) .'"
+                                   class="btn btn-outline-danger btn-sm">'.lang('Backend.delete').'</a>';
+            }
+            $data = [
+                'draw' => intval($data['draw']),
+                'iTotalRecords' => $totalRecords,
+                'iTotalDisplayRecords' => $totalRecords,
+                'aaData' => $results,
+            ];
+            return $this->respond($data, 200);
+        }
         return view('Modules\Blog\Views\list', $this->defData);
     }
 

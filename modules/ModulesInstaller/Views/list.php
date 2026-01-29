@@ -260,10 +260,10 @@
                 }
             }
         },
-        lengthMenu: [
-            [25, 50, 100, -1],
-            [25, 50, 100, "<?=lang('Backend.showAll')?>"]
-        ],
+        lengthMenu: [10, 25, 50, {
+            label: 'All',
+            value: -1
+        }],
         ajax: {
             url: '<?= route_to('modulesInstaller') ?>',
             type: 'post'

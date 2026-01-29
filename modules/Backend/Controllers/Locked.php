@@ -2,9 +2,6 @@
 
 namespace Modules\Backend\Controllers;
 
-use CodeIgniter\I18n\Time;
-use JasonGrimes\Paginator;
-
 class Locked extends BaseController
 {
     /**
@@ -12,36 +9,36 @@ class Locked extends BaseController
      */
     public function index()
     {
-        $filterData = [];
-        if (!empty($this->request->getGet())) {
-            $clearData = clearFilter($this->request->getGet());
-            $dates = explode(" - ", $clearData['date_range']);
-
-            $locked_at = Time::createFromFormat('Y-m-d H:i:s', new Time($dates[0]), 'Europe/Istanbul')->toLocalizedString();
-            $expiry_date = Time::createFromFormat('Y-m-d H:i:s', new Time($dates[1]), 'Europe/Istanbul')->toLocalizedString();
-
-            $filterData = [
+        if ($this->request->is('post') && $this->request->isAJAX()) {
+            $data = clearFilter($this->request->getPost());
+            $like = $data['search']['value'];
+            $l = [];
+            if (!empty($this->request->getPost('date_range'))) {
+                $dates = explode(" - ", $this->request->getPost('date_range'));
+                $locked_at = date('Y-m-d H:i:s', strtotime($dates[0]));
+                $expiry_date = date('Y-m-d H:i:s', strtotime($dates[1]));
+            }
+            $postData = [
                 'isLocked' => (isset($clearData['status'])) ? (bool)$clearData['status'] : null,
-                'locked_at' => ['$gte' => $locked_at],
-                'expiry_date' => ['$lte' => $expiry_date],
+                'locked_at' => $locked_at??null,
+                'expiry_date' => $expiry_date??null,
             ];
-            $filterData = clearFilter($filterData);
+            if (!empty($like)) $l = ['title' => $like];
+            $results = $this->commonModel->lists('locked', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
+            $totalRecords = $this->commonModel->count('locked', $postData, $l);
+            foreach ($results as $result) {
+                $result->locked_at = date('Y-m-d H:i:s', strtotime($result->locked_at));
+                $result->expiry_date = date('Y-m-d H:i:s', strtotime($result->expiry_date));
+                $result->actions = '<input type="checkbox" name="my-checkbox" class="bswitch"' . ($result->isLocked === true) ? 'checked' : '' . ' data-id="' . $result->_id . '" data-off-color="danger" data-on-color="success">';
+            }
+            $data = [
+                'draw' => intval($data['draw']),
+                'iTotalRecords' => $totalRecords,
+                'iTotalDisplayRecords' => $totalRecords,
+                'aaData' => $results,
+            ];
+            return $this->respond($data, 200);
         }
-        $totalItems = $this->commonModel->count('locked', $filterData);
-        $itemsPerPage = 10;
-        $currentPage = $this->request->getUri()->getSegment(3, 1);
-        $urlPattern = '/backend/locked/(:num)';
-        $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
-        $paginator->setMaxPagesToShow(5);
-        $bpk = ($this->request->getUri()->getSegment(3, 1) - 1) * $itemsPerPage;
-
-        $this->defData = array_merge($this->defData, [
-            'paginator' => $paginator,
-            'locks' => $this->commonModel->lists('locked','*', $filterData,'id ASC', $itemsPerPage,$bpk,['username' => (isset($clearData['email'])) ? $clearData['email']: '',
-                'ip_address' => (isset($clearData['ip'])) ?$clearData['ip'] : '']),
-            'totalCount' => $totalItems,
-            'filteredData' => $clearData ?? null,
-        ]);
         return view('Modules\Backend\Views\logs\locked', $this->defData);
     }
 }

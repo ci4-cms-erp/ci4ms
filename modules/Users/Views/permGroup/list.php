@@ -1,7 +1,9 @@
 <?= $this->extend('Modules\Backend\Views\base') ?>
 
 <?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
+<?= link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
+<?= link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
+<?= link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -37,55 +39,19 @@
         </div>
 
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
             <div class="table-responsive">
-                <table class="table table-bordered">
+                <table id="example1" class="table table-bordered table-striped">
                     <thead>
-                        <tr>
-                            <th><?= lang($title->pagename) ?></th>
-                            <th><?= lang('Backend.transactions') ?></th>
-                        </tr>
-                    <tbody>
-                        <?php foreach ($groups as $group):
-                            //if ($group->name != 'super user'):
-                        ?>
-                            <tr>
-                                <td><?= $group->name ?></td>
-                                <td>
-                                    <!--TODO: Silme adımı için yetkiye sahip olanların yetkisinin değiştirilmesi istenilecek-->
-                                    <a href="<?= route_to('group_update', $group->id) ?>" class="btn btn-outline-info btn-sm"><?= lang('Backend.update') ?></a>
-                                </td>
-                            </tr>
-                        <?php //endif;
-                        endforeach; ?>
-                    </tbody>
+                    <tr>
+                        <th><?=lang($title->pagename)?></th>
+                        <th><?=lang('Backend.transactions')?></th>
+                    </tr>
                     </thead>
+                    <tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
-        <?php if ($paginator->getNumPages() > 1): ?>
-            <div class="card-footer clearfix">
-                <ul class="pagination pagination-sm m-0 float-right">
-                    <?php if ($paginator->getPrevUrl()): ?>
-                        <li class="page-item"><a class="page-link" href="<?php echo $paginator->getPrevUrl(); ?>"></a></li>
-                    <?php endif; ?>
-
-                    <?php foreach ($paginator->getPages() as $page): ?>
-                        <?php if ($page['url']): ?>
-                            <li class="page-item <?php echo $page['isCurrent'] ? 'active' : ''; ?>">
-                                <a class="page-link" href="<?php echo $page['url']; ?>"><?php echo $page['num']; ?></a>
-                            </li>
-                        <?php else: ?>
-                            <li class="disabled page-item"><span><?php echo $page['num']; ?></span></li>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-
-                    <?php if ($paginator->getNextUrl()): ?>
-                        <li class="page-item"><a class="page-link" href="<?php echo $paginator->getNextUrl(); ?>"></a></li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
         <!-- /.card-body -->
     </div>
     <!-- /.card -->
@@ -95,54 +61,57 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('javascript') ?>
-<!-- jQuery Knob -->
-<?= script_tag("be-assets/plugins/jquery-knob/jquery.knob.min.js") ?>
-<!-- Sparkline -->
-<?= script_tag("be-assets/plugins/sparklines/sparkline.js") ?>
+<?= script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
+<?= script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
+<?= script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
+<?= script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
 <script>
-    $(function() {
-        /* jQueryKnob */
-        $('.knob').knob({
-            draw: function() {
-                // "tron" case
-                if (this.$.data('skin') == 'tron') {
-
-                    var a = this.angle(this.cv) // Angle
-                        ,
-                        sa = this.startAngle, // Previous start angle
-                        sat = this.startAngle, // Start angle
-                        ea, // Previous end angle
-                        eat = sat + a, // End angle
-                        r = true
-
-                    this.g.lineWidth = this.lineWidth
-                    this.o.cursor &&
-                        (sat = eat - 0.3) &&
-                        (eat = eat + 0.3)
-                    if (this.o.displayPrevious) {
-                        ea = this.startAngle + this.angle(this.value)
-                        this.o.cursor &&
-                            (sa = ea - 0.3) &&
-                            (ea = ea + 0.3)
-                        this.g.beginPath()
-                        this.g.strokeStyle = this.previousColor
-                        this.g.arc(this.xy, this.xy, this.radius - this.lineWidth, sa, ea, false)
-                        this.g.stroke()
-                    }
-                    this.g.beginPath()
-                    this.g.strokeStyle = r ? this.o.fgColor : this.fgColor
-                    this.g.arc(this.xy, this.xy, this.radius - this.lineWidth, sat, eat, false)
-                    this.g.stroke()
-                    this.g.lineWidth = 2
-                    this.g.beginPath()
-                    this.g.strokeStyle = this.o.fgColor
-                    this.g.arc(this.xy, this.xy, this.radius - this.lineWidth + 1 + this.lineWidth * 2 / 3, 0, 2 * Math.PI, false)
-                    this.g.stroke()
-                    return false
-                }
+    let isApprove = true;
+    var table = $("#example1").DataTable({
+        responsive: true,
+        lengthChange: false,
+        autoWidth: false,
+        buttons: ["pageLength", {
+            text: "Refresh",
+            className: "btn btn-teal",
+            action: function(e, dt, node, config) {
+                dt.ajax.reload();
             }
-        })
-        /* END JQUERY KNOB */
-    })
+        }],
+        processing: true,
+        pageLength: 10,
+        serverSide: true,
+        ordering: false,
+        lengthMenu: [10, 25, 50, {
+            label: 'All',
+            value: -1
+        }],
+        ajax: {
+            url: '<?= route_to('groupList') ?>',
+            type: 'POST',
+            data: {
+                isApproved: isApprove
+            }
+        },
+        columns: [{
+                data: 'name'
+            },
+            {
+                data: 'actions'
+            }
+        ],
+        initComplete: function() {
+            table.buttons().container()
+                .appendTo($('.col-md-6:eq(0)', table.table().container()));
+        }
+    });
 </script>
 <?= $this->endSection() ?>

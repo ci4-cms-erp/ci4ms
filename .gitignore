@@ -133,5 +133,5 @@ app/Config/Routes.php
 htdocs
 public/uploads/.tmb/
 public/uploads/.trash/
-public/uploads/media/.tmb/
+public/media/.tmb/
 writable/tmp/*

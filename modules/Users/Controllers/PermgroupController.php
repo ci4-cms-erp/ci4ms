@@ -3,21 +3,30 @@
 namespace Modules\Users\Controllers;
 
 use CodeIgniter\I18n\Time;
-use JasonGrimes\Paginator;
 
 class PermgroupController extends \Modules\Backend\Controllers\BaseController
 {
     public function groupList($num = 1)
     {
-        $this->defData['groups'] = $this->commonModel->lists('auth_groups', '*', [], 'id ASC', 12, ((int)$num - 1) * 12);
-        $c = count($this->commonModel->lists('auth_groups'));
-        $totalItems = $c;
-        $itemsPerPage = 12;
-        $currentPage = 12;
-        $urlPattern = '/backend/groupList/(:num)';
-        $paginator = new Paginator($totalItems, $itemsPerPage, $currentPage, $urlPattern);
-        $paginator->setMaxPagesToShow(5);
-        $this->defData['paginator'] = $paginator;
+        if ($this->request->is('post') && $this->request->isAJAX()) {
+            $data = clearFilter($this->request->getPost());
+            $like = $data['search']['value'];
+            $l = [];
+            $postData = [];
+            if (!empty($like)) $l = ['title' => $like];
+            $results = $this->commonModel->lists('auth_groups', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
+            $totalRecords = $this->commonModel->count('auth_groups', $postData, $l);
+            foreach ($results as $result) {
+                $result->actions = '<a href="' . route_to('group_update', $result->id) . '" class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>';
+            }
+            $data = [
+                'draw' => intval($data['draw']),
+                'iTotalRecords' => $totalRecords,
+                'iTotalDisplayRecords' => $totalRecords,
+                'aaData' => $results,
+            ];
+            return $this->respond($data, 200);
+        }
         return view('Modules\Users\Views\permGroup\list', $this->defData);
     }
 

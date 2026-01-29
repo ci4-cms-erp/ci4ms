@@ -382,3 +382,7 @@ input:checked + .toggle-slider:before {
 .gap-5 {
   gap: 5px;
 }
+
+.dt-button-collection .dropdown-menu {
+  top: unset !important;
+}

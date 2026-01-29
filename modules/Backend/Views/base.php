@@ -144,6 +144,7 @@
     <!-- AdminLTE for demo purposes -->
     <?= script_tag("be-assets/js/demo.js") ?>
     <?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
+    <?= view('Modules\Backend\Views\sweetalert_message_block') ?>
     <?= $this->renderSection('javascript') ?>
 </body>
 

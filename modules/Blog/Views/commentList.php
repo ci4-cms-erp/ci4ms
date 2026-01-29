@@ -98,7 +98,10 @@
             }
         ],
         processing: true, pageLength: 10, serverSide: true,
-        ordering: false, "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        ordering: false, lengthMenu: [10, 25, 50, {
+            label: 'All',
+            value: -1
+        }],
         ajax: {
             url: '<?=route_to('commentResponse')?>',
             type: 'POST',

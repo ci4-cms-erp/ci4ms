@@ -197,7 +197,7 @@ class InstallService
                         </div>
                     </div>
                 </div>
-            </section>', 'seflink' => 'hakkimizda', 'isActive' => '1', 'seo' => '{"coverImage":"https:\\/\\/kun-cms\\/uploads\\/media\\/main-vector.png","IMGWidth":"398","IMGHeight":"249","description":"Ci4MS hakkında","keywords":[{"value":"hakkımızda"}]}', 'inMenu' => '1'],
+            </section>', 'seflink' => 'hakkimizda', 'isActive' => '1', 'seo' => '{"coverImage":"\\/uploads\\/media\\/main-vector.png","IMGWidth":"398","IMGHeight":"249","description":"Ci4MS hakkında","keywords":[{"value":"hakkımızda"}]}', 'inMenu' => '1'],
             ['id' => '2', 'title' => 'İletişim', 'content' => '<section class="py-5">
                 <div class="container px-5">
 {\\App\\Libraries\\templates\\default\\Ci4mstemplateLib|contactForm/}
@@ -308,7 +308,7 @@ class InstallService
         $encrypter = \Config\Services::encrypter();
         $commonModel->createMany('settings', [
             ['option' => 'siteName', 'content' => $args['siteName'] ?? 'Ci4MS'],
-            ['option' => 'logo', 'content' => '/uploads/media/logo.png'],
+            ['option' => 'logo', 'content' => '/media/logo.png'],
             ['option' => 'siteURL', 'content' => $args['baseUrl'] ?? 'https://ci4ms.loc/'],
             ['option' => 'slogan', 'content' => $args['slogan'] ?? 'My First Ci4MS Project'],
             ['option' => 'socialNetwork', 'content' => '[{"smName":"facebook","link":"https:\\/\\/facebook.com\\/bertugfahriozer"},{"smName":"twitter","link":"https:\\/\\/twitter.com\\/bertugfahriozer"},{"smName":"github","link":"https:\\/\\/github.com\\/bertugfahriozer.com"}]'],

@@ -147,6 +147,12 @@ class Install extends Controller
         $file = APPPATH . 'Commands/Views/routes.tpl.php';
         $content = file_get_contents($file);
         $content = str_replace('<@', '<?', $content);
+        if (! is_dir(WRITEPATH. 'backups/') && !is_dir(PUBLICPATH. 'media/.tmb') && !is_dir(PUBLICPATH. 'media/.trash')) {
+
+                mkdir(WRITEPATH. 'backups/', 0755, true);
+                mkdir(PUBLICPATH. 'uploads/.tmb', 0755, true);
+                mkdir(PUBLICPATH. 'uploads/.trash', 0755, true);
+            }
         if (!write_file(APPPATH . 'Config/Routes.php', $content)) {
             return redirect()->to($baseURL)->withInput()->with('errors', ['route' => 'Routes dosyası oluşturulamadı.']);
         }

@@ -37,7 +37,6 @@
             </div>
         </div>
         <div class="card-body">
-            <?= view('Modules\Backend\Views\sweetalert_message_block') ?>
             <?=$logViewer->showLogs()?>
         </div>
         <!-- /.card-body -->

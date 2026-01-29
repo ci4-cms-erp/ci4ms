@@ -16,6 +16,6 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
 
     //log module
     $routes->group('locked', function ($routes) {
-        $routes->get('(:num)', 'Locked::index/$1', ['as' => 'locked', 'role' => 'read,create,update,delete']);
+        $routes->match(['GET','POST'],'/', 'Locked::index', ['as' => 'locked', 'role' => 'read,create,update,delete']);
     });
 });

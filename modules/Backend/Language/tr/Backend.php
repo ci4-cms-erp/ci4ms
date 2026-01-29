@@ -8,6 +8,7 @@ return [
     'add' => '<i class="fas fa-plus"></i> Ekle',
     'update' => '<i class="fas fa-edit"></i> Düzenle',
     'delete' => '<i class="fas fa-trash"></i> Sil',
+    'delText'=>'Sil',
     'backToList' => '<i class="fas fa-arrow-circle-left"></i> Listeye Dön',
     'cancel' => 'Vazgeç',
     'fullName' => 'Ad Soyad',

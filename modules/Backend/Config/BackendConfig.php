@@ -1,4 +1,6 @@
-<?php namespace Modules\Backend\Config;
+<?php
+
+namespace Modules\Backend\Config;
 
 class BackendConfig extends \CodeIgniter\Config\BaseConfig
 {
@@ -30,13 +32,19 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
         'backend/checkSeflink',
         'backend/isActive',
         'backend/maintenance',
+        'backend/locked',
         'backend/summary/summary_render'
     ];
 
-    public $filters=[
+    public $filters = [
         'backendAfterLoginFilter' => ['before' => [
             'backend',
-            'backend/tagify','backend/checkSeflink','backend/isActive',
-            'backend/maintenance','backend/locked/*','backend/profile',
-        ]]];
+            'backend/tagify',
+            'backend/checkSeflink',
+            'backend/isActive',
+            'backend/maintenance',
+            'backend/locked',
+            'backend/profile',
+        ]]
+    ];
 }

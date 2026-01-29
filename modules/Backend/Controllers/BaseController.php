@@ -50,8 +50,7 @@ class BaseController extends Controller
         $this->authLib = new AuthLibrary();
         $this->commonModel = new CommonModel();
         $userModel = new UserscrudModel();
-        $this->logged_in_user = $userModel->loggedUser(0, 'users.id,firstname,name,surname,username', ['users.id' => session()->get($this->config->logged_in)]);
-        $this->logged_in_user = reset($this->logged_in_user);
+
         $uri = '';
         if ($this->request->getUri()->getTotalSegments() > 1) {
             $segs = $this->request->getUri()->getSegments();
@@ -66,7 +65,7 @@ class BaseController extends Controller
         $perms = array_reduce(cache(session()->get($this->config->logged_in) . '_permissions'), fn($carry, $item) => $carry ?? ($item['className'] === $searchValues[0] && $item['methodName'] === $searchValues[1] ? $item : null));
         $this->defData = [
             'config' => $this->config,
-            'logged_in_user' => $this->logged_in_user,
+            'logged_in_user' => (object)session()->get('userInfos'), //$this->logged_in_user,
             'backConfig' => $this->backConfig,
             'navigation' => $this->authLib->sidebarNavigation(),
             'title' => (object)$perms,

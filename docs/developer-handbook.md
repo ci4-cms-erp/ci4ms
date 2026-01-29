@@ -158,7 +158,7 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 - elFinder configuration resides in `Modules\Media\Controllers\Media::elfinderConnection()`.
 - Allowed MIME types come from settings (`settings.allowedFiles`).
 - Optional WebP conversion uses `claviska/simpleimage` when enabled.
-- Media root: `public/uploads/media/`. Ensure the directory (and `.trash`) are writable by the web server.
+- Media root: `public/media/`. Ensure the directory (and `.trash`) are writable by the web server.
 
 ### File editor (`Modules\Fileeditor`)
 - Provides tree/file editing within the project root. `realpath` checks prevent escaping `ROOTPATH`.

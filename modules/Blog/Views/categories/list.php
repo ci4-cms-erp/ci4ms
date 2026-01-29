@@ -5,7 +5,9 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('head') ?>
-<?=link_tag("be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css")?>
+<?= link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
+<?= link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
+<?= link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -40,60 +42,18 @@
             </div>
         </div>
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
             <div class="table-responsive">
-                <table class="table table-striped table-bordered">
+                <table id="example1" class="table table-bordered table-striped">
                     <thead>
                     <tr>
                         <th><?=lang('Backend.title')?></th>
-                        <th><?=lang('Blog.parentCategory')?></th>
                         <th><?=lang('Backend.transactions')?></th>
                     </tr>
                     </thead>
                     <tbody>
-                    <?php foreach ($categories as $category) : ?>
-                        <tr>
-                            <td><?= $category->title ?></td>
-                            <td><?php if (isset($category->pivot)):
-                                    echo $category->pivot->title;
-                                endif; ?></td>
-                            <td>
-                                <a href="<?= route_to('categoryUpdate', $category->id) ?>"
-                                   class="btn btn-outline-info btn-sm"><?=lang('Backend.update')?></a>
-                                <a href="<?= route_to('categoryDelete', $category->id) ?>"
-                                   class="btn btn-outline-danger btn-sm"><?=lang('Backend.delete')?></a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
-            <?php if ($paginator->getNumPages() > 1): ?>
-                <div class="card-footer clearfix">
-                    <ul class="pagination pagination-sm m-0 float-right">
-                        <?php if ($paginator->getPrevUrl()): ?>
-                            <li class="page-item"><a class="page-link" href="<?php echo $paginator->getPrevUrl(); ?>">&laquo;</a>
-                            </li>
-                        <?php endif; ?>
-
-                        <?php foreach ($paginator->getPages() as $page): ?>
-                            <?php if ($page['url']): ?>
-                                <li class="page-item <?php echo $page['isCurrent'] ? 'active' : ''; ?>">
-                                    <a class="page-link"
-                                       href="<?php echo $page['url']; ?>"><?php echo $page['num']; ?></a>
-                                </li>
-                            <?php else: ?>
-                                <li class="disabled page-item"><span><?php echo $page['num']; ?></span></li>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-
-                        <?php if ($paginator->getNextUrl()): ?>
-                            <li class="page-item"><a class="page-link" href="<?php echo $paginator->getNextUrl(); ?>">&raquo;</a>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
         </div>
         <!-- /.card-body -->
     </div>
@@ -104,5 +64,57 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('javascript') ?>
-<?=script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js")?>
+<?= script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
+<?= script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
+<?= script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
+<?= script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
+<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
+<script>
+    let isApprove = true;
+    var table = $("#example1").DataTable({
+        responsive: true,
+        lengthChange: false,
+        autoWidth: false,
+        buttons: ["pageLength", {
+            text: "Refresh",
+            className: "btn btn-teal",
+            action: function(e, dt, node, config) {
+                dt.ajax.reload();
+            }
+        }],
+        processing: true,
+        pageLength: 10,
+        serverSide: true,
+        ordering: false,
+        lengthMenu: [10, 25, 50, {
+            label: 'All',
+            value: -1
+        }],
+        ajax: {
+            url: '<?= route_to('categories') ?>',
+            type: 'POST',
+            data: {
+                isApproved: isApprove
+            }
+        },
+        columns: [{
+                data: 'title'
+            },
+            {
+                data: 'actions'
+            }
+        ],
+        initComplete: function() {
+            table.buttons().container()
+                .appendTo($('.col-md-6:eq(0)', table.table().container()));
+        }
+    });
+</script>
 <?= $this->endSection() ?>
