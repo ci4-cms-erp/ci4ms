@@ -73,6 +73,7 @@ Use `php spark make:module Foo` (provided by `ci4-cms-erp/ext_module_generator`)
 - `Modules\Media` integrates elFinder, with MIME allowlist from settings and optional WebP conversion (`claviska/simpleimage`).
 - `Modules\Fileeditor` provides project-level file browse/edit operations with `realpath` guardrails.
 - `Modules\Logs` wraps `seunmatt/codeigniter-log-viewer` so administrators can inspect `writable/logs/` from `/backend/logs` without shell access.
+- `Modules\Backup` provides database backup and restore functionality, allowing administrators to download `.zip` archives of the database or restore from server-stored backups.
 
 ## CLI & automation
 - `app/Commands/*` includes backend generators (`make:acontroller`, etc.) and route regeneration (`create:route`).

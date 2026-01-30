@@ -26,7 +26,7 @@ public/
   index.php          Front controller
   be-assets/         Admin UI build artifacts (CSS/JS)
   templates/         Front-end themes (default shipped)
-  uploads/           Media storage (ensure writable)
+  media/             Media storage (ensure writable)
 writable/            Cache, logs, temporary files (must be writable)
 vendor/              Composer packages
 ```
@@ -83,7 +83,7 @@ The project depends on CodeIgniter 4 and several packages that power key feature
 - `ci4-cms-erp/ext_module_generator` – Module scaffolding support exposed as `php spark make:module`.
 - `claviska/simpleimage` – Image manipulation utilities for media uploads and WebP conversion.
 - `seunmatt/codeigniter-log-viewer` – Backend log viewer integration.
-- `gregwar/captcha`, `jasongrimes/paginator`, `phpmailer/phpmailer`, `studio-42/elfinder` – Authentication görselleri, pagination, mail gönderimi, medya yöneticisi. SEO meta yönetimi proje içindeki yerleşik servisler ile sağlanır.
+- `gregwar/captcha`, `phpmailer/phpmailer`, `studio-42/elfinder` – Authentication görselleri, pagination, mail gönderimi, medya yöneticisi. SEO meta yönetimi proje içindeki yerleşik servisler ile sağlanır.
 
 Install/update:
 ```bash
@@ -168,6 +168,11 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 - Themes live in `public/templates/<theme>/` plus optional app-level overrides (`app/Config/templates/<theme>`, etc.).
 - Upload flow: ZIP → `writable/tmp` → install helper → final directories.
 - Required files per theme: `info.xml`, `screenshot.png`. Missing assets trigger warnings via `BackendAfterLoginFilter`.
+
+### Backup (`Modules\Backup`)
+- **Functionality:** Database backup (ZIP download) and restore.
+- **Storage:** Backups are generated in `writable/uploads/backups/`.
+- **Driver:** Uses `mysqldump` if available, falls back to PHP loop.
 
 ---
 

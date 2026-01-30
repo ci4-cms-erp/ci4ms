@@ -281,7 +281,7 @@ public/
   index.php          Front controller
   be-assets/         Admin UI build artifacts (CSS/JS)
   templates/         Front-end themes (default shipped)
-  uploads/           Media storage (ensure writable)
+  media/             Media storage (ensure writable)
 writable/            Cache, logs, temporary files (must be writable)
 vendor/              Composer packages</code></pre>
       <p>Essential configuration files include <code>composer.json</code>, the contents of <code>app/Config</code>, and the environment overrides stored in <code>.env</code>.</p>
@@ -396,6 +396,14 @@ npm install
             <li>Required theme files: <code>info.xml</code>, <code>screenshot.png</code> (checked by backend filter).</li>
           </ul>
         </div>
+        <div>
+          <h3>Backup &amp; Restore</h3>
+          <ul>
+            <li><strong>Backup:</strong> Database dumps via <code>mysqldump</code> or PHP fallback.</li>
+            <li><strong>Restore:</strong> Restore from local ZIPs or server archives.</li>
+            <li><strong>Storage:</strong> Backups saved in <code>writable/uploads/backups</code>.</li>
+          </ul>
+        </div>
       </div>
     </section>
 
@@ -405,7 +413,7 @@ npm install
         <li><code>public/index.php</code> bootstraps CodeIgniter; production servers should expose only <code>public/</code>.</li>
         <li><code>public/maintenance/</code> serves the maintenance splash when enabled.</li>
         <li><code>public/be-assets/</code> houses admin CSS/JS, images, plugins, and package manifests.</li>
-        <li><code>public/uploads/</code> contains uploaded media (include in backups).</li>
+        <li><code>public/media/</code> contains uploaded media (include in backups).</li>
         <li><code>public/templates/default/</code> is the bundled theme—use it as a blueprint for custom themes.</li>
       </ul>
     </section>

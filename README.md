@@ -3,6 +3,7 @@
 CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, modular architecture with RBAC authorization and theme support. It combines CMS workflows, developer-focused CLI commands, an extensible module system, and customizable front-end themes in a single package.
 
 ## Key Features
+
 - Authentication & RBAC: `Modules\Auth` handles user login, lockouts, and password resets, while permissions map to `auth_permissions_pages` records.
 - Modular backend: Each feature ships as an independent module (Blog, Pages, Menu, Media, Users, Settings, Theme, etc.) under `modules/*`.
 - Flexible content management: Page and blog entries include SEO metadata, categories, tags, and full comment workflows.
@@ -12,6 +13,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - SEO helpers: `ci4seopro` builds meta tags and JSON-LD, while `CommonLibrary` centralizes email, breadcrumbs, and inline shortcode utilities.
 
 ## Requirements
+
 - PHP 8.1 or newer (intl, json, mbstring, gd, curl, openssl recommended)
 - Composer
 - MySQL/MariaDB (or any CodeIgniter 4-supported driver)
@@ -20,16 +22,20 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 See `composer.json` for the full dependency list (e.g. `bertugfahriozer/ci4commonmodel`, `bertugfahriozer/sql2migration`, `ci4-cms-erp/ext_module_generator`, `claviska/simpleimage`, `seunmatt/codeigniter-log-viewer`, `gregwar/captcha`, `jasongrimes/paginator`, `studio-42/elfinder`, `phpmailer/phpmailer`).
 
 # 🪴 Project Activity
+
 ![Alt](https://repobeats.axiom.co/api/embed/9f2631ce1dcfae3db84f5113fea08ac0c7ae8d29.svg "Repobeats analytics image")
 
 ## Installation
+
 ### Fresh Project (recommended)
+
 ```bash
 composer create-project ci4-cms-erp/ci4ms myproject
 cd myproject
 ```
 
 ### Clone Existing Repository
+
 ```bash
 git clone <repo-url> ci4ms
 cd ci4ms
@@ -37,6 +43,7 @@ composer install
 ```
 
 ### Environment & Configuration
+
 1. Create your `.env` and enable the development environment:
    ```bash
    cp env .env
@@ -49,21 +56,26 @@ composer install
 3. If you prefer the web installer, open `/install` in the browser and follow the wizard. Use the CLI steps below if you want to skip the wizard.
 
 ### Database & Seed Data
+
 ```bash
 php spark migrate
 php spark db:seed Ci4msDefaultsSeeder   # You will be prompted for your name, email, and password
 php spark create:route                  # Generates the default routes file
 php spark key:generate                  # Creates an encryption key
 ```
+
 The seeder provisions an active administrator account (group_id=1) and populates the initial module records.
 
 ### Run the Dev Server
+
 ```bash
 php spark serve
 ```
+
 Access the backend via: `https://<domain>/backend`
 
 ## Directory Layout
+
 - `app/Controllers/Home.php` — Handles front-end pages, blog listings, details, and comments.
 - `app/Libraries/` — Shared helpers (email, SEO, shortcodes).
 - `app/Commands/` — CLI tooling (`make:a*`, `create:route`).
@@ -73,26 +85,29 @@ Access the backend via: `https://<domain>/backend`
 - `writable/` — Cache, logs, temporary files.
 
 ## Modules
-| Module | Purpose | Highlights |
-|--------|---------|------------|
-| Auth | Authentication lifecycle | CAPTCHA, email activation, reset tokens |
-| Backend | Admin shell | Dashboard stats, shared base controller |
-| Blog | Blog CRUD | Categories, tags, comments, bad-word filters |
-| Pages | Static page management | SEO fields, inline shortcode parsing |
-| Menu | Menu builder | Drag-and-drop ordering, slug helpers |
-| Media | Media manager | elFinder integration, optional WebP conversion |
-| Fileeditor | Project file editor | Safe read/write/rename/move/delete |
-| Settings | System configuration | Company/social/mail settings, encrypted SMTP password |
-| Users | User & role management | Group-based permissions, reset tracking |
-| Methods | Route → permission mapping | Module toggling, router scan |
-| Logs | Log viewer | Browses CodeIgniter log files inside the backend |
-| ModulesInstaller | Module ZIP installer | Upload + cache invalidation |
-| Theme | Theme manager | ZIP upload, duplicate folder checks |
-| Install | Web installer | Creates `.env`, triggers migrations |
+
+| Module           | Purpose                    | Highlights                                            |
+| ---------------- | -------------------------- | ----------------------------------------------------- |
+| Auth             | Authentication lifecycle   | CAPTCHA, email activation, reset tokens               |
+| Backend          | Admin shell                | Dashboard stats, shared base controller               |
+| Blog             | Blog CRUD                  | Categories, tags, comments, bad-word filters          |
+| Pages            | Static page management     | SEO fields, inline shortcode parsing                  |
+| Menu             | Menu builder               | Drag-and-drop ordering, slug helpers                  |
+| Media            | Media manager              | elFinder integration, optional WebP conversion        |
+| Fileeditor       | Project file editor        | Safe read/write/rename/move/delete                    |
+| Settings         | System configuration       | Company/social/mail settings, encrypted SMTP password |
+| Users            | User & role management     | Group-based permissions, reset tracking               |
+| Methods          | Route → permission mapping | Module toggling, router scan                          |
+| Logs             | Log viewer                 | Browses CodeIgniter log files inside the backend      |
+| ModulesInstaller | Module ZIP installer       | Upload + cache invalidation                           |
+| Theme            | Theme manager              | ZIP upload, duplicate folder checks                   |
+| Install          | Web installer              | Creates `.env`, triggers migrations                   |
+| Backup           | Database backup manager    | Create, download, and restore backups                 |
 
 See `docs/architecture.md` for deeper architectural notes.
 
 ## CLI Commands
+
 - `php spark make:module Blog` — Scaffolds a module (`Config`, `Controllers`, `Views`, language files, etc.).
 - `php spark make:acontroller Example` — Generates a backend controller template.
 - `php spark make:amodel Example` — Generates a backend model (with options for table, return type).
@@ -101,6 +116,7 @@ See `docs/architecture.md` for deeper architectural notes.
 - Standard CodeIgniter commands: `php spark migrate`, `php spark db:seed`, `php spark cache:clear`, etc.
 
 ## Developer Notes
+
 - **Cache keys**: `settings` (24h), `menus` (menu tree, 24h), `{userId}_permissions`. Clear with `php spark cache:clear` or `cache()->delete()`.
 - **Base controller**: Extend `Modules\Backend\Controllers\BaseController` for new backend controllers; it prepares session user, navigation, mail settings, and shared data.
 - **Permissions**: Remember to register new secured routes in `Modules\Methods` (or via the database) so the permission filter recognizes them. The backend log viewer lives under `/backend/logs` and follows the same permission model.
@@ -111,12 +127,14 @@ See `docs/architecture.md` for deeper architectural notes.
 - **Theme uploads**: Each theme must include `info.xml` and `screenshot.png`; missing files trigger a backend warning.
 
 ## Testing & Maintenance
+
 - `composer test`
 - Add coding standards or static analysis as needed (not included by default).
 - **Maintenance mode**: When `settings.maintenanceMode.scalar == 1`, the `Ci4ms` filter redirects visitors to `maintenance-mode`.
 - **Security**: `Fileeditor` and `Media` enforce `realpath` guards. Limit access in production environments.
 
 ## Additional docs
+
 - `docs/architecture.md` — Architecture, flow, permissions, and extension guidance.
 
 Questions or contributions? Open an issue or pull request.
