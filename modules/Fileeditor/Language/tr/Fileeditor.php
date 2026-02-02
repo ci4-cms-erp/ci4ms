@@ -3,7 +3,6 @@ return [
     'fileEditor' => 'Dosya Düzenleyici',
     'renameFailed' => 'Dosya adı değiştirilemedi',
     'invalidSource' => 'Geçersiz kaynak dosya veya klasör',
-    'moveFailed' => 'Dosya veya klasör taşınamadı',
     'invalidFileOrFolder' => 'Geçersiz dosya veya klasör',
     'folderNotEmpty' => 'Klasörün içi boş değil veya silme işlemi başarısız!',
     'path' => 'Yol',

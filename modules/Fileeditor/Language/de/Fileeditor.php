@@ -3,7 +3,6 @@ return [
     'fileEditor' => 'Dateieditor',
     'renameFailed' => 'Datei konnte nicht umbenannt werden',
     'invalidSource' => 'Ungültige Quelldatei oder Ordner',
-    'moveFailed' => 'Datei oder Ordner konnte nicht verschoben werden',
     'invalidFileOrFolder' => 'Ungültige Datei oder Ordner',
     'folderNotEmpty' => 'Ordner ist nicht leer oder Löschen fehlgeschlagen!',
     'path' => 'Pfad',

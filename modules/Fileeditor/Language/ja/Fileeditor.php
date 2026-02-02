@@ -3,7 +3,6 @@ return [
     'fileEditor' => 'ファイルエディタ',
     'renameFailed' => 'ファイル名を変更できませんでした',
     'invalidSource' => '無効なソースファイルまたはフォルダ',
-    'moveFailed' => 'ファイルまたはフォルダを移動できませんでした',
     'invalidFileOrFolder' => '無効なファイルまたはフォルダ',
     'folderNotEmpty' => 'フォルダが空でないか、削除に失敗しました！',
     'path' => 'パス',

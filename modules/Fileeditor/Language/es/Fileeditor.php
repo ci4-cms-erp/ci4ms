@@ -3,7 +3,6 @@ return [
     'fileEditor' => 'Editor de Archivos',
     'renameFailed' => 'No se pudo renombrar el archivo',
     'invalidSource' => 'Archivo o carpeta de origen no válido',
-    'moveFailed' => 'No se pudo mover el archivo o carpeta',
     'invalidFileOrFolder' => 'Archivo o carpeta no válido',
     'folderNotEmpty' => '¡La carpeta no está vacía o falló la eliminación!',
     'path' => 'Ruta',

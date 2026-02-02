@@ -3,7 +3,6 @@ return [
     'fileEditor' => 'محرر الملفات',
     'renameFailed' => 'تعذر إعادة تسمية الملف',
     'invalidSource' => 'ملف أو مجلد مصدر غير صالح',
-    'moveFailed' => 'تعذر نقل الملف أو المجلد',
     'invalidFileOrFolder' => 'ملف أو مجلد غير صالح',
     'folderNotEmpty' => 'المجلد ليس فارغًا أو فشل الحذف!',
     'path' => 'مسار',

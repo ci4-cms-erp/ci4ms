@@ -7,6 +7,21 @@ use DirectoryIterator;
 class Fileeditor extends \Modules\Backend\Controllers\BaseController
 {
     protected $allowedExtensions = ['css', 'js', 'html', 'txt', 'json', 'sql', 'md'];
+    protected $hiddenItems = [
+        '.git',
+        '.github',
+        '.idea',
+        '.vscode',
+        'node_modules',
+        'vendor',
+        'writable',
+        '.env',
+        'composer.lock',
+        'tests',
+        'spark',
+        'phpunit.xml.dist',
+        'preload.php'
+    ];
 
     public function index()
     {
@@ -16,6 +31,13 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
     public function listFiles()
     {
         $path = $this->request->getVar('path') ?? '/';
+
+        $pathParts = explode('/', trim($path, '/'));
+        foreach ($pathParts as $part) {
+            if (in_array($part, $this->hiddenItems)) {
+                return $this->failForbidden();
+            }
+        }
         $fullPath = realpath(ROOTPATH . $path);
 
         if (!$fullPath || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
@@ -30,7 +52,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
             $lowerName = strtolower($name);
 
             if (strpos($lowerName, '.') === 0) continue;
-            if ($file->isDir() && $lowerName === '.github') continue;
+            if (in_array($name, $this->hiddenItems)) continue;
             $result[] = [
                 'title' => $name,
                 'key' => $path . '/' . $name,
@@ -60,9 +82,8 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $content = $this->request->getVar('content');
         $fullPath = realpath(ROOTPATH . $path);
 
-        $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
-        if (!in_array(strtolower($extension), $this->allowedExtensions)) {
-            return $this->response->setJSON(['error' => lang('Fileeditor.fileTypeEditNotAllowed')])->setStatusCode(403);
+        if (!$this->allowedFileTypes($fullPath)) {
+            return $this->failForbidden();
         }
 
         if (!$fullPath || !is_file($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
@@ -79,7 +100,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $path = $this->request->getVar('path');
         $newName = $this->request->getVar('newName');
         $fullPath = realpath(ROOTPATH . $path);
+
         $newPath = dirname($fullPath) . DIRECTORY_SEPARATOR . $newName;
+
+        if (!$this->allowedFileTypes($newName))
+            return $this->failForbidden();
 
         if (!$fullPath || !file_exists($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
@@ -99,10 +124,8 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $fullPath = realpath(ROOTPATH . $path);
 
         $extension = pathinfo($name, PATHINFO_EXTENSION);
-        if (!in_array(strtolower($extension), $this->allowedExtensions)) {
-            return $this->response->setJSON(['error' => lang('Fileeditor.fileTypeNotAllowed')])->setStatusCode(403);
-        }
-
+        if (!$this->allowedFileTypes($name))
+            return $this->failForbidden();
 
         if (!$fullPath || !is_dir($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
@@ -136,28 +159,6 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         }
     }
 
-    public function moveFileOrFolder()
-    {
-        $sourcePath = $this->request->getVar('sourcePath');
-        $targetPath = $this->request->getVar('targetPath');
-        $fullSourcePath = realpath(ROOTPATH . $sourcePath);
-        $fullTargetPath = realpath(ROOTPATH . $targetPath) . DIRECTORY_SEPARATOR . basename($fullSourcePath);
-
-        if (!$fullSourcePath || !file_exists($fullSourcePath) || strpos($fullSourcePath, realpath(ROOTPATH)) !== 0) {
-            return $this->response->setJSON(['error' => lang('Fileeditor.invalidSource')])->setStatusCode(400);
-        }
-
-        if (!$fullTargetPath || strpos($fullTargetPath, realpath(ROOTPATH)) !== 0) {
-            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
-        }
-
-        if (rename($fullSourcePath, $fullTargetPath)) {
-            return $this->response->setJSON(['success' => true]);
-        } else {
-            return $this->response->setJSON(['error' => lang('Fileeditor.moveFailed')])->setStatusCode(500);
-        }
-    }
-
     public function deleteFileOrFolder()
     {
         $path = $this->request->getVar('path');
@@ -178,5 +179,14 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         } else {
             return $this->response->setJSON(['error' => lang('Fileeditor.folderNotEmpty')])->setStatusCode(500);
         }
+    }
+
+    private function allowedFileTypes(string $file): bool
+    {
+        $extension = pathinfo($file, PATHINFO_EXTENSION);
+        if (!in_array(strtolower($extension), $this->allowedExtensions)) {
+            return false;
+        }
+        return true;
     }
 }

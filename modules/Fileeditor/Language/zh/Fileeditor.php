@@ -3,7 +3,6 @@ return [
     'fileEditor' => '文件编辑器',
     'renameFailed' => '无法重命名文件',
     'invalidSource' => '无效的源文件或文件夹',
-    'moveFailed' => '无法移动文件或文件夹',
     'invalidFileOrFolder' => '无效的文件或文件夹',
     'folderNotEmpty' => '文件夹不为空或删除失败！',
     'path' => '路径',

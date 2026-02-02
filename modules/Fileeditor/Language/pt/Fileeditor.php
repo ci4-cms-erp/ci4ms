@@ -3,7 +3,6 @@ return [
     'fileEditor' => 'Editor de Arquivos',
     'renameFailed' => 'Não foi possível renomear o arquivo',
     'invalidSource' => 'Arquivo ou pasta de origem inválido',
-    'moveFailed' => 'Não foi possível mover o arquivo ou pasta',
     'invalidFileOrFolder' => 'Arquivo ou pasta inválido',
     'folderNotEmpty' => 'A pasta não está vazia ou a exclusão falhou!',
     'path' => 'Caminho',

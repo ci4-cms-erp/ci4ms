@@ -42,7 +42,6 @@
             </div>
         </div>
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
             <div class="row">
                 <div class="col-3">
                     <div class="row">
@@ -128,7 +127,7 @@
                 });
             }
         },
-        extensions: ["edit", "filter", "dnd", "glyph"],
+        extensions: ["edit", "filter", "glyph"],
         quicksearch: true,
         filter: {
             autoApply: true, // Re-apply last filter if lazy data is loaded
@@ -173,7 +172,7 @@
             const rootNode = data.tree.getRootNode();
             rootNode.sortChildren(null, true); // null: varsayılan comparator (alfabetik), true:
             data.tree.visit(function(node) {
-                if (node.title === 'app' || node.title === 'modules' || node.title === 'public') {
+                if (node.title === 'app' || node.title === 'modules') {
                     if (node.title === 'modules') {
                         node.setExpanded(true).done(function() {
                             $.each(node.children, function(i, child) {
@@ -217,38 +216,6 @@
                     // Since we started an async request, mark the node as preliminary
                     $(data.node.span).addClass("pending");
                 }
-            }
-        },
-        dnd: {
-            autoExpandMS: 400,
-            focusOnClick: true,
-            preventVoidMoves: true, // Prevent dropping nodes 'before self', etc.
-            preventRecursiveMoves: true, // Prevent dropping nodes on own descendants
-            dragStart: function(node, data) {
-                return true;
-            },
-            dragEnter: function(node, data) {
-                return true;
-            },
-            dragDrop: function(node, data) {
-                $.ajax({
-                    url: '<?= route_to("moveFileOrFolder") ?>',
-                    method: 'POST',
-                    data: {
-                        sourcePath: data.otherNode.key,
-                        targetPath: node.key
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            data.otherNode.moveTo(node, data.hitMode);
-                        } else {
-                            alert('<?= lang('Fileeditor.moveFailed') ?>');
-                        }
-                    },
-                    error: function() {
-                        alert('<?= lang('Fileeditor.moveFailed') ?>');
-                    }
-                });
             }
         }
     });

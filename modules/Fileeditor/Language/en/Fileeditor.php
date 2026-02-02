@@ -3,7 +3,6 @@ return [
     'fileEditor' => 'File Editor',
     'renameFailed' => 'Could not rename file',
     'invalidSource' => 'Invalid source file or folder',
-    'moveFailed' => 'Could not move file or folder',
     'invalidFileOrFolder' => 'Invalid file or folder',
     'folderNotEmpty' => 'Folder is not empty or deletion failed!',
     'path' => 'Path',
