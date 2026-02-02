@@ -115,7 +115,7 @@ class AuthLibrary
 
     public function isLoggedIn(): bool
     {
-        if ($userID = session($this->config->logged_in)) {
+        if (!empty(session($this->config->logged_in)) && $userID = session($this->config->logged_in)) {
             // Store our current user object
             if (session()->get('redirect_url') == null) {
                 $this->user = $this->commonModel->selectOne($this->config->userTable, ['id' => $userID]);

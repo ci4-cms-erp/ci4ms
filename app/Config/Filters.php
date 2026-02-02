@@ -63,8 +63,6 @@ class Filters extends BaseFilters
             //'pagecache',   // Web Page Caching
             //'performance', // Performance Metrics
             'toolbar',     // Debug Toolbar
-            'seofilter',
-            'aifilter'
         ],
     ];
 
@@ -81,9 +79,11 @@ class Filters extends BaseFilters
             // 'invalidchars',
         ],
         'after' => [
-            'toolbar'
+            'toolbar',
             // 'honeypot',
             // 'secureheaders',
+            'seofilter' => ['except' => ['backend', 'backend/*', 'install', 'install/*']],
+            'aifilter' => ['except' => ['backend', 'backend/*', 'install', 'install/*']],
         ],
     ];
 

@@ -84,7 +84,10 @@ class AuthController extends BaseController
 
             $user = $this->commonModel->selectOne('users', ['email' => $this->request->getPost('email')]);
 
-            if (is_null($user)) return redirect()->back()->with('error', lang('Auth.forgotNoUser'));
+            /* THANK U LARS
+            You can also use `lang('Auth.forgotNoUser')`, but it will create a security vulnerability.
+             */
+            if (is_null($user)) return redirect()->back()->with('error', lang('Auth.forgotEmailSent'));
 
             // Save the reset hash /
             $this->commonModel->edit('users', ['reset_hash' => $this->authLib->generateActivateHash(), 'reset_expires' => date('Y-m-d H:i:s', time() + $this->config->resetTime)], ['id' => $user->_id]);

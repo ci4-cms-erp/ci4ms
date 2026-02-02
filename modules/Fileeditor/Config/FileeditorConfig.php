@@ -3,13 +3,13 @@
 class FileeditorConfig extends \CodeIgniter\Config\BaseConfig
 {
     public $csrfExcept = [
-        'backend/Fileeditor',
-        'backend/Fileeditor/*',
+        'backend/fileeditor',
+        'backend/fileeditor/*',
     ];
 
     public $filters = [
         'backendAfterLoginFilter' => ['before' => [
-            'backend/Fileeditor', 'backend/Fileeditor/*'
+            'backend/fileeditor', 'backend/fileeditor/*'
         ]]
     ];
 }

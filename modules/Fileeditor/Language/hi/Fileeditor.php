@@ -1,5 +1,4 @@
 <?php
-
 return [
     'fileEditor' => 'फ़ाइल संपादक',
     'renameFailed' => 'फ़ाइल का नाम बदला नहीं जा सका',
@@ -9,23 +8,23 @@ return [
     'folderNotEmpty' => 'फ़ोल्डर खाली नहीं है या हटाना विफल रहा!',
     'path' => 'पथ',
     'file' => 'फ़ाइल',
-    'create' => 'बनाएं',
-    'update' => 'अद्यतन',
-    'delete' => 'मिटाना',
-    'invalidFile' => 'अमान्य लेख्यपत्र',
-    'invalidPath' => 'अवैध्य मार्ग',
-    'renameSuccess' => 'फ़ाइल का नाम सफलतापूर्वक बदला गया',
-    'newFileName' => 'नया फ़ाइल नाम:',
     'newFile' => 'नई फ़ाइल',
+    'newFolder' => 'नया फ़ोल्डर',
+    'rename' => 'नाम बदलें',
+    'delete' => 'हटाएं',
+    'renameSuccess' => 'फ़ाइल का नाम सफलतापूर्वक बदला गया',
+    'newFileName' => 'नई फ़ाइल का नाम:',
     'fileCreated' => 'फ़ाइल सफलतापूर्वक बनाई गई',
     'fileCreateFailed' => 'फ़ाइल नहीं बनाई जा सकी',
-    'newFolderName' => 'नये फ़ोल्डर का नाम:',
+    'newFolderName' => 'नया फ़ोल्डर नाम:',
     'folderCreated' => 'फ़ोल्डर सफलतापूर्वक बनाया गया',
     'folderCreateFailed' => 'फ़ोल्डर नहीं बनाया जा सका',
     'deleteSuccess' => 'फ़ाइल या फ़ोल्डर सफलतापूर्वक हटा दिया गया',
     'deleteFailed' => 'फ़ाइल या फ़ोल्डर को हटाया नहीं जा सका',
-    'fileReadFailed' => 'फ़ाइल पढ़ी नहीं जा सकी',
+    'fileReadFailed' => 'फ़ाइल नहीं पढ़ी जा सकी',
     'fileContentLoadFailed' => 'फ़ाइल सामग्री लोड नहीं की जा सकी',
     'fileSaveSuccess' => 'फ़ाइल सफलतापूर्वक सहेजी गई',
     'fileSaveFailed' => 'फ़ाइल सहेजी नहीं जा सकी',
+    'fileTypeNotAllowed' => 'आप इस फ़ाइल प्रकार को नहीं बना सकते!',
+    'fileTypeEditNotAllowed' => 'आप इस फ़ाइल प्रकार को संपादित नहीं कर सकते!'
 ];

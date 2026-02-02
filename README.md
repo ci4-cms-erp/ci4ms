@@ -138,3 +138,13 @@ See `docs/architecture.md` for deeper architectural notes.
 - `docs/architecture.md` — Architecture, flow, permissions, and extension guidance.
 
 Questions or contributions? Open an issue or pull request.
+
+## 🏆 Security Hall of Fame
+
+A huge thank you to the security researchers who have helped make **ci4ms** more secure by finding and reporting vulnerabilities.
+
+| Contributor | Contribution | Date |
+| :--- | :--- | :--- |
+| **[Lars van Mil](https://github.com/Far-Horizons)** | Identified Critical RCE and Information Disclosure vulnerabilities. | Jan 2026 |
+
+> If you find a security vulnerability, please report it via [Security Policy](SECURITY.md).

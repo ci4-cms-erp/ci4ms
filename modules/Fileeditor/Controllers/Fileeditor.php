@@ -6,6 +6,8 @@ use DirectoryIterator;
 
 class Fileeditor extends \Modules\Backend\Controllers\BaseController
 {
+    protected $allowedExtensions = ['css', 'js', 'html', 'txt', 'json', 'sql', 'md'];
+
     public function index()
     {
         return view('Modules\Fileeditor\Views\fileEditor', $this->defData);
@@ -58,6 +60,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $content = $this->request->getVar('content');
         $fullPath = realpath(ROOTPATH . $path);
 
+        $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
+        if (!in_array(strtolower($extension), $this->allowedExtensions)) {
+            return $this->response->setJSON(['error' => lang('Fileeditor.fileTypeEditNotAllowed')])->setStatusCode(403);
+        }
+
         if (!$fullPath || !is_file($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
         }
@@ -90,6 +97,12 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $path = $this->request->getVar('path');
         $name = $this->request->getVar('name');
         $fullPath = realpath(ROOTPATH . $path);
+
+        $extension = pathinfo($name, PATHINFO_EXTENSION);
+        if (!in_array(strtolower($extension), $this->allowedExtensions)) {
+            return $this->response->setJSON(['error' => lang('Fileeditor.fileTypeNotAllowed')])->setStatusCode(403);
+        }
+
 
         if (!$fullPath || !is_dir($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
