@@ -198,8 +198,8 @@
                 if (response.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Başarılı!',
-                        text: 'Yedekleme oluşturuldu.',
+                        title: '<?= lang('Backend.success') ?>',
+                        text: '<?= lang('Backend.created',['Backup']) ?>',
                         confirmButtonText: '<?= lang('Backup.download') ?>',
                         showCancelButton: true,
                         cancelButtonText: '<?= lang('Backend.cancel') ?>'
@@ -216,16 +216,58 @@
                         table.ajax.reload();
                     });
                 } else {
-                    Swal.fire('Hata!', response.error || 'Yedekleme oluşturulamadı.', 'error');
+                    Swal.fire('<?= lang('Backend.error') ?>', response.error || '<?= lang('Backend.notCreated',['Backup']) ?>', 'error');
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                Swal.fire('Hata!', jqXHR.responseJSON.error || 'Sunucuyla iletişim kurulamadı.', 'error');
+                Swal.fire('<?= lang('Backend.error') ?>', jqXHR.responseJSON.error || '<?= lang('Backend.operationFailed') ?>', 'error');
             }
         });
     });
     $(function() {
         bsCustomFileInput.init();
     });
+
+    function remove (id) {
+        Swal.fire({
+            icon: 'warning',
+            title: '<?= lang('Backend.confirmDelete',['Backup']) ?>',
+            confirmButtonText: '<?= lang('Backend.delete') ?>',
+            showCancelButton: true,
+            cancelButtonText: '<?= lang('Backend.cancel') ?>',
+            allowOutsideClick: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/backend/backup/delete/'+ id,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '<?= lang('Backend.success') ?>',
+                                text: response.message || '<?= lang('Backend.deleted',['Backup']) ?>',
+                            });
+                            table.ajax.reload();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '<?= lang('Backend.error') ?>',
+                                text: response.error || '<?= lang('Backend.notDeleted',['Backup']) ?>',
+                            });
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '<?= lang('Backend.error') ?>',
+                            text: jqXHR.responseJSON.error || '<?= lang('Backend.operationFailed') ?>',
+                        });
+                    }
+                });
+            }
+        });
+    }
 </script>
 <?= $this->endSection() ?>

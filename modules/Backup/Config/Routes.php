@@ -4,5 +4,5 @@ $routes->group('backend/backup', ['namespace' => 'Modules\Backup\Controllers'], 
     $routes->post('restore', 'Backup::restore',['as' => 'backupRestore', 'role' => 'create']);
     $routes->post('create', 'Backup::create', ['as' => 'backupCreate', 'role' => 'create']);
     $routes->get('download/(:any)', 'Backup::download/$1', ['as' => 'backupDownload', 'role' => 'read']);
-    $routes->get('delete/(:num)', 'Backup::delete/$1',['as' => 'backupDelete', 'role' => 'delete']);
+    $routes->post('delete/(:num)', 'Backup::delete/$1',['as' => 'backupDelete', 'role' => 'delete']);
 });

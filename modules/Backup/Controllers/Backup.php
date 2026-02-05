@@ -21,7 +21,7 @@ class Backup extends \Modules\Backend\Controllers\BaseController
                 $result->file_size = number_to_size($result->file_size, 2);
                 $result->created_at = date('Y-m-d H:i:s', strtotime($result->created_at));
                 $result->actions = '<a class="btn btn-primary btn-sm" href="' . route_to('backupDownload', $result->filename) . '"><i class="fas fa-download"></i></a>
-                <a class="btn btn-danger btn-sm" href="' . route_to('backupDelete', $result->id) . '"><i class="fas fa-trash"></i></a>';
+                <button type="button" class="btn btn-danger btn-sm" onclick="remove(' . $result->id . ')"><i class="fas fa-trash"></i></button>';
             }
 
             $data = [
@@ -67,13 +67,12 @@ class Backup extends \Modules\Backend\Controllers\BaseController
 
     public function delete(int $id)
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
         $infos = $this->commonModel->selectOne('db_backups', ['id' => $id]);
         if ($this->commonModel->remove('db_backups', ['id' => $id])) {
             @unlink(WRITEPATH . 'backups/' . $infos->filename);
-            return redirect()->back()->with('success', lang('Backend.deleted', [$infos->filename]));
+            return $this->respond(['success' => true, 'message' => lang('Backend.deleted', [$infos->filename])]);
         }
-        return redirect()->back()->with('error', lang('Backend.notDeleted', [$infos->filename]));
+        $this->respond(['success' => false, 'error' => lang('Backend.notDeleted', [$infos->filename])], 400);
     }
 
     public function restore()
