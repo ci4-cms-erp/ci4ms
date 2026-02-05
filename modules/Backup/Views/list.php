@@ -199,7 +199,7 @@
                     Swal.fire({
                         icon: 'success',
                         title: '<?= lang('Backend.success') ?>',
-                        text: '<?= lang('Backend.created',['Backup']) ?>',
+                        text: '<?= lang('Backend.created', ['Backup']) ?>',
                         confirmButtonText: '<?= lang('Backup.download') ?>',
                         showCancelButton: true,
                         cancelButtonText: '<?= lang('Backend.cancel') ?>'
@@ -216,11 +216,12 @@
                         table.ajax.reload();
                     });
                 } else {
-                    Swal.fire('<?= lang('Backend.error') ?>', response.error || '<?= lang('Backend.notCreated',['Backup']) ?>', 'error');
+                    Swal.fire('<?= lang('Backend.error') ?>', response.error || '<?= lang('Backend.notCreated', ['Backup']) ?>', 'error');
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                Swal.fire('<?= lang('Backend.error') ?>', jqXHR.responseJSON.error || '<?= lang('Backend.operationFailed') ?>', 'error');
+                let msg = (jqXHR.responseJSON && jqXHR.responseJSON.error) ? jqXHR.responseJSON.error : '<?= lang('Backend.operationFailed') ?>';
+                Swal.fire('<?= lang('Backend.error') ?>', msg, 'error');
             }
         });
     });
@@ -228,10 +229,10 @@
         bsCustomFileInput.init();
     });
 
-    function remove (id) {
+    function remove(id) {
         Swal.fire({
             icon: 'warning',
-            title: '<?= lang('Backend.confirmDelete',['Backup']) ?>',
+            title: '<?= lang('Backend.confirmDelete', ['Backup']) ?>',
             confirmButtonText: '<?= lang('Backend.delete') ?>',
             showCancelButton: true,
             cancelButtonText: '<?= lang('Backend.cancel') ?>',
@@ -239,7 +240,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: '/backend/backup/delete/'+ id,
+                    url: '/backend/backup/delete/' + id,
                     type: 'POST',
                     dataType: 'json',
                     success: function(response) {
@@ -247,22 +248,23 @@
                             Swal.fire({
                                 icon: 'success',
                                 title: '<?= lang('Backend.success') ?>',
-                                text: response.message || '<?= lang('Backend.deleted',['Backup']) ?>',
+                                text: response.message || '<?= lang('Backend.deleted', ['Backup']) ?>',
                             });
                             table.ajax.reload();
                         } else {
                             Swal.fire({
                                 icon: 'error',
                                 title: '<?= lang('Backend.error') ?>',
-                                text: response.error || '<?= lang('Backend.notDeleted',['Backup']) ?>',
+                                text: response.error || '<?= lang('Backend.notDeleted', ['Backup']) ?>',
                             });
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
+                        let msg = (jqXHR.responseJSON && jqXHR.responseJSON.error) ? jqXHR.responseJSON.error : '<?= lang('Backend.operationFailed') ?>';
                         Swal.fire({
                             icon: 'error',
                             title: '<?= lang('Backend.error') ?>',
-                            text: jqXHR.responseJSON.error || '<?= lang('Backend.operationFailed') ?>',
+                            text: msg,
                         });
                     }
                 });
