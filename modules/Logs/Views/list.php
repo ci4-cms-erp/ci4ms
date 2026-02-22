@@ -37,7 +37,7 @@
             </div>
         </div>
         <div class="card-body">
-            <?php echo $logViewer->showLogs() ?>
+            <?php echo view('Modules\Logs\Views\logs', ['logs' => $logs, 'files' => $files, 'currentFile' => $currentFile]) ?>
         </div>
         <!-- /.card-body -->
     </div>
@@ -70,9 +70,37 @@
                 return data;
             }
         });
-        $('#delete-log, #delete-all-log').click(function() {
-            return confirm('Are you sure?');
-        });
     });
+
+    function deleteItem(id) {
+        Swal.fire({
+            title: '<?php echo lang('Backend.areYouSure') ?>',
+            text: "<?php echo lang('Backend.youWillNotBeAbleToRecoverThis') ?>",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: '<?php echo lang('Backend.delete') ?>',
+            cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post('<?php echo route_to('logDelete') ?>', {
+                    "id": id,
+                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                }, 'json').done(function(response) {
+                    if (response.status == 'success') {
+                        location.reload();
+                    } else {
+                        Swal.fire({
+                            title: '<?php echo lang('Backend.error') ?>',
+                            text: response.message,
+                            icon: 'error',
+                            confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                        });
+                    }
+                });
+            }
+        });
+    }
 </script>
 <?php echo $this->endSection() ?>

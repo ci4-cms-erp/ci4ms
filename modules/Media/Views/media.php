@@ -61,27 +61,31 @@
         var i18nPath = '/be-assets/plugins/elFinder/js/i18n',
             start = function(lng) {
                 $().ready(function() {
-                    var elf = $('#elfinder').elfinder(
-                        // 1st Arg - options
-                        {
-                            cssAutoLoad: [window.location.origin + '/be-assets/node_modules/elfinder-material-theme/Material/css/theme.css'],
-                            baseUrl: 'media/', // Base URL to css/*, js/*
-                            url: '/backend/media/elfinderConnection', // connector URL (REQUIRED)
-                            height: 768,
-                            workerBaseUrl: "/be-assets/plugins/elFinder/js/worker",
-                            getFileCallback: function(file) {
+                    var elf = $('#elfinder').elfinder({
+                        cssAutoLoad: [window.location.origin + '/be-assets/node_modules/elfinder-material-theme/Material/css/theme.css'],
+                        baseUrl: 'media/',
+                        url: '/backend/media/elfinderConnection',
+                        height: 768,
+                        workerBaseUrl: "/be-assets/plugins/elFinder/js/worker",
+                        getFileCallback: function(file, fm) {
+                            if (typeof top.elfinder_callback === 'function') {
                                 top.elfinder_callback(file);
-                                top.$.colorbox.close();
-                            },
-                            soundPath: '/be-assets/plugins/elFinder/sounds',
-                            sync: 1000,
-                            handlers: {
-                                upload: function() {
-                                    $('.elfinder-dialog-error').hide();
+                                if (top.$ && typeof top.$.colorbox === 'function' && typeof top.$.colorbox.close === 'function') {
+                                    top.$.colorbox.close();
                                 }
+                            } else {
+                                fm.exec('quicklook');
+                            }
+                        },
+
+                        soundPath: '/be-assets/plugins/elFinder/sounds',
+                        sync: 1000,
+                        handlers: {
+                            upload: function() {
+                                $('.elfinder-dialog-error').hide();
                             }
                         }
-                    ).elfinder('intance');
+                    }).elfinder('intance');
                 });
             },
             loct = window.location.search,

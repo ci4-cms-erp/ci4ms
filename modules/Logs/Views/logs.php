@@ -45,11 +45,11 @@
                                         <span class="far fa-search"></span>
                                     </a>
                                 <?php endif; ?>
-                                <?php echo $log['content']; ?>
+                                <?php echo esc($log['content']); ?>
                                 <?php if (array_key_exists("extra", $log)): ?>
                                     <div class="stack" id="stack<?php echo $key; ?>"
                                         style="display: none; white-space: pre-wrap;">
-                                        <?php echo $log['extra'] ?>
+                                        <?php echo esc($log['extra']) ?>
                                     </div>
                                 <?php endif; ?>
 
@@ -65,9 +65,9 @@
                     <span class="far fa-download"></span>
                     Download file
                 </a>
-                <a id="delete-log" href="?del=<?php echo base64_encode($currentFile); ?>" class="btn btn-light"><?php echo lang('Backend.delete') ?></a>
+                <button type="button" onclick="deleteItem('<?php echo base64_encode($currentFile); ?>')" class="btn btn-light"><?php echo lang('Backend.delete') ?></button>
                 <?php if (count($files) > 1): ?>
-                    <a id="delete-all-log" href="?del=<?php echo base64_encode("all"); ?>" class="btn btn-light"><span class="far fa-trash"></span> Delete all files</a>
+                    <button type="button" onclick="deleteItem('<?php echo base64_encode("all"); ?>')" class="btn btn-light"><span class="far fa-trash"></span> Delete all files</button>
                 <?php endif; ?>
             <?php endif; ?>
         </div>
