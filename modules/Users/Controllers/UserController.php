@@ -195,7 +195,10 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'username' => esc($this->request->getPost('username')),
                 'who_created' => user_id(),
             ];
-            if ($this->request->getPost('password')) $data['password'] = $this->request->getPost('password');
+            if ($this->request->getPost('password')) {
+                $data['password'] = $this->request->getPost('password');
+                if ($u->requiresPasswordReset()) $u->undoForcePasswordReset();
+            }
 
             $u->fill($data);
             if ($user->save($u)) return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
@@ -266,15 +269,15 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 $newName = $file->getRandomName();
                 if ($file->move(FCPATH . 'media/avatars', $newName)) {
                     $data['profileIMG'] = '/media/avatars/' . $newName;
-                    // Optional: Delete old image if it exists and isn't default
                     if (!empty($user->profileIMG) && file_exists(FCPATH . 'media/avatars/' . $user->profileIMG)) {
                         @unlink(FCPATH . 'media/avatars/' . $user->profileIMG);
                     }
                 }
             }
 
-            if ($this->request->getPost('password')) {
+            if (!empty($this->request->getPost('password'))) {
                 $data['password'] = $this->request->getPost('password');
+                if ($user->requiresPasswordReset()) $user->undoForcePasswordReset();
             }
 
             if ($user->email != $data['email']) {
