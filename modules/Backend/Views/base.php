@@ -6,19 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noimageindex, nofollow, nosnippet">
 
-    <title>Kun-CMS/ERP | <?= $this->renderSection('title') ?> - <?= getGitVersion() ?></title>
+    <title>Kun-CMS/ERP | <?php echo $this->renderSection('title') ?> - <?php echo getenv('app.version') ?></title>
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback" {csp-style-nonce}>
     <!-- Font Awesome -->
-    <?= link_tag("be-assets/plugins/fontawesome-free/css/all.min.css") ?>
-    <?= link_tag('be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') ?>
+    <?php echo link_tag("be-assets/plugins/fontawesome-free/css/all.min.css") ?>
+    <?php echo link_tag('be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') ?>
     <!-- Theme style -->
-    <?= link_tag("be-assets/css/adminlte.min.css") ?>
-    <?= link_tag("be-assets/custom.css") ?>
-    <?= csrf_meta() ?>
-    <?= $this->renderSection('head') ?>
+    <?php echo link_tag("be-assets/css/adminlte.min.css") ?>
+    <?php echo link_tag("be-assets/custom.css") ?>
+    <?php echo csrf_meta() ?>
+    <?php echo $this->renderSection('head') ?>
 </head>
 
 <body class="hold-transition sidebar-mini">
@@ -38,7 +38,7 @@
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-light-olive elevation-1">
             <!-- Brand Logo -->
-            <a href="<?= base_url('backend') ?>" class="brand-link navbar-kun-cms text-center">
+            <a href="<?php echo base_url('backend') ?>" class="brand-link navbar-kun-cms text-center">
                 <img src="/be-assets/img/logo-w.png" alt="" class="img-responsive" height="25">
             </a>
 
@@ -47,23 +47,24 @@
                 <!-- Sidebar user (optional) -->
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="image d-flex align-items-center">
-                        <img src="/be-assets/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+                        <img src="<?php echo $logged_in_user->profileIMG ?>" class="img-circle elevation-2"
+                        style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #dee2e6;" alt="User Image">
                     </div>
                     <div class="info w-100">
                         <button class="btn btn-light w-100" type="button" data-toggle="collapse"
                             data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                            <?= $logged_in_user->firstname . ' ' . $logged_in_user->surname ?> <br>
-                            <small class="text-success font-weight-bold">{ <?= $logged_in_user->name ?>
+                            <?php echo $logged_in_user->firstname . ' ' . $logged_in_user->surname ?> <br>
+                            <small class="text-success font-weight-bold">{ <?php echo implode(', ', $logged_in_user->getGroups()); ?>
                                 }</small>
                         </button>
                     </div>
                 </div>
                 <div class="collapse mb-2 border-bottom" id="collapseExample">
                     <div class="card card-body">
-                        <span><i class="fas fa-user"></i> <a class="link-black" href="<?= route_to('profile') ?>">Profil</a></span>
+                        <span><i class="fas fa-user"></i> <a class="link-black" href="<?php echo route_to('profile') ?>">Profil</a></span>
                         <div class="dropdown-divider"></div>
                         <span><i class="fas fa-sign-out-alt"></i> <a class="link-black"
-                                href="<?= route_to('logout') ?>">Çıkış Yap</a></span>
+                                href="<?php echo route_to('logout') ?>">Çıkış Yap</a></span>
                     </div>
                 </div>
 
@@ -82,7 +83,7 @@
                                     }
                                 }
                                 if ($nav->parent_pk == $child) : ?>
-                                    <li class="nav-item <?= (!empty($p) && $p->parent_pk == $nav->id) ? 'menu-is-opening menu-open' : '' ?>">
+                                    <li class="nav-item <?php echo (!empty($p) && $p->parent_pk == $nav->id) ? 'menu-is-opening menu-open' : '' ?>">
                                         <a href="<?php
                                                     $u = explode('/', $nav->sefLink);
                                                     if (empty($u[1])) echo route_to($u[0]);
@@ -92,8 +93,8 @@
                                                                 if ($nav->sefLink == $uri || $p->parent_pk == $nav->id) echo 'active';
                                                                 else echo '';
                                                             } ?>">
-                                            <i class="nav-icon <?= $nav->symbol ?>"></i>
-                                            <p><?= lang($nav->pagename) ?><?= ($nav->hasChild == true) ? '<i class="right fas fa-angle-left"></i>' : '' ?></p>
+                                            <i class="nav-icon <?php echo $nav->symbol ?>"></i>
+                                            <p><?php echo lang($nav->pagename) ?><?php echo ($nav->hasChild == true) ? '<i class="right fas fa-angle-left"></i>' : '' ?></p>
                                         </a>
                                         <?php if ($nav->hasChild == true): ?>
                                             <ul class="nav nav-treeview">
@@ -116,15 +117,15 @@
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
-            <?= $this->renderSection('content') ?>
+            <?php echo $this->renderSection('content') ?>
         </div>
         <!-- /.content-wrapper -->
 
         <footer class="main-footer">
             <div class="float-right d-none d-sm-block">
-                <b>Version</b> <?= getGitVersion() ?>
+                <b>Version</b> <?php echo getenv('app.version') ?>
             </div>
-            <strong>Copyright &copy; <?= date('Y') ?>.</strong> All rights reserved.
+            <strong>Copyright &copy; <?php echo date('Y') ?>.</strong> All rights reserved.
         </footer>
 
         <!-- Control Sidebar -->
@@ -136,16 +137,16 @@
     <!-- ./wrapper -->
 
     <!-- jQuery -->
-    <?= script_tag("be-assets/plugins/jquery/jquery.min.js") ?>
+    <?php echo script_tag("be-assets/plugins/jquery/jquery.min.js") ?>
     <!-- Bootstrap 4 -->
-    <?= script_tag("be-assets/plugins/bootstrap/js/bootstrap.bundle.min.js") ?>
+    <?php echo script_tag("be-assets/plugins/bootstrap/js/bootstrap.bundle.min.js") ?>
     <!-- AdminLTE App -->
-    <?= script_tag("be-assets/js/adminlte.min.js") ?>
+    <?php echo script_tag("be-assets/js/adminlte.min.js") ?>
     <!-- AdminLTE for demo purposes -->
-    <?= script_tag("be-assets/js/demo.js") ?>
-    <?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
-    <?= view('Modules\Backend\Views\sweetalert_message_block') ?>
-    <?= $this->renderSection('javascript') ?>
+    <?php echo script_tag("be-assets/js/demo.js") ?>
+    <?php echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
+    <?php echo view('Modules\Backend\Views\sweetalert_message_block') ?>
+    <?php echo $this->renderSection('javascript') ?>
 </body>
 
 </html>

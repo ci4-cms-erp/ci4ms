@@ -1,13 +1,12 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
-<?= $this->endSection() ?>
+<?php echo $this->section('title') ?>
+<?php echo lang($title->pagename) ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('head') ?>
-<?= link_tag("be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css") ?>
-<?= link_tag("be-assets/node_modules/nestable2/dist/jquery.nestable.min.css") ?>
-<style>
+<?php echo $this->section('head') ?>
+<?php echo link_tag("be-assets/node_modules/nestable2/dist/jquery.nestable.min.css") ?>
+<style {csp-style-nonce}>
     .dd-content {
         display: block;
         margin: 5px 0;
@@ -63,15 +62,15 @@
         background: #ddd;
     }
 </style>
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('content') ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang( $title->pagename) ?></h1>
+                <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -87,7 +86,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang( $title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -96,10 +95,9 @@
             </div>
         </div>
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
             <div class="row">
                 <div class="col-md-6" id="list">
-                    <?= view('\Modules\Menu\Views\list') ?>
+                    <?php echo view('\Modules\Menu\Views\list') ?>
                 </div>
                 <div class="col-md-6">
                     <div class="dd">
@@ -107,7 +105,7 @@
                             <?php if (!empty($nestable2)) nestable($nestable2); ?>
                         </ol>
                     </div>
-                    <button class="btn btn-success float-right" onclick="saveMenu()"><?= lang('Backend.save') ?></button>
+                    <button class="btn btn-success float-right" onclick="saveMenu()"><?php echo lang('Backend.save') ?></button>
                 </div>
             </div>
         </div>
@@ -117,16 +115,15 @@
 
 </section>
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('javascript') ?>
-<?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
-<?= script_tag("be-assets/node_modules/nestable2/dist/jquery.nestable.min.js") ?>
-<script>
+<?php echo $this->section('javascript') ?>
+<?php echo script_tag("be-assets/node_modules/nestable2/dist/jquery.nestable.min.js") ?>
+<script {csp-script-nonce}>
     $('.dd').nestable();
 
     function saveMenu() {
-        $.post('<?= route_to('queueMenuAjax') ?>', {
+        $.post('<?php echo route_to('queueMenuAjax') ?>', {
             "queue": $('.dd').nestable('serialize')
         }).done(function(data) {
             $('.dd').nestable('destroy');
@@ -136,7 +133,7 @@
     }
 
     function addPages(id) {
-        $.post('<?= route_to('createMenu') ?>', {
+        $.post('<?php echo route_to('createMenu') ?>', {
             "id": id,
             'where': 'pages'
         }).done(function(data) {
@@ -144,8 +141,8 @@
             $('.dd').html(data);
             $('.dd').nestable();
             $("#page-" + id + "").remove();
-            $.post('<?= route_to('menuList') ?>', {
-                "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
+            $.post('<?php echo route_to('menuList') ?>', {
+                "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
             }).done(function(data) {
                 $('#list').html(data);
             });
@@ -162,12 +159,12 @@
             name: "type",
             value: "pages"
         });
-        $.post('<?= route_to('addMultipleMenu') ?>', formData).done(function(data) {
+        $.post('<?php echo route_to('addMultipleMenu') ?>', formData).done(function(data) {
             $('.dd').nestable('destroy');
             $('.dd').html(data);
             $('.dd').nestable();
-            $.post('<?= route_to('menuList') ?>', {
-                "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
+            $.post('<?php echo route_to('menuList') ?>', {
+                "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
             }).done(function(data) {
                 $('#list').html(data);
             });
@@ -175,7 +172,7 @@
     }
 
     function addBlog(id) {
-        $.post('<?= route_to('createMenu') ?>', {
+        $.post('<?php echo route_to('createMenu') ?>', {
             "id": id,
             'where': 'blog'
         }).done(function(data) {
@@ -183,8 +180,8 @@
             $('.dd').html(data);
             $('.dd').nestable();
             $("#blog-" + id + "").remove();
-            $.post('<?= route_to('menuList') ?>', {
-                "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
+            $.post('<?php echo route_to('menuList') ?>', {
+                "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
             }).done(function(data) {
                 $('#list').html(data);
             });
@@ -201,12 +198,12 @@
             name: "type",
             value: "blogs"
         });
-        $.post('<?= route_to('addMultipleMenu') ?>', formData).done(function(data) {
+        $.post('<?php echo route_to('addMultipleMenu') ?>', formData).done(function(data) {
             $('.dd').nestable('destroy');
             $('.dd').html(data);
             $('.dd').nestable();
-            $.post('<?= route_to('menuList') ?>', {
-                "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
+            $.post('<?php echo route_to('menuList') ?>', {
+                "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
             }).done(function(data) {
                 $('#list').html(data);
             });
@@ -219,12 +216,12 @@
             name: "type",
             value: "url"
         });
-        $.post('<?= route_to('createMenu') ?>', formData).done(function(data) {
+        $.post('<?php echo route_to('createMenu') ?>', formData).done(function(data) {
             $('.dd').nestable('destroy');
             $('.dd').html(data);
             $('.dd').nestable();
-            $.post('<?= route_to('menuList') ?>', {
-                "<?= csrf_token() ?>": "<?= csrf_hash() ?>",
+            $.post('<?php echo route_to('menuList') ?>', {
+                "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
             }).done(function(data) {
                 $('#list').html(data);
             });
@@ -232,7 +229,7 @@
     }
 
     function removeFromMenu(id, type) {
-        $.post('<?= route_to('deleteMenuAjax') ?>', {
+        $.post('<?php echo route_to('deleteMenuAjax') ?>', {
             "id": id,
             "type": type
         }).done(function(data) {
@@ -240,8 +237,8 @@
             $('.dd').html(data);
             $('.dd').nestable();
             $("#menu-" + id + "").remove();
-            $.post('<?= route_to('menuList') ?>', {
-                "<?= csrf_token() ?>": "<?= csrf_hash() ?>",
+            $.post('<?php echo route_to('menuList') ?>', {
+                "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
                 "queue": $('.dd').nestable('serialize')
             }).done(function(data) {
                 $('#list').html(data);
@@ -249,4 +246,4 @@
         });
     }
 </script>
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

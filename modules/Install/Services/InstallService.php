@@ -2,32 +2,32 @@
 
 namespace Modules\Install\Services;
 
+use CodeIgniter\Shield\Entities\User;
+
 class InstallService
 {
     public function createDefaultData(array $args)
     {
         $commonModel = new \ci4commonmodel\Models\CommonModel();
-        $authLib = new \Modules\Auth\Libraries\AuthLibrary();
         $commonModel->create('auth_groups', [
-            "id" => 1,
-            "name" => "super user",
-            "updated_at" => null,
-            "description" => "Sistemi Yazan Teknik Personel",
+            "group" => "superadmin",
+            "description" => "superadmin",
             "seflink" => "backend",
-            "created_at" => date('Y-m-d H:i:s'),
             "who_created" => null
         ]);
-
-        $commonModel->create('users', [
-            'id' => 1,
-            'firstname' => $args['fname'],
-            'surname' => $args['sname'],
-            'username' => $args['username'],
-            'email' => $args['email'],
-            'status' => 'active',
-            'group_id' => 1,
-            'password_hash' => $authLib->setPassword($args['password'])
-        ]);
+        $users = auth()->getProvider();
+        $user = new User(
+            [
+                'firstname' => $args['fname'],
+                'surname' => $args['sname'],
+                'username' => $args['username'],
+                'email'    => $args['email'],
+                'password' => $args['password'],
+            ]
+        );
+        $users->save($user);
+        $user = $users->findById($users->getInsertID());
+        $user->addGroup('superadmin');
 
         $commonModel->createMany('modules', array(
             array('id' => '1', 'name' => 'Backend', 'isActive' => '1', 'icon' => 'fas fa-server'),
@@ -73,7 +73,6 @@ class InstallService
                 array('id' => '24', 'pagename' => 'sayfa silme', 'description' => 'sayfa silme', 'className' => '-Modules-Pages-Controllers-Pages', 'methodName' => 'delete_post', 'sefLink' => 'pageDelete', 'hasChild' => '0', 'pageSort' => NULL, 'parent_pk' => NULL, 'symbol' => '', 'inNavigation' => '0', 'isBackoffice' => '1', 'typeOfPermissions' => '{"delete_r": true}', 'module_id' => '8', 'isActive' => '1'),
                 array('id' => '25', 'pagename' => 'limitli etiket listesi ajax', 'description' => 'sayfa blog kısımlarında keywordleri ortak kullanabilmek için oluşturulmuş link', 'className' => '-Modules-Backend-Controllers-AJAX', 'methodName' => 'limitTags_ajax', 'sefLink' => 'tagify', 'hasChild' => '0', 'pageSort' => NULL, 'parent_pk' => NULL, 'symbol' => '', 'inNavigation' => '0', 'isBackoffice' => '1', 'typeOfPermissions' => '{"delete_r": true}', 'module_id' => '1', 'isActive' => '1'),
                 array('id' => '26', 'pagename' => 'seflink kontrol ajax', 'description' => 'sayfa blog kısımlarında seflink oluşturmak için kullanılır', 'className' => '-Modules-Backend-Controllers-AJAX', 'methodName' => 'autoLookSeflinks', 'sefLink' => 'checkSeflink', 'hasChild' => '0', 'pageSort' => NULL, 'parent_pk' => NULL, 'symbol' => '', 'inNavigation' => '0', 'isBackoffice' => '1', 'typeOfPermissions' => '{"delete_r": true}', 'module_id' => '1', 'isActive' => '1'),
-                array('id' => '27', 'pagename' => 'Ayarlar kısmındaki giriş ayarları postu.', 'description' => 'Ayarlar kısmın da giriş ayarlarının kaydeder.', 'className' => '-Modules-Settings-Controllers-Settings', 'methodName' => 'loginSettingsPost', 'sefLink' => 'loginSettingsPost', 'hasChild' => '0', 'pageSort' => NULL, 'parent_pk' => NULL, 'symbol' => '', 'inNavigation' => '0', 'isBackoffice' => '1', 'typeOfPermissions' => '{"delete_r": true}', 'module_id' => '9', 'isActive' => '1'),
                 array('id' => '28', 'pagename' => 'aktifmi kontrolü ajax', 'description' => 'aktifmi kontrolü ajax', 'className' => '-Modules-Backend-Controllers-AJAX', 'methodName' => 'isActive', 'sefLink' => 'isActive', 'hasChild' => '0', 'pageSort' => NULL, 'parent_pk' => NULL, 'symbol' => '', 'inNavigation' => '0', 'isBackoffice' => '1', 'typeOfPermissions' => '{"delete_r": true}', 'module_id' => '1', 'isActive' => '1'),
                 array('id' => '29', 'pagename' => 'Media.media', 'description' => 'Media', 'className' => '-Modules-Media-Controllers-Media', 'methodName' => 'index', 'sefLink' => 'media', 'hasChild' => '0', 'pageSort' => '6', 'parent_pk' => NULL, 'symbol' => 'fas fa-photo-video', 'inNavigation' => '1', 'isBackoffice' => '1', 'typeOfPermissions' => '{"create_r": true}', 'module_id' => '4', 'isActive' => '1'),
                 array('id' => '30', 'pagename' => 'Menu.menu', 'description' => 'menu', 'className' => '-Modules-Menu-Controllers-Menu', 'methodName' => 'index', 'sefLink' => 'menu', 'hasChild' => '0', 'pageSort' => '4', 'parent_pk' => NULL, 'symbol' => 'fas fa-bars', 'inNavigation' => '1', 'isBackoffice' => '1', 'typeOfPermissions' => '{"read_r": true}', 'module_id' => '5', 'isActive' => '1'),
@@ -107,7 +106,6 @@ class InstallService
                 array('id' => '58', 'pagename' => 'Blog.displayComment', 'description' => 'Yorumu Görüntüle', 'className' => '-Modules-Blog-Controllers-Blog', 'methodName' => 'displayComment', 'sefLink' => 'displayComment', 'hasChild' => '0', 'pageSort' => '0', 'parent_pk' => NULL, 'symbol' => '', 'inNavigation' => '0', 'isBackoffice' => '1', 'typeOfPermissions' => '{"update_r":true}', 'module_id' => '2', 'isActive' => '1'),
                 array('id' => '59', 'pagename' => 'Methods.methodCreate', 'description' => 'methodCreate', 'className' => '-Modules-Methods-Controllers-Methods', 'methodName' => 'create', 'sefLink' => 'methodCreate', 'hasChild' => '0', 'pageSort' => NULL, 'parent_pk' => NULL, 'symbol' => '', 'inNavigation' => '0', 'isBackoffice' => '1', 'typeOfPermissions' => '{"create_r":true}', 'module_id' => '6', 'isActive' => '1'),
                 array('id' => '60', 'pagename' => 'Backend.logs', 'description' => 'Günlükler', 'className' => '', 'methodName' => '', 'sefLink' => '#', 'hasChild' => '1', 'pageSort' => '7', 'parent_pk' => NULL, 'symbol' => 'fas fa-fingerprint', 'inNavigation' => '1', 'isBackoffice' => '1', 'typeOfPermissions' => '{"read_r":true}', 'module_id' => '1', 'isActive' => '1'),
-                array('id' => '61', 'pagename' => 'Backend.locked_accounts', 'description' => 'Kaba güç saldıraları ayarları', 'className' => '-Modules-Backend-Controllers-Locked', 'methodName' => 'index', 'sefLink' => 'locked/1', 'hasChild' => '0', 'pageSort' => NULL, 'parent_pk' => '60', 'symbol' => 'fas fa-user-shield', 'inNavigation' => '1', 'isBackoffice' => '1', 'typeOfPermissions' => '{"create_r":true,"read_r":true,"update_r":true,"delete_r":true}', 'module_id' => '1', 'isActive' => '1'),
                 array('id' => '62', 'pagename' => 'Backend.update', 'description' => 'update', 'className' => '-Modules-Methods-Controllers-Methods', 'methodName' => 'update', 'sefLink' => 'methodUpdate', 'hasChild' => '0', 'pageSort' => NULL, 'parent_pk' => NULL, 'symbol' => '', 'inNavigation' => '0', 'isBackoffice' => '1', 'typeOfPermissions' => '{"update_r":true}', 'module_id' => '6', 'isActive' => '1'),
                 array('id' => '63', 'pagename' => 'Backend.delete', 'description' => 'delete', 'className' => '-Modules-Methods-Controllers-Methods', 'methodName' => 'delete', 'sefLink' => 'methodDelete', 'hasChild' => '0', 'pageSort' => NULL, 'parent_pk' => NULL, 'symbol' => '', 'inNavigation' => '0', 'isBackoffice' => '1', 'typeOfPermissions' => '{"delete_r":true}', 'module_id' => '6', 'isActive' => '1'),
                 array('id' => '64', 'pagename' => 'Blog.blogs', 'description' => 'Blog Listesi', 'className' => '-Modules-Blog-Controllers-Blog', 'methodName' => 'index', 'sefLink' => 'blogs/1', 'hasChild' => '0', 'pageSort' => '1', 'parent_pk' => '49', 'symbol' => 'far fa-file-alt', 'inNavigation' => '1', 'isBackoffice' => '1', 'typeOfPermissions' => '{"create_r":true,"read_r":true,"update_r":true,"delete_r":true}', 'module_id' => '2', 'isActive' => '1'),
@@ -305,23 +303,31 @@ class InstallService
             ['pages_id' => 3, 'parent' => NULL, 'queue' => 1, 'urlType' => 'pages', 'title' => 'Anasayfa', 'seflink' => '/', 'target' => NULL, 'hasChildren' => 0],
             ['pages_id' => NULL, 'parent' => NULL, 'queue' => 3, 'urlType' => 'url', 'title' => 'Blog', 'seflink' => '/blog/1', 'target' => NULL, 'hasChildren' => 0]
         ]);
+
         $encrypter = \Config\Services::encrypter();
-        $commonModel->createMany('settings', [
-            ['option' => 'siteName', 'content' => $args['siteName'] ?? 'Ci4MS'],
-            ['option' => 'logo', 'content' => '/media/logo.png'],
-            ['option' => 'siteURL', 'content' => $args['baseUrl'] ?? 'https://ci4ms.loc/'],
-            ['option' => 'slogan', 'content' => $args['slogan'] ?? 'My First Ci4MS Project'],
-            ['option' => 'socialNetwork', 'content' => '[{"smName":"facebook","link":"https:\\/\\/facebook.com\\/bertugfahriozer"},{"smName":"twitter","link":"https:\\/\\/twitter.com\\/bertugfahriozer"},{"smName":"github","link":"https:\\/\\/github.com\\/bertugfahriozer.com"}]'],
-            ['option' => 'company', 'content' => '{"address":"Bal\\u0131kesir \\/ Turkey","phone":"+905000000000","email":"info@ci4ms.com"}'],
-            ['option' => 'mail', 'content' => '{"protocol": "smtp","server": "ssl://smtp.gmail.com","port": "465","address": "simple@gmail.com","password": "' . base64_encode($encrypter->encrypt('123456789')) . '","tls": "0"}'],
-            ['option' => 'map_iframe', 'content' => NULL],
-            ['option' => 'locked', 'content' => '{"isActive": 1,"userNotification": 0,"adminNotification": 0,"min": 15,"try": 4,"record": 3,"notificationLimitLoginAttempts": ""}'],
-            ['option' => 'templateInfos', 'content' => '{"path":"default","name":null,"widgets":{"sidebar":{"searchWidget":"true","categoriesWidget":"true"}}}'],
-            ['option' => 'maintenanceMode', 'content' => '0'],
-            ['option' => 'isActive', 'content' => '0'],
-            ['option' => 'allowedFiles', 'content' => '["image\\/x-ms-bmp","image\\/gif","image\\/jpeg","image\\/png","image\\/x-icon","text\\/plain"]'],
-            ['option' => 'badwords', 'content' => '{"status":1,"autoReject":0,"autoAccept":1,"list":["abaza","abazan","ag","ağzına sıçayım","ahmak","allah","allahsız","am","amarım","ambiti","am biti","amcığı","amcığın","amcığını","amcığınızı","amcık","amcık hoşafı","amcıklama","amcıklandı","amcik","amck","amckl","amcklama","amcklaryla","amckta","amcktan","amcuk","amık","amına","amınako","amına koy","amına koyarım","amına koyayım","amınakoyim","amına koyyim","amına s","amına sikem","amına sokam","amın feryadı","amını","amını s","amın oglu","amınoğlu","amın oğlu","amısına","amısını","amina","amina g","amina k","aminako","aminakoyarim","amina koyarim","amina koyayım","amina koyayim","aminakoyim","aminda","amindan","amindayken","amini","aminiyarraaniskiim","aminoglu","amin oglu","amiyum","amk","amkafa","amk çocuğu","amlarnzn","amlı","amm","ammak","ammna","amn","amna","amnda","amndaki","amngtn","amnn","amona","amq","amsız","amsiz","amsz","amteri","amugaa","amuğa","amuna","ana","anaaann","anal","analarn","anam","anamla","anan","anana","anandan","ananı","ananı","ananın","ananın am","ananın amı","ananın dölü","ananınki","ananısikerim","ananı sikerim","ananısikeyim","ananı sikeyim","ananızın","ananızın am","anani","ananin","ananisikerim","anani sikerim","ananisikeyim","anani sikeyim","anann","ananz","anas","anasını","anasının am","anası orospu","anasi","anasinin","anay","anayin","angut","anneni","annenin","annesiz","anuna","aptal","aq","a.q","a.q.","aq.","ass","atkafası","atmık","attırdığım","attrrm","auzlu","avrat","ayklarmalrmsikerim","azdım","azdır","azdırıcı","babaannesi kaşar","babanı","babanın","babani","babası pezevenk","bacağına sıçayım","bacına","bacını","bacının","bacini","bacn","bacndan","bacy","bastard","basur","beyinsiz","bızır","bitch","biting","bok","boka","bokbok","bokça","bokhu","bokkkumu","boklar","boktan","boku","bokubokuna","bokum","bombok","boner","bosalmak","boşalmak","cenabet","cibiliyetsiz","cibilliyetini","cibilliyetsiz","cif","cikar","cim","çük","dalaksız","dallama","daltassak","dalyarak","dalyarrak","dangalak","dassagi","diktim","dildo","dingil","dingilini","dinsiz","dkerim","domal","domalan","domaldı","domaldın","domalık","domalıyor","domalmak","domalmış","domalsın","domalt","domaltarak","domaltıp","domaltır","domaltırım","domaltip","domaltmak","dölü","dönek","düdük","eben","ebeni","ebenin","ebeninki","ebleh","ecdadını","ecdadini","embesil","emi","fahise","fahişe","feriştah","ferre","fuck","fucker","fuckin","fucking","gavad","gavat","geber","geberik","gebermek","gebermiş","gebertir","gerızekalı","gerizekalı","gerizekali","gerzek","giberim","giberler","gibis","gibiş","gibmek","gibtiler","goddamn","godoş","godumun","gotelek","gotlalesi","gotlu","gotten","gotundeki","gotunden","gotune","gotunu","gotveren","goyiim","goyum","goyuyim","goyyim","göt","göt deliği","götelek","göt herif","götlalesi","götlek","götoğlanı","göt oğlanı","götoş","götten","götü","götün","götüne","götünekoyim","götüne koyim","götünü","götveren","göt veren","göt verir","gtelek","gtn","gtnde","gtnden","gtne","gtten","gtveren","hasiktir","hassikome","hassiktir","has siktir","hassittir","haysiyetsiz","hayvan herif","hoşafı","hödük","hsktr","huur","ıbnelık","ibina","ibine","ibinenin","ibne","ibnedir","ibneleri","ibnelik","ibnelri","ibneni","ibnenin","ibnerator","ibnesi","idiot","idiyot","imansz","ipne","iserim","işerim","itoğlu it","kafam girsin","kafasız","kafasiz","kahpe","kahpenin","kahpenin feryadı","kaka","kaltak","kancık","kancik","kappe","karhane","kaşar","kavat","kavatn","kaypak","kayyum","kerane","kerhane","kerhanelerde","kevase","kevaşe","kevvase","koca göt","koduğmun","koduğmunun","kodumun","kodumunun","koduumun","koyarm","koyayım","koyiim","koyiiym","koyim","koyum","koyyim","krar","kukudaym","laciye boyadım","lavuk","liboş","madafaka","mal","malafat","malak","manyak","mcik","meme","memelerini","mezveleli","minaamcık","mincikliyim","mna","monakkoluyum","motherfucker","mudik","oc","ocuu","ocuun","OÇ","oç","o. çocuğu","oğlan","oğlancı","oğlu it","orosbucocuu","orospu","orospucocugu","orospu cocugu","orospu çoc","orospuçocuğu","orospu çocuğu","orospu çocuğudur","orospu çocukları","orospudur","orospular","orospunun","orospunun evladı","orospuydu","orospuyuz","orostoban","orostopol","orrospu","oruspu","oruspuçocuğu","oruspu çocuğu","osbir","ossurduum","ossurmak","ossuruk","osur","osurduu","osuruk","osururum","otuzbir","öküz","öşex","patlak zar","penis","pezevek","pezeven","pezeveng","pezevengi","pezevengin evladı","pezevenk","pezo","pic","pici","picler","piç","piçin oğlu","piç kurusu","piçler","pipi","pipiş","pisliktir","porno","pussy","puşt","puşttur","rahminde","revizyonist","s1kerim","s1kerm","s1krm","sakso","saksofon","salaak","salak","saxo","sekis","serefsiz","sevgi koyarım","sevişelim","sexs","sıçarım","sıçtığım","sıecem","sicarsin","sie","sik","sikdi","sikdiğim","sike","sikecem","sikem","siken","sikenin","siker","sikerim","sikerler","sikersin","sikertir","sikertmek","sikesen","sikesicenin","sikey","sikeydim","sikeyim","sikeym","siki","sikicem","sikici","sikien","sikienler","sikiiim","sikiiimmm","sikiim","sikiir","sikiirken","sikik","sikil","sikildiini","sikilesice","sikilmi","sikilmie","sikilmis","sikilmiş","sikilsin","sikim","sikimde","sikimden","sikime","sikimi","sikimiin","sikimin","sikimle","sikimsonik","sikimtrak","sikin","sikinde","sikinden","sikine","sikini","sikip","sikis","sikisek","sikisen","sikish","sikismis","sikiş","sikişen","sikişme","sikitiin","sikiyim","sikiym","sikiyorum","sikkim","sikko","sikleri","sikleriii","sikli","sikm","sikmek","sikmem","sikmiler","sikmisligim","siksem","sikseydin","sikseyidin","siksin","siksinbaya","siksinler","siksiz","siksok","siksz","sikt","sikti","siktigimin","siktigiminin","siktiğim","siktiğimin","siktiğiminin","siktii","siktiim","siktiimin","siktiiminin","siktiler","siktim","siktim","siktimin","siktiminin","siktir","siktir et","siktirgit","siktir git","siktirir","siktiririm","siktiriyor","siktir lan","siktirolgit","siktir ol git","sittimin","sittir","skcem","skecem","skem","sker","skerim","skerm","skeyim","skiim","skik","skim","skime","skmek","sksin","sksn","sksz","sktiimin","sktrr","skyim","slaleni","sokam","sokarım","sokarim","sokarm","sokarmkoduumun","sokayım","sokaym","sokiim","soktuğumunun","sokuk","sokum","sokuş","sokuyum","soxum","sulaleni","sülaleni","sülalenizi","sürtük","şerefsiz","şıllık","taaklarn","taaklarna","tarrakimin","tasak","tassak","taşak","taşşak","tipini s.k","tipinizi s.keyim","tiyniyat","toplarm","topsun","totoş","vajina","vajinanı","veled","veledizina","veled i zina","verdiimin","weled","weledizina","whore","xikeyim","yaaraaa","yalama","yalarım","yalarun","yaraaam","yarak","yaraksız","yaraktr","yaram","yaraminbasi","yaramn","yararmorospunun","yarra","yarraaaa","yarraak","yarraam","yarraamı","yarragi","yarragimi","yarragina","yarragindan","yarragm","yarrağ","yarrağım","yarrağımı","yarraimin","yarrak","yarram","yarramin","yarraminbaşı","yarramn","yarran","yarrana","yarrrak","yavak","yavş","yavşak","yavşaktır","yavuşak","yılışık","yilisik","yogurtlayam","yoğurtlayam","yrrak","zıkkımım","zibidi","zigsin","zikeyim","zikiiim","zikiim","zikik","zikim","ziksiiin","ziksiin","zulliyetini","zviyetini"]}'],
-            ['option' => 'elfinderConvertWebp', 'content' => '1']
-        ]);
+        $commonModel->createMany(
+            'settings',
+            array(
+                array('class' => 'Config\\App', 'key' => 'templateInfos', 'value' => '{"path":"default","name":null,"widgets":{"sidebar":{"searchWidget":"true","categoriesWidget":"true"}}}', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'siteName', 'value' => 'ci4ms', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'logo', 'value' => '/media/logo.png', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'socialNetwork', 'value' => '[{"smName":"facebook","link":"https:\\/\\/facebook.com\\/bertugfahriozer"},{"smName":"twitter","link":"https:\\/\\/twitter.com\\/bertugfahriozer"},{"smName":"github","link":"https:\\/\\/github.com\\/bertugfahriozer"}]', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'contact', 'value' => '{"address":"Bal\\u0131kesir \\/ Turkey","phone":"+905000000000","email":"info@ci4ms.com"}', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'mail', 'value' => '{
+    "server": "mail.ci4ms.com",
+    "port": "26",
+    "address": "simple@ci4ms.com",
+    "password": "' . base64_encode($encrypter->encrypt('123456789')) . '",
+    "protocol": "smtp",
+    "tls": false
+}', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Gmap', 'key' => 'map_iframe', 'value' => NULL, 'type' => 'NULL', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'slogan', 'value' => 'My First Ci4MS Project', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'maintenanceMode', 'value' => '0', 'type' => 'boolean', 'context' => NULL),
+                array('class' => 'Config\\Security', 'key' => 'allowedFiles', 'value' => '["image\\/x-ms-bmp","image\\/gif","image\\/jpeg","image\\/png","image\\/x-icon","text\\/plain","image\\/webp"]', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\Security', 'key' => 'badwords', 'value' => '{"status": 1, "autoReject": 0, "autoAccept": 1, "list": []}', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Elfinder', 'key' => 'convertWebp', 'value' => '1', 'type' => 'boolean', 'context' => NULL)
+            )
+        );
     }
 }

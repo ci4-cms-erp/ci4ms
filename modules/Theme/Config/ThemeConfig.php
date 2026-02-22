@@ -4,7 +4,7 @@ class ThemeConfig extends \CodeIgniter\Config\BaseConfig
 {
     public $csrfExcept = [];
 
-    public $filters = ['backendAfterLoginFilter' => ['before' => [
+    public $filters = ['backendGuard' => ['before' => [
         'backend/themes',
         'backend/themes/*'
     ]]];

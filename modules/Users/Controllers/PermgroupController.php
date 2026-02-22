@@ -3,6 +3,7 @@
 namespace Modules\Users\Controllers;
 
 use CodeIgniter\I18n\Time;
+use Exception;
 
 class PermgroupController extends \Modules\Backend\Controllers\BaseController
 {
@@ -12,7 +13,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             $data = clearFilter($this->request->getPost());
             $like = $data['search']['value'];
             $l = [];
-            $postData = [];
+            $postData = ['group!=' => 'superadmin'];
             if (!empty($like)) $l = ['title' => $like];
             $results = $this->commonModel->lists('auth_groups', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
             $totalRecords = $this->commonModel->count('auth_groups', $postData, $l);
@@ -34,42 +35,38 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'groupName' => ['label' => 'Yetki Grubu Adı', 'rules' => 'required'],
+                'groupName' => ['label' => 'Yetki Grubu Adı', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[auth_groups.group]'],
                 'description' => ['label' => 'Grup Açıklaması', 'rules' => 'required'],
-                'seflink' => ['label' => 'Seflink', 'rules' => 'required'],
+                'seflink' => ['label' => 'Seflink', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
                 'perms' => ['label' => 'İzinler', 'rules' => 'required']
             ]);
 
             if ($this->validate($valData) == false)
                 return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
-            $result = $this->commonModel->create('auth_groups', [
-                'name' => $this->request->getPost('groupName'),
-                'description' => $this->request->getPost('description'),
-                'seflink' => $this->request->getPost('seflink'),
-                'created_at' => new Time('now'),
-                'who_created' => session()->get('logged_in')
-            ]);
+            $data = [
+                'group' => esc($this->request->getPost('groupName')),
+                'description' => esc($this->request->getPost('description')),
+                'redirect' => esc($this->request->getPost('seflink')),
+                'who_created' => user_id()
+            ];
 
-            if (!empty($result)) {
-                $data = [];
-                foreach ($this->request->getPost('perms') as $key => $perm) {
-                    $roles = explode('|', $perm['roles']);
-                    $data[] = [
-                        'group_id' => $result,
-                        'page_id' => $key,
-                        'create_r' => in_array('create_r', $roles),
-                        'update_r' => in_array('update_r', $roles),
-                        'read_r' => in_array('read_r', $roles),
-                        'delete_r' => in_array('delete_r', $roles),
-                        'who_perm' => $this->logged_in_user->id,
-                        'created_at' => new Time('now')
-                    ];
-                }
-                $result = $this->commonModel->createMany('auth_groups_permissions', $data);
-                if (empty($result)) return redirect()->back()->withInput()->with('errors', ['Grup Yetkileri eklenemedi.']);
-                else return redirect()->to(route_to('groupList', 1))->with('message', $this->request->getPost('groupName') . ' adlı grup ve yetkileri başarıyla eklendi.');
-            } else return redirect()->back()->withInput()->with('errors', ['Grup Eklenemedi. Veri tabanı hatası !']);
+            foreach ($this->request->getPost('perms') as $key => $perm) {
+                $roles = explode('|', $perm['roles']);
+                $permissions[] = [
+                    'page_id' => $key,
+                    'create_r' => in_array('create_r', $roles),
+                    'update_r' => in_array('update_r', $roles),
+                    'read_r' => in_array('read_r', $roles),
+                    'delete_r' => in_array('delete_r', $roles),
+                    'who_perm' => user_id(),
+                    'created_at' => new Time('now')
+                ];
+            }
+            $data['permissions'] = json_encode($permissions, JSON_UNESCAPED_UNICODE);
+            $result = $this->commonModel->create('auth_groups', $data);
+            if (empty($result)) return redirect()->back()->withInput()->with('errors', lang('Backend.notCreated', [$this->request->getPost('groupName')]));
+            else return redirect()->to(route_to('groupList'))->with('message', lang('Backend.created', [$this->request->getPost('groupName')]));
         }
         $methodsModel = new \Modules\Methods\Models\MethodsModel();
         $this->defData['modules'] = $methodsModel->getModules();
@@ -80,86 +77,88 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'groupName' => ['label' => 'Yetki Grubu Adı', 'rules' => 'required'],
+                'groupName' => ['label' => 'Yetki Grubu Adı', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
                 'description' => ['label' => 'Grup Açıklaması', 'rules' => 'required'],
-                'seflink' => ['label' => 'Seflink', 'rules' => 'required'],
+                'seflink' => ['label' => 'Seflink', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
                 'perms' => ['label' => 'İzinler', 'rules' => 'required']
             ]);
 
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            $data = [
+                'group' => esc($this->request->getPost('groupName')),
+                'description' => esc($this->request->getPost('description')),
+                'redirect' => esc($this->request->getPost('seflink')),
+                'who_created' => user_id()
+            ];
 
-            if ($this->commonModel->edit('auth_groups', [
-                'name' => $this->request->getPost('groupName'),
-                'description' => $this->request->getPost('description'),
-                'seflink' => $this->request->getPost('seflink'),
-                'updated_at' => new Time('now')
-            ], ['id' => $id])) {
-                $data = [];
-                foreach ($this->request->getPost('perms') as $key => $perm) {
-                    $roles = explode('|', $perm['roles']);
-                    $data[] = [
-                        'group_id' => $id,
-                        'page_id' => $key,
-                        'create_r' => in_array('create_r', $roles),
-                        'update_r' => in_array('update_r', $roles),
-                        'read_r' => in_array('read_r', $roles),
-                        'delete_r' => in_array('delete_r', $roles),
-                        'who_perm' => $this->logged_in_user->id,
-                        'created_at' => new Time('now')
-                    ];
-                }
-                $this->commonModel->remove('auth_groups_permissions', ['group_id' => $id]);
-                $userIds = $this->commonModel->lists('users', 'id', ['group_id' => $id]);
-                foreach ($userIds as $userId) {
-                    cache()->delete("{$userId->id}_permissions");
-                }
-                if ($this->commonModel->createMany('auth_groups_permissions', $data)) return redirect()->route('groupList', [1])->with('message', '<b>' . $this->request->getPost('groupName') . '</b> adlı grup ve yetkileri başarıyla eklendi.');
-                else return redirect()->back()->withInput()->with('error', 'Grup Yetkileri eklenemedi.');
-            } else
-                return redirect()->back()->withInput()->with('error', 'Grup Eklenemedi. Veri tabanı hatası !');
-        }
-        $methodsModel = new \Modules\Methods\Models\MethodsModel();
-        $this->defData['modules'] = $methodsModel->getModules();
-        $this->defData['group_name'] = $this->commonModel->selectOne('auth_groups', ['id' => $id]);
-        $this->defData['perms'] = $this->commonModel->lists('auth_groups_permissions', '*', ['group_id' => $id]);
-        return view('Modules\Users\Views\permGroup\update', $this->defData);
-    }
-
-    public function user_perms(int $id)
-    {
-        $userPerms = cache()->get("{$id}_permissions");
-        if ($this->request->is('post')) {
-            if ($this->validate(['perms' => ['label' => 'İzinler', 'rules' => 'required']]) == false)
-                return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-
-            $data = [];
             foreach ($this->request->getPost('perms') as $key => $perm) {
                 $roles = explode('|', $perm['roles']);
-                $data[] = [
-                    'user_id' => $id,
+                $permissions[] = [
                     'page_id' => $key,
                     'create_r' => in_array('create_r', $roles),
                     'update_r' => in_array('update_r', $roles),
                     'read_r' => in_array('read_r', $roles),
                     'delete_r' => in_array('delete_r', $roles),
-                    'who_perm' => $this->logged_in_user->id,
+                    'who_perm' => user_id(),
                     'created_at' => new Time('now')
                 ];
             }
-            if ($this->commonModel->remove('auth_users_permissions', ['user_id' => $id]) && $this->commonModel->createMany('auth_users_permissions', $data)) {
-                cache()->delete("{$id}_permissions");
-                return redirect()->route('users', [1])->with('message', 'Kullanıcı yetkileri başarıyla eklendi.');
-            } else
-                return redirect()->back()->withInput()->with('error', 'Kullanıcı Yetkileri eklenemedi.');
+
+            $data['permissions'] = json_encode($permissions, JSON_UNESCAPED_UNICODE);
+            if ($this->commonModel->edit('auth_groups', $data, ['id' => $id])) {
+                cache()->delete("shield_auth_dynamic_config");
+                return redirect()->route('groupList')->with('message', lang('Backend.updated', [$this->request->getPost('groupName')]));
+            } else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('groupName')]));
         }
         $methodsModel = new \Modules\Methods\Models\MethodsModel();
         $this->defData['modules'] = $methodsModel->getModules();
-        $this->defData['userInfos'] = $this->commonModel->selectOne('users', ['id' => $id]);
-        $this->defData['perms'] = $this->commonModel->lists('auth_users_permissions', '*', ['user_id' => $id]);
-        $this->defData['groupPerms'] = $this->commonModel->lists('users', 'auth_groups_permissions.*', ['users.id' => $id], 'id ASC', 0, 0, [], [], [
-            ['table' => 'auth_groups', 'cond' => 'users.group_id = auth_groups.id', 'type' => 'left'],
-            ['table' => 'auth_groups_permissions', 'cond' => 'auth_groups_permissions.group_id = auth_groups.id', 'type' => 'left']
-        ]);
+        $this->defData['group_name'] = $this->commonModel->selectOne('auth_groups', ['id' => $id]);
+        $this->defData['perms'] = json_decode($this->defData['group_name']->permissions, JSON_UNESCAPED_UNICODE);
+        return view('Modules\Users\Views\permGroup\update', $this->defData);
+    }
+
+    public function user_perms(int $id)
+    {
+        if ($this->request->is('post')) {
+            $user = auth()->getProvider()->findById($id);
+            if ($user->inGroup('superadmin')) return redirect()->to('403');
+            try {
+                $perms = [];
+                $pageMap = [];
+
+                // Get page map
+                $pages = $this->commonModel->lists('auth_permissions_pages');
+                foreach ($pages as $page) {
+                    $pageMap[$page->id] = strtolower($page->pagename);
+                }
+                if (empty($this->request->getPost('perms'))) {
+                    $user->syncPermissions();
+                    return redirect()->route('users')->with('message', lang('Backend.updated', [$user->username]));
+                }
+                foreach ($this->request->getPost('perms') as $key => $perm) {
+                    if (!isset($pageMap[$key])) continue;
+
+                    $roles = explode('|', $perm['roles']);
+                    $pagename = $pageMap[$key];
+
+                    if (in_array('create_r', $roles)) $perms[] = $pagename . '.create';
+                    if (in_array('read_r', $roles))   $perms[] = $pagename . '.read';
+                    if (in_array('update_r', $roles)) $perms[] = $pagename . '.update';
+                    if (in_array('delete_r', $roles)) $perms[] = $pagename . '.delete';
+                }
+                $user->syncPermissions(...$perms);
+
+                return redirect()->route('users')->with('message', lang('Backend.updated', [$user->username]));
+            } catch (\Exception $e) {
+                return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$e->getMessage()]));
+            }
+        }
+        $methodsModel = new \Modules\Methods\Models\MethodsModel();
+        $user = auth()->getProvider()->findById($id);
+        $this->defData['modules'] = $methodsModel->getModules();
+        $this->defData['userInfos'] = $user;
+        $this->defData['perms'] = $user->getPermissions();
+        $this->defData['groupPerms'] = json_decode($this->commonModel->selectOne('auth_groups', ['group' => $user->getGroups()[0]])->permissions, true);
         return view('Modules\Users\Views\permGroup\userPerms', $this->defData);
     }
 }

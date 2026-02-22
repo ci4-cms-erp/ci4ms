@@ -15,7 +15,7 @@ class MethodsConfig extends \CodeIgniter\Config\BaseConfig{
     ];
 
     public $filters=[
-        'backendAfterLoginFilter' => ['before' => [
+        'backendGuard' => ['before' => [
             'backend/methods','backend/methods/*'
         ]]
     ];

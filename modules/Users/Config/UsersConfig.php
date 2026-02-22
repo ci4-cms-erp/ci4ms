@@ -9,7 +9,7 @@ class UsersConfig extends \CodeIgniter\Config\BaseConfig
         'backend/users/*'
     ];
     public $filters = [
-        'backendAfterLoginFilter' => ['before' => [
+        'backendGuard' => ['before' => [
             'backend/users','backend/users/*',
         ]]
     ];

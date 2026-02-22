@@ -18,34 +18,38 @@ class AJAX extends BaseController
      */
     public function limitTags_ajax()
     {
-        if ($this->request->isAJAX()) {
-            if (!empty($this->request->getPost('type'))) {
-                if ($this->commonModel->isHave('tags', []) === 1) {
-                    $data = ['tags_pivot.tagType' => $this->request->getPost('type')];
-                    if (!empty($this->request->getPost('piv_id')))
-                        $data['tags_pivot.piv_id'] = $this->request->getPost('piv_id');
-                    $result = $this->model->limitTags_ajax($data);
-                    if (empty($result)) {
-                        $result = null;
-                        foreach ($this->commonModel->lists('tags', '*', [], 'id DESC', 10) as $item) {
-                            $result[] = ['id' => (string)$item->_id, 'value' => $item->tag];
-                        }
-                        return $this->response->setJSON($result);
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $valData = ([
+            'type' => ['label' => 'type', 'rules' => 'required']
+        ]);
+
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if (!empty($this->request->getPost('type'))) {
+            if ($this->commonModel->isHave('tags', []) === 1) {
+                $data = ['tags_pivot.tagType' => $this->request->getPost('type')];
+                if (!empty($this->request->getPost('piv_id')))
+                    $data['tags_pivot.piv_id'] = $this->request->getPost('piv_id');
+                $result = $this->model->limitTags_ajax($data);
+                if (empty($result)) {
+                    $result = null;
+                    foreach ($this->commonModel->lists('tags', '*', [], 'id DESC', 10) as $item) {
+                        $result[] = ['id' => (string)$item->id, 'value' => $item->tag];
                     }
-                    $edited = [];
-                    foreach ($result as $item) {
-                        $edited[] = ['id' => (string)$item->id, 'value' => $item->tag];
-                    }
-                    unset($result);
-                    return $this->respond(['result' => $edited], 200);
-                } else return $this->failNotFound();
-            }
-            $result = null;
-            foreach ($this->commonModel->lists('tags', '*', [], 'id DESC', 10) as $item) {
-                $result[] = ['id' => (string)$item->id, 'value' => $item->tag];
-            }
-            return $this->respond(['result' => $result], 200);
-        } else return $this->failForbidden();
+                    return $this->response->setJSON($result);
+                }
+                $edited = [];
+                foreach ($result as $item) {
+                    $edited[] = ['id' => (string)$item->id, 'value' => $item->tag];
+                }
+                unset($result);
+                return $this->respond(['result' => $edited], 200);
+            } else return $this->failNotFound();
+        }
+        $result = null;
+        foreach ($this->commonModel->lists('tags', '*', [], 'id DESC', 10) as $item) {
+            $result[] = ['id' => (string)$item->id, 'value' => $item->tag];
+        }
+        return $this->respond(['result' => $result], 200);
     }
 
     /**
@@ -55,11 +59,11 @@ class AJAX extends BaseController
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([
-            'makeSeflink' => ['label' => 'makeSeflink', 'rules' => 'required'],
-            'where' => ['label' => 'where', 'rules' => 'required']
+            'makeSeflink' => ['label' => 'makeSeflink', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+            'where' => ['label' => 'where', 'rules' => 'required|in_list[pages,blog,categories,tags]']
         ]);
 
-        if ($this->validate($valData) == false) return redirect('403');
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $locale = !empty($this->request->getPost('locale')) ? ['locale' => $this->request->getPost('locale')] : ['locale' => 'tr'];
         if ($this->request->getPost('update') == 1) {
             $oldSeflink = $this->commonModel->selectOne($this->request->getPost('where'), ['id' => $this->request->getPost('id')]);
@@ -85,35 +89,33 @@ class AJAX extends BaseController
     public function isActive()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-            $valData = ([
-                'id' => ['label' => 'id', 'rules' => 'required'],
-                'isActive' => ['label' => 'isActive', 'rules' => 'required'],
-                'where' => ['label' => 'where', 'rules' => 'required']
-            ]);
+        $valData = ([
+            'id' => ['label' => 'id', 'rules' => 'required|is_natural_no_zero'],
+            'isActive' => ['label' => 'isActive', 'rules' => 'required|in_list[0,1]'],
+            'where' => ['label' => 'where', 'rules' => 'required|in_list[pages,blog]']
+        ]);
 
-            if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
 
-            if ($this->commonModel->edit($this->request->getPost('where'), ['isActive' => (bool)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
-                return $this->respond(['result' => true], 200);
-            else
+        if ($this->commonModel->edit($this->request->getPost('where'), ['isActive' => (bool)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
+            return $this->respond(['result' => true], 200);
+        else
             return $this->failForbidden();
     }
 
     public function maintenance()
     {
-        if ($this->request->isAJAX()) {
-            $valData = ([
-                'isActive' => ['label' => 'isActive', 'rules' => 'required']
-            ]);
-            if ($this->validate($valData) == false) return redirect('403');
-            if ($this->commonModel->edit('settings', ['content' => (bool)$this->request->getPost('isActive')], ['option' => 'maintenanceMode'])){
-                cache()->delete('settings');
-                return $this->respond(['result' => (bool)$this->request->getPost('isActive')],200);
-            }
-            else{
-                cache()->delete('settings');
-                return $this->fail(['pr' => false]);
-            }
-        } else return $this->failForbidden();
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $valData = ([
+            'isActive' => ['label' => 'isActive', 'rules' => 'required|in_list[0,1]']
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->commonModel->edit('settings', ['content' => (bool)$this->request->getPost('isActive')], ['option' => 'maintenanceMode'])) {
+            cache()->delete('settings');
+            return $this->respond(['result' => (bool)$this->request->getPost('isActive')], 200);
+        } else {
+            cache()->delete('settings');
+            return $this->fail(['pr' => false]);
+        }
     }
 }

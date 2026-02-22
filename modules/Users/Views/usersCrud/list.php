@@ -1,25 +1,25 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
-<?= $this->endSection() ?>
-<?= $this->section('head') ?>
-<?= link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
-<?= link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
-<?= link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
-<?= $this->endSection() ?>
-<?= $this->section('content') ?>
+<?php echo $this->section('title') ?>
+<?php echo lang($title->pagename) ?>
+<?php echo $this->endSection() ?>
+<?php echo $this->section('head') ?>
+<?php echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
+<?php echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
+<?php echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
+<?php echo $this->endSection() ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row pb-3 border-bottom">
             <div class="col-sm-6">
-                <h1><?= lang($title->pagename) ?></h1>
+                <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right"><a href="<?= route_to('create_user') ?>"
+                <ol class="breadcrumb float-sm-right"><a href="<?php echo route_to('create_user') ?>"
                         class="btn btn-outline-success"><i
-                            class="fas fa-user-plus"></i> <?= lang('Users.addUser') ?></a></ol>
+                            class="fas fa-user-plus"></i> <?php echo lang('Users.addUser') ?></a></ol>
             </div>
         </div>
     </div><!-- /.container-fluid -->
@@ -34,11 +34,11 @@
                 <table id="userTable" class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th><?= lang('Backend.fullName') ?></th>
-                            <th><?= lang('Backend.email') ?></th>
-                            <th><?= lang('Backend.status') ?></th>
-                            <th><?= lang('Users.authority') ?></th>
-                            <th><?= lang('Backend.transactions') ?></th>
+                            <th><?php echo lang('Backend.fullName') ?></th>
+                            <th><?php echo lang('Backend.email') ?></th>
+                            <th><?php echo lang('Backend.status') ?></th>
+                            <th><?php echo lang('Users.authority') ?></th>
+                            <th><?php echo lang('Backend.transactions') ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,10 +56,10 @@
                             </button>
                         </div>
                         <form id="blackListForm" method="post">
-                            <?= csrf_field() ?>
+                            <?php echo csrf_field() ?>
                             <input type="hidden" name="uid" id="modal_uid">
                             <div class="modal-body">
-                                <div id="modalNoteArea" style="display:none;" class="mb-3">
+                                <div id="modalNoteArea" class="mb-3">
                                     <label>Mevcut Not:</label>
                                     <div id="currentNote" class="alert alert-secondary"></div>
                                 </div>
@@ -82,36 +82,47 @@
 </section>
 
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('javascript') ?>
-<?= script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
-<?= script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
-<?= script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
-<?= script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
+<?php echo $this->section('javascript') ?>
+<?php echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
+<?php echo script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
+<?php echo script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
+<?php echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
 <!-- SweetAlert2 -->
-<script>
+<script {csp-script-nonce}>
+    $('#modalNoteArea').hide();
     var table = $('#userTable').DataTable({
         "processing": true,
         "serverSide": true, // Sunucu taraflı işlem için
         "ajax": {
-            "url": "<?= route_to('users') ?>", // Controller'da bu rotayı tanımlamalısınız
+            "url": "<?php echo route_to('users') ?>", // Controller'da bu rotayı tanımlamalısınız
             "type": "POST"
         },
-        "columns": [
-            { "data": "fullname" },
-            { "data": "email" },
-            { "data": "status" },
-            { "data": "name" },
-            { "data": "actions", "orderable": false } // İşlem butonları
+        "columns": [{
+                "data": "fullname"
+            },
+            {
+                "data": "email"
+            },
+            {
+                "data": "status"
+            },
+            {
+                "data": "groupName"
+            },
+            {
+                "data": "actions",
+                "orderable": false
+            }
         ]
     });
 
@@ -129,14 +140,14 @@
             $('#currentNote').text(note);
             $('#noteInput').hide();
             $('#noteLabel').hide();
-            $('#blackListForm').attr('action', "<?= route_to('removeFromBlacklist') ?>");
+            $('#blackListForm').attr('action', "<?php echo route_to('removeFromBlacklist') ?>");
             $('#modalSubmitBtn').html('<i class="fas fa-user-check"></i> Listeden Çıkar');
         } else {
             $('#modalTitle').text('Kara Listeye Ekle');
             $('#modalNoteArea').hide();
             $('#noteInput').show();
             $('#noteLabel').show();
-            $('#blackListForm').attr('action', "<?= route_to('blackList') ?>");
+            $('#blackListForm').attr('action', "<?php echo route_to('blackList') ?>");
             $('#modalSubmitBtn').html('<i class="fas fa-user-slash"></i> Kara Listeye Al');
         }
 
@@ -148,35 +159,81 @@
         e.preventDefault();
         $.post($(this).attr('action'), $(this).serialize(), function(data) {
             if (data.result) {
-                Toast.fire({ icon: 'success', title: data.error.message });
-                table.ajax.reload(); // Tabloyu yenile
+                Swal.fire({
+                    icon: 'success',
+                    title: data.error.message
+                });
+                table.ajax.reload();
                 $('#blackListModal').modal('hide');
             } else {
-                Toast.fire({ icon: 'error', title: 'İşlem başarısız!' });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'İşlem başarısız!'
+                });
             }
         }, 'json');
     });
 
-    $('.fpwd').on('click', function() {
-        $(this).addClass('disabled');
-        $.post("<?= route_to('forceResetPassword') ?>", {
-            uid: $(this).data('uid')
+    function forceResetPassword(uid) {
+        $('.fpwd' + uid).addClass('disabled');
+        $.post("<?php echo route_to('forceResetPassword') ?>", {
+            uid: uid
         }, function(data) {
             if (data.result == true) {
-                Toast.fire({
+                Swal.fire({
                     icon: data.error.type,
                     title: data.error.message
                 }).then(function() {
-                    location.reload();
+                    table.ajax.reload();
                 });
             } else
-                Toast.fire({
+                Swal.fire({
                     icon: 'warning',
-                    title: '<?= lang('Backend.operationFailed') ?>'
+                    title: '<?php echo lang('Backend.operationFailed') ?>'
                 }).then(function() {
                     $('.modal').modal('toggle');
                 });
         }, 'json');
-    });
+    }
+
+    function deleteItem(id) {
+        Swal.fire({
+            title: '<?php echo lang('Backend.areYouSure') ?>',
+            text: "<?php echo lang('Backend.youWillNotBeAbleToRecoverThis') ?>",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: '<?php echo lang('Backend.delete') ?>',
+            cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post('<?php echo route_to('user_del') ?>', {
+                    "id": id,
+                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                }, 'json').done(function(response) {
+                    if (response.status == 'success') {
+                        Swal.fire({
+                            title: '<?php echo lang('Backend.success') ?>',
+                            text: response.message,
+                            icon: 'success',
+                            confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                table.ajax.reload();
+                            }
+                        });
+                    }else{
+                        Swal.fire({
+                            title: '<?php echo lang('Backend.error') ?>',
+                            text: response.message,
+                            icon: 'error',
+                            confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                        });
+                    }
+                });
+            }
+        });
+    }
 </script>
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

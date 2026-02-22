@@ -2,25 +2,11 @@
 
 namespace Modules\Users\Controllers;
 
-use App\Libraries\CommonLibrary;
-use CodeIgniter\I18n\Time;
-use Modules\Users\Models\UserscrudModel;
+use CodeIgniter\Shield\Authentication\Actions\EmailActivator;
+use CodeIgniter\Shield\Entities\User;
 
 class UserController extends \Modules\Backend\Controllers\BaseController
 {
-    /**
-     * @var UserscrudModel
-     */
-    protected $userModel;
-
-    /**
-     *
-     */
-    public function __construct()
-    {
-        $this->userModel = new UserscrudModel();
-    }
-
     /**
      * @return string
      */
@@ -30,49 +16,76 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             $data = clearFilter($this->request->getPost());
             $like = $data['search']['value'];
             $l = [];
-            $postData = ['group_id!=' => 1, 'deleted_at' => null];
-            if (!empty($like)) $l = ['title' => $like];
-            $results = $this->userModel->userList(
-                ($data['length'] == '-1') ? 0 : (int)$data['length'],
-                'users.id,email,firstname,surname,status,auth_groups.name,black_list_users.notes,reset_expires',
-                [/* 'group_id!=' => 1,  */'deleted_at' => null],
-                ($data['length'] == '-1') ? 0 : (int)$data['start']
-            );
-            //$results=$this->commonModel->lists('blog', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
-            $totalRecords = $this->commonModel->count('users', $postData, $l);
-            $timeClass = new Time();
+            $users = auth()->getProvider();
+            $users->select('users.*, auth_identities.secret as email, auth_identities.force_reset')
+                ->withGroups()
+                ->withPermissions()
+                ->join('auth_identities', 'auth_identities.user_id = users.id')
+                ->where(['users.deleted_at' => null])
+                ->whereNotIn('users.id', function ($builder) {
+                    return $builder->select('user_id')->from('auth_groups_users')->join('auth_groups', 'auth_groups.group = auth_groups_users.group')->where('auth_groups.group', 'superadmin');
+                });
+            if (!empty($like)) {
+                $l = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
+                $users->groupStart();
+                foreach ($l as $field => $value) {
+                    $users->orLike($field, $value);
+                }
+                $users->groupEnd();
+            }
+            $results = $users->findAll(($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start']);
+
+            $users->select('users.*, auth_identities.secret as email')
+                ->join('auth_identities', 'auth_identities.user_id = users.id')
+                ->where(['users.deleted_at' => null])
+                ->whereNotIn('users.id', function ($builder) {
+                    return $builder->select('user_id')->from('auth_groups_users')->join('auth_groups', 'auth_groups.group = auth_groups_users.group')->where('auth_groups.group', 'superadmin');
+                });
+            if (!empty($like)) {
+                $l = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
+                $users->groupStart();
+                foreach ($l as $field => $value) {
+                    $users->orLike($field, $value);
+                }
+                $users->groupEnd();
+            }
+            $totalRecords = $users->countAllResults();
             foreach ($results as $result) {
-                $result->fullname = $result->firstname . ' ' . $result->surname;
+                $result->groupName = implode(',', $result->getGroups());
+                $result->fullname = esc($result->firstname) . ' ' . esc($result->surname);
                 $result->actions = '<a href="' . route_to('update_user', $result->id) . '" class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>';
                 if ($result->status == 'banned'):
-                    $result->actions .= '<button class="btn btn-outline-dark btn-sm open-blacklist-modal"
-                                            data-id="' . $result->id . '"><i
+                    $result->actions .= '<button type="button" class="btn btn-outline-dark btn-sm open-blacklist-modal"
+                                            data-id="' . $result->id . '" data-status="' . $result->status . '" data-note="' . $result->status_message . '"><i
                                                 class="fas fa-user-slash"></i> ' . lang('Users.inBlackList') . '
                                         </button>';
                 else:
-                    $result->actions .= '<button class="btn btn-outline-dark btn-sm open-blacklist-modal"
-                                            data-id="' . $result->id . '"><i
+                    $result->actions .= '<button type="button" class="btn btn-outline-dark btn-sm open-blacklist-modal"
+                                            data-id="' . $result->id . '" data-status="' . $result->status . '"><i
                                                 class="fas fa-user-slash"></i> ' . lang('Users.blackList') . '
                                         </button>';
                 endif;
-                $result->actions .= '<button class="btn btn-outline-dark btn-sm fpwd ';
-                if (!empty($result->reset_expires)) {
-                    $time = $timeClass::parse($result->reset_expires);
-                    if (time() < $time->getTimestamp())
-                        $result->actions .= 'disabled';
+                $result->actions .= '<button type="button" class="btn btn-outline-dark btn-sm fpwd' . $result->id . ' ';
+                if (!empty($result->force_reset)) {
+                    $result->actions .= 'disabled';
                 }
-                $result->actions .= '" data-uid="' . $result->id . '">' . lang('Users.resetPassword') . '</button>
+                $result->actions .= '" onclick="forceResetPassword(' . $result->id . ')" ';
+                if (!empty($result->force_reset)) {
+                    $result->actions .= 'disabled';
+                }
+                $result->actions .= '>' . lang('Users.resetPassword') . '</button>
                                     <a href="' . route_to('user_perms', $result->id) . '"
                                         class="btn btn-outline-primary btn-sm">
                                         <i class="fas fa-sitemap"></i> ' . lang('Users.spacialAuth') . '
                                     </a>
-                                    <a class="btn btn-outline-danger btn-sm" href="' . route_to('user_del', $result->id) . '">' . lang('Backend.delete') . '</a>';
+                                    <a href="javascript:void(0);" onclick="deleteItem(' . $result->id . ')"
+                                   class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>';
             }
             $data = [
                 'draw' => intval($data['draw']),
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalRecords,
-                'aaData' => $results,
+                'aaData' => array_values($results)
             ];
             return $this->respond($data, 200);
         }
@@ -86,78 +99,69 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
+                'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]|is_unique[users.username]',
                 'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
                 'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
+                'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email|is_unique[auth_identities.secret]'],
                 'group' => ['label' => 'Yetkisi', 'rules' => 'required'],
                 'password' => ['label' => 'Şifre', 'rules' => 'required|min_length[8]']
             ]);
 
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
-            if ($this->commonModel->isHave('users', ['email' => $this->request->getPost('email')]) === 1) return redirect()->back()->withInput()->with('errors', ['E-posta adresi daha önce kayıt edilmiş lütfen üye listesini kontrol ediniz.']);
-            $data = [
-                'email' => $this->request->getPost('email'),
-                'firstname' => $this->request->getPost('firstname'),
-                'surname' => $this->request->getPost('surname'),
-                'activate_hash' => $this->authLib->generateActivateHash(),
-                'password_hash' => $this->authLib->setPassword($this->request->getPost('password')),
-                'status' => 'deactive',
-                'group_id' => $this->request->getPost('group'),
-                'created_at' => new Time('now'),
-                'who_created' => (int)session()->get('logged_in')
-            ];
-            $result = $this->commonModel->create('users', $data);
-            $auth_users_permissions = [
-                [
-                    'page_id' => 1,
-                    'create_r' => true,
-                    'update_r' => true,
-                    'read_r' => true,
-                    'delete_r' => true,
-                    'who_perm' => !empty($this->defData['logged_in_user']->id) ? $this->defData['logged_in_user']->id : NULL,
-                    'created_at' => new Time('now'),
-                    'user_id' => $result
-                ],
-                [
-                    'page_id' => 9,
-                    'create_r' => true,
-                    'update_r' => true,
-                    'read_r' => true,
-                    'delete_r' => true,
-                    'who_perm' => !empty($this->defData['logged_in_user']->id) ? $this->defData['logged_in_user']->id : NULL,
-                    'created_at' => new Time('now'),
-                    'user_id' => $result
-                ],
-                [
-                    'page_id' => 10,
-                    'create_r' => true,
-                    'update_r' => true,
-                    'read_r' => true,
-                    'delete_r' => true,
-                    'who_perm' => !empty($this->defData['logged_in_user']->id) ? $this->defData['logged_in_user']->id : NULL,
-                    'created_at' => new Time('now'),
-                    'user_id' => $result
-                ]
-            ];
-            $this->commonModel->createMany('auth_users_permissions', $auth_users_permissions);
-            if ((bool)$result == false) return redirect()->back()->withInput()->with('error', 'Kullanıcı oluşturulamadı.');
-            $commonLibrary = new CommonLibrary();
-            $mailResult = $commonLibrary->phpMailer(
-                'noreply@' . $_SERVER['HTTP_HOST'],
-                'noreply@' . $_SERVER['HTTP_HOST'],
-                [['mail' => $this->request->getPost('email')]],
-                'noreply@' . $_SERVER['HTTP_HOST'],
-                'Information',
-                'Üyelik Aktivasyonu',
-                'Üyeliğiniz şirket yetkilisi tarafından oluşturuldu. Üyeliğinizi aktif etmek için lütfen <a href="' . site_url('backend/activate-account/' . $data['activate_hash']) . '"><b>buraya</b></a> tıklayınız. Tıkladıktan sonra sizinle paylaşılan <b>email</b> ve <b>şifre</b> ile giriş yapabilirsiniz.<br>E-mail adresi : ' . $this->request->getPost('email') . '<br>Şifreniz : ' . $this->request->getPost('password')
-            );
-            if ($mailResult === true) return redirect()->route('users', [1])->with('message', lang('Auth.activationSuccess'));
-            else return redirect()->back()->withInput()->with('error', $mailResult);
+            $users = auth()->getProvider();
+            try {
+                $d = [
+                    'email' => $this->request->getPost('email'),
+                    'firstname' => esc($this->request->getPost('firstname')),
+                    'surname' => esc($this->request->getPost('surname')),
+                    'password' => $this->request->getPost('password'),
+                    'active' => false,
+                    'username' => esc($this->request->getPost('username')),
+                    'who_created' => user_id()
+                ];
+                $user = new User($d);
+
+                if (!$users->save($user)) return redirect()->back()->withInput()->with('errors', $users->errors());
+                $new_user = $users->findById($users->getInsertID());
+
+                $group = $this->commonModel->selectOne('auth_groups', ['id' => $this->request->getPost('group')]);
+                $new_user->syncGroups($group->group);
+
+                $activator = new EmailActivator();
+
+                $code = $activator->createIdentity($new_user);
+
+                $emailSent = $this->sendActivationEmail($new_user, $code);
+                if (!$emailSent) {
+                    throw new \Exception($emailSent->printDebugger(['headers']));
+                }
+
+                return redirect()->route('users')->with('message', lang('Auth.activationSuccess'));
+            } catch (\Exception $e) {
+                return redirect()->back()->withInput()->with('error', $e->getMessage());
+            }
         }
-        $this->defData['groups'] = $this->commonModel->lists('auth_groups');
+        $this->defData['groups'] = $this->commonModel->lists('auth_groups', '*', ['group!=' => 'superadmin']);
         $this->defData['authLib'] = $this->authLib;
         return view('Modules\Users\Views\usersCrud\createUser', $this->defData);
+    }
+
+    private function sendActivationEmail($user, $code)
+    {
+        $url = url_to('register-verify-account');
+        $fullUrl = $url . '?token=' . $code;
+        $email = service('email');
+        $email->setFrom(setting('Email.fromEmail'), setting('Email.fromName') ?? '');
+        $email->setTo($user->email);
+        $email->setSubject(lang('Auth.emailActivateSubject'));
+
+        $email->setMessage(view(
+            'Modules\Users\Views\usersCrud\Email\email_activate_email',
+            ['url'  => $fullUrl, 'user' => $user],
+            ['debug' => false],
+        ));
+        return $email->send();
     }
 
     /**
@@ -168,6 +172,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
+                'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]',
                 'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
                 'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
@@ -178,25 +183,28 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
+            $user = auth()->getProvider();
+            if ($user->inGroup('superadmin')) return redirect()->route('403');
+            $u = $user->findById($id);
             $data = [
                 'email' => $this->request->getPost('email'),
-                'firstname' => $this->request->getPost('firstname'),
-                'surname' => $this->request->getPost('surname'),
-                'status' => 'deactive',
-                'force_pass_reset' => false,
+                'firstname' => esc($this->request->getPost('firstname')),
+                'surname' => esc($this->request->getPost('surname')),
                 'group_id' => $this->request->getPost('group'),
-                'created_at' => new Time('now'),
-                'who_created' => session()->get('logged_in')
+                'update_at' => date('Y-m-d H:i:s'),
+                'username' => esc($this->request->getPost('username')),
+                'who_created' => user_id(),
             ];
-            if ($this->request->getPost('password')) $data['password_hash'] = $this->authLib->setPassword($this->request->getPost('password'));
+            if ($this->request->getPost('password')) $data['password'] = $this->request->getPost('password');
 
-            $result = (string)$this->commonModel->edit('users', $data, ['id' => $id]);
-            if ((bool)$result == false) return redirect()->back()->withInput()->with('error', 'Kullanıcı oluşturulamadı.');
-            else return redirect()->route('users', [1])->with('message', 'Üyelik Güncellendi.');
+            $u->fill($data);
+            if ($user->save($u)) return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
+            else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$data['username']]));
         }
-        $this->defData['groups'] = $this->commonModel->lists('auth_groups');
-        $this->defData['authLib'] = $this->authLib;
-        $this->defData['userInfo'] = $this->commonModel->selectOne('users', ['id' => $id]);
+        $user = auth()->getProvider();
+        $this->defData['groups'] = $this->commonModel->lists('auth_groups', '*', ['group!=' => 'superadmin']);
+        $this->defData['userInfo'] = $user->findById($id);
+
         return view('Modules\Users\Views\usersCrud\updateUser', $this->defData);
     }
 
@@ -205,8 +213,17 @@ class UserController extends \Modules\Backend\Controllers\BaseController
      */
     public function user_del(string $id)
     {
-        if ($this->commonModel->edit('users', ['deleted_at' => date('Y-m-d H:i:s'), 'status' => 'deleted'], ['id' => $id]) === true) return redirect()->route('users', [1])->with('message', 'Üyelik Silindi.');
-        return redirect()->route('users', [1])->with('error', 'Üyelik Silinemedi.');
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $valData = ([
+            'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        $user = auth()->getProvider();
+        if ($user->inGroup('superadmin')) return redirect()->route('403');
+        if ($user->delete($this->request->getPost('id'), true)) {
+            return  $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$user->username])]);
+        }
+        return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$user->username])]);
     }
 
     /**
@@ -219,50 +236,87 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
                 'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
+                'profileIMG' => [
+                    'label' => 'Profil Resmi',
+                    'rules' => 'is_image[profileIMG]|mime_in[profileIMG,image/jpg,image/jpeg,image/png,image/webp]|max_size[profileIMG,2048]|max_dims[profileIMG,150,150]'
+                ]
             ]);
 
-            if ($this->request->getPost('password')) $valData['password'] = ['label' => 'Şifre', 'rules' => 'required|min_length[8]'];
+            if ($this->request->getPost('password')) {
+                $valData['password'] = ['label' => 'Şifre', 'rules' => 'required|min_length[8]'];
+            }
 
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) {
+                return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            }
 
-            $user = $this->commonModel->selectOne('users', ['id' => session()->get('logged_in')], 'email');
+            $users = auth()->getProvider();
+
+            $user = $users->findById(user_id());
 
             $data = [
                 'email' => $this->request->getPost('email'),
-                'firstname' => $this->request->getPost('firstname'),
-                'surname' => $this->request->getPost('surname')
+                'firstname' => esc($this->request->getPost('firstname')),
+                'surname' => esc($this->request->getPost('surname'))
             ];
 
-            if ($this->request->getPost('password')) $data['password_hash'] = $this->authLib->setPassword($this->request->getPost('password'));
+            // Image Upload Handling
+            $file = $this->request->getFile('profileIMG');
+            if ($file->isValid() && !$file->hasMoved()) {
+                $newName = $file->getRandomName();
+                if ($file->move(FCPATH . 'media/avatars', $newName)) {
+                    $data['profileIMG'] = '/media/avatars/' . $newName;
+                    // Optional: Delete old image if it exists and isn't default
+                    if (!empty($user->profileIMG) && file_exists(FCPATH . 'media/avatars/' . $user->profileIMG)) {
+                        @unlink(FCPATH . 'media/avatars/' . $user->profileIMG);
+                    }
+                }
+            }
+
+            if ($this->request->getPost('password')) {
+                $data['password'] = $this->request->getPost('password');
+            }
 
             if ($user->email != $data['email']) {
-                if ($this->commonModel->isHave('users', ['id!=' => $user->id, 'email' => $this->request->getPost('email')]) === 1) return redirect()->back()->withInput()->with('error', 'Daha önce bu mail adresi başka bir kullanıcı tarafından alınmıştır lütfen bilgilerinizi kontrol ediniz.');
-
-                $data['activate_hash'] = $this->authLib->generateActivateHash();
-                $data['status'] = 'deactive';
-
-                $result = $this->commonModel->edit('users', $data, ['id' => $user->id]);
-
-                if ((bool)$result == true) {
-                    $commonLibrary = new CommonLibrary();
-                    $mailResult = $commonLibrary->phpMailer(
-                        'noreply@' . $_SERVER['HTTP_HOST'],
-                        'noreply@' . $_SERVER['HTTP_HOST'],
-                        ['mail' => $this->request->getPost('email')],
-                        'noreply@' . $_SERVER['HTTP_HOST'],
-                        'Information',
-                        'Mail Aktivasyonu',
-                        'Mail adresiniz tarafınızdan güncellenmiştir. Lütfen <a href="' . site_url('backend/activate-email/' . $data['activate_hash']) . '"><b>buraya</b></a> tıklayınız.'
-                    );
-                    if ($mailResult === true) return redirect()->route('users', [1])->with('message', 'Üyelik oluşturuldu. Aktiflik maili gönderildi.');
-                    else return redirect()->back()->withInput()->with('error', $mailResult);
+                $existingUser = $users->findByCredentials(['email' => $data['email']]);
+                if ($existingUser && $existingUser->id != $user->id) {
+                    return redirect()->back()->withInput()->with('error', 'Daha önce bu mail adresi başka bir kullanıcı tarafından alınmıştır lütfen bilgilerinizi kontrol ediniz.');
                 }
-            } else $result = $this->commonModel->edit('users', $data, ['id' => session()->get('logged_in')]);
 
-            if ((bool)$result == false) return redirect()->back()->withInput()->with('error', 'Profil Güncellenemedi.');
-            else return redirect()->back()->withInput()->with('message', 'Profil Güncellendi.');
+
+                $user->fill($data);
+                $result = $users->save($user);
+                if ($result) {
+                    $activator = new EmailActivator();
+                    $code = $activator->createIdentity($user);
+                    $url = url_to('register-verify-account');
+                    $fullUrl = $url . '?token=' . $code;
+                    $email = service('email');
+                    $email->setFrom(setting('Email.fromEmail'), setting('Email.fromName') ?? '');
+                    $email->setTo($user->email);
+                    $email->setSubject(lang('Auth.emailActivateSubject'));
+
+                    $email->setMessage(view(
+                        'Modules\Users\Views\usersCrud\Email\profile_email_activate_email',
+                        ['url'  => $fullUrl, 'user' => $user],
+                        ['debug' => false],
+                    ));
+                    if (!$email->send()) {
+                        throw new \Exception($email->printDebugger(['headers']));
+                    }
+                }
+                if ($result) {
+                    return redirect()->route('logout');
+                }
+            } else {
+                $user->fill($data);
+                $result = $users->save($user);
+            }
+
+            if ((bool)$result == false) return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [esc($user->firstname . ' ' . $user->surname)]));
+            else return redirect()->back()->with('message', lang('Backend.updated', [esc($user->firstname . ' ' . $user->surname)]));
         }
-        $this->defData['user'] = $this->commonModel->selectOne('users', ['id' => session()->get('logged_in')], 'email,firstname,surname');
+        $this->defData['user'] = auth()->getProvider()->findById(user_id());
         return view('Modules\Users\Views\usersCrud\profile', $this->defData);
     }
 
@@ -272,14 +326,19 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     public function ajax_blackList_post()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        $valData = (['note' => ['label' => 'Note', 'rules' => 'required'], 'uid' => ['label' => 'Kullanıcı id', 'rules' => 'required']]);
+        $valData = (['note' => ['label' => 'Note', 'rules' => 'required'], 'uid' => ['label' => 'uid', 'rules' => 'required|is_natural_no_zero']]);
         if ($this->validate($valData) == false) return $this->validator->getErrors();
-        $result = [];
-        if ($this->commonModel->isHave('black_list_users', ['blacked_id' => $this->request->getPost('uid')]) === 0) $bid = $this->commonModel->create('black_list_users', ['blacked_id' => $this->request->getPost('uid'), 'who_blacklisted' => session()->get('logged_in'), 'notes' => $this->request->getPost('note'), 'created_at' => new Time('now')]);
-        else $result = ['result' => true, 'error' => ['type' => 'warning', 'message' => 'üyelik karalisteye daha önce eklendi.']];
 
-        if (!empty($bid) && $this->commonModel->edit('users', ['status' => 'banned', 'statusMessage' => $this->request->getPost('note')], ['id' => $this->request->getPost('uid')])) $result = ['result' => true, 'error' => ['type' => 'success', 'message' => 'üyelik karalisteye eklendi.']];
-        else $result = ['result' => true, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteye eklenemedi.']];
+        $user = auth()->getProvider()->findById($this->request->getPost('uid'));
+        if ($user->inGroup('superadmin')) return $this->failForbidden();
+        $user->ban($this->request->getPost('note'));
+        $this->commonModel->edit('auth_identities', ['who_banned' => user_id()], ['user_id' => $this->request->getPost('uid')],);
+        $result = [];
+
+        if ($user->isBanned()) {
+            $result = ['result' => true, 'error' => ['type' => 'success', 'message' => 'üyelik karalisteye eklendi.']];
+            $user->forcePasswordReset();
+        } else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteye eklenemedi.']];
 
         return $this->respond($result, 200);
     }
@@ -287,34 +346,18 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     public function ajax_remove_from_blackList_post()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        $valData = (['uid' => ['label' => 'Kullanıcı id', 'rules' => 'required']]);
+        $valData = (['uid' => ['label' => 'Kullanıcı id', 'rules' => 'required|is_natural_no_zero']]);
 
         if ($this->validate($valData) == false) return $this->validator->getErrors();
+        $user = auth()->getProvider()->findById($this->request->getPost('uid'));
+        if ($user->inGroup('superadmin')) return $this->failForbidden();
 
+        $user->unBan();
+        $this->commonModel->edit('auth_identities', ['who_banned' => null], ['user_id' => $this->request->getPost('uid')],);
         $result = [];
-
-        $pwd = $this->authLib->randomPassword();
-        $data = [
-            'password_hash' => $this->authLib->setPassword($pwd),
-            'status' => 'deactive',
-            'activate_hash' => $this->authLib->generateActivateHash(),
-            'statusMessage' => null
-        ];
-        if ($this->commonModel->update('users', $data, ['id' => $this->request->getPost('uid')]) && $this->commonModel->deleteOne('black_list_users', ['blacked_id' => $this->request->getPost('uid')])) {
-            $user = $this->commonModel->selectOne('users', ['id' => $this->request->getPost('uid')], 'email');
-
-            $commonLibrary = new CommonLibrary();
-            $mailResult = $commonLibrary->phpMailer(
-                'noreply@' . $_SERVER['HTTP_HOST'],
-                'noreply@' . $_SERVER['HTTP_HOST'],
-                ['mail' => $user->email],
-                'noreply@' . $_SERVER['HTTP_HOST'],
-                'Information',
-                'Mail Aktivasyonu',
-                'Üyeliğinizi yeniden aktif edebilimeniz için şirket yetkilisi müdehale etti. Üyeliğinizi aktif etmek için lütfen <a href="' . site_url('backend/activate-account/' . $data['activate_hash']) . '"><b>buraya</b></a> tıklayınız. Tıkladıktan sonra sizinle paylaşılan <b>email</b> ve <b>şifre</b> ile giriş yapabilirsiniz.<br>E-mail adresi : ' . $user->email . '<br>Şifreniz : ' . $pwd
-            );
-            if ($mailResult === true) $result = ['result' => true, 'error' => ['type' => 'success', 'message' => $user->email . ' e-mail adresli üyelik karalisteden çıkarıldı.']];
-            else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => $mailResult]];
+        if (!$user->isBanned()) {
+            $result = ['result' => true, 'error' => ['type' => 'success', 'message' => $user->email . ' e-mail adresli üyelik karalisteden çıkarıldı.']];
+            $user->undoForcePasswordReset();
         } else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteden çıkarılamadı.']];
 
         return $this->response->setJSON($result);
@@ -323,27 +366,22 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     public function ajax_force_reset_password()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        $valData = (['uid' => ['label' => 'Kullanıcı id', 'rules' => 'required']]);
+        $valData = (['uid' => ['label' => 'Kullanıcı id', 'rules' => 'required|is_natural_no_zero']]);
 
         if ($this->validate($valData) == false) return $this->validator->getErrors();
 
+        $user = auth()->getProvider()->findById($this->request->getPost('uid'));
+        if ($user->inGroup('superadmin')) return $this->failForbidden();
         $result = [];
-
-        if ($this->commonModel->edit('users', ['status' => 'deactive', 'reset_hash' => $this->authLib->generateActivateHash(), 'reset_expires' => date('Y-m-d H:i:s', time() + $this->config->resetTime)], ['id' => $this->request->getPost('uid')])) {
-            $user = $this->commonModel->selectOne('users', ['id' => $this->request->getPost('uid')]);
-            $commonLibrary = new CommonLibrary();
-            $mailResult = $commonLibrary->phpMailer(
-                'noreply@' . $_SERVER['HTTP_HOST'],
-                'noreply@' . $_SERVER['HTTP_HOST'],
-                ['mail' => $user->email],
-                'noreply@' . $_SERVER['HTTP_HOST'],
-                'Information',
-                'Üyelik Şifre Sıfırlama',
-                'Üyeliğinizin şifre sıfırlaması yetkili gerçekleştirildi. Şifre yenileme isteğiniz ' . date('d-m-Y H:i:s', strtotime($user->reset_expires)) . ' tarihine kadar geçerlidir. Lütfen yeni şifrenizi belirlemek için <a href="' . site_url('backend/reset-password/' . $user->reset_hash) . '"><b>buraya</b></a> tıklayınız.'
-            );
-            if ($mailResult === true) $result = ['result' => true, 'error' => ['type' => 'success', 'message' => $user->email . ' e-posta adresli kullanıcıya şifre yenileme maili atıldı.']];
-            else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => $mailResult]];
-        } else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => 'Şifre sıfırlama isteği gerçekleştirilemedi.']];
+        if ($user->requiresPasswordReset()) {
+            $result = ['result' => true, 'error' => ['type' => 'warning', 'message' => $user->email . ' e-mail adresli üyelik şifre sıfırlama adımında.']];
+        } else {
+            $user->forcePasswordReset();
+            if ($user->requiresPasswordReset())
+                $result = ['result' => true, 'error' => ['type' => 'success', 'message' => $user->email . ' e-mail adresli üyelik şifre sıfırlandı.']];
+            else
+                $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => $user->email . ' e-mail adresli üyelik şifre sıfırlanamadı.']];
+        }
 
         return $this->response->setJSON($result);
     }

@@ -1,24 +1,24 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
-<?= $this->endSection() ?>
+<?php echo $this->section('title') ?>
+<?php echo lang($title->pagename) ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('content') ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang($title->pagename) ?></h1>
+                <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <div class="btn-group float-sm-right" role="group" aria-label="Basic example">
                     <button class="btn btn-outline-info" id="moduleScan">
-                        <i class="fas fa-recycle"></i> <?=lang('Methods.scanModules')?>
+                        <i class="fas fa-recycle"></i> <?php echo lang('Methods.scanModules') ?>
                     </button>
-                    <a href="<?= route_to('methodCreate') ?>" class="btn btn-outline-success">
-                        <?= lang('Backend.add') ?>
+                    <a href="<?php echo route_to('methodCreate') ?>" class="btn btn-outline-success">
+                        <?php echo lang('Backend.add') ?>
                     </a>
                 </div>
             </div>
@@ -32,7 +32,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang($title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -41,15 +41,14 @@
             </div>
         </div>
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
             <div class="row mb-4">
                 <div class="col-md-3 col-sm-6 col-12">
                     <div class="info-box">
                         <span class="info-box-icon bg-primary"><i class="fas fa-cubes"></i></span>
 
                         <div class="info-box-content">
-                            <span class="info-box-text"><?=lang('Methods.totalModules')?></span>
-                            <span class="info-box-number"><?= count($modules) ?></span>
+                            <span class="info-box-text"><?php echo lang('Methods.totalModules') ?></span>
+                            <span class="info-box-number"><?php echo count($modules) ?></span>
                         </div>
                         <!-- /.info-box-content -->
                     </div>
@@ -61,8 +60,8 @@
                         <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
 
                         <div class="info-box-content">
-                            <span class="info-box-text"><?=lang('Methods.activeModules')?></span>
-                            <span class="info-box-number"><?= count(array_filter($modules, fn($m) => $m->active)) ?></span>
+                            <span class="info-box-text"><?php echo lang('Methods.activeModules') ?></span>
+                            <span class="info-box-number"><?php echo count(array_filter($modules, fn($m) => $m->active)) ?></span>
                         </div>
                         <!-- /.info-box-content -->
                     </div>
@@ -74,8 +73,8 @@
                         <span class="info-box-icon bg-warning"><i class="fas fa-file-alt text-light"></i></span>
 
                         <div class="info-box-content">
-                            <span class="info-box-text"><?=lang('Methods.totalPages')?></span>
-                            <span class="info-box-number"><?= array_sum(array_map(fn($m) => count($m->pages), $modules)) ?></span>
+                            <span class="info-box-text"><?php echo lang('Methods.totalPages') ?></span>
+                            <span class="info-box-number"><?php echo array_sum(array_map(fn($m) => count($m->pages), $modules)) ?></span>
                         </div>
                         <!-- /.info-box-content -->
                     </div>
@@ -87,7 +86,7 @@
                         <span class="info-box-icon bg-info"><i class="fas fa-sitemap"></i></span>
 
                         <div class="info-box-content">
-                            <span class="info-box-text"><?=lang('Methods.inNavigation')?></span>
+                            <span class="info-box-text"><?php echo lang('Methods.inNavigation') ?></span>
                             <span class="info-box-number"><?php
                                                             $navCount = 0;
                                                             foreach ($modules as $module) {
@@ -109,33 +108,33 @@
                 <div class="col-12 card filter-section">
                     <div class="row card-body g-3">
                         <div class="col-md-4 form-group">
-                            <label class="form-label"><?=lang('Methods.moduleName')?></label>
+                            <label class="form-label"><?php echo lang('Methods.moduleName') ?></label>
                             <select class="form-control" id="moduleFilter">
-                                <option value=""><?=lang('Methods.allModules')?></option>
+                                <option value=""><?php echo lang('Methods.allModules') ?></option>
                                 <?php foreach ($modules as $module) { ?>
-                                    <option value="<?= $module->id ?>"><?= $module->name ?></option>
+                                    <option value="<?php echo $module->id ?>"><?php echo $module->name ?></option>
                                 <?php } ?>
                             </select>
                         </div>
                         <div class="col-md-4 form-group">
-                            <label class="form-label"><?=lang('Methods.pageName')?></label>
-                            <input type="text" class="form-control" id="pageFilter" placeholder="<?=lang('Backend.search')?>">
+                            <label class="form-label"><?php echo lang('Methods.pageName') ?></label>
+                            <input type="text" class="form-control" id="pageFilter" placeholder="<?php echo lang('Backend.search') ?>">
                         </div>
                         <div class="col-md-4 form-group">
-                            <label class="form-label"><?=lang('Backend.status')?></label>
+                            <label class="form-label"><?php echo lang('Backend.status') ?></label>
                             <select class="form-control" id="statusFilter">
-                                <option value=""><?=lang('Backend.select')?></option>
-                                <option value="active"><?=lang('Backend.active')?></option>
-                                <option value="inactive"><?=lang('Backend.passive')?></option>
+                                <option value=""><?php echo lang('Backend.select') ?></option>
+                                <option value="active"><?php echo lang('Backend.active') ?></option>
+                                <option value="inactive"><?php echo lang('Backend.passive') ?></option>
                             </select>
                         </div>
                         <div class="col-12 form-group">
                             <div class="d-flex justify-content-end">
                                 <button id="resetFilters" class="btn btn-outline-secondary me-2">
-                                    <i class="fas fa-undo me-1"></i> <?=lang('Backend.reset')?>
+                                    <i class="fas fa-undo me-1"></i> <?php echo lang('Backend.reset') ?>
                                 </button>
                                 <button id="applyFilters" class="btn btn-primary">
-                                    <i class="fas fa-filter me-1"></i> <?=lang('Backend.filter')?>
+                                    <i class="fas fa-filter me-1"></i> <?php echo lang('Backend.filter') ?>
                                 </button>
                             </div>
                         </div>
@@ -143,26 +142,26 @@
                 </div>
                 <div class="col-12">
                     <?php foreach ($modules as $module): ?>
-                        <div class="card module-card" data-module-id="<?= $module->id ?>" data-status="<?= $module->active ? 'active' : 'inactive' ?>">
+                        <div class="card module-card" data-module-id="<?php echo $module->id ?>" data-status="<?php echo $module->active ? 'active' : 'inactive' ?>">
                             <div class="card-header">
                                 <div class="d-flex align-items-center">
                                     <div class="module-title">
                                         <div class="icon bg-secondary">
-                                            <i class="<?= $module->icon ?>"></i>
+                                            <i class="<?php echo $module->icon ?>"></i>
                                         </div>
                                         <div>
-                                            <h5 class="mb-0"><?= htmlspecialchars($module->name) ?></h5>
-                                            <small class="text-muted"><?= date('d.m.Y', strtotime($module->created)) ?></small>
-                                            <span class="badge bg-primary"><?=lang('Methods.methodCount',[count($module->pages)])?></span>
+                                            <h5 class="mb-0"><?php echo htmlspecialchars($module->name) ?></h5>
+                                            <small class="text-muted"><?php echo date('d.m.Y', strtotime($module->created)) ?></small>
+                                            <span class="badge bg-primary"><?php echo lang('Methods.methodCount', [count($module->pages)]) ?></span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="w-100 text-right">
                                     <div class="module-toggle float-right">
-                                        <span class="module-toggle-label"><?= $module->active ? lang('Backend.active') : lang('Backend.passive') ?></span>
+                                        <span class="module-toggle-label"><?php echo $module->active ? lang('Backend.active') : lang('Backend.passive') ?></span>
                                         <label class="toggle-switch">
-                                            <input type="checkbox" class="module-toggle-input" <?= $module->active ? 'checked' : '' ?>>
+                                            <input type="checkbox" class="module-toggle-input" <?php echo $module->active ? 'checked' : '' ?>>
                                             <span class="toggle-slider"></span>
                                         </label>
                                     </div>
@@ -170,38 +169,38 @@
                             </div>
                             <div class="card-body p-0">
                                 <?php if (empty($module->pages)): ?>
-                                    <div class="alert alert-warning"><?=lang('Methods.noPagesFound')?></div>
+                                    <div class="alert alert-warning"><?php echo lang('Methods.noPagesFound') ?></div>
                                     <?php else:
                                     foreach ($module->pages as $page): ?>
-                                        <div class="page-item" data-page-id="<?= $page->id ?>" data-status="<?= $page->isActive ? 'active' : 'inactive' ?>" data-content="<?= htmlspecialchars($page->description) ?>">
+                                        <div class="page-item" data-page-id="<?php echo $page->id ?>" data-status="<?php echo $page->isActive ? 'active' : 'inactive' ?>" data-content="<?php echo htmlspecialchars($page->description) ?>">
                                             <div class="d-flex">
-                                                <div class="page-name w-100 d-flex"><?= htmlspecialchars($page->pagename) ?>
+                                                <div class="page-name w-100 d-flex"><?php echo htmlspecialchars($page->pagename) ?>
                                                     <?php if ($page->inNavigation): ?>
-                                                        <span class="ml-2 badge bg-info d-flex align-items-center"><?=lang('Methods.navigation')?></span>
+                                                        <span class="ml-2 badge bg-info d-flex align-items-center"><?php echo lang('Methods.navigation') ?></span>
                                                     <?php endif; ?>
                                                     <?php if ($page->hasChild): ?>
-                                                        <span class="ml-2 badge bg-warning d-flex align-items-center"><?=lang('Methods.hasChildPages')?></span>
+                                                        <span class="ml-2 badge bg-warning d-flex align-items-center"><?php echo lang('Methods.hasChildPages') ?></span>
                                                     <?php endif; ?>
                                                 </div>
                                                 <div class="text-right w-100">
-                                                    <span class="status-badge status-<?= $page->isActive == true ? 'active' : 'inactive' ?>"><?= $page->isActive == true ? lang('Backend.active') : lang('Backend.passive') ?></span>
+                                                    <span class="status-badge status-<?php echo $page->isActive == true ? 'active' : 'inactive' ?>"><?php echo $page->isActive == true ? lang('Backend.active') : lang('Backend.passive') ?></span>
                                                 </div>
                                             </div>
-                                            <div class="page-description"><?= htmlspecialchars($page->description) ?></div>
+                                            <div class="page-description"><?php echo htmlspecialchars($page->description) ?></div>
                                             <div class="page-meta">
                                                 <div class="meta-item">
                                                     <i class="fas fa-code me-1"></i>
-                                                    <?= htmlspecialchars(str_replace('-', '\\', $page->className)) ?>::<?= htmlspecialchars($page->methodName) ?>
+                                                    <?php echo htmlspecialchars(str_replace('-', '\\', $page->className)) ?>::<?php echo htmlspecialchars($page->methodName) ?>
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="fas fa-link me-1"></i>
-                                                    <?= htmlspecialchars($page->sefLink) ?>
+                                                    <?php echo htmlspecialchars($page->sefLink) ?>
                                                 </div>
                                             </div>
                                             <label class="toggle-switch page-toggle">
-                                                <input type="checkbox" <?= $page->isActive ? 'checked' : '' ?>>
+                                                <input type="checkbox" <?php echo $page->isActive ? 'checked' : '' ?>>
                                                 <span class="toggle-slider"></span>
-                                                <a href="<?= route_to('methodUpdate', $page->id) ?>" class="btn btn-info float-right mt-3 btn-sm"><?= lang('Backend.update') ?></a>
+                                                <a href="<?php echo route_to('methodUpdate', $page->id) ?>" class="btn btn-info float-right mt-3 btn-sm"><?php echo lang('Backend.update') ?></a>
                                             </label>
                                         </div>
                                 <?php endforeach;
@@ -218,17 +217,17 @@
 
 </section>
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('javascript') ?>
-<script>
+<?php echo $this->section('javascript') ?>
+<script {csp-script-nonce}>
     $('#moduleScan').on('click', function() {
         $.ajax({
-            url: '<?= route_to('moduleScan') ?>',
+            url: '<?php echo route_to('moduleScan') ?>',
             type: 'POST',
             beforeSend: function() {
                 Swal.fire({
-                    title: '<?=lang('Methods.modulesLoading')?>',
+                    title: '<?php echo lang('Methods.modulesLoading') ?>',
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
@@ -237,15 +236,15 @@
             },
             success: function(response) {
                 if (response.result === true) {
-                    Swal.fire('<?=lang('Methods.modulesLoaded')?>', '', 'success').then((result) => {
+                    Swal.fire('<?php echo lang('Methods.modulesLoaded') ?>', '', 'success').then((result) => {
                         if (result.isConfirmed) location.reload();
                     });
                 } else {
-                    Swal.fire('<?=lang('Methods.noNewModules')?>', '<?=lang('Methods.noNewModulesError')?>', 'warning');
+                    Swal.fire('<?php echo lang('Methods.noNewModules') ?>', '<?php echo lang('Methods.noNewModulesError') ?>', 'warning');
                 }
             },
             error: function() {
-                Swal.fire('<?=lang('Methods.modulesLoadError')?>', '', 'error');
+                Swal.fire('<?php echo lang('Methods.modulesLoadError') ?>', '', 'error');
             }
         });
     });
@@ -314,7 +313,7 @@
         // Sonuç yoksa mesaj göster
         if (!hasResults) {
             if ($('#noResultsMessage').length === 0) {
-                $('#modulesContainer').append('<div id="noResultsMessage" class="no-results"><?=lang('Methods.noResults')?></div>');
+                $('#modulesContainer').append('<div id="noResultsMessage" class="no-results"><?php echo lang('Methods.noResults') ?></div>');
             }
         } else {
             $('#noResultsMessage').remove();
@@ -349,25 +348,25 @@
 
         if (this.checked) {
             moduleCard.removeClass('inactive');
-            moduleStatusLabel.text('<?=lang('Backend.active')?>');
+            moduleStatusLabel.text('<?php echo lang('Backend.active') ?>');
             moduleCard.find('.page-toggle input').each(function() {
                 $(this).prop('checked', true);
                 $(this).closest('.page-item').removeClass('inactive');
-                $(this).closest('.page-item').find('.status-badge').text('<?=lang('Backend.active')?>').attr('class', 'status-badge status-active');
+                $(this).closest('.page-item').find('.status-badge').text('<?php echo lang('Backend.active') ?>').attr('class', 'status-badge status-active');
             });
         } else {
             moduleCard.addClass('inactive');
-            moduleStatusLabel.text('<?=lang('Backend.passive')?>');
+            moduleStatusLabel.text('<?php echo lang('Backend.passive') ?>');
             moduleCard.find('.page-toggle input').each(function() {
                 $(this).prop('checked', false);
                 $(this).closest('.page-item').addClass('inactive');
-                $(this).closest('.page-item').find('.status-badge').text('<?=lang('Backend.passive')?>').attr('class', 'status-badge status-inactive');
+                $(this).closest('.page-item').find('.status-badge').text('<?php echo lang('Backend.passive') ?>').attr('class', 'status-badge status-inactive');
             });
         }
 
         // AJAX isteği gönder
         $.ajax({
-            url: '<?= route_to('methods') ?>',
+            url: '<?php echo route_to('methods') ?>',
             type: 'POST',
             data: {
                 module_id: moduleCard.data('module-id'),
@@ -376,26 +375,26 @@
             success: function(response) {
                 if (response.success) {
                     Swal.fire({
-                        title: '<?=lang('Backend.success')?>',
-                        text: '<?=lang('Methods.moduleStatusUpdated')?>',
+                        title: '<?php echo lang('Backend.success') ?>',
+                        text: '<?php echo lang('Methods.moduleStatusUpdated') ?>',
                         icon: 'success',
-                        confirmButtonText: '<?=lang('Backend.ok')?>'
+                        confirmButtonText: '<?php echo lang('Backend.ok') ?>'
                     });
                 } else {
                     Swal.fire({
-                        title: '<?=lang('Backend.error')?>',
-                        text: '<?=lang('Backend.moduleStatusUpdateFailed')?>',
+                        title: '<?php echo lang('Backend.error') ?>',
+                        text: '<?php echo lang('Backend.moduleStatusUpdateFailed') ?>',
                         icon: 'error',
-                        confirmButtonText: '<?=lang('Backend.ok')?>'
+                        confirmButtonText: '<?php echo lang('Backend.ok') ?>'
                     });
                 }
             },
             error: function() {
                 Swal.fire({
-                    title: '<?=lang('Backend.error')?>',
-                    text: '<?=lang('Backend.serverConnectionError')?>',
+                    title: '<?php echo lang('Backend.error') ?>',
+                    text: '<?php echo lang('Backend.serverConnectionError') ?>',
                     icon: 'error',
-                    confirmButtonText: '<?=lang('Backend.ok')?>'
+                    confirmButtonText: '<?php echo lang('Backend.ok') ?>'
                 });
             }
         });
@@ -407,15 +406,15 @@
         const statusBadge = pageItem.find('.status-badge');
         if (this.checked) {
             pageItem.removeClass('inactive');
-            statusBadge.text('<?=lang('Backend.active')?>').attr('class', 'status-badge status-active');
+            statusBadge.text('<?php echo lang('Backend.active') ?>').attr('class', 'status-badge status-active');
         } else {
             pageItem.addClass('inactive');
-            statusBadge.text('<?=lang('Backend.passive')?>').attr('class', 'status-badge status-inactive');
+            statusBadge.text('<?php echo lang('Backend.passive') ?>').attr('class', 'status-badge status-inactive');
         }
 
         // AJAX isteği gönder
         $.ajax({
-            url: '<?= route_to('methods') ?>',
+            url: '<?php echo route_to('methods') ?>',
             type: 'POST',
             data: {
                 page_id: pageItem.data('page-id'),
@@ -424,29 +423,29 @@
             success: function(response) {
                 if (response.success) {
                     Swal.fire({
-                        title: '<?=lang('Backend.success')?>',
-                        text: '<?=lang('Methods.pageStatusUpdated')?>',
+                        title: '<?php echo lang('Backend.success') ?>',
+                        text: '<?php echo lang('Methods.pageStatusUpdated') ?>',
                         icon: 'success',
-                        confirmButtonText: '<?=lang('Backend.ok')?>'
+                        confirmButtonText: '<?php echo lang('Backend.ok') ?>'
                     });
                 } else {
                     Swal.fire({
-                        title: '<?=lang('Backend.error')?>',
-                        text: '<?=lang('Methods.pageStatusUpdateFailed')?>',
+                        title: '<?php echo lang('Backend.error') ?>',
+                        text: '<?php echo lang('Methods.pageStatusUpdateFailed') ?>',
                         icon: 'error',
-                        confirmButtonText: '<?=lang('Backend.ok')?>'
+                        confirmButtonText: '<?php echo lang('Backend.ok') ?>'
                     });
                 }
             },
             error: function() {
                 Swal.fire({
-                    title: '<?=lang('Backend.error')?>',
-                    text: '<?=lang('Methods.serverConnectionError')?>',
+                    title: '<?php echo lang('Backend.error') ?>',
+                    text: '<?php echo lang('Methods.serverConnectionError') ?>',
                     icon: 'error',
-                    confirmButtonText: '<?=lang('Backend.ok')?>'
+                    confirmButtonText: '<?php echo lang('Backend.ok') ?>'
                 });
             }
         });
     });
 </script>
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

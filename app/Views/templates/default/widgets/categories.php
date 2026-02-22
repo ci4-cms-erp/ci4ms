@@ -5,20 +5,20 @@
         <div class="row">
             <?php $c = 0;
             foreach ($categories as $category):
-                if ($c == 0):?>
+                if ($c == 0): ?>
                     <div class="col-sm-6">
-                    <ul class="list-unstyled mb-0">
-                <?php endif; ?>
-                <li>
-                    <a href="<?= site_url('category/' . $category->seflink) ?>"><?= esc($category->title) ?></a>
-                </li>
-                <?php if ($c == 0): ?>
-                </ul>
-                </div>
+                        <ul class="list-unstyled mb-0">
+                        <?php endif; ?>
+                        <li>
+                            <a href="<?php echo site_url('category/' . $category->seflink) ?>"><?php echo esc($category->title) ?></a>
+                        </li>
+                        <?php if ($c == 0): ?>
+                        </ul>
+                    </div>
             <?php endif;
-                $c++;
-                if ($c == 3) $c = 0;
-            endforeach; ?>
+                        $c++;
+                        if ($c == 3) $c = 0;
+                    endforeach; ?>
         </div>
     </div>
 </div>

@@ -91,7 +91,7 @@ class Autoload extends AutoloadConfig
      *
      * @var list<string>
      */
-    public $helpers = ['text', 'filesystem', 'html'];
+    public $helpers = ['text', 'filesystem', 'html', 'auth', 'setting', 'form'];
 
     private string $modulesPath = ROOTPATH . 'modules/';
     public function __construct()

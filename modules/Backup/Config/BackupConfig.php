@@ -7,7 +7,7 @@ class BackupConfig {
     ];
 
     public $filters=[
-        'backendAfterLoginFilter' => ['before' => [
+        'backendGuard' => ['before' => [
             'backend/backup','backend/backup/*'
             ]
         ]

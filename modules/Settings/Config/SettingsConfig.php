@@ -12,7 +12,7 @@ class SettingsConfig extends \CodeIgniter\Config\BaseConfig
     ];
 
     public $filters = [
-        'backendAfterLoginFilter' => ['before' => [
+        'backendGuard' => ['before' => [
             'backend/settings',
             'backend/settings/*',
         ]]

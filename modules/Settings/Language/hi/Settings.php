@@ -1,5 +1,4 @@
 <?php
-
 return [
     'settings' => 'सेटिंग्स',
     'siteSettings' => 'साइट सेटिंग अपडेट करें',
@@ -8,7 +7,6 @@ return [
     'socialMedia' => 'सोशल मीडिया',
     'socialMediaLink' => 'सोशल मीडिया लिंक',
     'mailSettings' => 'मेल सेटिंग्स',
-    'lockedSettings' => 'लॉगिन सेटिंग्स',
     'companyName' => 'कंपनी का नाम',
     'websiteUrl' => 'वेबसाइट यूआरएल',
     'companySlogan' => 'नारा',
@@ -25,18 +23,6 @@ return [
     'mailProtocol' => 'मेल प्रोटोकॉल',
     'allowedFiles' => 'अनुमत फ़ाइल प्रकार सहेजें',
     'fileTypes' => 'फ़ाइल प्रकार',
-    'lockingCounter' => 'काउंटर लॉक करें',
-    'blockedTime' => 'अवरोधन अवधि <small>(मिनट)</small>',
-    'tryCounter' => 'प्रयास गणना',
-    'lockedUserNotification' => 'उपयोगकर्ता अधिसूचना',
-    'locketAdminNotification' => 'प्रशासक अधिसूचना',
-    'separateWithComma' => '<small>अल्पविराम से अलग करें</small>',
-    'blockIps' => 'आईपी ​​रेंज को ब्लॉक करें',
-    'blockIp' => 'सिंगल आईपी को ब्लॉक करें',
-    'blockUsername' => 'उपयोगकर्ता नाम ब्लॉक करें',
-    'trustedIps' => 'विश्वसनीय आईपी रेंज',
-    'trustedIp' => 'विश्वसनीय एकल आईपी',
-    'trustedUsername' => 'विश्वसनीय उपयोगकर्ता नाम',
     'templateSettings' => 'थीम सेटिंग्स',
     'elfinderConvertWebp' => 'वेबपी प्रारूप में कनवर्ट करें',
     'socialMediaNameOrLinkRequired' => 'सोशल मीडिया नाम या लिंक खाली नहीं हो सकता',

@@ -1,4 +1,6 @@
-<?php namespace Modules\Auth\Controllers;
+<?php
+
+namespace Modules\Auth\Controllers;
 
 /**
  * Class BaseController
@@ -16,13 +18,11 @@
 use ci4commonModel\Models\CommonModel;
 use CodeIgniter\Controller;
 use Modules\Auth\Config\AuthConfig;
-use Modules\Auth\Libraries\AuthLibrary;
 
 class BaseController extends Controller
 {
     protected $session;
     protected $config;
-    protected $authLib;
     public $commonModel;
     /**
      * An array of helpers to be loaded automatically upon
@@ -49,27 +49,10 @@ class BaseController extends Controller
 
         $this->session = service('session');
         $this->config = new AuthConfig();
-        $this->authLib = new AuthLibrary();
         $this->commonModel = new CommonModel();
-        $this->authLib->check();
-        if(empty(cache('settings'))){
-            $settings=$this->commonModel->lists('settings');
-            cache()->save('settings',$settings,86400);
-        }
-        else $settings=(object)cache()->get('settings');
-        $encrypter = \Config\Services::encrypter();
-        $this->config->mailConfig=['protocol' => $settings->mail->protocol,
-            'SMTPHost' => $settings->mail->server,
-            'SMTPPort' => $settings->mail->port,
-            'SMTPUser' => $settings->mail->address,
-            'SMTPPass' => $encrypter->decrypt(base64_decode($settings->mail->password)),
-            'charset' => 'UTF-8',
-            'mailtype' => 'html',
-            'wordWrap' => 'true',
-            'TLS'=>$settings->mail->tls,
-            'newline' => "\r\n"];
-        if($settings->mail->protocol==='smtp')
-            $this->config->mailConfig['SMTPCrypto']='PHPMailer::ENCRYPTION_STARTTLS';
+        if (empty(cache('settings'))) {
+            $settings = $this->commonModel->lists('settings');
+            cache()->save('settings', $settings, 86400);
+        } else $settings = (object)cache()->get('settings');
     }
-
 }

@@ -11,20 +11,20 @@ class Install extends Controller
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'baseUrl' => ['label' => '', 'rules' => 'required'],
-                'dbname' => ['label' => '', 'rules' => 'required'],
-                'dbusername' => ['label' => '', 'rules' => 'required'],
+                'baseUrl' => ['label' => '', 'rules' => 'required|valid_url'],
+                'dbname' => ['label' => '', 'rules' => 'required|alpha_dash'],
+                'dbusername' => ['label' => '', 'rules' => 'required|alpha_dash'],
                 'dbpassword' => ['label' => '', 'rules' => 'required'],
-                'dbdriver' => ['label' => '', 'rules' => 'required'],
-                'dbpre' => ['label' => '', 'rules' => 'required'],
-                'dbport' => ['label' => '', 'rules' => 'required'],
-                'name' => ['label' => '', 'rules' => 'required'],
-                'surname' => ['label' => '', 'rules' => 'required'],
-                'username' => ['label' => '', 'rules' => 'required'],
-                'email' => ['label' => '', 'rules' => 'required'],
-                'siteName' => ['label' => '', 'rules' => 'required']
+                'dbdriver' => ['label' => '', 'rules' => 'required|in_list[MySQLi]'],
+                'dbpre' => ['label' => '', 'rules' => 'required|permit_empty|alpha_dash'],
+                'dbport' => ['label' => '', 'rules' => 'required|is_natural_no_zero|less_than[65536]'],
+                'name' => ['label' => '', 'rules' => 'required|alpha_space'],
+                'surname' => ['label' => '', 'rules' => 'required|alpha_space'],
+                'username' => ['label' => '', 'rules' => 'required|alpha_numeric'],
+                'email' => ['label' => '', 'rules' => 'required|valid_email'],
+                'siteName' => ['label' => '', 'rules' => 'required|alpha_numeric_space']
             ]);
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors',$this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
             $this->copyEnvFile();
             $updates = [
@@ -41,8 +41,8 @@ class Install extends Controller
                 'cookie.expires' => 0,
                 'cookie.path' => '\'/\'',
                 'cookie.domain' => '\'\'',
-                'cookie.secure' => 'false',
-                'cookie.httponly' => 'false',
+                'cookie.secure' => 'false #Don\'t forget to set it to true when buying production mode.',
+                'cookie.httponly' => 'true',
                 'cookie.samesite' => '\'Lax\'',
                 'cookie.raw' => 'false',
                 'honeypot.hidden' => '\'true\'',
@@ -59,15 +59,24 @@ class Install extends Controller
                 'security.regenerate' => 'true',
                 'security.redirect' => 'false',
                 'security.samesite' => '\'Lax\'',
-                'app.defaultLocale'=> '\'en\'',
-                'app.supportedLocales'=> '[\'ar\',\'de\',\'en\',\'es\',\'fr\',\'hi\',\'ja\',\'pt\',\'ru\',\'tr\',\'zh\']',
-                'app.negotiateLocale'=> 'true',
-                'app.appTimzezone'=> '\'Europe/Istanbul\'',
+                'app.defaultLocale' => '\'en\'',
+                'app.supportedLocales' => '[\'ar\',\'de\',\'en\',\'es\',\'fr\',\'hi\',\'ja\',\'pt\',\'ru\',\'tr\',\'zh\']',
+                'app.negotiateLocale' => 'true',
+                'app.appTimzezone' => '\'Europe/Istanbul\'',
+                'app.version' => '0.29.0.0'
             ];
             if ($this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-            return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install/dbsetup?fname=' . $this->request->getPost('name') . '&sname=' . $this->request->getPost('surname') . '&username=' . $this->request->getPost('username') . '&email=' . $this->request->getPost('email') . '&password=' . $this->request->getPost('password') . '&siteName=' . $this->request->getPost('baseUrl') . '&siteName=' . $this->request->getPost('siteName'), 308);
+            session()->setFlashdata('install_data', [
+                'name' => $this->request->getPost('name'),
+                'surname' => $this->request->getPost('surname'),
+                'username' => $this->request->getPost('username'),
+                'email' => $this->request->getPost('email'),
+                'password' => $this->request->getPost('password'),
+                'siteName' => $this->request->getPost('siteName'),
+            ]);
+            return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install/dbsetup', 308);
         }
         return view('Modules\Install\Views\install');
     }
@@ -75,12 +84,11 @@ class Install extends Controller
     private function updateEnvSettings(array $updates)
     {
         $envPath = ROOTPATH . '.env';
-        if (!file_exists($envPath)) return ['error' => "'.env' dosyası bulunamadı."];
+        if (!file_exists($envPath)) return ['error' => "'.env' file not found."];
         $contents = file_get_contents($envPath);
         foreach ($updates as $key => $value) {
             $pattern = '/^' . preg_quote($key, '/') . '=.*/m';
             $replacement = "{$key}={$value}";
-            // Eğer satır varsa değiştir, yoksa en sona ekle
             if (preg_match($pattern, $contents)) $contents = preg_replace($pattern, $replacement, $contents);
             else $contents .= PHP_EOL . $replacement;
         }
@@ -93,10 +101,10 @@ class Install extends Controller
         $source = ROOTPATH . 'env';
         $destination = ROOTPATH . '.env';
         if (!file_exists($source)) {
-            return ['error' => "'env' dosyası bulunamadı."];
+            return ['error' => "'env' file not found."];
         }
         if (!copy($source, $destination)) {
-            return ['error' => "'env' dosyası .env olarak kopyalanamadı."];
+            return ['error' => "'env' file is not copy to .env file."];
         }
         return true;
     }
@@ -120,39 +128,38 @@ class Install extends Controller
 
     public function dbsetup()
     {
-        // Create default database tables
         $migrate = \Config\Services::migrations();
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
         $baseURL = $protocol . $_SERVER['SERVER_NAME'];
         try {
             $migrate->latest();
         } catch (\Throwable $e) {
-            // Hata mesajını görebilmek için logla veya ekrana yazdır
             log_message('error', $e->getMessage());
             return redirect()->to($baseURL)->withInput()->with('errors', ['migration' => $e->getMessage()]);
         }
         $createDBs = new InstallService();
+        $installData = session()->getFlashdata('install_data');
+        if (empty($installData)) return redirect()->to($baseURL);
         $createDBs->createDefaultData([
-            'fname' => $this->request->getPost('name'),
-            'sname' => $this->request->getPost('surname'),
-            'username' => $this->request->getPost('username'),
-            'email' => $this->request->getPost('email'),
-            'password' => $this->request->getPost('password'),
-            'baseUrl' => $this->request->getPost('baseUrl'),
-            'siteName' => $this->request->getPost('siteName'),
+            'fname' => trim(strip_tags($installData['name'])),
+            'sname' => trim(strip_tags($installData['surname'])),
+            'username' => trim(strip_tags($installData['username'])),
+            'email' => trim(strip_tags($installData['email'])),
+            'password' => $installData['password'],
+            'baseUrl' => $installData['baseUrl'],
+            'siteName' => trim(strip_tags($installData['siteName'])),
         ]);
 
-        // Create default routes file
-        unlink(APPPATH . 'Config/Routes.php');
+        @unlink(APPPATH . 'Config/Routes.php');
         $file = APPPATH . 'Commands/Views/routes.tpl.php';
         $content = file_get_contents($file);
         $content = str_replace('<@', '<?', $content);
-        if (! is_dir(WRITEPATH. 'backups/') && !is_dir(PUBLICPATH. 'media/.tmb') && !is_dir(PUBLICPATH. 'media/.trash')) {
+        if (! is_dir(WRITEPATH . 'backups/') && !is_dir(PUBLICPATH . 'media/.tmb') && !is_dir(PUBLICPATH . 'media/.trash')) {
 
-                mkdir(WRITEPATH. 'backups/', 0755, true);
-                mkdir(PUBLICPATH. 'uploads/.tmb', 0755, true);
-                mkdir(PUBLICPATH. 'uploads/.trash', 0755, true);
-            }
+            mkdir(WRITEPATH . 'backups/', 0755, true);
+            mkdir(PUBLICPATH . 'uploads/.tmb', 0755, true);
+            mkdir(PUBLICPATH . 'uploads/.trash', 0755, true);
+        }
         if (!write_file(APPPATH . 'Config/Routes.php', $content)) {
             return redirect()->to($baseURL)->withInput()->with('errors', ['route' => 'Routes dosyası oluşturulamadı.']);
         }

@@ -41,13 +41,14 @@ return [
     'reset'=>'Sıfırla',
     'filter' => 'Filtrele',
     'ok'=>'Tamam',
+    'areYouSure'=>'Emin misiniz?',
+    'youWillNotBeAbleToRecoverThis'=>'Bu veriyi geri getiremeyeceksiniz.',
 
     //pages
     'homepage' => 'Anasayfa',
     'draft' => 'Taslak',
     'publish' => 'Yayında',
     'logs' => 'Günlükler',
-    'locked_accounts' => 'Hesap Kilit Verileri',
     'coverImage' => 'Kapak Görseli',
     'coverImgURL' => 'Görsel URL',
     'coverImgWith' => 'Görsel genişliği',

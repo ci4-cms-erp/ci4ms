@@ -1,10 +1,10 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('title') ?>
+<?php echo $this->section('title') ?>
 403 - Forbidden
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('content') ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -14,7 +14,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= base_url('/backend') ?>">Anasayfa</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo base_url('/backend') ?>">Anasayfa</a></li>
                     <li class="breadcrumb-item active">403 - Forbidden</li>
                 </ol>
             </div>
@@ -35,7 +35,7 @@
                 Lütfen yönetici ile iletişime geçin veya butona tıklayarak geri dönün.
             </p>
 
-            <div><a href="<?= previous_url() ?>" class="btn btn-warning w-100"><i class="fas fa-arrow-left"></i> Geri
+            <div><a href="<?php echo previous_url() ?>" class="btn btn-warning w-100"><i class="fas fa-arrow-left"></i> Geri
                     Dön</a></div>
         </div>
         <!-- /.error-content -->
@@ -43,4 +43,4 @@
     <!-- /.error-page -->
 </section>
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

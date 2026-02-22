@@ -7,7 +7,7 @@ class LogsConfig {
     ];
 
     public $filters=[
-        'backendAfterLoginFilter' => ['before' => [
+        'backendGuard' => ['before' => [
             'backend/logs','backend/logs/*'
             ]
         ]

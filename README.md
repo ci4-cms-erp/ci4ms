@@ -19,7 +19,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - MySQL/MariaDB (or any CodeIgniter 4-supported driver)
 - Writable directories: `writable/`, `public/uploads/`, optionally `public/templates/`
 
-See `composer.json` for the full dependency list (e.g. `bertugfahriozer/ci4commonmodel`, `bertugfahriozer/sql2migration`, `ci4-cms-erp/ext_module_generator`, `claviska/simpleimage`, `seunmatt/codeigniter-log-viewer`, `gregwar/captcha`, `jasongrimes/paginator`, `studio-42/elfinder`, `phpmailer/phpmailer`).
+See `composer.json` for the full dependency list (e.g. `bertugfahriozer/ci4commonmodel`, `bertugfahriozer/sql2migration`, `ci4-cms-erp/ext_module_generator`, `claviska/simpleimage`, `seunmatt/codeigniter-log-viewer`, `gregwar/captcha`, `studio-42/elfinder`).
 
 # 🪴 Project Activity
 
@@ -123,7 +123,6 @@ See `docs/architecture.md` for deeper architectural notes.
 - **Slug generation**: `seflink()` handles transliteration (including Turkish characters).
 - **Form security**: Global CSRF is enabled; backend AJAX endpoints opt out via `BackendConfig::$csrfExcept`.
 - **Comment moderation**: `CommonLibrary::commentBadwordFiltering` handles bad word filtering and moderation rules.
-- **Email delivery**: `CommonLibrary::phpMailer()` resolves SMTP settings from encrypted storage in `settings.mail`.
 - **Theme uploads**: Each theme must include `info.xml` and `screenshot.png`; missing files trigger a backend warning.
 
 ## Testing & Maintenance
@@ -146,5 +145,10 @@ A huge thank you to the security researchers who have helped make **ci4ms** more
 | Contributor | Contribution | Date |
 | :--- | :--- | :--- |
 | **[Lars van Mil](https://github.com/Far-Horizons)** | Identified Critical RCE and Information Disclosure vulnerabilities. | Jan 2026 |
+| **[0xAlchemist](https://github.com/bugmithlegend)** | Identified Stored DOM XSS vulnerabilities leading to Account Takeover. | Feb 2026 |
+| **[peeefour](https://github.com/peeefour)** | Identified Stored DOM XSS vulnerabilities leading to Account Takeover. | Feb 2026 |
+| **[Hunter.](https://github.com/LAW6ZX7)** | Identified Critical Stored XSS in Backend & Blog modules allowing Session Hijacking. | Feb 2026 |
+| **[m1scher](https://github.com/m1scher)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
+| **[alpernae](https://github.com/alpernae)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
 
 > If you find a security vulnerability, please report it via [Security Policy](SECURITY.md).

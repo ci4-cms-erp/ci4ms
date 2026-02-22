@@ -1,25 +1,24 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
-<?= $this->endSection() ?>
+<?php echo $this->section('title') ?>
+<?php echo lang($title->pagename) ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('head') ?>
-<?= link_tag("be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css") ?>
-<?= link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
+<?php echo $this->section('head') ?>
+<?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
 <link rel="stylesheet" type="text/css"
     href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
-<?= link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
-<?= link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
-<?= $this->endSection() ?>
+<?php echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
+<?php echo link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('content') ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang($title->pagename) ?></h1>
+                <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right"></ol>
@@ -34,7 +33,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang('Settings.siteSettings') ?></h3>
+            <h3 class="card-title font-weight-bold"><?php echo lang('Settings.siteSettings') ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -43,105 +42,96 @@
             </div>
         </div>
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
             <div class="row">
                 <div class="col-md-3">
                     <div class="nav flex-column nav-tabs h-100" id="vert-tabs-tab" role="tablist"
                         aria-orientation="vertical">
                         <a class="nav-link active" id="vert-tabs-home-tab" data-toggle="pill" href="#vert-tabs-home"
                             role="tab" aria-controls="vert-tabs-home"
-                            aria-selected="true"><?= lang('Settings.companyInfos') ?></a>
+                            aria-selected="true"><?php echo lang('Settings.companyInfos') ?></a>
                         <a class="nav-link" id="vert-tabs-templates-tab" data-toggle="pill"
                             href="#vert-tabs-templates"
                             role="tab" aria-controls="vert-tabs-templates"
-                            aria-selected="false"><?= lang('Settings.templateSelect') ?></a>
+                            aria-selected="false"><?php echo lang('Settings.templateSelect') ?></a>
                         <a class="nav-link" id="vert-tabs-social-tab" data-toggle="pill" href="#vert-tabs-social"
                             role="tab" aria-controls="vert-tabs-social"
-                            aria-selected="false"><?= lang('Settings.socialMedia') ?></a>
+                            aria-selected="false"><?php echo lang('Settings.socialMedia') ?></a>
                         <a class="nav-link" id="vert-tabs-mailSettings-tab" data-toggle="pill"
                             href="#vert-tabs-mailSettings"
                             role="tab" aria-controls="vert-tabs-mailSettings"
-                            aria-selected="false"><?= lang('Settings.mailSettings') ?></a>
+                            aria-selected="false"><?php echo lang('Settings.mailSettings') ?></a>
                         <a class="nav-link" id="vert-tabs-media-tab" data-toggle="pill"
                             href="#vert-tabs-media"
                             role="tab" aria-controls="vert-tabs-media"
-                            aria-selected="false"><?= lang('Media.media') ?></a>
-                        <a class="nav-link" id="vert-tabs-login-tab" data-toggle="pill" href="#vert-tabs-login"
-                            role="tab" aria-controls="vert-tabs-login"
-                            aria-selected="false"><?= lang('Settings.lockedSettings') ?></a>
+                            aria-selected="false"><?php echo lang('Media.media') ?></a>
                     </div>
                 </div>
                 <div class="col-md-9">
                     <div class="tab-content" id="vert-tabs-tabContent">
                         <div class="tab-pane text-left fade active show" id="vert-tabs-home" role="tabpanel"
                             aria-labelledby="vert-tabs-home-tab">
-                            <form action="<?= route_to('compInfosPost') ?>" method="post" class="form-row">
-                                <?= csrf_field() ?>
+                            <form action="<?php echo route_to('compInfosPost') ?>" method="post" class="form-row">
+                                <?php echo csrf_field() ?>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.companyName') ?></label>
+                                    <label for=""><?php echo lang('Settings.companyName') ?></label>
                                     <input type="text" name="cName" class="form-control"
-                                        value="<?= (!empty($settings->siteName)) ? $settings->siteName : '' ?>">
+                                        value="<?php echo old('cName', (!empty($settings->siteName)) ? esc($settings->siteName) : '') ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.websiteUrl') ?></label>
-                                    <input type="text" name="cUrl" class="form-control"
-                                        value="<?= (!empty($settings->siteURL)) ? $settings->siteURL : '' ?>">
-                                </div>
-                                <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.companySlogan') ?></label>
+                                    <label for=""><?php echo lang('Settings.companySlogan') ?></label>
                                     <input type="text" name="cSlogan" class="form-control"
-                                        value="<?= (!empty($settings->slogan)) ? $settings->slogan : '' ?>">
+                                        value="<?php echo old('cSlogan', (!empty($settings->slogan)) ? esc($settings->slogan) : '') ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.companyAddress') ?></label>
+                                    <label for=""><?php echo lang('Settings.companyAddress') ?></label>
                                     <input type="text" name="cAddress" class="form-control"
-                                        value="<?= (!empty($settings->company->address)) ? $settings->company->address : '' ?>">
+                                        value="<?php echo old('cAddress', (!empty($settings->contact->address)) ? esc($settings->contact->address) : '') ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.companyPhone') ?></label>
+                                    <label for=""><?php echo lang('Settings.companyPhone') ?></label>
                                     <input type="text" name="cPhone" class="form-control"
-                                        value="<?= (!empty($settings->company->phone)) ? $settings->company->phone : '' ?>">
+                                        value="<?php echo old('cPhone', (!empty($settings->contact->phone)) ? esc($settings->contact->phone) : '') ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.companyGsm') ?></label>
+                                    <label for=""><?php echo lang('Settings.companyGsm') ?></label>
                                     <input type="text" name="cGSM" class="form-control"
-                                        value="<?= (!empty($settings->company->gsm)) ? $settings->company->gsm : '' ?>">
+                                        value="<?php echo old('cGSM', (!empty($settings->contact->gsm)) ? esc($settings->contact->gsm) : '') ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.companyEmail') ?></label>
+                                    <label for=""><?php echo lang('Settings.companyEmail') ?></label>
                                     <input type="text" name="cMail" class="form-control"
-                                        value="<?= (!empty($settings->company->email)) ? $settings->company->email : '' ?>">
+                                        value="<?php echo old('cMail', (!empty($settings->contact->email)) ? esc($settings->contact->email) : '') ?>">
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.gmapIframe') ?></label>
+                                    <label for=""><?php echo lang('Settings.gmapIframe') ?></label>
                                     <input type="text" name="cMap" class="form-control"
-                                        value='<?= (!empty($settings->map_iframe)) ? $settings->map_iframe : '' ?>'>
+                                        value='<?php echo (!empty($settings->map_iframe)) ? $settings->map_iframe : '' ?>'>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.companyLogo') ?></label>
+                                    <label for=""><?php echo lang('Settings.companyLogo') ?></label>
                                     <button type="button"
-                                        class="pageIMG btn btn-info w-100"><?= lang('Backend.selectCoverImg') ?></button>
+                                        class="pageIMG btn btn-info w-100"><?php echo lang('Backend.selectCoverImg') ?></button>
                                     <input hidden class="pageimg-input" name="cLogo">
                                 </div>
                                 <div class="col-md-6 form-group rounded bg-dark p-3">
-                                    <img src="<?= (!empty($settings->logo)) ? $settings->logo : '' ?>"
+                                    <img src="<?php echo (!empty($settings->logo)) ? esc($settings->logo) : '' ?>"
                                         class="img-fluid pageimg">
                                 </div>
                                 <div class="col-md-12 form-group">
-                                    <button class="btn btn-success float-right mt-5"><?= lang('Backend.update') ?></button>
+                                    <button class="btn btn-success float-right mt-5"><?php echo lang('Backend.update') ?></button>
                                 </div>
                             </form>
                             <div class="w-100">
-                                <label><?= lang('Settings.maintenanceMode') ?></label>
+                                <label><?php echo lang('Settings.maintenanceMode') ?></label>
                                 <input type="checkbox" name="my-checkbox" id="my-checkbox"
-                                    class="bswitch" <?= ((bool)$settings->maintenanceMode->scalar === true) ? 'checked' : '' ?>
+                                    class="bswitch" <?php echo ((bool)$settings->maintenanceMode->scalar === true) ? 'checked' : '' ?>
                                     data-id="maintenanceMode" data-off-color="danger" data-on-color="success">
                             </div>
                         </div>
                         <div class="tab-pane fade" id="vert-tabs-templates" role="tabpanel"
                             aria-labelledby="vert-tabs-templates-tab">
                             <div class="row">
-                                <div class="col-12 mb-2"><a href="<?= route_to('backendThemes') ?>" class="btn btn-outline-success float-right">Tema Ekle</a></div>
+                                <div class="col-12 mb-2"><a href="<?php echo route_to('backendThemes') ?>" class="btn btn-outline-success float-right">Tema Ekle</a></div>
                                 <hr class="w-100">
                                 <?php foreach ($templates as $key => $template):
                                     $arrContextOptions = [];
@@ -149,26 +139,26 @@
                                     if (is_file(ROOTPATH . 'public/templates/' . $key . 'info.xml') === true):
                                         $data = simplexml_load_string(file_get_contents(ROOTPATH . 'public/templates/' . $key . 'info.xml', false, stream_context_create($arrContextOptions)), 'SimpleXMLElement', LIBXML_NOCDATA); ?>
                                         <div class="col-md-4">
-                                            <div class="card bg-light rounded <?= ($settings->templateInfos->path == $data->defPath) ? 'border border-success shadow' : '' ?>">
+                                            <div class="card bg-light rounded <?php echo ($settings->templateInfos->path == $data->defPath) ? 'border border-success shadow' : '' ?>">
                                                 <div class="car-img">
                                                     <img class="img-fluid"
-                                                        src="<?= site_url('templates/' . $data->screenshotPNG) ?>">
+                                                        src="<?php echo site_url('templates/' . $data->screenshotPNG) ?>">
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="row">
                                                         <div class="col-md-12">
-                                                            <h4><?= $data->templateName ?></h4>
-                                                            <p>Coded By <?= $data->codedBy ?></p>
+                                                            <h4><?php echo $data->templateName ?></h4>
+                                                            <p>Coded By <?php echo $data->codedBy ?></p>
                                                         </div>
                                                         <div class="col-md-12">
                                                             <?php if ($settings->templateInfos->path != $data->defPath): ?>
                                                                 <button class="btn btn-outline-success"
-                                                                    id="<?= $data->defPath ?>" type="button"
-                                                                    onclick="chooseTemplate('<?= $data->defPath ?>','<?= $data->templateName ?>')">
+                                                                    id="<?php echo $data->defPath ?>" type="button"
+                                                                    onclick="chooseTemplate('<?php echo $data->defPath ?>','<?php echo $data->templateName ?>')">
                                                                     Seç
                                                                 </button>
                                                             <?php else: ?>
-                                                                <a href="<?= route_to('templateSettings') ?>"
+                                                                <a href="<?php echo route_to('templateSettings') ?>"
                                                                     class="btn btn-outline-primary">Ayarlar</a>
                                                             <?php endif; ?>
                                                         </div>
@@ -182,39 +172,39 @@
                         </div>
                         <div class="tab-pane fade" id="vert-tabs-social" role="tabpanel"
                             aria-labelledby="vert-tabs-social-tab">
-                            <form action="<?= route_to('socialMediaPost') ?>" class="repeater" method="post">
-                                <?= csrf_field() ?>
+                            <form action="<?php echo route_to('socialMediaPost') ?>" class="repeater" method="post">
+                                <?php echo csrf_field() ?>
                                 <div data-repeater-list="socialNetwork" class="col-md-12">
                                     <?php if (!empty($settings->socialNetwork)):
                                         foreach ($settings->socialNetwork as $socialNetwork) : ?>
                                             <div class="row border-bottom" data-repeater-item>
                                                 <div class="col-md-6 form-group">
-                                                    <label for=""><?= lang('Settings.socialMedia') ?></label>
+                                                    <label for=""><?php echo lang('Settings.socialMedia') ?></label>
                                                     <input type="text" class="form-control" name="smName"
-                                                        value="<?= $socialNetwork['smName'] ?>"
+                                                        value="<?php echo esc($socialNetwork['smName']) ?>"
                                                         placeholder="facebook"
                                                         required>
                                                 </div>
                                                 <div class="col-md-5 form-group">
-                                                    <label for=""><?= lang('Settings.socialMediaLink') ?></label>
+                                                    <label for=""><?php echo lang('Settings.socialMediaLink') ?></label>
                                                     <input type="text" class="form-control" name="link"
-                                                        value="<?= $socialNetwork['link'] ?>" required>
+                                                        value="<?php echo $socialNetwork['link'] ?>" required>
                                                 </div>
                                                 <div class="col-md-1 form-group d-flex m-auto">
                                                     <button data-repeater-delete type="button"
-                                                        class="btn btn-danger w-100"><?= lang('Backend.delete') ?></button>
+                                                        class="btn btn-danger w-100"><?php echo lang('Backend.delete') ?></button>
                                                 </div>
                                             </div>
                                         <?php endforeach;
                                     else: ?>
                                         <div class="row border-bottom" data-repeater-item>
                                             <div class="col-md-6 form-group">
-                                                <label for=""><?= lang('Settings.socialMedia') ?></label>
+                                                <label for=""><?php echo lang('Settings.socialMedia') ?></label>
                                                 <input type="text" class="form-control" name="smName" placeholder="facebook"
                                                     required>
                                             </div>
                                             <div class="col-md-5 form-group">
-                                                <label for=""><?= lang('Settings.socialMediaLink') ?></label>
+                                                <label for=""><?php echo lang('Settings.socialMediaLink') ?></label>
                                                 <input type="text" class="form-control" name="link" required>
                                             </div>
                                             <div class="col-md-1 form-group">
@@ -226,112 +216,112 @@
                                 </div>
                                 <div class="row mt-3">
                                     <div class="col-md-6 form-group">
-                                        <button data-repeater-create type="button" class="btn btn-secondary"><?= lang('Backend.add') ?></button>
+                                        <button data-repeater-create type="button" class="btn btn-secondary"><?php echo lang('Backend.add') ?></button>
                                     </div>
                                     <div class="col-md-6 form-group">
-                                        <button class="btn btn-success float-right"><?= lang('Backend.update') ?></button>
+                                        <button class="btn btn-success float-right"><?php echo lang('Backend.update') ?></button>
                                     </div>
                                 </div>
                             </form>
                         </div>
                         <div class="tab-pane fade" id="vert-tabs-mailSettings" role="tabpanel"
                             aria-labelledby="vert-tabs-mailSettings-tab">
-                            <form action="<?= route_to('mailSettingsPost') ?>" method="post" class="form-row">
-                                <?= csrf_field() ?>
+                            <form action="<?php echo route_to('mailSettingsPost') ?>" method="post" class="form-row">
+                                <?php echo csrf_field() ?>
                                 <div class="col-md-6 form-group">
                                     <label for="">Mail Server</label>
                                     <input type="text" name="mServer" class="form-control"
-                                        value="<?= empty($settings->mail->server) ? '' : $settings->mail->server ?>"
+                                        value="<?php echo old('mServer', empty($settings->mail->server) ? '' : esc($settings->mail->server)) ?>"
                                         required>
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for="">Mail Port</label>
                                     <input type="text" name="mPort" class="form-control"
-                                        value="<?= empty($settings->mail->port) ? '' : $settings->mail->port ?>"
+                                        value="<?php echo old('mPort', empty($settings->mail->port) ? '' : esc($settings->mail->port)) ?>"
                                         required>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.mailAddress') ?></label>
+                                    <label for=""><?php echo lang('Settings.mailAddress') ?></label>
                                     <input type="text" name="mAddress" class="form-control"
-                                        value="<?= empty($settings->mail->address) ? '' : $settings->mail->address ?>"
+                                        value="<?php echo old('mAddress', empty($settings->mail->address) ? '' : esc($settings->mail->address)) ?>"
                                         required>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.mailPassword') ?></label>
+                                    <label for=""><?php echo lang('Settings.mailPassword') ?></label>
                                     <input type="text" name="mPwd" class="form-control"
                                         required>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.mailProtocol') ?></label>
+                                    <label for=""><?php echo lang('Settings.mailProtocol') ?></label>
                                     <select name="mProtocol" id="" class="form-control" required>
-                                        <option value="smtp" <?= (isset($settings->mail->protocol) && $settings->mail->protocol === 'smtp') ? 'selected' : '' ?>>
+                                        <option value="smtp" <?php echo set_select('mProtocol', 'smtp', isset($settings->mail->protocol) && $settings->mail->protocol === 'smtp') ?>>
                                             SMTP
                                         </option>
-                                        <option value="pop3" <?= (isset($settings->mail->protocol) && $settings->mail->protocol === 'pop3') ? 'selected' : '' ?>>
+                                        <option value="pop3" <?php echo set_select('mProtocol', 'pop3', isset($settings->mail->protocol) && $settings->mail->protocol === 'pop3') ?>>
                                             POP3
                                         </option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for=""><?= lang('Settings.isTLSactive') ?> </label>
+                                    <label for=""><?php echo lang('Settings.isTLSactive') ?> </label>
                                     <input type="checkbox" name="mTls"
-                                        id="" <?= (!empty($settings->mail->tls) && $settings->mail->tls === true) ? 'checked' : '' ?>>
+                                        id="" <?php echo set_checkbox('mTls', '1', (!empty($settings->mail->tls) && $settings->mail->tls === true)) ?>>
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <div class="input-group">
                                         <input type="text" id="testemail" name="testemail" class="form-control" placeholder="simple@domain.com">
-                                        <button class="btn btn-success" id="sendtest"><?=lang('Backend.send')?></button>
+                                        <button class="btn btn-success" id="sendtest"><?php echo lang('Backend.send') ?></button>
                                     </div>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <button class="btn btn-success float-right"><?= lang('Backend.update') ?></button>
+                                    <button class="btn btn-success float-right"><?php echo lang('Backend.update') ?></button>
                                 </div>
                             </form>
                         </div>
                         <div class="tab-pane fade" id="vert-tabs-media" role="tabpanel"
                             aria-labelledby="vert-tabs-social-tab">
-                            <form action="<?= route_to('saveAllowedFiles') ?>" class="row" method="post">
-                                <?= csrf_field() ?>
+                            <form action="<?php echo route_to('saveAllowedFiles') ?>" class="row" method="post">
+                                <?php echo csrf_field() ?>
                                 <div class="col-md-12 form-group">
                                     <textarea name="allowedFiles" rows="10"
-                                        class="form-control"><?= implode(',', (array)$settings->allowedFiles) ?></textarea>
+                                        class="form-control"><?php echo implode(',', (array)$settings->allowedFiles) ?></textarea>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label><?= lang('Settings.elfinderConvertWebp') ?></label>
+                                    <label><?php echo lang('Settings.elfinderConvertWebp') ?></label>
                                     <input type="checkbox" name="elfinderConvertWebp" id="elfinderConvertWebp"
-                                        class="bswitch" <?= ((bool)$settings->elfinderConvertWebp === true) ? 'checked' : '' ?>
+                                        class="bswitch" <?php echo ((bool)$settings->convertWebp->scalar === true) ? 'checked' : '' ?>
                                         data-off-color="danger"
                                         data-on-color="success">
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <button class="btn btn-success float-right"><?= lang('Settings.allowedFiles') ?></button>
+                                    <button class="btn btn-success float-right"><?php echo lang('Settings.allowedFiles') ?></button>
                                 </div>
                             </form>
                             <hr>
                             <div class="w-100">
-                                <h2><?= lang('Settings.fileTypes') ?></h2>
+                                <h2><?php echo lang('Settings.fileTypes') ?></h2>
                                 <div id="accordion">
                                     <?php foreach ($mimes as $key => $mime) :; ?>
                                         <div class="card">
-                                            <div class="card-header" id="heading<?= $key ?>">
+                                            <div class="card-header" id="heading<?php echo $key ?>">
                                                 <h5 class="mb-0">
                                                     <button class="btn btn-link" data-toggle="collapse"
-                                                        data-target="#collapse<?= $key ?>" aria-expanded="true"
-                                                        aria-controls="collapse<?= $key ?>">
-                                                        <?= $key ?>
+                                                        data-target="#collapse<?php echo $key ?>" aria-expanded="true"
+                                                        aria-controls="collapse<?php echo $key ?>">
+                                                        <?php echo $key ?>
                                                     </button>
                                                 </h5>
                                             </div>
 
-                                            <div id="collapse<?= $key ?>" class="collapse"
-                                                aria-labelledby="heading<?= $key ?>" data-parent="#accordion">
+                                            <div id="collapse<?php echo $key ?>" class="collapse"
+                                                aria-labelledby="heading<?php echo $key ?>" data-parent="#accordion">
                                                 <div class="card-body">
                                                     <ul>
                                                         <?php if (is_string($mime)): ?>
-                                                            <li><?= $mime ?></li>
+                                                            <li><?php echo $mime ?></li>
                                                             <?php else:
                                                             foreach ($mimes[$key] as $m) : ?>
-                                                                <li><?= $m ?></li>
+                                                                <li><?php echo $m ?></li>
                                                         <?php endforeach;
                                                         endif; ?>
                                                     </ul>
@@ -342,92 +332,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="vert-tabs-login" role="tabpanel"
-                            aria-labelledby="vert-tabs-login-tab">
-                            <form action="<?= route_to('loginSettingsPost') ?>" method="post" class="form-row">
-                                <?= csrf_field() ?>
 
-                                <div class="col-md-6">
-                                    <div class="col-md-12 form-group">
-                                        <label for=""><?= lang('Settings.lockingCounter') ?></label>
-                                        <input type="number" name="lockedRecord" class="form-control"
-                                            value="<?= empty($settings->lockedRecord) ? '' : $settings->lockedRecord ?>"
-                                            required>
-                                    </div>
-                                    <div class="col-md-12 form-group">
-                                        <label for=""><?= lang('Settings.blockedTime') ?></label>
-                                        <input type="number" name="lockedMin" class="form-control"
-                                            value="<?= empty($settings->lockedMin) ? '' : $settings->lockedMin ?>"
-                                            required>
-                                    </div>
-                                    <div class="col-md-12 form-group">
-                                        <label for=""><?= lang('Settings.tryCounter') ?></label>
-                                        <input type="number" name="lockedTry" class="form-control"
-                                            value="<?= empty($settings->lockedTry) ? '' : $settings->lockedTry ?>"
-                                            required>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="col-md-12 form-group">
-                                        <label for=""><?= lang('Settings.lockedSettings') ?></label>
-                                        <input type="checkbox" name="lockedIsActive"
-                                            <?= (!empty($settings->lockedIsActive) && (bool)$settings->lockedIsActive === true) ? 'checked' : '' ?>>
-                                    </div>
-
-                                    <div class="col-md-12 form-group">
-                                        <label for=""><?= lang('Settings.lockedUserNotification') ?></label>
-                                        <input type="checkbox" name="lockedUserNotification"
-                                            <?= (!empty($settings->lockedUserNotification) && $settings->lockedUserNotification === true) ? 'checked' : '' ?>>
-
-                                    </div>
-                                    <div class="col-md-12 form-group">
-                                        <label for=""><?= lang('Settings.locketAdminNotification') ?> </label>
-                                        <input type="checkbox" name="lockedAdminNotification"
-                                            <?= (!empty($settings->lockedAdminNotification) && $settings->lockedAdminNotification === true) ? 'checked' : '' ?>>
-
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4 form-group">
-                                    <label><?= lang('Settings.blockIps') ?> <?= lang('Settings.separateWithComma') ?></label>
-                                    <textarea class="form-control border-danger" rows="5" name="blackListRange"
-                                        placeholder="Ör : 222.175.223.123 - 222.175.223.123"><?= $blacklistRange ?? '' ?></textarea>
-
-                                </div>
-                                <div class="col-md-4 form-group">
-                                    <label><?= lang('Settings.BlockIp') ?> <?= lang('Settings.separateWithComma') ?></label>
-                                    <textarea class="form-control border-danger" rows="5" name="blacklistLine"
-                                        placeholder="Ör : 255.255.255.255"><?= $blacklistLine ?? '' ?></textarea>
-                                </div>
-                                <div class="col-md-4 form-group">
-                                    <label><?= lang('Settings.blockUsername') ?> <?= lang('Settings.separateWithComma') ?></label>
-                                    <textarea class="form-control border-danger" rows="5" name="blacklistUsername"
-                                        placeholder="Ör : qwe@asd.com"><?= $blacklistUsername ?? '' ?></textarea>
-                                </div>
-
-                                <div class="col-md-4 form-group">
-                                    <label><?= lang('Settings.trustedIps') ?> <?= lang('Settings.separateWithComma') ?></label>
-                                    <textarea class="form-control border-success" rows="5" name="whitelistRange"
-                                        placeholder="Ör : 222.175.223.123 - 222.175.223.123"><?= $whitelistRange ?? '' ?></textarea>
-
-                                </div>
-                                <div class="col-md-4 form-group">
-                                    <label><?= lang('Settings.trustedIp') ?> <?= lang('Settings.separateWithComma') ?></label>
-                                    <textarea class="form-control  border-success" rows="5" name="whitelistLine"
-                                        placeholder="Ör : 8.8.8.8"><?= $whitelistLine ?? '' ?></textarea>
-                                </div>
-                                <div class="col-md-4 form-group">
-                                    <label><?= lang('Settings.trustedUsername') ?> <?= lang('Settings.separateWithComma') ?></label>
-                                    <textarea class="form-control  border-success" rows="5" name="whitelistUsername"
-                                        placeholder="Ör : qwe@asd.com"><?= $whitelistUsername ?? '' ?></textarea>
-                                </div>
-
-                                <div class="col-md-12 form-group">
-                                    <button class="btn btn-success float-right"><?= lang('Backend.update') ?></button>
-                                </div>
-                            </form>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -438,19 +343,18 @@
 
 </section>
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('javascript') ?>
-<?= script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
-<?= script_tag("be-assets/node_modules/jquery.repeater/jquery.repeater.js") ?>
+<?php echo $this->section('javascript') ?>
+<?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
+<?php echo script_tag("be-assets/node_modules/jquery.repeater/jquery.repeater.js") ?>
 <!-- Bootstrap Switch -->
-<?= script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js") ?>
-<?= script_tag("be-assets/plugins/elFinder/js/elfinder.min.js") ?>
-<?= script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>
-<?= script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js") ?>
-<?= script_tag("be-assets/js/ci4ms.js") ?>
-<script>
+<?php echo script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js") ?>
+<?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.min.js") ?>
+<?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>
+<?php echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js") ?>
+<?php echo script_tag("be-assets/js/ci4ms.js") ?>
+<script {csp-script-nonce}>
     $('.repeater').repeater({
         defaultValues: {},
         isFirstItemUndeletable: true,
@@ -474,7 +378,7 @@
     });
 
     function chooseTemplate(path, templateName) {
-        $.post('<?= route_to('setTemplate') ?>', {
+        $.post('<?php echo route_to('setTemplate') ?>', {
             "path": path,
             "tName": templateName
         }).done(function(data) {
@@ -492,7 +396,7 @@
             isActive;
         if ($(this).prop('checked')) isActive = 1;
         else isActive = 0;
-        $.post('<?= route_to('maintenance') ?>', {
+        $.post('<?php echo route_to('maintenance') ?>', {
             'isActive': isActive
         }, 'json').done(function(data) {
             if (data.result === true) Swal.fire('Bakım Aşaması Sayfası yayına alındı.', '', 'success');
@@ -506,7 +410,7 @@
             isActive;
         if ($(this).prop('checked')) isActive = 1;
         else isActive = 0;
-        $.post('<?= route_to('elfinderConvertWebp') ?>', {
+        $.post('<?php echo route_to('elfinderConvertWebp') ?>', {
             'isActive': isActive
         }, 'json').done(function(data) {
             if (data.result === true) Swal.fire('Elfinder ile webp formatına çevirme ektif edildi.', '', 'success');
@@ -524,7 +428,7 @@
         }
         $.ajax({
             type: 'POST',
-            url: '<?= route_to('testMail') ?>',
+            url: '<?php echo route_to('testMail') ?>',
             data: {
                 'testemail': email
             },
@@ -550,4 +454,4 @@
         });
     });
 </script>
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

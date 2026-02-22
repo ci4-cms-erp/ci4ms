@@ -17,10 +17,10 @@ class Ci4msDefaultsSeeder extends Seeder
         $password = CLI::prompt('Please enter your password');
         $installService= new InstallService();
         $installService->createDefaultData([
-            'fname' => $fname,
-            'sname' => $sname,
-            'username' => $username,
-            'email' => $email,
+            'fname' => strip_tags(trim($fname)),
+            'sname' => strip_tags(trim($sname)),
+            'username' => strip_tags(trim($username)),
+            'email' => strip_tags(trim($email)),
             'password' => $password,
         ]);
     }

@@ -45,7 +45,6 @@ class DbBackup
 
         if ($prefs['format'] === 'zip') {
             $filename = $prefs['filename'] ?: 'backup.sql';
-            // .sql uzantısı yoksa ekle
             if (! preg_match('|.+?\.sql$|', $filename)) {
                 $filename .= '.sql';
             }
@@ -56,7 +55,7 @@ class DbBackup
                 $zip->addFromString($filename, $out);
                 $zip->close();
                 $zipData = file_get_contents($tmpFile);
-                unlink($tmpFile);
+                @unlink($tmpFile);
                 return $zipData;
             }
         }
@@ -111,6 +110,8 @@ class DbBackup
 
     public function restore(string $filePath)
     {
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        if ($extension != 'sql') return false;
         $file = fopen($filePath, 'r');
         if (! $file) {
             return false;
@@ -120,7 +121,6 @@ class DbBackup
 
         $templine = '';
         while (($line = fgets($file)) !== false) {
-            // Yorum satırlarını ve boş satırları atla
             if (substr($line, 0, 2) == '--' || trim($line) == '' || substr($line, 0, 1) == '#') {
                 continue;
             }

@@ -1,30 +1,29 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
-<?= $this->endSection() ?>
+<?php echo $this->section('title') ?>
+<?php echo lang($title->pagename) ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('head') ?>
-<?= link_tag("be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css") ?>
-<?= link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
-<?= link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
-<?= link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
-<?= link_tag('be-assets/plugins/dropzone/min/dropzone.min.css') ?>
+<?php echo $this->section('head') ?>
+<?php echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
+<?php echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
+<?php echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
+<?php echo link_tag('be-assets/plugins/dropzone/min/dropzone.min.css') ?>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('content') ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang($title->pagename) ?></h1>
+                <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <div class="btn-group float-sm-right" role="group" aria-label="Basic example">
-                    <a href="<?= route_to('uploadModule') ?>" class="btn btn-outline-success" data-toggle="modal" data-target="#modal-default">
-                        <?=lang('Backend.add')?>
+                    <a href="<?php echo route_to('uploadModule') ?>" class="btn btn-outline-success" data-toggle="modal" data-target="#modal-default">
+                        <?php echo lang('Backend.add') ?>
                     </a>
                 </div>
                 <ol class="breadcrumb float-sm-right">
@@ -43,7 +42,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang($title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -52,7 +51,6 @@
             </div>
         </div>
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
 
         </div>
         <!-- /.card-body -->
@@ -62,7 +60,7 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title"><?=lang('Modules.uploadModule')?></h4>
+                    <h4 class="modal-title"><?php echo lang('Modules.uploadModule') ?></h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -74,15 +72,15 @@
                                 <div class="btn-group w-100">
                                     <span class="btn btn-success col fileinput-button">
                                         <i class="fas fa-plus"></i>
-                                        <span><?=lang('Modules.addFiles')?></span>
+                                        <span><?php echo lang('Modules.addFiles') ?></span>
                                     </span>
                                     <button type="submit" class="btn btn-primary col start">
                                         <i class="fas fa-upload"></i>
-                                        <span><?=lang('Modules.startUpload')?></span>
+                                        <span><?php echo lang('Modules.startUpload') ?></span>
                                     </button>
                                     <button type="reset" class="btn btn-warning col cancel">
                                         <i class="fas fa-times-circle"></i>
-                                        <span><?=lang('Modules.cancelUpload')?></span>
+                                        <span><?php echo lang('Modules.cancelUpload') ?></span>
                                     </button>
                                 </div>
                             </div>
@@ -115,15 +113,15 @@
                                     <div class="btn-group">
                                         <button class="btn btn-primary start">
                                             <i class="fas fa-upload"></i>
-                                            <span><?=lang('Modules.start')?></span>
+                                            <span><?php echo lang('Modules.start') ?></span>
                                         </button>
                                         <button data-dz-remove class="btn btn-warning cancel">
                                             <i class="fas fa-times-circle"></i>
-                                            <span><?=lang('Backend.cancel')?></span>
+                                            <span><?php echo lang('Backend.cancel') ?></span>
                                         </button>
                                         <button data-dz-remove class="btn btn-danger delete">
                                             <i class="fas fa-trash"></i>
-                                            <span><?=lang('Backend.delete')?></span>
+                                            <span><?php echo lang('Backend.delete') ?></span>
                                         </button>
                                     </div>
                                 </div>
@@ -132,7 +130,7 @@
                     </div>
                 </div>
                 <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-default" data-dismiss="modal"><?= lang('Backend.cancel') ?></button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo lang('Backend.cancel') ?></button>
                 </div>
             </div>
             <!-- /.modal-content -->
@@ -142,22 +140,21 @@
     <!-- /.modal -->
 </section>
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('javascript') ?>
-<?= script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
-<?= script_tag("be-assets/plugins/dropzone/min/dropzone.min.js") ?>
-<?= script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?= script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
-<script>
+<?php echo $this->section('javascript') ?>
+<?php echo script_tag("be-assets/plugins/dropzone/min/dropzone.min.js") ?>
+<?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
+<?php echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
+<script {csp-script-nonce}>
     Dropzone.autoDiscover = false;
 
     // Get the template HTML and remove it from the doumenthe template HTML and remove it from the doument
@@ -167,7 +164,7 @@
     previewNode.parentNode.removeChild(previewNode);
 
     var myDropzone = new Dropzone(document.body, { // Make the whole body a dropzone
-        url: "<?= route_to('moduleUpload') ?>", // Set the url
+        url: "<?php echo route_to('moduleUpload') ?>", // Set the url
         thumbnailWidth: 80,
         thumbnailHeight: 80,
         parallelUploads: 20,
@@ -227,7 +224,7 @@
     let table = $("#example1").DataTable({
         buttons: ["pageLength", {
             extend: 'colvis',
-            text: '<?=lang('Backend.showColumns')?>'
+            text: '<?php echo lang('Backend.showColumns') ?>'
         }],
         responsive: true,
         lengthChange: false,
@@ -237,26 +234,26 @@
         serverSide: true,
         language: {
             info: "",
-            sEmptyTable: "<?=lang('Backend.emptyTable')?>",
-            sInfoEmpty: "<?=lang('Backend.noRecords')?>",
-            sLoadingRecords: "<?=lang('Backend.loadingRecords')?>",
-            sProcessing: "<?=lang('Backend.processing')?>",
-            sSearch: "<?=lang('Backend.search')?>:",
-            sZeroRecords: "<?=lang('Backend.noRecords')?>",
+            sEmptyTable: "<?php echo lang('Backend.emptyTable') ?>",
+            sInfoEmpty: "<?php echo lang('Backend.noRecords') ?>",
+            sLoadingRecords: "<?php echo lang('Backend.loadingRecords') ?>",
+            sProcessing: "<?php echo lang('Backend.processing') ?>",
+            sSearch: "<?php echo lang('Backend.search') ?>:",
+            sZeroRecords: "<?php echo lang('Backend.noRecords') ?>",
             oPaginate: {
-                sFirst: "<?=lang('Backend.first')?>",
-                sLast: "<?=lang('Backend.last')?>",
-                sNext: "<?=lang('Backend.next')?>",
-                sPrevious: "<?=lang('Backend.previous')?>"
+                sFirst: "<?php echo lang('Backend.first') ?>",
+                sLast: "<?php echo lang('Backend.last') ?>",
+                sNext: "<?php echo lang('Backend.next') ?>",
+                sPrevious: "<?php echo lang('Backend.previous') ?>"
             },
             oAria: {
-                sSortAscending: ": <?=lang('Backend.sortAscending')?>",
-                sSortDescending: ": <?=lang('Backend.sortDescending')?>"
+                sSortAscending: ": <?php echo lang('Backend.sortAscending') ?>",
+                sSortDescending: ": <?php echo lang('Backend.sortDescending') ?>"
             },
             buttons: {
                 pageLength: {
-                    _: "<?=lang('Backend.showEntries')?>",
-                    '-1': "<?=lang('Backend.showAll')?>"
+                    _: "<?php echo lang('Backend.showEntries') ?>",
+                    '-1': "<?php echo lang('Backend.showAll') ?>"
                 }
             }
         },
@@ -265,7 +262,7 @@
             value: -1
         }],
         ajax: {
-            url: '<?= route_to('modulesInstaller') ?>',
+            url: '<?php echo route_to('modulesInstaller') ?>',
             type: 'post'
         },
         columns: [{
@@ -301,4 +298,4 @@
         }
     });
 </script>
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

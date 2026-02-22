@@ -5,9 +5,9 @@
                 <a class="list-group-item active">No Log Files Found</a>
             <?php else: ?>
                 <?php foreach ($files as $file): ?>
-                    <a href="?f=<?= base64_encode($file); ?>"
-                        class="list-group-item list-group-item-light <?= ($currentFile == $file) ? "active" : "" ?>">
-                        <?= $file; ?>
+                    <a href="?f=<?php echo base64_encode($file); ?>"
+                        class="list-group-item list-group-item-light <?php echo ($currentFile == $file) ? "active" : "" ?>">
+                        <?php echo $file; ?>
                     </a>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -31,25 +31,25 @@
                 </thead>
                 <tbody>
                     <?php foreach ($logs as $key => $log): ?>
-                        <tr data-display="stack<?= $key; ?>">
+                        <tr data-display="stack<?php echo $key; ?>">
 
-                            <td class="text-<?= $log['class']; ?>">
-                                <span class="<?= $log['icon']; ?>" aria-hidden="true"></span>
-                                &nbsp;<?= $log['level']; ?>
+                            <td class="text-<?php echo $log['class']; ?>">
+                                <span class="<?php echo $log['icon']; ?>" aria-hidden="true"></span>
+                                &nbsp;<?php echo $log['level']; ?>
                             </td>
-                            <td class="date"><?= $log['date']; ?></td>
+                            <td class="date"><?php echo $log['date']; ?></td>
                             <td class="text">
                                 <?php if (array_key_exists("extra", $log)): ?>
                                     <a class="pull-right expand btn btn-default btn-xs"
-                                        data-display="stack<?= $key; ?>">
+                                        data-display="stack<?php echo $key; ?>">
                                         <span class="far fa-search"></span>
                                     </a>
                                 <?php endif; ?>
-                                <?= $log['content']; ?>
+                                <?php echo $log['content']; ?>
                                 <?php if (array_key_exists("extra", $log)): ?>
-                                    <div class="stack" id="stack<?= $key; ?>"
+                                    <div class="stack" id="stack<?php echo $key; ?>"
                                         style="display: none; white-space: pre-wrap;">
-                                        <?= $log['extra'] ?>
+                                        <?php echo $log['extra'] ?>
                                     </div>
                                 <?php endif; ?>
 
@@ -61,13 +61,13 @@
         <?php endif; ?>
         <div class="button-group">
             <?php if ($currentFile): ?>
-                <a href="?dl=<?= base64_encode($currentFile); ?>" class="btn btn-light">
+                <a href="?dl=<?php echo base64_encode($currentFile); ?>" class="btn btn-light">
                     <span class="far fa-download"></span>
                     Download file
                 </a>
-                <a id="delete-log" href="?del=<?= base64_encode($currentFile); ?>" class="btn btn-light"><?=lang('Backend.delete')?></a>
+                <a id="delete-log" href="?del=<?php echo base64_encode($currentFile); ?>" class="btn btn-light"><?php echo lang('Backend.delete') ?></a>
                 <?php if (count($files) > 1): ?>
-                    <a id="delete-all-log" href="?del=<?= base64_encode("all"); ?>" class="btn btn-light"><span class="far fa-trash"></span> Delete all files</a>
+                    <a id="delete-all-log" href="?del=<?php echo base64_encode("all"); ?>" class="btn btn-light"><span class="far fa-trash"></span> Delete all files</a>
                 <?php endif; ?>
             <?php endif; ?>
         </div>

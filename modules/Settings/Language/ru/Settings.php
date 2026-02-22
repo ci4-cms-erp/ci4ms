@@ -1,5 +1,4 @@
 <?php
-
 return [
     'settings' => 'Настройки',
     'siteSettings' => 'Обновить настройки сайта',
@@ -8,7 +7,6 @@ return [
     'socialMedia' => 'Социальные сети',
     'socialMediaLink' => 'Ссылка на социальные сети',
     'mailSettings' => 'Настройки почты',
-    'lockedSettings' => 'Настройки входа',
     'companyName' => 'Название компании',
     'websiteUrl' => 'URL-адрес веб-сайта',
     'companySlogan' => 'Лозунг',
@@ -25,18 +23,6 @@ return [
     'mailProtocol' => 'Почтовый протокол',
     'allowedFiles' => 'Сохранять разрешенные типы файлов',
     'fileTypes' => 'Типы файлов',
-    'lockingCounter' => 'Блокировка счетчика',
-    'blockedTime' => 'Продолжительность блокировки <small>(мин)</small>',
-    'tryCounter' => 'Количество попыток',
-    'lockedUserNotification' => 'Уведомление пользователя',
-    'locketAdminNotification' => 'Уведомление администратора',
-    'separateWithComma' => '<small>Разделяйте запятыми</small>',
-    'blockIps' => 'Блокировать диапазон IP-адресов',
-    'blockIp' => 'Блокировать один IP-адрес',
-    'blockUsername' => 'Заблокировать имя пользователя',
-    'trustedIps' => 'Доверенный диапазон IP-адресов',
-    'trustedIp' => 'Доверенный одиночный IP-адрес',
-    'trustedUsername' => 'Доверенное имя пользователя',
     'templateSettings' => 'Настройки темы',
     'elfinderConvertWebp' => 'конвертировать в формат WebP',
     'socialMediaNameOrLinkRequired' => 'Название или ссылка в социальной сети не могут быть пустыми.',

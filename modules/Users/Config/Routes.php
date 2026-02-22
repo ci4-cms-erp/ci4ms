@@ -4,7 +4,7 @@ $routes->group('backend/users', ['namespace' => 'Modules\Users\Controllers'], fu
     $routes->match(['GET', 'POST'],'/', 'UserController::users', ['as' => 'users', 'role' => 'create,read,update,delete']);
     $routes->match(['GET', 'POST'], 'create_user', 'UserController::create_user', ['as' => 'create_user', 'role' => 'create']);
     $routes->match(['GET', 'POST'], 'update_user/(:any)', 'UserController::update_user/$1', ['as' => 'update_user', 'role' => 'update']);
-    $routes->get('user_del/(:any)', 'UserController::user_del/$1', ['as' => 'user_del', 'role' => 'delete']);
+    $routes->post('user_del', 'UserController::user_del', ['as' => 'user_del', 'role' => 'delete']);
     $routes->post('blackList', 'UserController::ajax_blackList_post', ['as' => 'blackList', 'role' => 'update']);
     $routes->post('removeFromBlacklist', 'UserController::ajax_remove_from_blackList_post', ['as' => 'removeFromBlacklist', 'role' => 'update']);
     $routes->post('forceResetPassword', 'UserController::ajax_force_reset_password', ['as' => 'forceResetPassword', 'role' => 'update']);

@@ -37,6 +37,15 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         //'pagecache'     => PageCache::class,
         //'performance'   => PerformanceMetrics::class,
+        'session'     => \CodeIgniter\Shield\Filters\SessionAuth::class,
+        'tokens'      => \CodeIgniter\Shield\Filters\TokenAuth::class,
+        'hmac'        => \CodeIgniter\Shield\Filters\HmacAuth::class,
+        'chain'       => \CodeIgniter\Shield\Filters\ChainAuth::class,
+        'auth-rates'  => \CodeIgniter\Shield\Filters\AuthRates::class,
+        'group'       => \CodeIgniter\Shield\Filters\GroupFilter::class,
+        'permission'  => \CodeIgniter\Shield\Filters\PermissionFilter::class,
+        'force-reset' => \CodeIgniter\Shield\Filters\ForcePasswordResetFilter::class,
+        //'jwt'         => \CodeIgniter\Shield\Filters\JWTAuth::class,
         'seofilter' => SearchSeoFilter::class,
         'aifilter' => AiHeaderFilter::class,
     ];
@@ -126,9 +135,9 @@ class Filters extends BaseFilters
                 $set = [];
                 $formatRules = new \CodeIgniter\Validation\FormatRules();
                 foreach ($this->settings as $setting) {
-                    if ($formatRules->valid_json($setting->content) === true)
-                        $set[$setting->option] = (object)json_decode($setting->content, JSON_UNESCAPED_UNICODE);
-                    else $set[$setting->option] = $setting->content;
+                    if ($formatRules->valid_json($setting->value) === true)
+                        $set[$setting->key] = (object)json_decode($setting->value, JSON_UNESCAPED_UNICODE);
+                    else $set[$setting->key] = $setting->value;
                 }
                 cache()->save('settings', $set, 86400);
                 $this->settings = (object)$set;
@@ -149,7 +158,6 @@ class Filters extends BaseFilters
         if (!empty($this->settings) && isset($this->settings->templateInfos) && isset($this->settings->templateInfos->path))
             $mods[] = APPPATH . 'Filters/templates/' . $this->settings->templateInfos->path;
 
-        // Filtre klasörünü tara
         $this->loadDynamicFilters($mods);
 
         $this->loadConfig();
@@ -162,6 +170,11 @@ class Filters extends BaseFilters
      */
     private function loadDynamicFilters(array $directories): void
     {
+        $this->aliases['backendGuard'] = [
+            \CodeIgniter\Shield\Filters\SessionAuth::class,
+            \CodeIgniter\Shield\Filters\ForcePasswordResetFilter::class,
+            \Modules\Auth\Filters\Ci4MsAuthFilter::class,
+        ];
         foreach ($directories as $directory) {
             if (is_dir($directory)) {
                 foreach (glob("$directory/*.php") as $file) {
@@ -234,7 +247,9 @@ class Filters extends BaseFilters
                         }
                     }
                 }
-                // Tekrar eden path'leri temizle
+                if (property_exists($configInstance, 'globals') && is_array($configInstance->globals)) {
+                    $allGlobals = array_merge($allGlobals, $configInstance->globals);
+                }
                 $allCsrfExcept = array_unique($allCsrfExcept);
             }
         }

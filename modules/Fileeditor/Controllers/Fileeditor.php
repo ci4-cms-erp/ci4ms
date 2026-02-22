@@ -30,6 +30,10 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     public function listFiles()
     {
+        $valData = ([
+            'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path') ?? '/';
 
         $pathParts = explode('/', trim($path, '/'));
@@ -66,6 +70,10 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     public function readFile()
     {
+        $valData = ([
+            'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
         $fullPath = realpath(ROOTPATH . $path);
 
@@ -78,6 +86,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     public function saveFile()
     {
+        $valData = ([
+            'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+            'content' => ['label' => '', 'rules' => 'required'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
         $content = $this->request->getVar('content');
         $fullPath = realpath(ROOTPATH . $path);
@@ -97,6 +110,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     public function renameFile()
     {
+        $valData = ([
+            'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+            'newName' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
         $newName = $this->request->getVar('newName');
         $fullPath = realpath(ROOTPATH . $path);
@@ -119,11 +137,15 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     public function createFile()
     {
+        $valData = ([
+            'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+            'name' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
         $name = $this->request->getVar('name');
         $fullPath = realpath(ROOTPATH . $path);
 
-        $extension = pathinfo($name, PATHINFO_EXTENSION);
         if (!$this->allowedFileTypes($name))
             return $this->failForbidden();
 
@@ -142,6 +164,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     public function createFolder()
     {
+        $valData = ([
+            'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+            'name' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
         $name = $this->request->getVar('name');
         $fullPath = realpath(ROOTPATH . $path);
@@ -161,6 +188,10 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     public function deleteFileOrFolder()
     {
+        $valData = ([
+            'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
         $fullPath = realpath(ROOTPATH . $path);
 

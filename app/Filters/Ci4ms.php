@@ -38,7 +38,7 @@ class Ci4ms implements FilterInterface
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
             return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install');
         }
-        if (cache()->get('settings')['maintenanceMode']->scalar === 1) return redirect()->route('maintenance-mode');
+        if ((bool)cache()->get('settings')['maintenanceMode']->scalar === true) return redirect()->route('maintenance-mode');
     }
 
     /**

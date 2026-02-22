@@ -1,4 +1,6 @@
-<?php namespace Modules\Blog\Config;
+<?php
+
+namespace Modules\Blog\Config;
 
 class BlogConfig extends \CodeIgniter\Config\BaseConfig
 {
@@ -7,9 +9,8 @@ class BlogConfig extends \CodeIgniter\Config\BaseConfig
         'backend/blogs/*'
     ];
 
-    public $filters = ['backendAfterLoginFilter' => ['before' => [
+    public $filters = ['backendGuard' => ['before' => [
         'backend/blogs',
         'backend/blogs/*'
     ]]];
 }
-

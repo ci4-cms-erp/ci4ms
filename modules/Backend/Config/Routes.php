@@ -13,9 +13,4 @@ $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], functi
     $routes->post('checkSeflink', 'AJAX::autoLookSeflinks', ['as' => 'checkSeflink', 'role' => 'delete']);
     $routes->post('isActive', 'AJAX::isActive', ['as' => 'isActive', 'role' => 'delete']);
     $routes->post('maintenance', 'AJAX::maintenance', ['as' => 'maintenance', 'role' => 'update']);
-
-    //log module
-    $routes->group('locked', function ($routes) {
-        $routes->match(['GET','POST'],'/', 'Locked::index', ['as' => 'locked', 'role' => 'read,create,update,delete']);
-    });
 });

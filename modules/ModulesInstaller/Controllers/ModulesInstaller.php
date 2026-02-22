@@ -24,6 +24,18 @@ class ModulesInstaller extends \Modules\Backend\Controllers\BaseController
         $zip = new ZipArchive();
 
         if ($zip->open($file->getTempName()) === true) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = $zip->getNameIndex($i);
+                $realEntry = realpath($tempPath . $entryName);
+                if ($realEntry !== false && strpos($realEntry, realpath($tempPath)) !== 0) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains invalid paths']);
+                }
+                if (preg_match('/\.\./', $entryName)) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains path traversal']);
+                }
+            }
             $zip->extractTo($tempPath);
             $zip->close();
         } else {

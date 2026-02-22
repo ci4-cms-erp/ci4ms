@@ -1,5 +1,4 @@
 <?php
-
 return [
     'settings' => '设置',
     'siteSettings' => '更新站点设置',
@@ -8,7 +7,6 @@ return [
     'socialMedia' => '社交媒体',
     'socialMediaLink' => '社交媒体链接',
     'mailSettings' => '邮件设置',
-    'lockedSettings' => '登录设置',
     'companyName' => '公司名称',
     'websiteUrl' => '网站网址',
     'companySlogan' => '口号',
@@ -25,18 +23,6 @@ return [
     'mailProtocol' => '邮件协议',
     'allowedFiles' => '保存允许的文件类型',
     'fileTypes' => '文件类型',
-    'lockingCounter' => '锁柜台',
-    'blockedTime' => '阻塞持续时间<small>(分钟)</small>',
-    'tryCounter' => '尝试次数',
-    'lockedUserNotification' => '用户通知',
-    'locketAdminNotification' => '管理员通知',
-    'separateWithComma' => '<small>用逗号分隔</small>',
-    'blockIps' => '阻止 IP 范围',
-    'blockIp' => '阻止单一IP',
-    'blockUsername' => '阻止用户名',
-    'trustedIps' => '可信IP范围',
-    'trustedIp' => '可信单一IP',
-    'trustedUsername' => '可信用户名',
     'templateSettings' => '主题设置',
     'elfinderConvertWebp' => '转换为WebP格式',
     'socialMediaNameOrLinkRequired' => '社交媒体名称或链接不能为空',

@@ -23,19 +23,11 @@ if (!function_exists('clearFilter')) {
      */
     function clearFilter(array $array)
     {
-        $clear = array_filter(
-            $array,
-            function ($value) {
-                return $value !== '';
-            }
-        );
-
-        return array_filter(
-            $clear,
-            function ($value) {
-                return $value !== null;
-            }
-        );
+        return array_map(function ($value){
+            if(is_array($value)) return clearFilter($value);
+            if($value==='' || $value===null) return $value;
+            return is_string($value) ? esc($value) : $value;
+        },$array);
     }
 }
 
@@ -139,7 +131,7 @@ if (!function_exists('menu')) {
                 if ((bool)$menu->hasChildren === true) echo ' dropdown-toggle';
                 echo '" href="' . site_url($menu->seflink) . '"';
                 if ((bool)$menu->hasChildren === true) echo ' role="button" data-bs-toggle="dropdown" aria-expanded="false"';
-                echo '>' . $menu->title . '</a>';
+                echo '>' . esc($menu->title) . '</a>';
                 if ((bool)$menu->hasChildren === true) echo '<ul class="dropdown-menu dropdown-menu-end">';
                 menu($kategori, $menu->id);
                 if ((bool)$menu->hasChildren === true) echo '</ul>';
@@ -192,24 +184,6 @@ if (!function_exists('compressAndOverwriteImage')) {
     }
 }
 
-if (!function_exists('getGitVersion')) {
-    function getGitVersion(): string
-    {
-        // Git versiyonunu almak için shell_exec'i bir metot içinde çağırıyoruz.
-        $commitHash = shell_exec('git rev-parse --short HEAD');
-        $branchName = shell_exec('git rev-parse --abbrev-ref HEAD');
-        $versionTag = shell_exec('git describe --tags --abbrev=0');
-
-        // Eğer herhangi bir hata olursa null kontrolü yapabilirsiniz
-        if (!$commitHash || !$branchName || !$versionTag) {
-            return 'Version not available';
-        }
-
-        // Versiyon bilgisini döndürüyoruz
-        return $versionTag . " (Branch: " . $branchName . " @ " . $commitHash . ")";
-    }
-}
-
 if (!function_exists('hasFilesInFolder')) {
     function hasFilesInFolder(string $folderPath): bool
     {
@@ -218,14 +192,31 @@ if (!function_exists('hasFilesInFolder')) {
 
             foreach ($iterator as $fileinfo) {
                 if ($fileinfo->isFile()) {
-                    return true; // İlk dosyada döner
+                    return true;
                 }
             }
         } catch (UnexpectedValueException $e) {
-            // Klasör bulunamadıysa veya açılamadıysa
             return false;
         }
 
-        return false; // Hiç dosya yoksa
+        return false;
     }
 }
+
+function sanitizePost(array $data, array $allowRaw = []): array
+{
+    $sanitized = [];
+    foreach ($data as $key => $value) {
+        if (in_array($key, $allowRaw)) {
+            $sanitized[$key] = $value; // trust raw (e.g., content from rich editor)
+        } elseif (is_array($value)) {
+            $sanitized[$key] = sanitizePost($value, $allowRaw);
+        } elseif (is_string($value)) {
+            $sanitized[$key] = esc(trim($value));
+        } else {
+            $sanitized[$key] = $value;
+        }
+    }
+    return $sanitized;
+}
+

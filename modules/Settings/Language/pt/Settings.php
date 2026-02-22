@@ -1,5 +1,4 @@
 <?php
-
 return [
     'settings' => 'Configurações',
     'siteSettings' => 'Atualizar configurações do site',
@@ -8,7 +7,6 @@ return [
     'socialMedia' => 'Mídias Sociais',
     'socialMediaLink' => 'Link de mídia social',
     'mailSettings' => 'Configurações de correio',
-    'lockedSettings' => 'Configurações de login',
     'companyName' => 'nome da empresa',
     'websiteUrl' => 'URL do site',
     'companySlogan' => 'Slogan',
@@ -25,18 +23,6 @@ return [
     'mailProtocol' => 'Protocolo de correio',
     'allowedFiles' => 'Salvar tipos de arquivos permitidos',
     'fileTypes' => 'Tipos de arquivo',
-    'lockingCounter' => 'Contador de bloqueio',
-    'blockedTime' => 'Duração do bloqueio <small>(min)</small>',
-    'tryCounter' => 'Contagem de tentativas',
-    'lockedUserNotification' => 'Notificação do usuário',
-    'locketAdminNotification' => 'Notificação do administrador',
-    'separateWithComma' => '<small>Separar por vírgulas</small>',
-    'blockIps' => 'Bloquear intervalo de IP',
-    'blockIp' => 'Bloquear IP único',
-    'blockUsername' => 'Bloquear nome de usuário',
-    'trustedIps' => 'Faixa de IP confiável',
-    'trustedIp' => 'IP único confiável',
-    'trustedUsername' => 'Nome de usuário confiável',
     'templateSettings' => 'Configurações de tema',
     'elfinderConvertWebp' => 'converter para o formato WebP',
     'socialMediaNameOrLinkRequired' => 'O nome ou link da mídia social não pode ficar vazio',

@@ -40,13 +40,14 @@ return [
     'reset' => 'Сбросить',
     'filter' => 'Фильтр',
     'ok' => 'ОК',
+    'areYouSure' => 'Вы уверены?',
+    'youWillNotBeAbleToRecoverThis' => 'Вы не сможете восстановить эти данные.',
 
     //pages
     'homepage' => 'Панель управления',
     'draft' => 'Черновик',
     'publish' => 'Опубликовано',
     'logs' => 'Журналы',
-    'locked_accounts' => 'Журналы блокировки аккаунтов',
     'coverImage' => 'Обложка',
     'coverImgURL' => 'URL изображения',
     'coverImgWith' => 'Ширина изображения',

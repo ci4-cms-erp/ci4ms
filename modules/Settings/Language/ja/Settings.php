@@ -1,5 +1,4 @@
 <?php
-
 return [
     'settings' => '設定',
     'siteSettings' => 'サイト設定を更新する',
@@ -8,7 +7,6 @@ return [
     'socialMedia' => 'ソーシャルメディア',
     'socialMediaLink' => 'ソーシャルメディアリンク',
     'mailSettings' => 'メール設定',
-    'lockedSettings' => 'ログイン設定',
     'companyName' => '会社名',
     'websiteUrl' => 'ウェブサイトのURL',
     'companySlogan' => 'スローガン',
@@ -25,18 +23,6 @@ return [
     'mailProtocol' => 'メールプロトコル',
     'allowedFiles' => '許可されているファイルの種類を保存する',
     'fileTypes' => 'ファイルの種類',
-    'lockingCounter' => 'ロックカウンター',
-    'blockedTime' => 'ブロック期間 <small>(分)</small>',
-    'tryCounter' => '試行回数',
-    'lockedUserNotification' => 'ユーザーへの通知',
-    'locketAdminNotification' => '管理者への通知',
-    'separateWithComma' => '<small>カンマで区切る</small>',
-    'blockIps' => 'ブロックIP範囲',
-    'blockIp' => '単一 IP をブロックする',
-    'blockUsername' => 'ユーザー名をブロックする',
-    'trustedIps' => '信頼できる IP 範囲',
-    'trustedIp' => '信頼できる単一 IP',
-    'trustedUsername' => '信頼できるユーザー名',
     'templateSettings' => 'テーマの設定',
     'elfinderConvertWebp' => 'WebP形式に変換する',
     'socialMediaNameOrLinkRequired' => 'ソーシャルメディアの名前またはリンクを空にすることはできません',

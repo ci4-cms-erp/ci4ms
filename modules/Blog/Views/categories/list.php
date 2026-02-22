@@ -1,26 +1,26 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
-<?= $this->endSection() ?>
+<?php echo $this->section('title') ?>
+<?php echo lang($title->pagename) ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('head') ?>
-<?= link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
-<?= link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
-<?= link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
-<?= $this->endSection() ?>
+<?php echo $this->section('head') ?>
+<?php echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
+<?php echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
+<?php echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('content') ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang($title->pagename) ?></h1>
+                <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?= route_to('categoryCreate') ?>" class="btn btn-outline-success"><?=lang('Backend.add')?></a>
+                    <a href="<?php echo route_to('categoryCreate') ?>" class="btn btn-outline-success"><?php echo lang('Backend.add') ?></a>
                 </ol>
             </div>
         </div>
@@ -33,7 +33,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang($title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -45,10 +45,10 @@
             <div class="table-responsive">
                 <table id="example1" class="table table-bordered table-striped">
                     <thead>
-                    <tr>
-                        <th><?=lang('Backend.title')?></th>
-                        <th><?=lang('Backend.transactions')?></th>
-                    </tr>
+                        <tr>
+                            <th><?php echo lang('Backend.title') ?></th>
+                            <th><?php echo lang('Backend.transactions') ?></th>
+                        </tr>
                     </thead>
                     <tbody>
                     </tbody>
@@ -61,22 +61,22 @@
 
 </section>
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('javascript') ?>
-<?= script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
-<?= script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
-<?= script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
-<?= script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
-<?= script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
-<script>
+<?php echo $this->section('javascript') ?>
+<?php echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
+<?php echo script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
+<?php echo script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
+<?php echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
+<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
+<script {csp-script-nonce}>
     let isApprove = true;
     var table = $("#example1").DataTable({
         responsive: true,
@@ -98,7 +98,7 @@
             value: -1
         }],
         ajax: {
-            url: '<?= route_to('categories') ?>',
+            url: '<?php echo route_to('categories') ?>',
             type: 'POST',
             data: {
                 isApproved: isApprove
@@ -116,5 +116,45 @@
                 .appendTo($('.col-md-6:eq(0)', table.table().container()));
         }
     });
+
+    function deleteItem(id) {
+        Swal.fire({
+            title: '<?php echo lang('Backend.areYouSure') ?>',
+            text: "<?php echo lang('Backend.youWillNotBeAbleToRecoverThis') ?>",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: '<?php echo lang('Backend.delete') ?>',
+            cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post('<?php echo route_to('categoryDelete') ?>', {
+                    "id": id,
+                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                }, 'json').done(function(response) {
+                    if (response.status == 'success') {
+                        Swal.fire({
+                            title: '<?php echo lang('Backend.success') ?>',
+                            text: response.message,
+                            icon: 'success',
+                            confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                table.ajax.reload();
+                            }
+                        });
+                    }else{
+                        Swal.fire({
+                            title: '<?php echo lang('Backend.error') ?>',
+                            text: response.message,
+                            icon: 'error',
+                            confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                        });
+                    }
+                });
+            }
+        });
+    }
 </script>
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

@@ -7,6 +7,14 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
+            $valData = [
+                'status' => ['label' => 'Status', 'rules' => 'required|in_list[active,inactive]'],
+            ];
+            if (!empty($this->request->getPost('module_id')))
+                $valData['module_id'] = ['label' => 'Module ID', 'rules' => 'required|is_natural_no_zero'];
+            if (!empty($this->request->getPost('page_id')))
+                $valData['page_id'] = ['label' => 'Page ID', 'rules' => 'required|is_natural_no_zero'];
+            if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
             $flag = false;
             if (!empty($this->request->getPost('module_id')) && $this->commonModel->edit('modules', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['id' => $this->request->getPost('module_id')]) && $this->commonModel->edit('auth_permissions_pages', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['module_id' => $this->request->getPost('module_id')]))
                 $flag = true;
@@ -26,8 +34,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'pagename' => ['label' => '', 'rules' => 'required'],
-                'sefLink' => ['label' => '', 'rules' => 'required'],
+                'pagename' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+                'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[auth_permissions_pages.sefLink]'],
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required'],
             ]);
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
@@ -40,10 +48,10 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             ];
             $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
             if ($this->commonModel->create('auth_permissions_pages', [
-                'pagename' => $this->request->getPost('pagename'),
-                'description' => $this->request->getPost('description') ?? '',
-                'className' => $this->request->getPost('className') ?? '',
-                'methodName' => $this->request->getPost('methodName') ?? '',
+                'pagename' => esc(strip_tags(trim($this->request->getPost('pagename')))),
+                'description' => esc(strip_tags(trim($this->request->getPost('description')))),
+                'className' => esc(strip_tags(trim($this->request->getPost('className')))),
+                'methodName' => esc(strip_tags(trim($this->request->getPost('methodName')))),
                 'sefLink' => $this->request->getPost('sefLink'),
                 'hasChild' => $this->request->getPost('hasChild') ?? 0,
                 'pageSort' => !empty($this->request->getPost('pageSort')) ? $this->request->getPost('pageSort') : NULL,
@@ -55,9 +63,9 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             ])) {
                 $id = $this->defData['logged_in_user']->id;
                 cache()->delete("{$id}_permissions");
-                return redirect()->route('list')->with('success', lang('Backend.created',[$this->request->getPost('pagename')]));
+                return redirect()->route('list')->with('success', lang('Backend.created', [$this->request->getPost('pagename')]));
             } else
-                return redirect()->back()->withInput()->with('error', lang('Backend.notCreated',[$this->request->getPost('pagename')]));
+                return redirect()->back()->withInput()->with('error', lang('Backend.notCreated', [$this->request->getPost('pagename')]));
         }
         $this->defData['modules'] = $this->commonModel->lists('modules');
         $this->defData['permPages'] = $this->commonModel->lists('auth_permissions_pages');
@@ -68,8 +76,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'pagename' => ['label' => '', 'rules' => 'required'],
-                'sefLink' => ['label' => '', 'rules' => 'required'],
+                'pagename' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+                'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required']
             ]);
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
@@ -82,10 +90,10 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             ];
             $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
             if ($this->commonModel->edit('auth_permissions_pages', [
-                'pagename' => $this->request->getPost('pagename'),
-                'description' => $this->request->getPost('description') ?? '',
-                'className' => $this->request->getPost('className') ?? '',
-                'methodName' => $this->request->getPost('methodName') ?? '',
+                'pagename' => esc(strip_tags(trim($this->request->getPost('pagename')))),
+                'description' => esc(strip_tags(trim($this->request->getPost('description')))),
+                'className' => esc(strip_tags(trim($this->request->getPost('className')))),
+                'methodName' => esc(strip_tags(trim($this->request->getPost('methodName')))),
                 'sefLink' => $this->request->getPost('sefLink'),
                 'hasChild' => (bool)$this->request->getPost('hasChild') == true ? 1 : 0,
                 'pageSort' => $this->request->getPost('pageSort') ?? 0,
@@ -97,12 +105,12 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             ], ['id' => $pk])) {
                 $id = $this->defData['logged_in_user']->id;
                 cache()->delete("{$id}_permissions");
-                return redirect()->route('list')->with('success', lang('Backend.updated',[$this->request->getPost('pagename')]));
+                return redirect()->route('list')->with('success', lang('Backend.updated', [$this->request->getPost('pagename')]));
             } else
-                return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated',[$this->request->getPost('pagename')]));
+                return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('pagename')]));
         }
         $this->defData['method'] = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pk]);
-        $this->defData['methods'] = $this->commonModel->lists('auth_permissions_pages', '*', ['id!=' => $pk,'inNavigation'=>true],'pagename ASC');
+        $this->defData['methods'] = $this->commonModel->lists('auth_permissions_pages', '*', ['id!=' => $pk, 'inNavigation' => true], 'pagename ASC');
         $this->defData['modules'] = $this->commonModel->lists('modules');
         $this->defData['permPages'] = $this->commonModel->lists('auth_permissions_pages');
         return view('Modules\Methods\Views\update', $this->defData);
@@ -111,19 +119,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     public function moduleScan()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        $sortByHandler = $this->request->getGet('sortBy') === 'handler';
-        $host = $this->request->getGet('host');
-
-        if ($host !== null) {
-            $request = service('request');
-            $_SERVER = $request->getServer();
-            $_SERVER['HTTP_HOST'] = $host;
-            $request->setGlobal('server', $_SERVER);
-        }
 
         $collection = service('routes')->loadRoutes();
-
-        if ($host !== null) unset($_SERVER['HTTP_HOST']);
 
         $methods = \CodeIgniter\Router\Router::HTTP_METHODS;
         $tbody = [];
@@ -131,7 +128,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         $filterCollector = new \CodeIgniter\Commands\Utilities\Routes\FilterCollector();
 
         $definedRouteCollector = new \CodeIgniter\Router\DefinedRouteCollector($collection);
-        $findFilter = ['backendAfterLoginFilter'];
+        $findFilter = ['backendGuard'];
         foreach ($definedRouteCollector->collect() as $route) {
             if ($route['route'] === '__hot-reload') continue;
             $filters   = $filterCollector->get($route['method'], $uriGenerator->get($route['route']));
@@ -266,11 +263,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             $seen[$key] = true;
             return true;
         }));
-        if ($sortByHandler) {
-            usort($tbody, static function ($a, $b) {
-                return strcmp($a['handler'], $b['handler']);
-            });
-        }
+
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -290,15 +283,20 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
 
         $uniqueKeys = array_diff_key($newKeys, $existingKeys);
-        $uniquePages = [];
-        foreach ($uniqueKeys as $key => $index) {
-            $uniquePages[] = $tbody[$index];
+        $removedPages = array_diff_key($existingKeys, $newKeys);
+        if (!empty($removedPages)) {
+            foreach ($removedPages as $key => $removedPage) {
+                $remove = explode('\0', $key);
+                if (!empty(str_replace('\0', '', $key))) {
+                    $this->commonModel->remove('auth_permissions_pages', ['className' => $remove['0'], 'methodName' => $remove['1']]);
+                }
+            }
         }
         $insertBach = [];
         if (!empty($uniqueKeys)) {
-            $module_id=null;
+            $module_id = null;
             foreach ($uniqueKeys as $uniqueKey) {
-                $module_id = $this->commonModel->selectOne('modules', ['name' => $tbody[$uniqueKey]['module']],'id');
+                $module_id = $this->commonModel->selectOne('modules', ['name' => $tbody[$uniqueKey]['module']], 'id');
                 if (empty($module_id->id)) {
                     $module_id->id = $this->commonModel->create('modules', [
                         'name' => $tbody[$uniqueKey]['module'],

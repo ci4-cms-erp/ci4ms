@@ -1,25 +1,25 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
-<?= $this->endSection() ?>
+<?php echo $this->section('title') ?>
+<?php echo lang($title->pagename) ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('head') ?>
+<?php echo $this->section('head') ?>
 <link rel="stylesheet" href="/be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('content') ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang($title->pagename) ?></h1>
+                <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?= route_to('settings') ?>" class="btn btn-outline-info"><i
-                                class="fas fa-arrow-circle-left"></i> Ayarlara Dön</a>
+                    <a href="<?php echo route_to('settings') ?>" class="btn btn-outline-info"><i
+                            class="fas fa-arrow-circle-left"></i> Ayarlara Dön</a>
                 </ol>
             </div>
         </div>
@@ -32,7 +32,7 @@
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang($title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -41,9 +41,9 @@
             </div>
         </div>
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
-            <form action="<?=route_to('templateSettings_post')?>" method="post">
-                <?= csrf_field() ?>
+            <?php echo view('Modules\Auth\Views\_message_block') ?>
+            <form action="<?php echoroute_to('templateSettings_post') ?>" method="post">
+                <?php echo csrf_field() ?>
                 <div class="row">
                     <div class="col-md-6 card">
                         <div class="card-header bg-success">
@@ -53,15 +53,15 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <label for="">Arama</label>
-                                    <input type="checkbox" name="settings[widgets][sidebar][searchWidget]" value="true" <?=!empty($settings->templateInfos->widgets['sidebar']['searchWidget']) && (boolean)$settings->templateInfos->widgets['sidebar']['searchWidget']===true?'checked':''?>>
+                                    <input type="checkbox" name="settings[widgets][sidebar][searchWidget]" value="true" <?php echo !empty($settings->templateInfos->widgets['sidebar']['searchWidget']) && (bool)$settings->templateInfos->widgets['sidebar']['searchWidget'] === true ? 'checked' : '' ?>>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="">Kategori listesi</label>
-                                    <input type="checkbox" name="settings[widgets][sidebar][categoriesWidget]" value="true" <?=!empty($settings->templateInfos->widgets['sidebar']['categoriesWidget']) && (boolean)$settings->templateInfos->widgets['sidebar']['categoriesWidget']===true?'checked':''?>>
+                                    <input type="checkbox" name="settings[widgets][sidebar][categoriesWidget]" value="true" <?php echo !empty($settings->templateInfos->widgets['sidebar']['categoriesWidget']) && (bool)$settings->templateInfos->widgets['sidebar']['categoriesWidget'] === true ? 'checked' : '' ?>>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="">Arşiv listesi</label>
-                                    <input type="checkbox" name="settings[widgets][sidebar][archiveWidget]" value="true" <?=!empty($settings->templateInfos->widgets['sidebar']['archiveWidget']) && (boolean)$settings->templateInfos->widgets['sidebar']['archiveWidget']===true?'checked':''?>>
+                                    <input type="checkbox" name="settings[widgets][sidebar][archiveWidget]" value="true" <?php echo !empty($settings->templateInfos->widgets['sidebar']['archiveWidget']) && (bool)$settings->templateInfos->widgets['sidebar']['archiveWidget'] === true ? 'checked' : '' ?>>
                                 </div>
                             </div>
                         </div>
@@ -78,8 +78,8 @@
 
 </section>
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('javascript') ?>
+<?php echo $this->section('javascript') ?>
 <script src="/be-assets/plugins/sweetalert2/sweetalert2.min.js"></script>
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

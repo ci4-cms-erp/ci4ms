@@ -50,7 +50,6 @@ class Validation extends BaseConfig
         $modules = array_filter(scandir($this->modulesPath), function ($module) {
             return !in_array($module, ['.', '..', '.DS_Store']) && is_dir($this->modulesPath . DIRECTORY_SEPARATOR . $module);
         });
-        // 1. Modules içindeki Validation klasörlerini tara
         foreach ($modules as $module) {
             $validationDir =  $this->modulesPath . $module . '/Validation';
             if (is_dir($validationDir)) {
@@ -64,7 +63,6 @@ class Validation extends BaseConfig
             }
         }
 
-        // 2. app/Validation/temalar/{tema_adi}/ klasörlerini tara
         if (is_dir($this->themesPath)) {
             $themes = array_filter(scandir($this->themesPath), function ($module) {
                 return !in_array($module, ['.', '..', '.DS_Store']) && is_dir($this->themesPath . DIRECTORY_SEPARATOR . $module);

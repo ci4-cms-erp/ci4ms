@@ -1,6 +1,6 @@
 <!-- Contact form-->
 <div class="bg-light rounded-3 py-5 px-4 px-md-5 mb-5">
-    <?= view('templates/default/_message_block') ?>
+    <?php echo view('templates/default/_message_block') ?>
     <div class="text-center mb-5">
         <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-envelope"></i></div>
         <h1 class="fw-bolder">Get in touch</h1>
@@ -8,30 +8,30 @@
     </div>
     <div class="row gx-5 justify-content-center">
         <div class="col-lg-8 col-xl-6">
-            <form id="contactForm" method="post" action="<?=route_to('contactForm')?>">
-                <?= csrf_field() ?>
+            <form id="contactForm" method="post" action="<?php echo route_to('contactForm') ?>">
+                <?php echo csrf_field() ?>
                 <!-- Name input-->
                 <div class="form-floating mb-3">
-                    <input class="form-control" name="name" type="text" placeholder="Enter your name..." data-sb-validations="required" />
+                    <input class="form-control" name="name" value="<?php echo old('name') ?>" type="text" placeholder="Enter your name..." data-sb-validations="required" />
                     <label for="name">Full name</label>
                     <div class="invalid-feedback" data-sb-feedback="name:required">A name is required.</div>
                 </div>
                 <!-- Email address input-->
                 <div class="form-floating mb-3">
-                    <input class="form-control" name="email" type="email" placeholder="name@example.com" data-sb-validations="required,email" />
+                    <input class="form-control" name="email" value="<?php echo old('email') ?>" type="email" placeholder="name@example.com" data-sb-validations="required,email" />
                     <label for="email">Email address</label>
                     <div class="invalid-feedback" data-sb-feedback="email:required">An email is required.</div>
                     <div class="invalid-feedback" data-sb-feedback="email:email">Email is not valid.</div>
                 </div>
                 <!-- Phone number input-->
                 <div class="form-floating mb-3">
-                    <input class="form-control" name="phone" type="tel" placeholder="(123) 456-7890" data-sb-validations="required" />
+                    <input class="form-control" name="phone" value="<?php echo old('phone') ?>" type="tel" placeholder="(123) 456-7890" data-sb-validations="required" />
                     <label for="phone">Phone number</label>
                     <div class="invalid-feedback" data-sb-feedback="phone:required">A phone number is required.</div>
                 </div>
                 <!-- Message input-->
                 <div class="form-floating mb-3">
-                    <textarea class="form-control" name="message" type="text" placeholder="Enter your message here..." style="height: 10rem" data-sb-validations="required"></textarea>
+                    <textarea class="form-control" name="message" type="text" placeholder="Enter your message here..." style="height: 10rem" data-sb-validations="required"><?php echo old('message') ?></textarea>
                     <label for="message">Message</label>
                     <div class="invalid-feedback" data-sb-feedback="message:required">A message is required.</div>
                 </div>

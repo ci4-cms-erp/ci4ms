@@ -8,7 +8,7 @@ if (!function_exists('comments')) {
                 $returnData .= '<div class="d-flex mb-4">
 <div class="flex-shrink-0"><img class="rounded-circle" src="https://dummyimage.com/50x50/ced4da/6c757d.jpg"/></div>
 <div class="ms-3">
-<div class="fw-bold">' . $comment->comFullName . '</div>' . $comment->comMessage . '
+<div class="fw-bold">' . esc($comment->comFullName) . '</div>' . esc($comment->comMessage) . '
 <div class="w-100"></div>
 <div class="btn-group">
 <button class="btn btn-sm btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#reply' . $comment->id . '" aria-expanded="false" aria-controls="reply' . $comment->id . '">Reply</button>';

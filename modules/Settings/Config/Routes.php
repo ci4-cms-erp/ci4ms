@@ -5,7 +5,6 @@ $routes->group('backend/settings', ['namespace' => 'Modules\Settings\Controllers
     $routes->post('compInfos', 'Settings::compInfosPost', ['as' => 'compInfosPost','role'=>'update']);
     $routes->post('socialMedia', 'Settings::socialMediaPost', ['as' => 'socialMediaPost','role'=>'update']);
     $routes->post('mailSettings', 'Settings::mailSettingsPost', ['as' => 'mailSettingsPost','role'=>'update']);
-    $routes->post('loginSettings', 'Settings::loginSettingsPost', ['as' => 'loginSettingsPost','role'=>'delete']);
     $routes->post('setTemplate', 'Settings::templateSelectPost', ['as' => 'setTemplate','role'=>'update']);
     $routes->post('saveAllowedFiles', 'Settings::saveAllowedFiles', ['as' => 'saveAllowedFiles','role'=>'update']);
     $routes->get('templateSettings', 'Settings::templateSettings', ['as' => 'templateSettings','role'=>'update']);

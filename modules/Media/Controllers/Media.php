@@ -58,8 +58,7 @@ class Media extends \Modules\Backend\Controllers\BaseController
             ),
             'bind' => array(
                 'upload.presave' => array(function (&$thash, &$name, $tmpname, $elfinder, $volume) {
-                    $convertWebp = (bool)$this->defData['settings']->elfinderConvertWebp->scalar;
-                    if ($convertWebp) {
+                    if ((bool)$this->defData['settings']->convertWebp->scalar===true) {
                         $char_map = ['.jpg' => '.webp', '.png' => '.webp', '.jpeg' => '.webp'];
                         $ext = strtolower(strrchr($name, '.'));
                         if (in_array($ext, array('.jpg', '.jpeg', '.png'))) {

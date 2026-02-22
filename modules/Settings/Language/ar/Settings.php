@@ -1,5 +1,4 @@
 <?php
-
 return [
     'settings' => 'إعدادات',
     'siteSettings' => 'تحديث إعدادات الموقع',
@@ -8,7 +7,6 @@ return [
     'socialMedia' => 'وسائل التواصل الاجتماعي',
     'socialMediaLink' => 'رابط وسائل التواصل الاجتماعي',
     'mailSettings' => 'إعدادات البريد',
-    'lockedSettings' => 'إعدادات تسجيل الدخول',
     'companyName' => 'اسم الشركة',
     'websiteUrl' => 'عنوان URL لموقع الويب',
     'companySlogan' => 'شعار',
@@ -25,18 +23,6 @@ return [
     'mailProtocol' => 'بروتوكول البريد',
     'allowedFiles' => 'حفظ أنواع الملفات المسموح بها',
     'fileTypes' => 'أنواع الملفات',
-    'lockingCounter' => 'عداد القفل',
-    'blockedTime' => 'مدة الحظر <small>(دقيقة)</small>',
-    'tryCounter' => 'عدد المحاولات',
-    'lockedUserNotification' => 'إشعار المستخدم',
-    'locketAdminNotification' => 'إشعار المسؤول',
-    'separateWithComma' => '<small>افصل بفواصل</small>',
-    'blockIps' => 'حظر نطاق IP',
-    'blockIp' => 'حظر IP واحد',
-    'blockUsername' => 'حظر اسم المستخدم',
-    'trustedIps' => 'نطاق IP الموثوق به',
-    'trustedIp' => 'عنوان IP واحد موثوق به',
-    'trustedUsername' => 'اسم مستخدم موثوق به',
     'templateSettings' => 'إعدادات الموضوع',
     'elfinderConvertWebp' => 'تحويل إلى تنسيق WebP',
     'socialMediaNameOrLinkRequired' => 'لا يمكن أن يكون اسم أو رابط الوسائط الاجتماعية فارغًا',

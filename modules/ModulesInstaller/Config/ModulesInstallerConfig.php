@@ -8,7 +8,7 @@ class ModulesInstallerConfig extends \CodeIgniter\Config\BaseConfig
     ];
 
     public $filters = [
-        'backendAfterLoginFilter' => ['before' => [
+        'backendGuard' => ['before' => [
             'backend/modulesInstaller', 'backend/modulesInstaller/*'
         ]]
     ];
