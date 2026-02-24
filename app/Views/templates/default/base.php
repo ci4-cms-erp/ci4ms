@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <?php echo $this->renderSection('metatags') ?>
     <!-- Favicon-->
-    <link rel="icon" type="image/x-icon" href="/templates/default/assets/node_modules/startbootstrap-modern-business/dist/assets/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="/templates/default/assets/vendor/modern-business/favicon.ico" />
     <!-- Bootstrap icons-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
     <!-- Core theme CSS (includes Bootstrap)-->
-    <link href="/templates/default/assets/node_modules/startbootstrap-modern-business/dist/css/styles.css" rel="stylesheet" />
+    <link href="/templates/default/assets/vendor/modern-business/styles.css" rel="stylesheet" />
     <link href="/templates/default/assets/ci4ms.css" rel="stylesheet" />
     <link href="/be-assets/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />
     <?php echo $this->renderSection('head') ?>
@@ -74,10 +74,10 @@
         </div>
     </div>
     <!-- Bootstrap core JS-->
-    <script src="/templates/default/assets/node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
-    <script src="/templates/default/assets/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/templates/default/assets/vendor/popperjs/popper.min.js"></script>
+    <script src="/templates/default/assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
     <!-- Core theme JS-->
-    <script src="<?php echo base_url("templates/default/assets/node_modules/jquery/dist/jquery.js") ?>"></script>
+    <script src="<?php echo base_url("templates/default/assets/vendor/jquery/jquery.min.js") ?>"></script>
     <script src="/be-assets/plugins/jquery-ui/jquery-ui.min.js"></script>
     <script src="<?php echo base_url("templates/default/assets/ci4ms.js") ?>"></script>
     <?php echo $this->renderSection('javascript') ?>

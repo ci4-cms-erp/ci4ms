@@ -5,7 +5,7 @@
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/node_modules/@yaireo/tagify/dist/tagify.css") ?>
+<?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
 <?php echo link_tag("be-assets/plugins/summernote/summernote-bs4.css") ?>
 <?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
 <link rel="stylesheet" type="text/css"
@@ -53,19 +53,19 @@
                 <?php echo csrf_field() ?>
                 <div class="col-md-8 form-group row">
                     <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.title') ?></label>
+                        <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
                         <input type="text" name="title" class="form-control ptitle" placeholder="<?php echo lang('Backend.title') ?>"
-                            required value="<?php echo old('title',esc($infos->title)) ?>">
+                            required value="<?php echo old('title', esc($infos->title)) ?>">
                     </div>
                     <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.url') ?></label>
+                        <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
                         <input type="text" class="form-control seflink" name="seflink" required
-                            value="<?php echo old('seflink',esc($infos->seflink)) ?>">
+                            value="<?php echo old('seflink', esc($infos->seflink)) ?>">
                     </div>
                     <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.content') ?></label>
+                        <label for=""><?php echo lang('Backend.content') . ' ' . lang('Backend.required') ?></label>
                         <textarea name="content" rows="60" class="form-control editor"
-                            required><?php echo old('content',esc($infos->content)) ?></textarea>
+                            required><?php echo old('content', esc($infos->content)) ?></textarea>
                     </div>
                 </div>
                 <div class="col-md-4 form-group row">
@@ -85,7 +85,7 @@
                         </div>
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?php echo lang('Blog.author') ?></label>
+                        <label for=""><?php echo lang('Blog.author') . ' ' . lang('Backend.required') ?></label>
                         <select name="author" id="" class="form-control" required>
                             <option value=""><?php echo lang('Blog.author') ?></option>
                             <?php foreach ($authors as $author): ?>
@@ -94,7 +94,7 @@
                         </select>
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?php echo lang('Backend.createdAt') ?></label>
+                        <label for=""><?php echo lang('Backend.createdAt') . ' ' . lang('Backend.required') ?></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
@@ -104,7 +104,7 @@
                         </div>
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?php echo lang('Blog.categories') ?></label>
+                        <label for=""><?php echo lang('Blog.categories') . ' ' . lang('Backend.required') ?></label>
                         <select name="categories[]" id="" class="form-control select2bs4" multiple="multiple"
                             data-placeholder="<?php echo lang('Backend.selectOption', [lang('Blog.categories')]) ?>">
                             <?php $selected = [];
@@ -129,23 +129,23 @@
                     <div class="form-group col-md-12 row">
                         <div class="col-md-12 form-group">
                             <label for=""><?php echo lang('Backend.coverImage') ?></label>
-                            <img src="<?php echo (!empty($infos->seo->coverImage)) ? esc($infos->seo->coverImage) : '' ?>" alt="" class="pageimg img-fluid">
+                            <img src="<?php echo old('pageimg', (!empty($infos->seo->coverImage)) ? esc($infos->seo->coverImage) : '') ?>" alt="" class="pageimg img-fluid">
                         </div>
                         <div class="col-md-12 form-group">
                             <label for=""><?php echo lang('Backend.coverImgURL') ?></label>
                             <input type="text" name="pageimg" class="form-control pageimg-input"
-                                placeholder="Görsel URL" value="<?php echo (!empty($infos->seo->coverImage)) ? esc($infos->seo->coverImage) : '' ?>">
+                                placeholder="Görsel URL" value="<?php echo old('pageimg', (!empty($infos->seo->coverImage)) ? esc($infos->seo->coverImage) : '') ?>">
                         </div>
                         <div class="col-md-12 row form-group">
                             <div class="col-sm-6">
                                 <label for=""><?php echo lang('Backend.coverImgWith') ?></label>
                                 <input type="number" name="pageIMGWidth" class="form-control" id="pageIMGWidth"
-                                    readonly value="<?php echo (!empty($infos->seo->IMGWidth)) ? esc($infos->seo->IMGWidth) : '' ?>">
+                                    readonly value="<?php echo old('pageIMGWidth', (!empty($infos->seo->IMGWidth)) ? esc($infos->seo->IMGWidth) : '') ?>">
                             </div>
                             <div class="col-sm-6">
                                 <label for=""><?php echo lang('Backend.coverImgHeight') ?></label>
                                 <input type="number" name="pageIMGHeight" class="form-control" id="pageIMGHeight"
-                                    readonly value="<?php echo (!empty($infos->seo->IMGHeight)) ? esc($infos->seo->IMGHeight) : '' ?>">
+                                    readonly value="<?php echo old('pageIMGHeight', (!empty($infos->seo->IMGHeight)) ? esc($infos->seo->IMGHeight) : '') ?>">
                             </div>
                         </div>
                         <div class="col-md-12 form-group">
@@ -155,7 +155,7 @@
                     </div>
                     <div class="form-group col-md-12">
                         <label for=""><?php echo lang('Backend.seoDescription') ?></label>
-                        <textarea class="form-control" name="description"><?php echo (!empty($infos->seo->description)) ? esc($infos->seo->description) : '' ?></textarea>
+                        <textarea class="form-control" name="description"><?php echo old('description', (!empty($infos->seo->description)) ? esc($infos->seo->description) : '') ?></textarea>
                     </div>
                     <div class="form-group col-md-12">
                         <label for=""><?php echo lang('Backend.seoKeywords') ?></label>
@@ -176,7 +176,7 @@
 
 <?php echo $this->section('javascript') ?>
 <?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/node_modules/@yaireo/tagify/dist/jQuery.tagify.min.js") ?>
+<?php echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js") ?>
 <?php echo script_tag("be-assets/plugins/summernote/summernote-bs4.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>

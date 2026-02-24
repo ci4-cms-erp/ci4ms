@@ -62,7 +62,7 @@
             start = function(lng) {
                 $().ready(function() {
                     var elf = $('#elfinder').elfinder({
-                        cssAutoLoad: [window.location.origin + '/be-assets/node_modules/elfinder-material-theme/Material/css/theme.css'],
+                        cssAutoLoad: [window.location.origin + '/be-assets/plugins/elfinder-material-theme/css/theme.css'],
                         baseUrl: 'media/',
                         url: '/backend/media/elfinderConnection',
                         height: 768,

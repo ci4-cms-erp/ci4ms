@@ -129,7 +129,7 @@ if (!function_exists('menu')) {
                 if (empty($menu->parent)) echo 'nav-link';
                 else echo 'dropdown-item';
                 if ((bool)$menu->hasChildren === true) echo ' dropdown-toggle';
-                echo '" href="' . site_url($menu->seflink) . '"';
+                echo '" href="' . (str_starts_with($menu->seflink, 'http://') || str_starts_with($menu->seflink, 'https://') ? $menu->seflink : site_url($menu->seflink)) . '"';
                 if ((bool)$menu->hasChildren === true) echo ' role="button" data-bs-toggle="dropdown" aria-expanded="false"';
                 echo '>' . esc($menu->title) . '</a>';
                 if ((bool)$menu->hasChildren === true) echo '<ul class="dropdown-menu dropdown-menu-end">';

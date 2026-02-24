@@ -17,16 +17,21 @@ class Menu extends \Modules\Backend\Controllers\BaseController
     public function create()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        $valD = [
-            'type' => ['label' => 'type', 'rules' => 'required|in_list[url,pages,blog]'],
-            'where' => ['label' => 'where', 'rules' => 'required|in_list[pages,blog]'],
-        ];
-        if (!empty($this->request->getPost('URL')))
-            $valD['URL'] = ['label' => 'URL', 'rules' => 'required|valid_url_strict'];
-        if (!empty($this->request->getPost('URLname')))
-            $valD['URLname'] = ['label' => 'URLname', 'rules' => 'required|max_length[100]'];
-        if (!empty($this->request->getPost('target')))
-            $valD['target'] = ['label' => 'target', 'rules' => 'required|in_list[_blank,_self,_parent,_top]'];
+
+        if (!empty($this->request->getPost('type'))) {
+            $valD['type'] = ['label' => 'type', 'rules' => 'required|in_list[url,pages,blog]'];
+
+            if (!empty($this->request->getPost('URL')))
+                $valD['URL'] = ['label' => 'URL', 'rules' => 'required|valid_url'];
+            if (!empty($this->request->getPost('URLname')))
+                $valD['URLname'] = ['label' => 'URLname', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
+            if (!empty($this->request->getPost('target')))
+                $valD['target'] = ['label' => 'target', 'rules' => 'required|in_list[_blank,_self,_parent,_top]'];
+        } else
+            $valD = [
+                'id' => ['label' => 'type', 'rules' => 'required|is_natural_no_zero'],
+                'where' => ['label' => 'where', 'rules' => 'required|in_list[pages,blog]'],
+            ];
         $valData = ($valD);
 
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
@@ -48,7 +53,7 @@ class Menu extends \Modules\Backend\Controllers\BaseController
             if ($this->request->getPost('where') == 'pages') $seflink = $added->seflink;
             if ($this->request->getPost('where') == 'blog') {
                 $seflink = 'blog/' . $added->seflink;
-                $type = 'blogs';
+                $type = 'blog';
             }
 
             $data = [
@@ -61,8 +66,10 @@ class Menu extends \Modules\Backend\Controllers\BaseController
             ];
             $this->commonModel->edit($this->request->getPost('where'), ['inMenu' => true], ['id' => $added->id]);
         }
-        if ($this->commonModel->create('menu', $data))
-            return view('Modules\Menu\Views\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
+        if ($this->commonModel->create('menu', $data)) {
+            cache()->delete('menus');
+            return view('Modules\Menu\Views\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')], ['debug' => false]);
+        }
     }
 
     public function addMultipleMenu()
@@ -81,7 +88,7 @@ class Menu extends \Modules\Backend\Controllers\BaseController
             $d = $this->commonModel->selectOne($this->request->getPost('where'), ['id' => $item]);
 
             if ($this->request->getPost('type') == 'pages') $seflink = $d->seflink;
-            if ($this->request->getPost('type') == 'blogs') $seflink = 'blog/' . $d->seflink;
+            if ($this->request->getPost('type') == 'blog') $seflink = 'blog/' . $d->seflink;
 
             $data = [
                 'pages_id' => $item,
@@ -95,7 +102,8 @@ class Menu extends \Modules\Backend\Controllers\BaseController
             $this->commonModel->edit($this->request->getPost('where'), ['inMenu' => true], ['id' => $item]);
             $this->commonModel->create('menu', $data);
         }
-        return view('Modules\Menu\Views\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
+        cache()->delete('menus');
+        return view('Modules\Menu\Views\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')], ['debug' => false]);
     }
 
     public function delete_ajax()
@@ -103,13 +111,12 @@ class Menu extends \Modules\Backend\Controllers\BaseController
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([
             'type' => ['label' => 'type', 'rules' => 'required|in_list[url,pages,blog]'],
-            'where' => ['label' => 'where', 'rules' => 'required|in_list[pages,blog]'],
             'id' => ['label' => 'id', 'rules' => 'required|is_natural_no_zero'],
         ]);
 
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $type = 'pages';
-        if ($this->request->getPost('type') == 'blogs') $type = 'blog';
+        if ($this->request->getPost('type') == 'blog') $type = 'blog';
         $getData = $this->commonModel->selectone('menu', ['id' => $this->request->getPost('id'), 'urlType' => $this->request->getPost('type')]);
         if ($this->commonModel->isHave('menu', ['parent' => $getData->id]) === 1) {
             $reQ = $this->commonModel->lists('menu', '*', ['parent' => $getData->id]);
@@ -121,7 +128,8 @@ class Menu extends \Modules\Backend\Controllers\BaseController
         $this->commonModel->remove('menu', ['id' => $getData->id]);
         if (!empty($getData->parent) && $this->commonModel->isHave('menu', ['parent' => (int)$getData->parent]) === 0) $this->commonModel->edit('menu', ['hasChildren' => false], ['id' => $getData->parent]);
         $this->commonModel->edit($type, ['inMenu' => 0], ['id' => $getData->pages_id]);
-        return view('Modules\Menu\Views\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
+        cache()->delete('menus');
+        return view('Modules\Menu\Views\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')], ['debug' => false]);
     }
 
     private function queue($menu, $parent = null)
@@ -137,7 +145,6 @@ class Menu extends \Modules\Backend\Controllers\BaseController
             $this->commonModel->edit('menu', $data, ['id' => $d['id']]);
             $i++;
         }
-        cache()->delete('menus');
     }
 
     public function queue_ajax()
@@ -149,7 +156,8 @@ class Menu extends \Modules\Backend\Controllers\BaseController
 
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $this->queue($this->request->getPost('queue'));
-        return view('Modules\Menu\Views\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')]);
+        cache()->delete('menus');
+        return view('Modules\Menu\Views\render-nestable2', ['nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')], ['debug' => false]);
     }
 
     public function listURLs()
@@ -159,6 +167,6 @@ class Menu extends \Modules\Backend\Controllers\BaseController
             'blogs' => $this->commonModel->lists('blog', '*', ['inMenu' => false, 'isActive' => true]),
             'nestable2' => $this->commonModel->lists('menu', '*', [], 'queue ASC')
         ]);
-        return view('Modules\Menu\Views\list', $this->defData);
+        return view('Modules\Menu\Views\list', $this->defData, ['debug' => false]);
     }
 }

@@ -5,7 +5,7 @@
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/node_modules/@yaireo/tagify/dist/tagify.css") ?>
+<?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
 <?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
 <link rel="stylesheet" type="text/css"
     href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
@@ -130,7 +130,7 @@
 
 <?php echo $this->section('javascript') ?>
 <?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/node_modules/@yaireo/tagify/dist/jQuery.tagify.min.js") ?>
+<?php echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js") ?>

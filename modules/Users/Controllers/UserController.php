@@ -107,7 +107,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'password' => ['label' => 'Şifre', 'rules' => 'required|min_length[8]']
             ]);
 
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->route('create_user')->withInput()->with('errors', $this->validator->getErrors());
 
             $users = auth()->getProvider();
             try {
@@ -122,7 +122,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 ];
                 $user = new User($d);
 
-                if (!$users->save($user)) return redirect()->back()->withInput()->with('errors', $users->errors());
+                if (!$users->save($user)) return redirect()->route('create_user')->withInput()->with('errors', $users->errors());
                 $new_user = $users->findById($users->getInsertID());
 
                 $group = $this->commonModel->selectOne('auth_groups', ['id' => $this->request->getPost('group')]);
@@ -139,7 +139,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
                 return redirect()->route('users')->with('message', lang('Auth.activationSuccess'));
             } catch (\Exception $e) {
-                return redirect()->back()->withInput()->with('error', $e->getMessage());
+                return redirect()->route('create_user')->withInput()->with('error', $e->getMessage());
             }
         }
         $this->defData['groups'] = $this->commonModel->lists('auth_groups', '*', ['group!=' => 'superadmin']);
@@ -181,7 +181,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             if ($this->request->getPost('password')) $valData['password'] = ['label' => 'Şifre', 'rules' => 'required|min_length[8]'];
 
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->route('update_user', [$id])->withInput()->with('errors', $this->validator->getErrors());
 
             $user = auth()->getProvider();
             if ($user->inGroup('superadmin')) return redirect()->route('403');
@@ -202,7 +202,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             $u->fill($data);
             if ($user->save($u)) return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
-            else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$data['username']]));
+            else return redirect()->route('update_user', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$data['username']]));
         }
         $user = auth()->getProvider();
         $this->defData['groups'] = $this->commonModel->lists('auth_groups', '*', ['group!=' => 'superadmin']);
@@ -250,7 +250,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             }
 
             if ($this->validate($valData) == false) {
-                return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+                return redirect()->route('profile')->withInput()->with('errors', $this->validator->getErrors());
             }
 
             $users = auth()->getProvider();
@@ -283,7 +283,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             if ($user->email != $data['email']) {
                 $existingUser = $users->findByCredentials(['email' => $data['email']]);
                 if ($existingUser && $existingUser->id != $user->id) {
-                    return redirect()->back()->withInput()->with('error', 'Daha önce bu mail adresi başka bir kullanıcı tarafından alınmıştır lütfen bilgilerinizi kontrol ediniz.');
+                    return redirect()->route('profile')->withInput()->with('error', 'Daha önce bu mail adresi başka bir kullanıcı tarafından alınmıştır lütfen bilgilerinizi kontrol ediniz.');
                 }
 
 
@@ -316,8 +316,8 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 $result = $users->save($user);
             }
 
-            if ((bool)$result == false) return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [esc($user->firstname . ' ' . $user->surname)]));
-            else return redirect()->back()->with('message', lang('Backend.updated', [esc($user->firstname . ' ' . $user->surname)]));
+            if ((bool)$result == false) return redirect()->route('profile')->withInput()->with('error', lang('Backend.notUpdated', [esc($user->firstname . ' ' . $user->surname)]));
+            else return redirect()->route('profile')->with('message', lang('Backend.updated', [esc($user->firstname . ' ' . $user->surname)]));
         }
         $this->defData['user'] = auth()->getProvider()->findById(user_id());
         return view('Modules\Users\Views\usersCrud\profile', $this->defData);

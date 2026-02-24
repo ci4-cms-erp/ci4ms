@@ -3,7 +3,7 @@
 <?php echo lang($title->pagename) ?>
 <?php echo $this->endSection() ?>
 <?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/node_modules/@yaireo/tagify/dist/tagify.css") ?>
+<?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
 <?php echo link_tag("be-assets/plugins/summernote/summernote-bs4.css") ?>
 <?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
 <link rel="stylesheet" type="text/css"
@@ -46,15 +46,15 @@
                 <?php echo csrf_field() ?>
                 <div class="col-md-8 form-group row">
                     <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.title'). ' '.lang('Backend.required') ?></label>
+                        <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
                         <input type="text" name="title" class="form-control ptitle" value="<?php echo old('title') ?>" placeholder="<?php echo lang('Backend.title') ?>" required>
                     </div>
                     <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.url'). ' '.lang('Backend.required') ?></label>
+                        <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
                         <input type="text" class="form-control seflink" name="seflink" value="<?php echo old('seflink') ?>" required>
                     </div>
                     <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.content'). ' '.lang('Backend.required') ?></label>
+                        <label for=""><?php echo lang('Backend.content') . ' ' . lang('Backend.required') ?></label>
                         <textarea name="content" rows="60" class="form-control editor" required><?php echo old('content') ?></textarea>
                     </div>
                 </div>
@@ -115,7 +115,7 @@
 <?php echo $this->endSection() ?>
 <?php echo $this->section('javascript') ?>
 <?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/node_modules/@yaireo/tagify/dist/jQuery.tagify.min.js") ?>
+<?php echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js") ?>
 <?php echo script_tag("be-assets/plugins/summernote/summernote-bs4.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>

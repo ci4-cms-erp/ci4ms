@@ -42,7 +42,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             ]);
 
             if ($this->validate($valData) == false)
-                return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+                return redirect()->route('group_create')->withInput()->with('errors', $this->validator->getErrors());
 
             $data = [
                 'group' => esc($this->request->getPost('groupName')),
@@ -65,7 +65,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             }
             $data['permissions'] = json_encode($permissions, JSON_UNESCAPED_UNICODE);
             $result = $this->commonModel->create('auth_groups', $data);
-            if (empty($result)) return redirect()->back()->withInput()->with('errors', lang('Backend.notCreated', [$this->request->getPost('groupName')]));
+            if (empty($result)) return redirect()->route('group_create')->withInput()->with('errors', lang('Backend.notCreated', [$this->request->getPost('groupName')]));
             else return redirect()->to(route_to('groupList'))->with('message', lang('Backend.created', [$this->request->getPost('groupName')]));
         }
         $methodsModel = new \Modules\Methods\Models\MethodsModel();
@@ -83,7 +83,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
                 'perms' => ['label' => 'İzinler', 'rules' => 'required']
             ]);
 
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->route('group_update', [$id])->withInput()->with('errors', $this->validator->getErrors());
             $data = [
                 'group' => esc($this->request->getPost('groupName')),
                 'description' => esc($this->request->getPost('description')),
@@ -108,7 +108,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             if ($this->commonModel->edit('auth_groups', $data, ['id' => $id])) {
                 cache()->delete("shield_auth_dynamic_config");
                 return redirect()->route('groupList')->with('message', lang('Backend.updated', [$this->request->getPost('groupName')]));
-            } else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('groupName')]));
+            } else return redirect()->route('group_update', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('groupName')]));
         }
         $methodsModel = new \Modules\Methods\Models\MethodsModel();
         $this->defData['modules'] = $methodsModel->getModules();
@@ -150,7 +150,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
 
                 return redirect()->route('users')->with('message', lang('Backend.updated', [$user->username]));
             } catch (\Exception $e) {
-                return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$e->getMessage()]));
+                return redirect()->route('user_perms', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$e->getMessage()]));
             }
         }
         $methodsModel = new \Modules\Methods\Models\MethodsModel();

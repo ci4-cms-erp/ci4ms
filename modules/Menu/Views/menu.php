@@ -5,7 +5,7 @@
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/node_modules/nestable2/dist/jquery.nestable.min.css") ?>
+<?php echo link_tag("be-assets/plugins/nestable2/jquery.nestable.min.css") ?>
 <style {csp-style-nonce}>
     .dd-content {
         display: block;
@@ -118,7 +118,7 @@
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('javascript') ?>
-<?php echo script_tag("be-assets/node_modules/nestable2/dist/jquery.nestable.min.js") ?>
+<?php echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js") ?>
 <script {csp-script-nonce}>
     $('.dd').nestable();
 
@@ -196,7 +196,7 @@
         });
         formData.push({
             name: "type",
-            value: "blogs"
+            value: "blog"
         });
         $.post('<?php echo route_to('addMultipleMenu') ?>', formData).done(function(data) {
             $('.dd').nestable('destroy');

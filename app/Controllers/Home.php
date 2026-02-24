@@ -268,46 +268,40 @@ class Home extends BaseController
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $vdata = [
-            'comFullName' => ['label' => 'Full name', 'rules' => 'required'],
+            'comFullName' => ['label' => 'Full name', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
             'comEmail' => ['label' => 'E-mail', 'rules' => 'required|valid_email'],
-            'comMessage' => ['label' => 'Join the discussion and leave a comment!', 'rules' => 'required'],
-            'captcha' => ['label' => 'Captcha', 'rules' => 'required'],
+            'comMessage' => ['label' => 'Join the discussion and leave a comment!', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+            'captcha' => ['label' => 'Captcha', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
             'blog_id' => ['label' => 'Blog', 'rules' => 'required|is_natural_no_zero']
         ];
 
-        if(!empty($this->request->getPost('commentID'))) $vdata['commentID'] = ['label' => 'Comment', 'rules' => 'required|is_natural_no_zero'];
+        if (!empty($this->request->getPost('commentID'))) $vdata['commentID'] = ['label' => 'Comment', 'rules' => 'required|is_natural_no_zero'];
         $valData = ($vdata);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
-        if ($this->request->getPost('captcha') == session()->getFlashdata('cap')) {
-            $badwordFilterSettings = json_decode($this->commonModel->selectOne(
-                'settings',
-                ['option' => 'badwords'],
-                'content'
-            )->content);
-            $checked = $this->commonLibrary->commentBadwordFiltering(
-                $this->request->getPost('comMessage'),
-                $badwordFilterSettings->list,
-                (bool)$badwordFilterSettings->status,
-                (bool)$badwordFilterSettings->autoReject
+        if (ENVIRONMENT !== 'development' && $this->request->getPost('captcha') != session()->getFlashdata('cap')) return $this->fail('Please get a new captcha !');
+        $checked = $this->commonLibrary->commentBadwordFiltering(
+            $this->request->getPost('comMessage'),
+            $this->defData['settings']->badwords->list,
+            (bool)$this->defData['settings']->badwords->status,
+            (bool)$this->defData['settings']->badwords->autoReject
+        );
+        if (is_bool($checked) && !$checked) return $this->fail('Lütfen kelimelerinize dikkat ediniz.');
+        $data = [
+            'blog_id' => $this->request->getPost('blog_id'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'comFullName' => strip_tags(trim($this->request->getPost('comFullName'))),
+            'comEmail' => $this->request->getPost('comEmail'),
+            'comMessage' => $checked
+        ];
+        if (!empty($this->request->getPost('commentID'))) {
+            $data['parent_id'] = $this->request->getPost('commentID');
+            $this->commonModel->edit(
+                'comments',
+                ['isThereAnReply' => true],
+                ['id' => $this->request->getPost('commentID')]
             );
-            if (is_bool($checked) && !$checked) return $this->fail('Lütfen kelimelerinize dikkat ediniz.');
-            $data = [
-                'blog_id' => $this->request->getPost('blog_id'),
-                'created_at' => date('Y-m-d H:i:s'),
-                'comFullName' => strip_tags(trim($this->request->getPost('comFullName'))),
-                'comEmail' => $this->request->getPost('comEmail'),
-                'comMessage' => $checked
-            ];
-            if (!empty($this->request->getPost('commentID'))) {
-                $data['parent_id'] = $this->request->getPost('commentID');
-                $this->commonModel->edit(
-                    'comments',
-                    ['isThereAnReply' => true],
-                    ['id' => $this->request->getPost('commentID')]
-                );
-            }
-            if ($this->commonModel->create('comments', $data)) return $this->respondCreated(['result' => true]);
-        } else return $this->fail('Please get a new captcha !');
+        }
+        if ($this->commonModel->create('comments', $data)) return $this->respondCreated(['result' => true]);
     }
 
     public function repliesComment()

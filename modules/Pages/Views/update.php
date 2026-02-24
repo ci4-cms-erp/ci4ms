@@ -3,7 +3,7 @@
 <?php echo lang($title->pagename) ?>
 <?php echo $this->endSection() ?>
 <?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/node_modules/@yaireo/tagify/dist/tagify.css") ?>
+<?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
 <?php echo link_tag("be-assets/plugins/summernote/summernote-bs4.css") ?>
 <?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
 <link rel="stylesheet" type="text/css"
@@ -118,7 +118,7 @@
 <?php echo $this->endSection() ?>
 <?php echo $this->section('javascript') ?>
 <?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/node_modules/@yaireo/tagify/dist/jQuery.tagify.min.js") ?>
+<?php echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js") ?>
 <?php echo script_tag("be-assets/plugins/summernote/summernote-bs4.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>

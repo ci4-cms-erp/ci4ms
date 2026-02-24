@@ -5,7 +5,7 @@
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/node_modules/@yaireo/tagify/dist/tagify.css") ?>
+<?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
 <?php echo link_tag("be-assets/plugins/summernote/summernote-bs4.css") ?>
 <?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
 <link rel="stylesheet" type="text/css"
@@ -53,16 +53,16 @@
                 <?php echo csrf_field() ?>
                 <div class="col-md-8 form-group row">
                     <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.title') ?></label>
+                        <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
                         <input type="text" name="title" class="form-control ptitle" placeholder="<?php echo lang('Backend.title') ?>"
                             value="<?php echo old('title') ?>" required>
                     </div>
                     <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.url') ?></label>
+                        <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
                         <input type="text" class="form-control seflink" name="seflink" value="<?php echo old('seflink') ?>" required>
                     </div>
                     <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.content') ?></label>
+                        <label for=""><?php echo lang('Backend.content') . ' ' . lang('Backend.required') ?></label>
                         <textarea name="content" rows="60" class="form-control editor" required><?php echo old('content') ?></textarea>
                     </div>
                 </div>
@@ -78,16 +78,16 @@
                         </div>
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?php echo lang('Blog.author') ?></label>
+                        <label for=""><?php echo lang('Blog.author') . ' ' . lang('Backend.required') ?></label>
                         <select name="author" class="form-control" required>
                             <option value=""><?php echo lang('Backend.select') ?></option>
                             <?php foreach ($authors as $author): ?>
-                                <option value="<?php echo $author->id ?>" <?php echo $author->id == $logged_in_user->id ? 'selected' : '' ?>><?php echo esc($author->firstname) . ' ' . esc($author->surname) ?></option>
+                                <option value="<?php echo $author->id ?>" <?php echo set_select('author', $author->id, $author->id == $logged_in_user->id) ?>><?php echo esc($author->firstname) . ' ' . esc($author->surname) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?php echo lang('Backend.createdAt') ?></label>
+                        <label for=""><?php echo lang('Backend.createdAt') . ' ' . lang('Backend.required') ?></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
@@ -96,7 +96,7 @@
                         </div>
                     </div>
                     <div class="col-md-12 form-group">
-                        <label for=""><?php echo lang('Blog.categories') ?></label>
+                        <label for=""><?php echo lang('Blog.categories') . ' ' . lang('Backend.required') ?></label>
                         <select name="categories[]" id="" class="form-control select2bs4" multiple="multiple" data-placeholder="<?php echo lang('Backend.selectOption', [lang('Blog.categories')]) ?>">
                             <?php foreach ($categories as $category): ?>
                                 <option value="<?php echo $category->id ?>"><?php echo esc($category->title) ?></option>
@@ -106,12 +106,12 @@
                     <div class="form-group col-md-12 row">
                         <div class="col-md-12 form-group">
                             <label for=""><?php echo lang('Backend.coverImage') ?></label>
-                            <img src="<?php echo old('pageimg') ?>" alt="" class="pageimg img-fluid">
+                            <img src="<?php echo old('pageimg') ?>" class="pageimg img-fluid">
                         </div>
                         <div class="col-md-12 form-group">
                             <label for=""><?php echo lang('Backend.coverImgURL') ?></label>
                             <input type="text" name="pageimg" class="form-control pageimg-input"
-                                value="<?php echo old('pageimg') ?>" placeholder="Görsel URL">
+                                value="<?php echo old('pageimg') ?>" placeholder="<?php echo lang('Backend.coverImgURL') ?>">
                         </div>
                         <div class="col-md-12 row form-group">
                             <div class="col-sm-6">
@@ -153,7 +153,7 @@
 
 <?php echo $this->section('javascript') ?>
 <?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/node_modules/@yaireo/tagify/dist/jQuery.tagify.min.js") ?>
+<?php echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js") ?>
 <?php echo script_tag("be-assets/plugins/summernote/summernote-bs4.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>

@@ -33,7 +33,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         if (!empty($this->request->getPost('cMap'))) $valData['cMap'] = ['label' => lang('Settings.gmapIframe'), 'rules' => 'required'];
         if (!empty($this->request->getPost('cLogo'))) $valData['cLogo'] = ['label' => lang('Settings.companyLogo'), 'rules' => 'required'];
 
-        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
 
         try {
             setting()->set('App.siteName', esc(trim(strip_tags($this->request->getPost('cName')))));
@@ -50,9 +50,9 @@ class Settings extends \Modules\Backend\Controllers\BaseController
 
             setting()->set('App.contact', json_encode($data, JSON_UNESCAPED_UNICODE));
             cache()->delete('settings');
-            return redirect()->back()->with('message', lang('Backend.updated', [lang('Settings.companyInfos')]));
+            return redirect()->route('settings')->with('message', lang('Backend.updated', [lang('Settings.companyInfos')]));
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.companyInfos')]));
+            return redirect()->route('settings')->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.companyInfos')]));
         }
     }
 
@@ -71,7 +71,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 $error['link'] = lang('Settings.socialMediaLinkMustBeUrl');
                 unset($socialNetwork[$key]);
             }
-            if (!empty($error)) return redirect()->back()->withInput()->with('errors', $error);
+            if (!empty($error)) return redirect()->route('settings')->withInput()->with('errors', $error);
             if (!is_string($item['smName'])) {
                 $error['snName'] = lang('Settings.socialMediaNameMustBeText');
                 unset($socialNetwork[$key]);
@@ -82,14 +82,14 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             }
         }
 
-        if (!empty($error)) return redirect()->back()->withInput()->with('errors', $error);
-        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if (!empty($error)) return redirect()->route('settings')->withInput()->with('errors', $error);
+        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             setting()->set('App.socialNetwork', json_encode($socialNetwork, JSON_UNESCAPED_UNICODE));
             cache()->delete('settings');
-            return redirect()->back()->withInput()->with('message', lang('Backend.updated', [lang('Settings.socialMedia')]));
+            return redirect()->route('settings')->withInput()->with('message', lang('Backend.updated', [lang('Settings.socialMedia')]));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', lang('Backend.notUpdated', [lang('Settings.socialMedia')]));
+            return redirect()->route('settings')->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.socialMedia')]));
         }
     }
 
@@ -105,7 +105,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             'mPwd' => ['label' => lang('Settings.mailPassword'), 'rules' => 'required']
         ];
         if (!empty($this->request->getPost('mPwd'))) $valData['mPwd'] = ['label' => lang('Settings.mailPassword'), 'rules' => 'required|min_length[8]'];
-        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             $data = [
                 'server' => trim(strip_tags($this->request->getPost('mServer'))),
@@ -118,9 +118,9 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             if ($this->request->getPost('mTls')) $data['tls'] = true;
             setting()->set('App.mail', json_encode($data));
             cache()->delete('settings');
-            return redirect()->back()->withInput()->with('message', lang('Backend.updated', [lang('Settings.mailSettings')]));
+            return redirect()->route('settings')->withInput()->with('message', lang('Backend.updated', [lang('Settings.mailSettings')]));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', lang('Backend.notUpdated', [lang('Settings.mailSettings')]));
+            return redirect()->route('settings')->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.mailSettings')]));
         }
     }
 
@@ -155,7 +155,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 'path' => ['label' => 'path', 'rules' => 'required'],
                 'tName' => ['label' => 'tName', 'rules' => 'required']
             ]);
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
             try {
                 setting()->set('App.templateInfos', json_encode([
                     'path' => esc($this->request->getPost('path')),
@@ -177,14 +177,14 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'allowedFiles' => ['label' => lang('Settings.fileTypes'), 'rules' => 'required|alpha_numeric'],
         ]);
-        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             $data = explode(',', $this->request->getPost('allowedFiles'));
             setting()->set('Security.allowedFiles', json_encode($data, JSON_UNESCAPED_UNICODE));
             cache()->delete('settings');
-            return redirect()->back()->with('message', lang('Backend.updated', [lang('Settings.fileTypes')]));
+            return redirect()->route('settings')->with('message', lang('Backend.updated', [lang('Settings.fileTypes')]));
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.fileTypes')]));
+            return redirect()->route('settings')->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.fileTypes')]));
         }
     }
 
@@ -202,7 +202,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     public function templateSettings_post()
     {
         $valData = (['settings' => ['label' => 'widgets', 'rules' => 'required']]);
-        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
 
             $current = (array)$this->defData['settings']->templateInfos;
@@ -212,9 +212,9 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             setting()->set('App.templateInfos', json_encode($data, JSON_UNESCAPED_UNICODE));
 
             cache()->delete('settings');
-            return redirect()->back()->with('success', lang('Backend.updated', [lang('Settings.templateSettings')]));
+            return redirect()->route('settings')->with('success', lang('Backend.updated', [lang('Settings.templateSettings')]));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', lang('Backend.notUpdated', [lang('Settings.templateSettings')]));
+            return redirect()->route('settings')->with('error', lang('Backend.notUpdated', [lang('Settings.templateSettings')]));
         }
     }
 

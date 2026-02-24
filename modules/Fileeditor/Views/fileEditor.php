@@ -3,9 +3,9 @@
 <?php echo lang($title->pagename) ?>
 <?php echo $this->endSection() ?>
 <?php echo $this->section('head') ?>
-<?php echo link_tag('be-assets/node_modules/jquery.fancytree/dist/skin-bootstrap/ui.fancytree.min.css') ?>
+<?php echo link_tag('be-assets/plugins/jquery-fancytree/skin-bootstrap/ui.fancytree.min.css') ?>
 <?php echo link_tag('be-assets/plugins/jquery-ui/jquery-ui.min.css') ?>
-<?php echo link_tag('be-assets/node_modules/jquery-contextmenu/dist/jquery.contextMenu.min.css') ?>
+<?php echo link_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.css') ?>
 <style {csp-style-nonce}>
     .ui-menu kbd {
         /* Keyboard shortcuts for ui-contextmenu titles */
@@ -67,14 +67,14 @@
 
 <?php echo $this->section('javascript') ?>
 <?php echo script_tag('be-assets/plugins/jquery-ui/jquery-ui.min.js') ?>
-<?php echo script_tag('be-assets/node_modules/jquery.fancytree/dist/jquery.fancytree.min.js') ?>
-<?php echo script_tag('be-assets/node_modules/jquery.fancytree/dist/modules/jquery.fancytree.edit.js') ?>
-<?php echo script_tag('be-assets/node_modules/jquery.fancytree/dist/modules/jquery.fancytree.filter.js') ?>
-<?php echo script_tag('be-assets/node_modules/jquery.fancytree/dist/modules/jquery.fancytree.dnd.js') ?>
-<?php echo script_tag('be-assets/node_modules/jquery.fancytree/dist/modules/jquery.fancytree.glyph.js') ?>
-<?php echo script_tag('be-assets/node_modules/jquery-contextmenu/dist/jquery.contextMenu.min.js') ?>
-<?php echo script_tag('be-assets/node_modules/jquery-contextmenu/dist/jquery.ui.position.min.js') ?>
-<?php echo script_tag('be-assets/node_modules/monaco-editor/min/vs/loader.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/jquery.fancytree.min.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.edit.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.filter.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.dnd.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.glyph.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.ui.position.min.js') ?>
+<?php echo script_tag('be-assets/plugins/monaco-editor/vs/loader.js') ?>
 <script {csp-script-nonce}>
     $('body').addClass('sidebar-collapse');
 
@@ -84,7 +84,7 @@
     // Monaco Editor Initialization
     require.config({
         paths: {
-            'vs': '/be-assets/node_modules/monaco-editor/min/vs'
+            'vs': '/be-assets/plugins/monaco-editor/vs'
         }
     });
     require(['vs/editor/editor.main'], function() {
@@ -98,28 +98,12 @@
 
     const $saveButton = $('#saveFile');
 
-    function filterNodes(nodes) {
-        return nodes.filter(function(node) {
-            const title = node.title.toLowerCase(); // Küçük harfe dönüştür (case-insensitive)
-            // Gizli dosyaları/klasörleri filtrele ('.' ile başlar)
-            if (title.startsWith('.')) {
-                return false; // Gizle
-            }
-            // Özel filtre: .github klasörünü gizle
-            if (node.folder && title === '.github') {
-                return false; // Gizle
-            }
-            return true; // Göster
-        });
-    }
     // Load file list
     $('#fileTree').fancytree({
         source: {
             url: '<?php echo route_to("listfiles") ?>', // Endpoint to fetch file list
             cache: false, // Disable cache for live updates
             postProcess: function(event, data) {
-                // Dönen veriyi filtrele
-                data.result = filterNodes(data.result);
                 data.result.sort(function(a, b) {
                     return a.title.localeCompare(b.title, undefined, {
                         sensitivity: 'base'
@@ -152,8 +136,6 @@
                     path: node.key
                 },
                 postProcess: function(event, data) {
-                    // Lazy load verisini de filtrele (alt klasörler için)
-                    data.result = filterNodes(data.result);
                     data.result.sort(function(a, b) {
                         return a.title.localeCompare(b.title, undefined, {
                             sensitivity: 'base'
@@ -172,7 +154,8 @@
             const rootNode = data.tree.getRootNode();
             rootNode.sortChildren(null, true); // null: varsayılan comparator (alfabetik), true:
             data.tree.visit(function(node) {
-                if (node.title === 'app' || node.title === 'modules') {
+                // Automatically open the folders you specify.
+                /* if (node.title === 'app' || node.title === 'modules') {
                     if (node.title === 'modules') {
                         node.setExpanded(true).done(function() {
                             $.each(node.children, function(i, child) {
@@ -184,13 +167,13 @@
                     }
                 } else {
                     node.setExpanded(false);
-                }
+                } */
+                node.setExpanded(false);
             });
         },
         edit: {
             triggerStart: ["f2"],
             save: function(event, data) {
-                // Save data.input.val() or return false to keep editor open
                 $.ajax({
                     url: '<?php echo route_to("renameFile") ?>',
                     method: 'POST',
@@ -380,6 +363,22 @@
         $("input[name=search]").keyup();
     });
 
+    const getLanguageFromExtension = (fileName) => {
+        const ext = fileName.split('.').pop().toLowerCase();
+        const map = {
+            'php': 'php',
+            'js': 'javascript',
+            'css': 'css',
+            'md': 'markdown',
+            'json': 'json',
+            'html': 'html',
+            'txt': 'plaintext',
+            'sql': 'sql',
+            'env': 'properties'
+        };
+        return map[ext] || undefined;
+    };
+
     // Load file content
     const loadFileContent = (path, fileName) => {
         $.ajax({
@@ -392,17 +391,16 @@
                 if (data.content) {
                     const currentModel = editor.getModel();
                     if (currentModel) {
-                        currentModel.dispose(); // Eski modeli temizle (hafıza yönetimi için)
+                        currentModel.dispose();
                     }
 
-                    // Yeni model: Dil undefined bırak, URI ile dosya adını ver (otomatik algılama için)
+                    const language = getLanguageFromExtension(fileName);
                     const newModel = monaco.editor.createModel(
                         data.content,
-                        undefined, // Dil otomatik algılansın (uzantıya göre)
-                        monaco.Uri.file(fileName) // Dosya adından uzantı algılanır
+                        language,
+                        monaco.Uri.file(fileName)
                     );
 
-                    // Editör'e yeni modeli ata
                     editor.setModel(newModel);
                     currentPath = path;
                 } else {

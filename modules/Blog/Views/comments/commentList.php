@@ -151,7 +151,7 @@
             cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.post('<?php echo route_to('blogDelete') ?>', {
+                $.post('<?php echo route_to('commentRemove') ?>', {
                     "id": id,
                     "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
                 }, 'json').done(function(response) {
@@ -166,7 +166,7 @@
                                 table.ajax.reload();
                             }
                         });
-                    }else{
+                    } else {
                         Swal.fire({
                             title: '<?php echo lang('Backend.error') ?>',
                             text: response.message,

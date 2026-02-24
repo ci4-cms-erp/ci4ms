@@ -38,7 +38,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[auth_permissions_pages.sefLink]'],
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required'],
             ]);
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->route('methodCreate')->withInput()->with('errors', $this->validator->getErrors());
             $roles = $this->request->getPost('typeOfPermissions');
             $r = [
                 'create_r' => in_array('create', $roles),
@@ -61,11 +61,9 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
                 'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
             ])) {
-                $id = $this->defData['logged_in_user']->id;
-                cache()->delete("{$id}_permissions");
                 return redirect()->route('list')->with('success', lang('Backend.created', [$this->request->getPost('pagename')]));
             } else
-                return redirect()->back()->withInput()->with('error', lang('Backend.notCreated', [$this->request->getPost('pagename')]));
+                return redirect()->route('methodCreate')->withInput()->with('error', lang('Backend.notCreated', [$this->request->getPost('pagename')]));
         }
         $this->defData['modules'] = $this->commonModel->lists('modules');
         $this->defData['permPages'] = $this->commonModel->lists('auth_permissions_pages');
@@ -80,7 +78,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required']
             ]);
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->route('methodUpdate', [$pk])->withInput()->with('errors', $this->validator->getErrors());
             $roles = $this->request->getPost('typeOfPermissions');
             $r = [
                 'create_r' => in_array('create', $roles),
@@ -103,11 +101,9 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'isBackoffice' => (bool)$this->request->getPost('isBackoffice') == true ? 1 : 0,
                 'typeOfPermissions' => $roles
             ], ['id' => $pk])) {
-                $id = $this->defData['logged_in_user']->id;
-                cache()->delete("{$id}_permissions");
                 return redirect()->route('list')->with('success', lang('Backend.updated', [$this->request->getPost('pagename')]));
             } else
-                return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('pagename')]));
+                return redirect()->route('methodUpdate', [$pk])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('pagename')]));
         }
         $this->defData['method'] = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pk]);
         $this->defData['methods'] = $this->commonModel->lists('auth_permissions_pages', '*', ['id!=' => $pk, 'inNavigation' => true], 'pagename ASC');

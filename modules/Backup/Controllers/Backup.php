@@ -78,9 +78,9 @@ class Backup extends \Modules\Backend\Controllers\BaseController
     public function restore()
     {
         $valData = ([
-            'backup_file' => ['label' => 'Backup File', 'rules' => 'ext_in[zip]'],
+            'backup_file' => ['label' => 'Backup File', 'rules' => 'uploaded[backup_file]|ext_in[backup_file,zip]'],
         ]);
-        if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) == false) return redirect()->route('backup')->withInput()->with('errors', $this->validator->getErrors());
         $file = $this->request->getFile('backup_file');
 
         if ($file && $file->isValid() && ! $file->hasMoved()) {
@@ -106,22 +106,26 @@ class Backup extends \Modules\Backend\Controllers\BaseController
             $dbBackup = new \Modules\Backup\Libraries\DbBackup();
             if ($dbBackup->restore($sqlPath)) {
                 @unlink($sqlPath);
-                return redirect()->back()->with('message', lang('Backup.dbRestore'));
+                cache()->delete('menus');
+                cache()->delete('settings');
+                cache()->delete('shield_auth_dynamic_config');
+                cache()->delete('sidebar_menu');
+                return redirect()->route('backup')->with('message', lang('Backup.dbRestore'));
             }
         }
-        return redirect()->back()->with('error', lang('Backup.dbNotRestore'));
+        return redirect()->route('backup')->with('error', lang('Backup.dbNotRestore'));
     }
 
     public function download($fileName)
     {
         $fileName = basename($fileName);
         if (!preg_match('/^backup_[\d\-_]+\.zip$/', $fileName)) {
-            return redirect()->back()->with('error', 'Geçersiz dosya adı.');
+            return redirect()->route('backup')->with('error', 'Geçersiz dosya adı.');
         }
         $path = WRITEPATH . 'backups/' . $fileName;
         if (file_exists($path)) {
             return $this->response->download($path, null);
         }
-        return redirect()->back()->with('error', 'Dosya bulunamadı.');
+        return redirect()->route('backup')->with('error', 'Dosya bulunamadı.');
     }
 }

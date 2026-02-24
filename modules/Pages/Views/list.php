@@ -146,7 +146,7 @@
                     if (response.status == 'success') {
                         Swal.fire({
                             title: '<?php echo lang('Backend.success') ?>',
-                            text: "<?php echo lang('Backend.deletedSuccessfully') ?>",
+                            text: response.message,
                             icon: 'success',
                             confirmButtonText: '<?php echo lang('Backend.ok') ?>'
                         }).then((result) => {

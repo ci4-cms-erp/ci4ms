@@ -154,7 +154,7 @@
             cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.post('<?php echo route_to('commentRemove') ?>', {
+                $.post('<?php echo route_to('blogDelete') ?>', {
                     "id": id,
                     "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
                 }, 'json').done(function(response) {

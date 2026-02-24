@@ -49,39 +49,45 @@ class Pages extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[pages.seflink]'],
                 'content' => ['label' => lang('Backend.content'), 'rules' => 'required'],
                 'isActive' => ['label' => lang('Backend.draft') . ' / ' . lang('Backend.publish'), 'rules' => 'required|in_list[0,1]']
             ]);
             if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required'];
+                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
                 $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
+            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
             if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
 
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-            if ($this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->back()->withInput()->with('error', lang('Backend.slugExists', [$this->request->getPost('title')]));
+            if ($this->validate($valData) == false) return redirect()->route('pageCreate')->withInput()->with('errors', $this->validator->getErrors());
 
             $data = [
-                'title' => $this->request->getPost('title'),
-                'content' => $this->request->getPost('content'),
+                'title' => strip_tags(trim($this->request->getPost('title'))),
+                'content' => strip_tags(trim($this->request->getPost('content'))),
                 'isActive' => (bool)$this->request->getPost('isActive'),
-                'seflink' => $this->request->getPost('seflink'),
+                'seflink' => strip_tags(trim($this->request->getPost('seflink'))),
                 'inMenu' => false
             ];
 
             if (!empty($this->request->getPost('pageimg'))) {
-                $data['seo']['coverImage'] = $this->request->getPost('pageimg');
-                $data['seo']['IMGWidth'] = $this->request->getPost('pageIMGWidth');
-                $data['seo']['IMGHeight'] = $this->request->getPost('pageIMGHeight');
+                $data['seo']['coverImage'] = strip_tags(trim($this->request->getPost('pageimg')));
+                $data['seo']['IMGWidth'] = strip_tags(trim($this->request->getPost('pageIMGWidth')));
+                $data['seo']['IMGHeight'] = strip_tags(trim($this->request->getPost('pageIMGHeight')));
             }
-            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
-            if (!empty($this->request->getPost('keywords'))) $data['seo']['keywords'] = json_decode($this->request->getPost('keywords'));
-            if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
+            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = strip_tags(trim($this->request->getPost('description')));
+            if (!empty($this->request->getPost('keywords'))) {
+                $keywords = json_decode($this->request->getPost('keywords'));
+                foreach($keywords as $key=>$keyword){
+                    $value=strip_tags(trim($keyword->value));
+                    if(empty($value)) unset($keywords[$key]);
+                }
+                $data['seo']['keywords']=$keywords;
+            }
+            if (!empty($data['seo'])) $data['seo'] = strip_tags(trim(json_encode($data['seo'], JSON_UNESCAPED_UNICODE)));
             if ($this->commonModel->create('pages', $data)) return redirect()->route('pages', [1])->with('message', lang('Backend.created', [$this->request->getPost('title')]));
-            else return redirect()->back()->withInput()->with('error', lang('Backend.notCreated', [$this->request->getPost('title')]));
+            else return redirect()->route('pageCreate')->withInput()->with('error', lang('Backend.notCreated', [$this->request->getPost('title')]));
         }
         return view('Modules\Pages\Views\create', $this->defData);
     }
@@ -96,34 +102,41 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                 'isActive' => ['label' => lang('Backend.draft') . ' / ' . lang('Backend.publish'), 'rules' => 'required|in_list[0,1]']
             ]);
             if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required'];
+                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
                 $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
             if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
             if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
 
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->route('pageUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
             $info = $this->commonModel->selectOne('pages', ['id' => $id]);
-            if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave('pages', ['seflink' => $this->request->getPost('seflink'), 'id!=' => $id]) === 1) return redirect()->back()->withInput()->with('error', lang('Backend.slugExists', [$this->request->getPost('title')]));
+            if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave('pages', ['seflink' => $this->request->getPost('seflink'), 'id!=' => $id]) === 1) return redirect()->route('pageUpdate', [$id])->withInput()->with('error', lang('Backend.slugExists', [$this->request->getPost('title')]));
             $data = [
-                'title' => $this->request->getPost('title'),
-                'content' => $this->request->getPost('content'),
+                'title' => strip_tags(trim($this->request->getPost('title'))),
+                'content' => strip_tags(trim($this->request->getPost('content'))),
                 'isActive' => (bool)$this->request->getPost('isActive'),
-                'seflink' => $this->request->getPost('seflink')
+                'seflink' => strip_tags(trim($this->request->getPost('seflink')))
             ];
 
             if (!empty($this->request->getPost('pageimg'))) {
-                $data['seo']['coverImage'] = $this->request->getPost('pageimg');
-                $data['seo']['IMGWidth'] = $this->request->getPost('pageIMGWidth');
-                $data['seo']['IMGHeight'] = $this->request->getPost('pageIMGHeight');
+                $data['seo']['coverImage'] = strip_tags(trim($this->request->getPost('pageimg')));
+                $data['seo']['IMGWidth'] = strip_tags(trim($this->request->getPost('pageIMGWidth')));
+                $data['seo']['IMGHeight'] = strip_tags(trim($this->request->getPost('pageIMGHeight')));
             }
 
-            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
-            if (!empty($this->request->getPost('keywords'))) $data['seo']['keywords'] = json_decode($this->request->getPost('keywords'));
-            if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
+            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = strip_tags(trim($this->request->getPost('description')));
+            if (!empty($this->request->getPost('keywords'))) {
+                $keywords = json_decode($this->request->getPost('keywords'));
+                foreach($keywords as $key=>$keyword){
+                    $value=strip_tags(trim($keyword->value));
+                    if(empty($value)) unset($keywords[$key]);
+                }
+                $data['seo']['keywords']=$keywords;
+            }
+            if (!empty($data['seo'])) $data['seo'] = strip_tags(trim(json_encode($data['seo'], JSON_UNESCAPED_UNICODE)));
             if ($this->commonModel->edit('pages', $data, ['id' => $id])) return redirect()->route('pages', [1])->with('message', lang('Backend.updated', [$this->request->getPost('title')]));
-            else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('title')]));
+            else return redirect()->route('pageUpdate', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('title')]));
         }
         $this->defData['pageInfo'] = $this->commonModel->selectOne('pages', ['id' => $id]);
         if (!empty($this->defData['pageInfo']->seo)) {

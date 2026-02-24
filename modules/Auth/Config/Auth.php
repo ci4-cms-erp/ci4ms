@@ -209,7 +209,7 @@ class Auth extends ShieldAuth
     public array $sessionConfig = [
         'field'              => 'ci4ms_user',
         'allowRemembering'   => true,
-        'rememberCookieName' => 'ci4ms_remember',
+        'rememberCookieName' => 'remember',
         'rememberLength'     => 30 * DAY,
     ];
 

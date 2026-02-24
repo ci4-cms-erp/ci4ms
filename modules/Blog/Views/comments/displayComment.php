@@ -50,10 +50,10 @@
                         </a>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons">
                             <label class="btn btn-outline-primary <?php echo ((bool)$commentInfo->isApproved === true) ? 'checked' : '' ?>">
-                                <input type="radio" name="options" value="1" id="option1" <?php echo ((bool)$commentInfo->isApproved === true) ? 'checked' : '' ?> required> <?php echo lang('Blog.publish') ?>
+                                <input type="radio" name="options" value="1" id="option1" <?php echo set_radio('options',1,(int)$commentInfo->isApproved === 1 ) ?> required> <?php echo lang('Backend.publish') ?>
                             </label>
                             <label class="btn btn-outline-danger">
-                                <input type="radio" name="options" value="2" id="option2" required> <?php echo lang('Backend.delete') ?>
+                                <input type="radio" name="options" value="2" id="option2" <?php echo set_radio('options',2,(int)$commentInfo->isApproved === 2 ) ?> required> <?php echo lang('Backend.delete') ?>
                             </label>
                         </div>
                     </div>

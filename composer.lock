@@ -183,16 +183,16 @@
         },
         {
             "name": "ci4-cms-erp/ext_module_generator",
-            "version": "v1.2.1",
+            "version": "v1.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ci4-cms-erp/ext_module_generator.git",
-                "reference": "0443a745cc24a4033428e730bcc143b8914a9cc5"
+                "reference": "ce30affd09c2504ac472fa4b52e73acfbc58d3a1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ci4-cms-erp/ext_module_generator/zipball/0443a745cc24a4033428e730bcc143b8914a9cc5",
-                "reference": "0443a745cc24a4033428e730bcc143b8914a9cc5",
+                "url": "https://api.github.com/repos/ci4-cms-erp/ext_module_generator/zipball/ce30affd09c2504ac472fa4b52e73acfbc58d3a1",
+                "reference": "ce30affd09c2504ac472fa4b52e73acfbc58d3a1",
                 "shasum": ""
             },
             "require": {
@@ -236,9 +236,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ci4-cms-erp/ext_module_generator/issues",
-                "source": "https://github.com/ci4-cms-erp/ext_module_generator/tree/v1.2.1"
+                "source": "https://github.com/ci4-cms-erp/ext_module_generator/tree/v1.2.3"
             },
-            "time": "2026-01-29T15:13:36+00:00"
+            "time": "2026-02-23T03:46:23+00:00"
         },
         {
             "name": "claviska/simpleimage",

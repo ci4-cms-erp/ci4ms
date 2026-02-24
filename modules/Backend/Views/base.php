@@ -48,7 +48,7 @@
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="image d-flex align-items-center">
                         <img src="<?php echo $logged_in_user->profileIMG ?>" class="img-circle elevation-2"
-                        style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #dee2e6;" alt="User Image">
+                            style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #dee2e6;" alt="User Image">
                     </div>
                     <div class="info w-100">
                         <button class="btn btn-light w-100" type="button" data-toggle="collapse"
@@ -72,41 +72,77 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column nav-flat nav-child-indent"
                         data-widget="treeview" role="menu" data-accordion="false">
-                        <?php function navigation($navigation, $uri, $child = null)
-                        {
-                            foreach ($navigation as $nav) :
-                                $p = null;
-                                foreach ($navigation as $item) {
-                                    if ($item->sefLink != 'profile' && $item->sefLink === $uri) {
-                                        $p = $item;
-                                        break;
+                        <?php
+                        // 1. Indexing for O(1) lookups and grouping Children
+                        $nav_by_id = [];
+                        $nav_by_parent = [];
+                        foreach ($navigation as $item) {
+                            if ($item->sefLink === 'profile' || empty($item->sefLink)) continue;
+                            $nav_by_id[(int)$item->id] = $item;
+                            $nav_by_parent[(int)$item->parent_pk][] = $item;
+                        }
+
+                        // 2. Identify Active IDs (O(N) path lookup)
+                        $active_ids = [];
+                        $current_id = isset($title->id) ? (int)$title->id : null;
+
+                        // Fallback search if title doesn't match a specific nav item directly
+                        if (!$current_id || !isset($nav_by_id[$current_id])) {
+                            $matched_item = null;
+                            foreach ($navigation as $item) {
+                                if ($item->sefLink === 'profile' || empty($item->sefLink)) continue;
+                                if ($item->sefLink === $uri || str_starts_with($uri, $item->sefLink . '/')) {
+                                    if ($matched_item === null || strlen($item->sefLink) > strlen($matched_item->sefLink)) {
+                                        $matched_item = $item;
                                     }
                                 }
-                                if ($nav->parent_pk == $child) : ?>
-                                    <li class="nav-item <?php echo (!empty($p) && $p->parent_pk == $nav->id) ? 'menu-is-opening menu-open' : '' ?>">
-                                        <a href="<?php
-                                                    $u = explode('/', $nav->sefLink);
-                                                    if (empty($u[1])) echo route_to($u[0]);
-                                                    else
-                                                        echo route_to($u[0], $u[1]); ?>"
-                                            class="nav-link <?php if (!empty($p)) {
-                                                                if ($nav->sefLink == $uri || $p->parent_pk == $nav->id) echo 'active';
-                                                                else echo '';
-                                                            } ?>">
+                            }
+                            if ($matched_item) $current_id = (int)$matched_item->id;
+                        }
+
+                        while ($current_id && isset($nav_by_id[$current_id])) {
+                            $active_ids[$current_id] = true;
+                            $current_id = (int)$nav_by_id[$current_id]->parent_pk;
+                        }
+
+                        if (!function_exists('render_sidebar_menu')) {
+                            function render_sidebar_menu($grouped_nav, $active_ids, $parent_id = 0)
+                            {
+                                if (!isset($grouped_nav[$parent_id])) return;
+
+                                foreach ($grouped_nav[$parent_id] as $nav) {
+                                    $id = (int)$nav->id;
+                                    $is_active = isset($active_ids[$id]);
+                                    $has_child = (bool)$nav->hasChild;
+
+                                    // Calculate CSS classes
+                                    $li_class = ($is_active && $has_child) ? 'menu-is-opening menu-open' : '';
+                                    $link_class = $is_active ? 'active' : '';
+
+                                    // Pre-calculate URL
+                                    $u = explode('/', $nav->sefLink);
+                                    $href = empty($u[1]) ? route_to($u[0]) : route_to($u[0], $u[1]);
+                        ?>
+                                    <li class="nav-item <?php echo $li_class ?>">
+                                        <a href="<?php echo $href ?>" class="nav-link <?php echo $link_class ?>">
                                             <i class="nav-icon <?php echo $nav->symbol ?>"></i>
-                                            <p><?php echo lang($nav->pagename) ?><?php echo ($nav->hasChild == true) ? '<i class="right fas fa-angle-left"></i>' : '' ?></p>
+                                            <p>
+                                                <?php echo lang($nav->pagename) ?>
+                                                <?php echo $has_child ? '<i class="right fas fa-angle-left"></i>' : '' ?>
+                                            </p>
                                         </a>
-                                        <?php if ($nav->hasChild == true): ?>
+                                        <?php if ($has_child): ?>
                                             <ul class="nav nav-treeview">
-                                                <?php navigation($navigation, $uri, $nav->id); ?>
+                                                <?php render_sidebar_menu($grouped_nav, $active_ids, $id); ?>
                                             </ul>
                                         <?php endif; ?>
                                     </li>
-                        <?php endif;
-                            endforeach;
+                        <?php
+                                }
+                            }
                         }
 
-                        navigation($navigation, $uri);
+                        render_sidebar_menu($nav_by_parent, $active_ids, 0);
                         ?>
                     </ul>
                 </nav>
@@ -145,7 +181,7 @@
     <!-- AdminLTE for demo purposes -->
     <?php echo script_tag("be-assets/js/demo.js") ?>
     <?php echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
-    <?php echo view('Modules\Backend\Views\sweetalert_message_block') ?>
+    <?php echo view('Modules\Backend\Views\sweetalert_message_block', [], ['debug' => false]) ?>
     <?php echo $this->renderSection('javascript') ?>
 </body>
 

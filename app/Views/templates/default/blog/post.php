@@ -2,7 +2,7 @@
 <?php echo $this->section('metatags') ?>
 <?php echo $this->endSection() ?>
 <?php echo $this->section('head') ?>
-<?php echo link_tag('templates/' . $settings->templateInfos->path . '/assets/node_modules/sweetalert2/dist/sweetalert2.min.css') ?>
+<?php echo link_tag('templates/' . $settings->templateInfos->path . '/assets/vendor/sweetalert2/sweetalert2.min.css') ?>
 <?php echo $this->endSection() ?>
 <?php echo $this->section('content') ?>
 <section class="py-5">
@@ -120,5 +120,5 @@
 </section>
 <?php echo $this->endSection() ?>
 <?php echo $this->section('javascript') ?>
-<?php echo script_tag('templates/' . $settings->templateInfos->path . '/assets/node_modules/sweetalert2/dist/sweetalert2.all.min.js') ?>
+<?php echo script_tag('templates/' . $settings->templateInfos->path . '/assets/vendor/sweetalert2/sweetalert2.all.min.js') ?>
 <?php echo $this->endSection() ?>

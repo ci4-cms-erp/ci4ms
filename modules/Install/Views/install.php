@@ -129,8 +129,8 @@
 <?php echo $this->endSection() ?>
 <?php echo $this->section('javascript') ?>
 <script src="/be-assets/plugins/bs-stepper/js/bs-stepper.min.js"></script>
-<script src="/be-assets/node_modules/zxcvbn/dist/zxcvbn.js"></script>
-<script src="/be-assets/node_modules/pwstrength-bootstrap/dist/pwstrength-bootstrap.min.js"></script>
+<script src="/be-assets/plugins/zxcvbn/zxcvbn.js"></script>
+<script src="/be-assets/plugins/pwstrength-bootstrap/pwstrength-bootstrap.min.js"></script>
 <script {csp-script-nonce}>
   // BS-Stepper Init
   document.addEventListener('DOMContentLoaded', function() {

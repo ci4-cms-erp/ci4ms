@@ -39,11 +39,11 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[blog.seflink]']
             ]);
             if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required'];
+                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
                 $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
             if ($this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 0) {
                 $data = ['title' => trim(strip_tags($this->request->getPost('title'))), 'seflink' => trim(strip_tags($this->request->getPost('seflink'))), 'isActive' => $this->request->getPost('isActive')];
                 if (!empty($this->request->getPost('parent'))) $data['parent'] = $this->request->getPost('parent');
@@ -52,11 +52,18 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 if (!empty($this->request->getPost('pageimg'))) $seo['coverImage'] = trim(strip_tags($this->request->getPost('pageimg')));
                 if (!empty($this->request->getPost('pageIMGWidth'))) $seo['IMGWidth'] = trim(strip_tags($this->request->getPost('pageIMGWidth')));
                 if (!empty($this->request->getPost('pageIMGHeight'))) $seo['IMGHeight'] = trim(strip_tags($this->request->getPost('pageIMGHeight')));
-                if (!empty($this->request->getPost('keywords'))) $seo['keywords'] = json_decode($this->request->getPost('keywords'));
+                if (!empty($this->request->getPost('keywords'))) {
+                    $keywords = json_decode($this->request->getPost('keywords'));
+                    foreach ($keywords as $key => $keyword) {
+                        $value = strip_tags(trim($keyword->value));
+                        if (empty($value)) unset($keywords[$key]);
+                    }
+                    $data['seo']['keywords'] = $keywords;
+                }
                 $data['seo'] = json_encode($seo, JSON_UNESCAPED_UNICODE);
                 if ($this->commonModel->create('categories', $data)) return redirect()->route('categories', [1])->with('message', lang('Backend.created', [esc($data['title'])]));
-                else return redirect()->back()->withInput()->with('error', lang('Backend.created', [esc($data['title'])]));
-            } else return redirect()->back()->withInput()->with('error', lang('Backend.notCreated', [esc($this->request->getPost('title'))]));
+                else return redirect()->route('categories')->withInput()->with('error', lang('Backend.created', [esc($data['title'])]));
+            } else return redirect()->route('categories')->withInput()->with('error', lang('Backend.notCreated', [esc($this->request->getPost('title'))]));
         }
         $this->defData['categories'] = $this->commonModel->lists('categories');
         return view('Modules\Blog\Views\categories\create', $this->defData);
@@ -70,13 +77,13 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[blog.seflink]'],
             ]);
             if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required'];
+                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
                 $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) == false) return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
             $info = $this->commonModel->selectOne('categories', ['id' => $id]);
-            if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->get_where(['seflink' => $this->request->getPost('seflink')], 'categories') === 1) return redirect()->back()->withInput()->with('error', lang('Backend.slugExists', [esc($this->request->getPost('seflink'))]));
+            if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->get_where(['seflink' => $this->request->getPost('seflink')], 'categories') === 1) return redirect()->route('categories')->withInput()->with('error', lang('Backend.slugExists', [esc($this->request->getPost('seflink'))]));
             $data = ['title' => trim(strip_tags($this->request->getPost('title'))), 'seflink' => trim(strip_tags($this->request->getPost('seflink'))), 'isActive' => $this->request->getPost('isActive')];
             if (!empty($this->request->getPost('parent'))) $data['parent'] = $this->request->getPost('parent');
             $seo = [];
@@ -84,10 +91,17 @@ class Categories extends \Modules\Backend\Controllers\BaseController
             if (!empty($this->request->getPost('pageimg'))) $seo['coverImage'] = trim(strip_tags($this->request->getPost('pageimg')));
             if (!empty($this->request->getPost('pageIMGWidth'))) $seo['IMGWidth'] = trim(strip_tags($this->request->getPost('pageIMGWidth')));
             if (!empty($this->request->getPost('pageIMGHeight'))) $seo['IMGHeight'] = trim(strip_tags($this->request->getPost('pageIMGHeight')));
-            if (!empty($this->request->getPost('keywords'))) $seo['keywords'] = json_decode($this->request->getPost('keywords'));
+            if (!empty($this->request->getPost('keywords'))) {
+                $keywords = json_decode($this->request->getPost('keywords'));
+                foreach ($keywords as $key => $keyword) {
+                    $value = strip_tags(trim($keyword->value));
+                    if (empty($value)) unset($keywords[$key]);
+                }
+                $data['seo']['keywords'] = $keywords;
+            }
             $data['seo'] = json_encode($seo, JSON_UNESCAPED_UNICODE);
             if ($this->commonModel->edit('categories', $data, ['id' => $id])) return redirect()->route('categories', [1])->with('message', lang('Backend.updated', [esc($data['title'])]));
-            else return redirect()->back()->withInput()->with('error', lang('Backend.notUpdated', [esc($data['title'])]));
+            else return redirect()->route('categories')->withInput()->with('error', lang('Backend.notUpdated', [esc($data['title'])]));
         }
         $this->defData = array_merge($this->defData, ['infos' => $this->commonModel->selectOne('categories', ['id' => $id]), 'categories' => $this->commonModel->lists('categories', '*', ['id!=' => $id])]);
         $this->defData['infos']->seo = json_decode($this->defData['infos']->seo);

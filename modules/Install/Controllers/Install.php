@@ -63,7 +63,7 @@ class Install extends Controller
                 'app.supportedLocales' => '[\'ar\',\'de\',\'en\',\'es\',\'fr\',\'hi\',\'ja\',\'pt\',\'ru\',\'tr\',\'zh\']',
                 'app.negotiateLocale' => 'true',
                 'app.appTimzezone' => '\'Europe/Istanbul\'',
-                'app.version' => '0.29.0.0'
+                'app.version' => '0.29.5.0'
             ];
             if ($this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
