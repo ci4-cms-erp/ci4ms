@@ -6,14 +6,14 @@ This handbook captures the workflows, conventions, and tooling you need to exten
 
 ## 1. System Requirements
 
-| Layer | Required | Notes |
-|-------|----------|-------|
-| PHP   | 8.1+     | Enable intl, json, mbstring, gd, curl, openssl extensions. Match the `composer.json` platform (8.1). |
-| Composer | 2.5+ | Used for all PHP dependencies. |
-| Node.js | 18 LTS | Required only if you maintain `public/be-assets` (backend UI assets). |
-| npm    | 8+      | Node package manager for backend asset dependencies. |
-| Database | MySQL/MariaDB (or supported CI4 driver) | Configure via `.env`. |
-| Web server | Apache/Nginx/CI4 spark serve | Production deploys typically proxy to `public/index.php`. |
+| Layer      | Required                                | Notes                                                                                                |
+| ---------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| PHP        | 8.1+                                    | Enable intl, json, mbstring, gd, curl, openssl extensions. Match the `composer.json` platform (8.1). |
+| Composer   | 2.5+                                    | Used for all PHP dependencies.                                                                       |
+| Node.js    | 18 LTS                                  | Required only if you maintain `public/be-assets` (backend UI assets).                                |
+| npm        | 8+                                      | Node package manager for backend asset dependencies.                                                 |
+| Database   | MySQL/MariaDB (or supported CI4 driver) | Configure via `.env`.                                                                                |
+| Web server | Apache/Nginx/CI4 spark serve            | Production deploys typically proxy to `public/index.php`.                                            |
 
 ---
 
@@ -32,6 +32,7 @@ vendor/              Composer packages
 ```
 
 Key config files:
+
 - `composer.json` – PHP dependencies and scripts.
 - `app/Config/*.php` – Framework configuration; many classes consume cached settings populated at runtime.
 - `.env` – Environment overrides; generated from `env` template.
@@ -41,6 +42,7 @@ Key config files:
 ## 3. Getting Started
 
 1. **Clone & install**
+
    ```bash
    git clone <repo-url> ci4ms
    cd ci4ms
@@ -48,13 +50,16 @@ Key config files:
    ```
 
 2. **Environment**
+
    ```bash
    cp env .env
    php spark env development
    ```
+
    Update: `app.baseURL`, `database.default.*`, mail credentials, cookie/security settings as needed.
 
 3. **Database**
+
    ```bash
    php spark migrate
    php spark db:seed Ci4msDefaultsSeeder  # prompts for admin account details
@@ -77,32 +82,28 @@ Key config files:
 ### 4.1 Composer packages
 
 The project depends on CodeIgniter 4 and several packages that power key features:
+
 - `bertugfahriozer/ci4commonmodel` – Database abstraction helpers used across modules.
 - `bertugfahriozer/sql2migration` – CLI tooling for migrations.
 - `bertugfahriozer/ci4seopro` – CI4 SEO + AI Library (Drop-in) + FEEDS
 - `ci4-cms-erp/ext_module_generator` – Module scaffolding support exposed as `php spark make:module`.
 - `claviska/simpleimage` – Image manipulation utilities for media uploads and WebP conversion.
-- `seunmatt/codeigniter-log-viewer` – Backend log viewer integration.
-- `gregwar/captcha`, `phpmailer/phpmailer`, `studio-42/elfinder` – Authentication görselleri, pagination, mail gönderimi, medya yöneticisi. SEO meta yönetimi proje içindeki yerleşik servisler ile sağlanır.
+- `gregwar/captcha`, `studio-42/elfinder` – Authentication görselleri, pagination, mail gönderimi, medya yöneticisi. SEO meta yönetimi proje içindeki yerleşik servisler ile sağlanır.
 
 Install/update:
+
 ```bash
 composer install        # first-time setup
 composer update vendor/package   # update specific dependencies
 composer outdated        # check for new versions
 ```
 
-### 4.2 Node dependencies (admin assets)
+### 4.2 Frontend Assets
 
-The admin interface bundles several JS packages under `public/be-assets/` (Tagify, elFinder themes, Monaco, etc.).
+The admin interface and default templates use static JS/CSS packages (Tagify, Monaco Editor, Bootstrap, etc.).
+To keep the repository small and performant, we do not use npm or `node_modules` by default. Instead, all required third-party libraries are hosted statically within `public/be-assets/plugins/` (for the backend) and `public/templates/default/assets/vendor/` (for the frontend).
 
-```bash
-cd public/be-assets
-npm install
-# add your build/watch commands here (currently static assets live in css/js)
-```
-
-> There is no predefined bundler script yet. If you introduce Vite/Webpack, document the commands and output paths here.
+If you wish to update these plugins or introduce a bundler (like Webpack or Vite) in the future, you can add your own `package.json` to the corresponding asset directory, but be sure to compile the assets and exclude `node_modules` from version control.
 
 ---
 
@@ -117,9 +118,11 @@ npm install
 - **Docblocks**: Keep concise PHPDoc on public methods; avoid redundant descriptions.
 
 Formatting/testing:
+
 ```bash
 composer test     # runs PHPUnit (configure test suite under tests/)
 ```
+
 Add a linter (PHP-CS-Fixer, Pint) if you need formatting automation.
 
 ---
@@ -134,6 +137,7 @@ Add a linter (PHP-CS-Fixer, Pint) if you need formatting automation.
 - Clear cached permission keys (`{userId}_permissions`) after changes: `php spark cache:clear` or `cache()->delete("{$id}_permissions")`.
 
 Recommended workflow when adding a module:
+
 1. Scaffold with `php spark make:module <Name>` (provided by `ci4-cms-erp/ext_module_generator`).
 2. Add routes in `modules/<Name>/Config/Routes.php` (include `role` metadata).
 3. Implement controllers/models/views.
@@ -145,9 +149,9 @@ Recommended workflow when adding a module:
 ## 7. Configuration & Settings Cache
 
 Application settings are persisted in the `settings` table and cached for 24 hours.
+
 - Use `cache()->delete('settings')` after updating settings programmatically.
 - Menu structures are cached as `menus`; cleared automatically when updating through the Menu module, or manually if needed.
-- Mail credentials are encrypted (base64 + CodeIgniter encrypter). Use `CommonLibrary::phpMailer()` or backend base controller to fetch decrypted values.
 - Maintenance mode flag lives under `settings.maintenanceMode`. When set, `App\Filters\Ci4ms` redirects all traffic to `maintenance-mode` except install/login.
 
 ---
@@ -155,21 +159,25 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 ## 8. Media, File, and Theme Handling
 
 ### Media (`Modules\Media`)
+
 - elFinder configuration resides in `Modules\Media\Controllers\Media::elfinderConnection()`.
 - Allowed MIME types come from settings (`settings.allowedFiles`).
 - Optional WebP conversion uses `claviska/simpleimage` when enabled.
 - Media root: `public/media/`. Ensure the directory (and `.trash`) are writable by the web server.
 
 ### File editor (`Modules\Fileeditor`)
+
 - Provides tree/file editing within the project root. `realpath` checks prevent escaping `ROOTPATH`.
 - Restrict access to trusted roles; any structural change is immediate.
 
 ### Themes (`Modules\Theme`)
+
 - Themes live in `public/templates/<theme>/` plus optional app-level overrides (`app/Config/templates/<theme>`, etc.).
 - Upload flow: ZIP → `writable/tmp` → install helper → final directories.
 - Required files per theme: `info.xml`, `screenshot.png`. Missing assets trigger warnings via `BackendAfterLoginFilter`.
 
 ### Backup (`Modules\Backup`)
+
 - **Functionality:** Database backup (ZIP download) and restore.
 - **Storage:** Backups are generated in `writable/uploads/backups/`.
 - **Driver:** Uses `mysqldump` if available, falls back to PHP loop.

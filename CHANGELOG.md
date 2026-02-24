@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
-## [0.29.2.0] - 2026-02-22
+## [featured/shield-integration] - 2026-02-24
 
 ### Security
 
@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Added
 
+- **Development Tools:** Added a custom module generator hook for streamlined backend module creation.
 - **Dynamic Confirmation:** Integrated SweetAlert2 for all delete operations across the dashboard.
 - **Localization:** Added new translation keys (`areYouSure`, `youWillNotBeAbleToRecoverThis`, `ok`, `success`, `error`) to all 11 supported languages:
   - Turkish (tr), English (en), Arabic (ar), German (de), Spanish (es), French (fr), Hindi (hi), Japanese (ja), Portuguese (pt), Russian (ru), Chinese (zh).
@@ -26,6 +27,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Changed
 
+- **Asset Optimization:** Migrated heavy frontend dependencies from `node_modules` to standalone `vendor` and `plugins` directories in `be-assets` and `templates`. Drastically reduced repository size (~147MB saved) by removing source maps, unminified files, and unused package logic.
+- **Fileeditor Enhancements:**
+  - Implemented robust client-side alphabetical sorting (folders first, with Turkish locale character support).
+  - Enhanced Monaco Editor integration with accurate language detection (PHP, JS, CSS, MD, ENV) and `vs-dark` theme optimization.
+  - Cleaned up redundant logic and syntax issues in the file tree view.
 - **AJAX Refactoring:** Converted all "Delete" actions from `GET` routes to secure AJAX `POST` requests.
 - **DataTables Improvements:** Fixed dynamic element initialization (Bootstrap Switch) by moving logic to the DataTables `drawCallback`. This ensures elements work after pagination or searching.
 - **Module Consistency:** Standardized variable names and status indicators across `Blog` and `Pages` modules.
@@ -33,10 +39,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Fixed
 
+- **Tags Architecture:** Fixed pivot table insertion logic in `CommonTagsLibrary` to ensure new tags are always correctly linked and persisted for blog posts.
+- **Sidebar Navigation:** Fixed the sidebar menu auto-open and active state logic (AdminLTE 3) to accurately reflect the user's current module.
+- **Fileeditor Module:** Fixed the path validation regex to correctly allow multi-level folder traversal (`/` character).
 - **PHP Logic:** Fixed ternary operator precedence bugs that caused incorrect 'checked' states for status switches.
 - **Database Search:** Resolved a linting error in `count()` method calls in controllers.
 - **View Cleanup:** Deleted unused `commentList.php` and restructured comment management views.
-
 
 ## [0.26.3.4] - 2025-09-27
 
