@@ -1,4 +1,6 @@
-<?php namespace Modules\Pages\Config;
+<?php
+
+namespace Modules\Pages\Config;
 
 class PagesConfig extends \CodeIgniter\Config\BaseConfig
 {
@@ -8,8 +10,9 @@ class PagesConfig extends \CodeIgniter\Config\BaseConfig
     ];
 
     public $filters = [
-        'backendAfterLoginFilter' => ['before' => [
-            'backend/Pages', 'backend/Pages/*'
+        'backendGuard' => ['before' => [
+            'backend/Pages',
+            'backend/Pages/*'
         ]]
     ];
 }

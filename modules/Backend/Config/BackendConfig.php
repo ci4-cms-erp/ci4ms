@@ -32,19 +32,17 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
         'backend/checkSeflink',
         'backend/isActive',
         'backend/maintenance',
-        'backend/locked',
         'backend/summary/summary_render'
     ];
 
     public $filters = [
-        'backendAfterLoginFilter' => ['before' => [
+        'backendGuard' => ['before' => [
             'backend',
             'backend/tagify',
             'backend/checkSeflink',
             'backend/isActive',
             'backend/maintenance',
-            'backend/locked',
             'backend/profile',
-        ]]
+        ]],
     ];
 }

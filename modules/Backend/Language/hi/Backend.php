@@ -40,13 +40,14 @@ return [
     'reset' => 'रीसेट',
     'filter' => 'फ़िल्टर',
     'ok' => 'ठीक है',
+    'areYouSure' => 'क्या आप वाकई निश्चित हैं?',
+    'youWillNotBeAbleToRecoverThis' => 'आप इस डेटा को पुनर्प्राप्त नहीं कर पाएंगे।',
 
     //pages
     'homepage' => 'डैशबोर्ड',
     'draft' => 'मसौदा',
     'publish' => 'प्रकाशित',
     'logs' => 'लॉग',
-    'locked_accounts' => 'खाता लॉक रिकॉर्ड',
     'coverImage' => 'कवर छवि',
     'coverImgURL' => 'छवि URL',
     'coverImgWith' => 'छवि चौड़ाई',

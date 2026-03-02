@@ -40,13 +40,14 @@ return [
     'reset' => 'Restablecer',
     'filter' => 'Filtrar',
     'ok' => 'Aceptar',
+    'areYouSure' => '¿Estás seguro?',
+    'youWillNotBeAbleToRecoverThis' => 'No podrás recuperar estos datos.',
 
     //pages
     'homepage' => 'Panel de control',
     'draft' => 'Borrador',
     'publish' => 'Publicado',
     'logs' => 'Registros',
-    'locked_accounts' => 'Registros de bloqueo de cuentas',
     'coverImage' => 'Imagen de portada',
     'coverImgURL' => 'URL de la imagen',
     'coverImgWith' => 'Ancho de la imagen',

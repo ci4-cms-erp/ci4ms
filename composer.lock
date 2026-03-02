@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "11a3ada1a9f990507200b0f7a190c994",
+    "content-hash": "0e5020a62cc82dd2c9cf86a26f775443",
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
@@ -183,16 +183,16 @@
         },
         {
             "name": "ci4-cms-erp/ext_module_generator",
-            "version": "v1.2.1",
+            "version": "v1.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ci4-cms-erp/ext_module_generator.git",
-                "reference": "0443a745cc24a4033428e730bcc143b8914a9cc5"
+                "reference": "ce30affd09c2504ac472fa4b52e73acfbc58d3a1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ci4-cms-erp/ext_module_generator/zipball/0443a745cc24a4033428e730bcc143b8914a9cc5",
-                "reference": "0443a745cc24a4033428e730bcc143b8914a9cc5",
+                "url": "https://api.github.com/repos/ci4-cms-erp/ext_module_generator/zipball/ce30affd09c2504ac472fa4b52e73acfbc58d3a1",
+                "reference": "ce30affd09c2504ac472fa4b52e73acfbc58d3a1",
                 "shasum": ""
             },
             "require": {
@@ -236,9 +236,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ci4-cms-erp/ext_module_generator/issues",
-                "source": "https://github.com/ci4-cms-erp/ext_module_generator/tree/v1.2.1"
+                "source": "https://github.com/ci4-cms-erp/ext_module_generator/tree/v1.2.3"
             },
-            "time": "2026-01-29T15:13:36+00:00"
+            "time": "2026-02-23T03:46:23+00:00"
         },
         {
             "name": "claviska/simpleimage",
@@ -366,6 +366,132 @@
                 "source": "https://github.com/codeigniter4/CodeIgniter4"
             },
             "time": "2025-12-12T10:37:42+00:00"
+        },
+        {
+            "name": "codeigniter4/settings",
+            "version": "v2.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/codeigniter4/settings.git",
+                "reference": "2748f2b4572d44a940f98c31847d65272cac5666"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/codeigniter4/settings/zipball/2748f2b4572d44a940f98c31847d65272cac5666",
+                "reference": "2748f2b4572d44a940f98c31847d65272cac5666",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "codeigniter4/devkit": "^1.1.2",
+                "codeigniter4/framework": "^4.2.3",
+                "rector/rector": "0.18.13"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "CodeIgniter\\Settings\\": "src"
+                },
+                "exclude-from-classmap": [
+                    "**/Database/Migrations/**"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Lonnie Ezell",
+                    "email": "lonnieje@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Settings library for CodeIgniter 4",
+            "homepage": "https://github.com/codeigniter4/settings",
+            "keywords": [
+                "Settings",
+                "codeigniter",
+                "codeigniter4"
+            ],
+            "support": {
+                "issues": "https://github.com/codeigniter4/settings/issues",
+                "source": "https://github.com/codeigniter4/settings/tree/v2.2.0"
+            },
+            "time": "2024-01-06T07:10:58+00:00"
+        },
+        {
+            "name": "codeigniter4/shield",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/codeigniter4/shield.git",
+                "reference": "2d1b2177a914dcd490f54a6706792eacabd9e3e8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/codeigniter4/shield/zipball/2d1b2177a914dcd490f54a6706792eacabd9e3e8",
+                "reference": "2d1b2177a914dcd490f54a6706792eacabd9e3e8",
+                "shasum": ""
+            },
+            "require": {
+                "codeigniter4/settings": "^2.1",
+                "php": "^8.1"
+            },
+            "provide": {
+                "codeigniter4/authentication-implementation": "1.0"
+            },
+            "require-dev": {
+                "codeigniter/phpstan-codeigniter": "^1.3",
+                "codeigniter4/devkit": "^1.3",
+                "codeigniter4/framework": ">=4.3.5 <4.5.0 || ^4.5.1",
+                "firebase/php-jwt": "^6.4",
+                "mikey179/vfsstream": "^1.6.7",
+                "mockery/mockery": "^1.0",
+                "phpstan/phpstan-strict-rules": "^2.0"
+            },
+            "suggest": {
+                "ext-curl": "Required to use the password validation rule via PwnedValidator class.",
+                "ext-openssl": "Required to use the JWT Authenticator."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "CodeIgniter\\Shield\\": "src"
+                },
+                "exclude-from-classmap": [
+                    "**/Database/Migrations/**"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Lonnie Ezell",
+                    "email": "lonnieje@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Authentication and Authorization for CodeIgniter 4",
+            "homepage": "https://github.com/codeigniter4/shield",
+            "keywords": [
+                "Authentication",
+                "authorization",
+                "codeigniter",
+                "codeigniter4"
+            ],
+            "support": {
+                "docs": "https://codeigniter4.github.io/shield/",
+                "forum": "https://github.com/codeigniter4/shield/discussions",
+                "issues": "https://github.com/codeigniter4/shield/issues",
+                "slack": "https://codeigniterchat.slack.com",
+                "source": "https://github.com/codeigniter4/shield"
+            },
+            "time": "2025-07-14T10:26:03+00:00"
         },
         {
             "name": "codeigniter4/translations",
@@ -599,87 +725,6 @@
             "time": "2022-09-24T15:57:16+00:00"
         },
         {
-            "name": "phpmailer/phpmailer",
-            "version": "v6.9.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "a7b17b42fa4887c92146243f3d2f4ccb962af17c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/a7b17b42fa4887c92146243f3d2f4ccb962af17c",
-                "reference": "a7b17b42fa4887c92146243f3d2f4ccb962af17c",
-                "shasum": ""
-            },
-            "require": {
-                "ext-ctype": "*",
-                "ext-filter": "*",
-                "ext-hash": "*",
-                "php": ">=5.5.0"
-            },
-            "require-dev": {
-                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
-                "doctrine/annotations": "^1.2.6 || ^1.13.3",
-                "php-parallel-lint/php-console-highlighter": "^1.0.0",
-                "php-parallel-lint/php-parallel-lint": "^1.3.2",
-                "phpcompatibility/php-compatibility": "^9.3.5",
-                "roave/security-advisories": "dev-latest",
-                "squizlabs/php_codesniffer": "^3.7.2",
-                "yoast/phpunit-polyfills": "^1.0.4"
-            },
-            "suggest": {
-                "decomplexity/SendOauth2": "Adapter for using XOAUTH2 authentication",
-                "ext-mbstring": "Needed to send email in multibyte encoding charset or decode encoded addresses",
-                "ext-openssl": "Needed for secure SMTP sending and DKIM signing",
-                "greew/oauth2-azure-provider": "Needed for Microsoft Azure XOAUTH2 authentication",
-                "hayageek/oauth2-yahoo": "Needed for Yahoo XOAUTH2 authentication",
-                "league/oauth2-google": "Needed for Google XOAUTH2 authentication",
-                "psr/log": "For optional PSR-3 debug logging",
-                "symfony/polyfill-mbstring": "To support UTF-8 if the Mbstring PHP extension is not enabled (^1.2)",
-                "thenetworg/oauth2-azure": "Needed for Microsoft XOAUTH2 authentication"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PHPMailer\\PHPMailer\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-2.1-only"
-            ],
-            "authors": [
-                {
-                    "name": "Marcus Bointon",
-                    "email": "phpmailer@synchromedia.co.uk"
-                },
-                {
-                    "name": "Jim Jagielski",
-                    "email": "jimjag@gmail.com"
-                },
-                {
-                    "name": "Andy Prevost",
-                    "email": "codeworxtech@users.sourceforge.net"
-                },
-                {
-                    "name": "Brent R. Matzelle"
-                }
-            ],
-            "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
-            "support": {
-                "issues": "https://github.com/PHPMailer/PHPMailer/issues",
-                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.9.2"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/Synchro",
-                    "type": "github"
-                }
-            ],
-            "time": "2024-10-09T10:07:50+00:00"
-        },
-        {
             "name": "psr/log",
             "version": "3.0.2",
             "source": {
@@ -728,57 +773,6 @@
                 "source": "https://github.com/php-fig/log/tree/3.0.2"
             },
             "time": "2024-09-11T13:17:53+00:00"
-        },
-        {
-            "name": "seunmatt/codeigniter-log-viewer",
-            "version": "2.0.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/SeunMatt/codeigniter-log-viewer.git",
-                "reference": "08d093e13b86b8fd26d11b93e547e5b57afa87e1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/SeunMatt/codeigniter-log-viewer/zipball/08d093e13b86b8fd26d11b93e547e5b57afa87e1",
-                "reference": "08d093e13b86b8fd26d11b93e547e5b57afa87e1",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "CILogViewer\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Miguel Martinez",
-                    "email": "rodilla@gmail.com"
-                },
-                {
-                    "name": "Seun Matt",
-                    "email": "smatt382@gmail.com"
-                }
-            ],
-            "description": "This is a simple Log Viewer for viewing CodeIgniter log files on the browser",
-            "keywords": [
-                "CI4",
-                "Code Igniter",
-                "Code Igniter 4",
-                "log viewer",
-                "php"
-            ],
-            "support": {
-                "issues": "https://github.com/SeunMatt/codeigniter-log-viewer/issues",
-                "source": "https://github.com/SeunMatt/codeigniter-log-viewer/tree/2.0.3"
-            },
-            "time": "2025-12-09T13:20:18+00:00"
         },
         {
             "name": "studio-42/elfinder",

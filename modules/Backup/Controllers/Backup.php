@@ -77,45 +77,55 @@ class Backup extends \Modules\Backend\Controllers\BaseController
 
     public function restore()
     {
-        if ($this->request->is('post')) {
-            $file = $this->request->getFile('backup_file');
+        $valData = ([
+            'backup_file' => ['label' => 'Backup File', 'rules' => 'uploaded[backup_file]|ext_in[backup_file,zip]'],
+        ]);
+        if ($this->validate($valData) == false) return redirect()->route('backup')->withInput()->with('errors', $this->validator->getErrors());
+        $file = $this->request->getFile('backup_file');
 
-            if ($file && $file->isValid() && ! $file->hasMoved()) {
-                $newName    = $file->getRandomName();
-                $uploadPath = WRITEPATH . 'uploads/';
-                if (! is_dir($uploadPath)) {
-                    mkdir($uploadPath, 0755, true);
-                }
-                $ext = $file->getExtension();
-                $file->move($uploadPath, $newName);
-                $filePath = WRITEPATH . 'uploads/' . $newName;
-                $sqlPath  = $filePath;
-                if ($ext === 'zip') {
-                    $zip = new \ZipArchive();
-                    if ($zip->open($filePath) === true) {
-                        $zip->extractTo($uploadPath);
-                        $sqlPath = $uploadPath . $zip->getNameIndex(0);
-                        $zip->close();
-                        unlink($filePath);
-                    }
-                }
-
-                $dbBackup = new \Modules\Backup\Libraries\DbBackup();
-                if ($dbBackup->restore($sqlPath)) {
-                    @unlink($sqlPath);
-                    return redirect()->back()->with('message', lang('Backup.dbRestore'));
+        if ($file && $file->isValid() && ! $file->hasMoved()) {
+            $newName    = $file->getRandomName();
+            $uploadPath = WRITEPATH . 'uploads/';
+            if (! is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+            $ext = $file->getExtension();
+            $file->move($uploadPath, $newName);
+            $filePath = WRITEPATH . 'uploads/' . $newName;
+            $sqlPath  = $filePath;
+            if ($ext === 'zip') {
+                $zip = new \ZipArchive();
+                if ($zip->open($filePath) === true) {
+                    $zip->extractTo($uploadPath);
+                    $sqlPath = $uploadPath . $zip->getNameIndex(0);
+                    $zip->close();
+                    @unlink($filePath);
                 }
             }
-            return redirect()->back()->with('error', lang('Backup.dbNotRestore'));
+
+            $dbBackup = new \Modules\Backup\Libraries\DbBackup();
+            if ($dbBackup->restore($sqlPath)) {
+                @unlink($sqlPath);
+                cache()->delete('menus');
+                cache()->delete('settings');
+                cache()->delete('shield_auth_dynamic_config');
+                cache()->delete('sidebar_menu');
+                return redirect()->route('backup')->with('message', lang('Backup.dbRestore'));
+            }
         }
+        return redirect()->route('backup')->with('error', lang('Backup.dbNotRestore'));
     }
 
     public function download($fileName)
     {
+        $fileName = basename($fileName);
+        if (!preg_match('/^backup_[\d\-_]+\.zip$/', $fileName)) {
+            return redirect()->route('backup')->with('error', 'Geçersiz dosya adı.');
+        }
         $path = WRITEPATH . 'backups/' . $fileName;
         if (file_exists($path)) {
             return $this->response->download($path, null);
         }
-        return redirect()->back()->with('error', 'Dosya bulunamadı.');
+        return redirect()->route('backup')->with('error', 'Dosya bulunamadı.');
     }
 }

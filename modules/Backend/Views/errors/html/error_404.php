@@ -1,10 +1,10 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('head') ?>
-<title>Ci4ms <?= $config->vers ?> | 404 File Not Found</title>
-<?= $this->endSection() ?>
+<?php echo $this->section('head') ?>
+<title>Ci4ms <?php echo $config->vers ?> | 404 File Not Found</title>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('content') ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -14,7 +14,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= base_url('/backend') ?>">Anasayfa</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo base_url('/backend') ?>">Anasayfa</a></li>
                     <li class="breadcrumb-item active">404 - File Not Found</li>
                 </ol>
             </div>
@@ -32,16 +32,16 @@
 
             <p>
                 <?php if (!empty($message) && $message !== '(null)') : ?>
-                    <?= esc($message) ?>
+                    <?php echo esc($message) ?>
                 <?php else : ?>
                     Sorry! Cannot seem to find the page you were looking for.
                 <?php endif ?>
             </p>
-            <div><a href="<?= previous_url() ?>" class="btn btn-warning"> Geri Dön</a></div>
+            <div><a href="<?php echo previous_url() ?>" class="btn btn-warning"> Geri Dön</a></div>
         </div>
         <!-- /.error-content -->
     </div>
     <!-- /.error-page -->
 </section>
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

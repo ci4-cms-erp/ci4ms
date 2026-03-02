@@ -24,13 +24,24 @@ class ModulesInstaller extends \Modules\Backend\Controllers\BaseController
         $zip = new ZipArchive();
 
         if ($zip->open($file->getTempName()) === true) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = $zip->getNameIndex($i);
+                $realEntry = realpath($tempPath . $entryName);
+                if ($realEntry !== false && strpos($realEntry, realpath($tempPath)) !== 0) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains invalid paths']);
+                }
+                if (preg_match('/\.\./', $entryName)) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains path traversal']);
+                }
+            }
             $zip->extractTo($tempPath);
             $zip->close();
         } else {
             return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP dosyası açılamadı']);
         }
 
-        // Çıkarılan klasörün adını bul (örneğin "Blog")
         $folders = array_filter(glob($tempPath . '*'), 'is_dir');
         $moduleFolder = basename(reset($folders));
         $finalPath = ROOTPATH . "modules/" . $moduleFolder;
@@ -41,13 +52,10 @@ class ModulesInstaller extends \Modules\Backend\Controllers\BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => "Zaten '$moduleFolder' adında bir modül var"]);
         }
 
-        // Klasörü taşı
         rename(reset($folders), $finalPath);
 
-        // Geçici dizini temizle
         helper('filesystem');
         delete_files($tempPath, true);
-        cache()->delete("{$this->logged_in_user->id}_permissions");
         return $this->response->setJSON(['status' => 'success', 'message' => "'$moduleFolder' modülü başarıyla yüklendi"]);
     }
 }

@@ -78,6 +78,7 @@ class Modules extends BaseModules
         'registrars',
         'routes',
         'services',
-        'languages'
+        'languages',
+        'commands'
     ];
 }

@@ -32,8 +32,8 @@ class Home extends BaseController
                 $keywords = array_column($this->defData['pageInfo']->seo->keywords, 'value');
                 $this->seo()->keywords($keywords);
             }
-            $this->seo()->set('title', $this->defData['pageInfo']->title)
-                ->set('excerpt', $this->defData['pageInfo']->seo->description)
+            $this->seo()->set('title', esc($this->defData['pageInfo']->title))
+                ->set('excerpt', esc($this->defData['pageInfo']->seo->description))
                 ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
                 ->addSchema(
                     [
@@ -41,11 +41,11 @@ class Home extends BaseController
                         '@type' => 'Organization',
                         'url' => site_url(),
                         'logo' => $this->defData['settings']->logo,
-                        'name' => $this->defData['settings']->siteName,
+                        'name' => esc($this->defData['settings']->siteName),
                         'ContactPoint' =>
                         [
                             '@type' => 'ContactPoint',
-                            'telephone' => $this->defData['settings']->company->phone,
+                            'telephone' => $this->defData['settings']->contact->phone,
                             'contactType' => 'customer support'
                         ],
                         'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
@@ -93,11 +93,11 @@ class Home extends BaseController
                     '@type' => 'Organization',
                     'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
                     'logo' => $this->defData['settings']->logo,
-                    'name' => $this->defData['settings']->siteName,
+                    'name' => esc($this->defData['settings']->siteName),
                     'ContactPoint' =>
                     [
                         '@type' => 'ContactPoint',
-                        'telephone' => $this->defData['settings']->company->phone,
+                        'telephone' => $this->defData['settings']->contact->phone,
                         'contactType' => 'customer support'
                     ],
                     'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
@@ -116,9 +116,8 @@ class Home extends BaseController
                 'blog.*,
                 GROUP_CONCAT(' . getenv('database.default.DBPrefix') . 'categories.title SEPARATOR \',\') as categories,
                 CONCAT(' . getenv('database.default.DBPrefix') . 'users.firstname,\' \',' . getenv('database.default.DBPrefix') . 'users.surname) as author,
-                users.profileIMG,
-                auth_groups.name as groupName',
-                ['blog.seflink' => $seflink],
+                users.profileIMG',
+                ['blog.seflink' => strip_tags(trim($seflink))],
                 'id ASC',
                 0,
                 0,
@@ -128,7 +127,6 @@ class Home extends BaseController
                     ['table' => 'blog_categories_pivot', 'cond' => 'blog_categories_pivot.blog_id = blog.id', 'type' => 'left'],
                     ['table' => 'categories', 'cond' => 'categories.id = blog_categories_pivot.categories_id', 'type' => 'left'],
                     ['table' => 'users', 'cond' => 'users.id = blog.author', 'type' => 'left'],
-                    ['table' => 'auth_groups', 'cond' => 'auth_groups.id = users.group_id', 'type' => 'left']
                 ],
                 ['isReset' => true]
             );
@@ -144,26 +142,26 @@ class Home extends BaseController
             $this->defData['infos']->seo = json_decode($this->defData['infos']->seo);
             $this->defData['infos']->seo = (object)$this->defData['infos']->seo;
             $this->defData['categories'] = $this->commonModel->lists('categories');
-            $this->seo()->set('title', $this->defData['infos']->title)
-                ->set('excerpt', $this->defData['infos']->title)
+            $this->seo()->set('title', esc($this->defData['infos']->title))
+                ->set('excerpt', esc($this->defData['infos']->title))
                 ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
-                ->set('author', $this->defData['infos']->author)
+                ->set('author', esc($this->defData['infos']->author))
                 ->set('image', $this->defData['infos']->seo->coverImage ?? '')
                 ->addSchema(SchemaPreset::article(
                     [
                         'url' => site_url(implode('/', $this->request->getUri()->getSegments())),
                         'logo' => $this->defData['settings']->logo,
-                        'name' => $this->defData['settings']->siteName,
-                        'title' => $this->defData['infos']->title,
+                        'name' => esc($this->defData['settings']->siteName),
+                        'title' => esc($this->defData['infos']->title),
                         'image' => $this->defData['infos']->seo->coverImage ?? '',
-                        'description' => $this->defData['infos']->seo->description ?? '',
+                        'description' => esc($this->defData['infos']->seo->description ?? ''),
                         'date' => $this->defData['infos']->created_at,
-                        'author' => $this->defData['infos']->author,
+                        'author' => esc($this->defData['infos']->author),
                         'section' => $this->defData['infos']->categories,
                         'ContactPoint' =>
                         [
                             '@type' => 'ContactPoint',
-                            'telephone' => $this->defData['settings']->company->phone,
+                            'telephone' => $this->defData['settings']->contact->phone,
                             'contactType' => 'customer support'
                         ],
                         'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
@@ -206,7 +204,7 @@ class Home extends BaseController
                         'ContactPoint' =>
                         [
                             '@type' => 'ContactPoint',
-                            'telephone' => $this->defData['settings']->company->phone,
+                            'telephone' => $this->defData['settings']->contact->phone,
                             'contactType' => 'customer support'
                         ],
                         'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
@@ -255,7 +253,7 @@ class Home extends BaseController
                     'ContactPoint' =>
                     [
                         '@type' => 'ContactPoint',
-                        'telephone' => $this->defData['settings']->company->phone,
+                        'telephone' => $this->defData['settings']->contact->phone,
                         'contactType' => 'customer support'
                     ],
                     'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
@@ -269,50 +267,47 @@ class Home extends BaseController
     public function newComment()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-
-        $valData = ([
-            'comFullName' => ['label' => 'Full name', 'rules' => 'required'],
+        $vdata = [
+            'comFullName' => ['label' => 'Full name', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
             'comEmail' => ['label' => 'E-mail', 'rules' => 'required|valid_email'],
-            'comMessage' => ['label' => 'Join the discussion and leave a comment!', 'rules' => 'required'],
-            'captcha' => ['Captcha' => 'Captcha', 'rules' => 'required']
-        ]);
+            'comMessage' => ['label' => 'Join the discussion and leave a comment!', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+            'captcha' => ['label' => 'Captcha', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+            'blog_id' => ['label' => 'Blog', 'rules' => 'required|is_natural_no_zero']
+        ];
+
+        if (!empty($this->request->getPost('commentID'))) $vdata['commentID'] = ['label' => 'Comment', 'rules' => 'required|is_natural_no_zero'];
+        $valData = ($vdata);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
-        if ($this->request->getPost('captcha') == session()->getFlashdata('cap')) {
-            $badwordFilterSettings = json_decode($this->commonModel->selectOne(
-                'settings',
-                ['option' => 'badwords'],
-                'content'
-            )->content);
-            $checked = $this->commonLibrary->commentBadwordFiltering(
-                $this->request->getPost('comMessage'),
-                $badwordFilterSettings->list,
-                (bool)$badwordFilterSettings->status,
-                (bool)$badwordFilterSettings->autoReject
+        if (ENVIRONMENT !== 'development' && $this->request->getPost('captcha') != session()->getFlashdata('cap')) return $this->fail('Please get a new captcha !');
+        $checked = $this->commonLibrary->commentBadwordFiltering(
+            $this->request->getPost('comMessage'),
+            $this->defData['settings']->badwords->list,
+            (bool)$this->defData['settings']->badwords->status,
+            (bool)$this->defData['settings']->badwords->autoReject
+        );
+        if (is_bool($checked) && !$checked) return $this->fail('Lütfen kelimelerinize dikkat ediniz.');
+        $data = [
+            'blog_id' => $this->request->getPost('blog_id'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'comFullName' => strip_tags(trim($this->request->getPost('comFullName'))),
+            'comEmail' => $this->request->getPost('comEmail'),
+            'comMessage' => $checked
+        ];
+        if (!empty($this->request->getPost('commentID'))) {
+            $data['parent_id'] = $this->request->getPost('commentID');
+            $this->commonModel->edit(
+                'comments',
+                ['isThereAnReply' => true],
+                ['id' => $this->request->getPost('commentID')]
             );
-            if (is_bool($checked) && !$checked) return $this->fail('Lütfen kelimelerinize dikkat ediniz.');
-            $data = [
-                'blog_id' => $this->request->getPost('blog_id'),
-                'created_at' => date('Y-m-d H:i:s'),
-                'comFullName' => $this->request->getPost('comFullName'),
-                'comEmail' => $this->request->getPost('comEmail'),
-                'comMessage' => $checked
-            ];
-            if (!empty($this->request->getPost('commentID'))) {
-                $data['parent_id'] = $this->request->getPost('commentID');
-                $this->commonModel->edit(
-                    'comments',
-                    ['isThereAnReply' => true],
-                    ['id' => $this->request->getPost('commentID')]
-                );
-            }
-            if ($this->commonModel->create('comments', $data)) return $this->respondCreated(['result' => true]);
-        } else return $this->fail('Please get a new captcha !');
+        }
+        if ($this->commonModel->create('comments', $data)) return $this->respondCreated(['result' => true]);
     }
 
     public function repliesComment()
     {
         if ($this->request->isAJAX()) {
-            $valData = (['comID' => ['label' => 'Comment', 'rules' => 'required']]);
+            $valData = (['comID' => ['label' => 'Comment', 'rules' => 'required|is_natural_no_zero']]);
             if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
             return $this->respond(['display' => view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/replies', ['replies' => $this->commonModel->lists('comments', '*', ['parent_id' => $this->request->getPost('comID')])])], 200);
         } else return $this->failForbidden();
@@ -321,8 +316,8 @@ class Home extends BaseController
     public function loadMoreComments()
     {
         if ($this->request->isAJAX()) {
-            $valData = (['blogID' => ['label' => 'Blog ID', 'rules' => 'required|string'], 'skip' => ['label' => 'data-skip', 'rules' => 'required|is_natural_no_zero']]);
-            if (!empty($this->request->getPost('comID'))) $valData['comID'] = ['label' => 'Comment ID', 'rules' => 'required|string'];
+            $valData = (['blogID' => ['label' => 'Blog ID', 'rules' => 'required|is_natural_no_zero'], 'skip' => ['label' => 'data-skip', 'rules' => 'required|is_natural_no_zero']]);
+            if (!empty($this->request->getPost('comID'))) $valData['comID'] = ['label' => 'Comment ID', 'rules' => 'required|is_natural_no_zero'];
             if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
             helper('templates/' . $this->defData['settings']->templateInfos->path . '/funcs');
             $data = ['blog_id' => $this->request->getPost('blogID')];

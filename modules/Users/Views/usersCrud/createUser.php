@@ -1,19 +1,19 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
 
-<?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
-<?= $this->endSection() ?>
-<?= $this->section('content') ?>
+<?php echo $this->section('title') ?>
+<?php echo lang($title->pagename) ?>
+<?php echo $this->endSection() ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row pb-3 border-bottom">
             <div class="col-sm-6">
-                <h1><?= lang($title->pagename) ?></h1>
+                <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?= route_to('users', 1) ?>" class="btn btn-outline-info"><?= lang('Backend.backToList') ?></a>
+                    <a href="<?php echo route_to('users', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
                 </ol>
             </div>
         </div>
@@ -24,48 +24,52 @@
 <section class="content">
     <div class="card card-outline card-shl">
         <div class="card-body">
-            <?= view('Modules\Auth\Views\_message_block') ?>
-            <form action="<?= route_to('create_user') ?>" method="post" class="form-row">
-                <?= csrf_field() ?>
+            <form action="<?php echo route_to('create_user') ?>" method="post" class="form-row">
+                <?php echo csrf_field() ?>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for=""><?= lang('Backend.fullName') ?> <?= lang('Backend.required') ?></label>
+                        <label for=""><?php echo lang('Backend.fullName') ?> <?php echo lang('Backend.required') ?></label>
                         <div class="input-group">
-                            <input type="text" aria-label="<?= lang('Backend.name') ?>" name="firstname" class="form-control" placeholder="<?= lang('Backend.name') ?>"
-                                required>
-                            <input type="text" aria-label="<?= lang('Backend.surname') ?>" name="surname" class="form-control"
-                                placeholder="<?= lang('Backend.surname') ?>" required>
+                            <input type="text" aria-label="<?php echo lang('Backend.name') ?>" name="firstname" class="form-control" placeholder="<?php echo lang('Backend.name') ?>"
+                                value="<?php echo old('firstname') ?>" required>
+                            <input type="text" aria-label="<?php echo lang('Backend.surname') ?>" name="surname" class="form-control"
+                                placeholder="<?php echo lang('Backend.surname') ?>" value="<?php echo old('surname') ?>" required>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for=""><?= lang('Backend.email') ?> <?= lang('Backend.required') ?></label>
-                        <input type="email" name="email" class="form-control" required>
+                        <label for=""><?php echo lang('Backend.email') ?> <?php echo lang('Backend.required') ?></label>
+                        <input type="email" name="email" class="form-control" value="<?php echo old('email') ?>" required>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for=""><?= lang('Users.authority') ?> <?= lang('Backend.required') ?></label>
+                        <label for=""><?php echo lang('Users.authority') ?> <?php echo lang('Backend.required') ?></label>
                         <select name="group" class="form-control" required>
-                            <option value=""><?= lang('Backend.select') ?></option>
-                            <?php foreach ($groups as $group):
-                                if ($group->name != 'super user'): ?>
-                                    <option value="<?= $group->id ?>"><?= $group->name ?></option>
-                            <?php endif;
-                            endforeach; ?>
+                            <option value=""><?php echo lang('Backend.select') ?></option>
+                            <?php foreach ($groups as $group): ?>
+                                <option value="<?php echo $group->id ?>" <?php echo set_select('group', $group->id) ?>><?php echo esc($group->group) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for=""><?= lang('Auth.password') ?> <?= lang('Backend.takeNotePassword') ?></label>
+                        <label for=""><?php echo lang('Auth.username') ?> <?php echo lang('Backend.required') ?></label>
+                        <input type="text" class="form-control" name="username" minlength="3" maxlength="30"
+                            value="<?php echo old('username') ?>" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for=""><?php echo lang('Auth.password') ?> <?php echo lang('Backend.takeNotePassword') ?></label>
                         <input type="text" class="form-control" name="password" minlength="8"
-                            value="<?= $authLib->randomPassword() ?>" required>
+                            value="<?php echo old('password', randomPassword()) ?>" required>
                     </div>
                 </div>
                 <div class="col-md-12">
-                    <button class="btn btn-outline-success float-right"><?= lang('Backend.add') ?>
+                    <button class="btn btn-outline-success float-right"><?php echo lang('Backend.add') ?>
                     </button>
                 </div>
             </form>
@@ -74,4 +78,4 @@
 </section>
 
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

@@ -1,25 +1,25 @@
-<?= $this->extend('Modules\Backend\Views\base') ?>
-<?= $this->section('title') ?>
-<?= lang($title->pagename) ?>
-<?= $this->endSection() ?>
-<?= $this->section('head') ?>
-<?= link_tag('be-assets/node_modules/jquery.fancytree/dist/skin-bootstrap/ui.fancytree.min.css') ?>
-<?= link_tag('be-assets/plugins/jquery-ui/jquery-ui.min.css') ?>
-<?= link_tag('be-assets/node_modules/jquery-contextmenu/dist/jquery.contextMenu.min.css') ?>
-<style>
+<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->section('title') ?>
+<?php echo lang($title->pagename) ?>
+<?php echo $this->endSection() ?>
+<?php echo $this->section('head') ?>
+<?php echo link_tag('be-assets/plugins/jquery-fancytree/skin-bootstrap/ui.fancytree.min.css') ?>
+<?php echo link_tag('be-assets/plugins/jquery-ui/jquery-ui.min.css') ?>
+<?php echo link_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.css') ?>
+<style {csp-style-nonce}>
     .ui-menu kbd {
         /* Keyboard shortcuts for ui-contextmenu titles */
         float: right;
     }
 </style>
-<?= $this->endSection() ?>
-<?= $this->section('content') ?>
+<?php echo $this->endSection() ?>
+<?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1><?= lang($title->pagename) ?></h1>
+                <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right"></ol>
@@ -33,7 +33,7 @@
 
     <div class="card card-outline card-shl">
         <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?= lang($title->pagename) ?></h3>
+            <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -57,25 +57,25 @@
                 </div>
 
                 <div class="col-12 float-end">
-                    <button id="saveFile" class="btn btn-primary float-right"><?= lang('Backend.save') ?></button>
+                    <button id="saveFile" class="btn btn-primary float-right"><?php echo lang('Backend.save') ?></button>
                 </div>
             </div>
         </div>
 </section>
 <!-- /.content -->
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>
 
-<?= $this->section('javascript') ?>
-<?= script_tag('be-assets/plugins/jquery-ui/jquery-ui.min.js') ?>
-<?= script_tag('be-assets/node_modules/jquery.fancytree/dist/jquery.fancytree.min.js') ?>
-<?= script_tag('be-assets/node_modules/jquery.fancytree/dist/modules/jquery.fancytree.edit.js') ?>
-<?= script_tag('be-assets/node_modules/jquery.fancytree/dist/modules/jquery.fancytree.filter.js') ?>
-<?= script_tag('be-assets/node_modules/jquery.fancytree/dist/modules/jquery.fancytree.dnd.js') ?>
-<?= script_tag('be-assets/node_modules/jquery.fancytree/dist/modules/jquery.fancytree.glyph.js') ?>
-<?= script_tag('be-assets/node_modules/jquery-contextmenu/dist/jquery.contextMenu.min.js') ?>
-<?= script_tag('be-assets/node_modules/jquery-contextmenu/dist/jquery.ui.position.min.js') ?>
-<?= script_tag('be-assets/node_modules/monaco-editor/min/vs/loader.js') ?>
-<script>
+<?php echo $this->section('javascript') ?>
+<?php echo script_tag('be-assets/plugins/jquery-ui/jquery-ui.min.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/jquery.fancytree.min.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.edit.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.filter.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.dnd.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.glyph.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.js') ?>
+<?php echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.ui.position.min.js') ?>
+<?php echo script_tag('be-assets/plugins/monaco-editor/vs/loader.js') ?>
+<script {csp-script-nonce}>
     $('body').addClass('sidebar-collapse');
 
     let currentPath = '';
@@ -84,7 +84,7 @@
     // Monaco Editor Initialization
     require.config({
         paths: {
-            'vs': '/be-assets/node_modules/monaco-editor/min/vs'
+            'vs': '/be-assets/plugins/monaco-editor/vs'
         }
     });
     require(['vs/editor/editor.main'], function() {
@@ -98,28 +98,12 @@
 
     const $saveButton = $('#saveFile');
 
-    function filterNodes(nodes) {
-        return nodes.filter(function(node) {
-            const title = node.title.toLowerCase(); // Küçük harfe dönüştür (case-insensitive)
-            // Gizli dosyaları/klasörleri filtrele ('.' ile başlar)
-            if (title.startsWith('.')) {
-                return false; // Gizle
-            }
-            // Özel filtre: .github klasörünü gizle
-            if (node.folder && title === '.github') {
-                return false; // Gizle
-            }
-            return true; // Göster
-        });
-    }
     // Load file list
     $('#fileTree').fancytree({
         source: {
-            url: '<?= route_to("listfiles") ?>', // Endpoint to fetch file list
+            url: '<?php echo route_to("listfiles") ?>', // Endpoint to fetch file list
             cache: false, // Disable cache for live updates
             postProcess: function(event, data) {
-                // Dönen veriyi filtrele
-                data.result = filterNodes(data.result);
                 data.result.sort(function(a, b) {
                     return a.title.localeCompare(b.title, undefined, {
                         sensitivity: 'base'
@@ -147,13 +131,11 @@
         lazyLoad: function(event, data) {
             const node = data.node;
             data.result = {
-                url: '<?= route_to("listfiles") ?>',
+                url: '<?php echo route_to("listfiles") ?>',
                 data: {
                     path: node.key
                 },
                 postProcess: function(event, data) {
-                    // Lazy load verisini de filtrele (alt klasörler için)
-                    data.result = filterNodes(data.result);
                     data.result.sort(function(a, b) {
                         return a.title.localeCompare(b.title, undefined, {
                             sensitivity: 'base'
@@ -172,7 +154,8 @@
             const rootNode = data.tree.getRootNode();
             rootNode.sortChildren(null, true); // null: varsayılan comparator (alfabetik), true:
             data.tree.visit(function(node) {
-                if (node.title === 'app' || node.title === 'modules') {
+                // Automatically open the folders you specify.
+                /* if (node.title === 'app' || node.title === 'modules') {
                     if (node.title === 'modules') {
                         node.setExpanded(true).done(function() {
                             $.each(node.children, function(i, child) {
@@ -184,15 +167,15 @@
                     }
                 } else {
                     node.setExpanded(false);
-                }
+                } */
+                node.setExpanded(false);
             });
         },
         edit: {
             triggerStart: ["f2"],
             save: function(event, data) {
-                // Save data.input.val() or return false to keep editor open
                 $.ajax({
-                    url: '<?= route_to("renameFile") ?>',
+                    url: '<?php echo route_to("renameFile") ?>',
                     method: 'POST',
                     data: {
                         path: data.node.key,
@@ -200,13 +183,13 @@
                     },
                     success: function(response) {
                         if (response.success) {
-                            alert('<?= lang('Fileeditor.renameSuccess') ?>');
+                            alert('<?php echo lang('Fileeditor.renameSuccess') ?>');
                         } else {
-                            alert('<?= lang('Fileeditor.renameFailed') ?>');
+                            alert('<?php echo lang('Fileeditor.renameFailed') ?>');
                         }
                     },
                     error: function() {
-                        alert('<?= lang('Fileeditor.renameFailed') ?>');
+                        alert('<?php echo lang('Fileeditor.renameFailed') ?>');
                     }
                 });
             },
@@ -225,14 +208,14 @@
         selector: '#fileTree span.fancytree-title',
         items: {
             "createFile": {
-                name: "<?= lang('Fileeditor.newFile') ?>",
+                name: "<?php echo lang('Fileeditor.newFile') ?>",
                 icon: "file",
                 callback: function(key, opt) {
                     var node = $.ui.fancytree.getNode(opt.$trigger);
-                    var fileName = prompt("<?= lang('Fileeditor.newFileName') ?>");
+                    var fileName = prompt("<?php echo lang('Fileeditor.newFileName') ?>");
                     if (fileName) {
                         $.ajax({
-                            url: '<?= route_to("createFile") ?>',
+                            url: '<?php echo route_to("createFile") ?>',
                             method: 'POST',
                             data: {
                                 path: node.key,
@@ -245,27 +228,27 @@
                                         key: node.key + '/' + fileName,
                                         folder: false
                                     });
-                                    alert('<?= lang('Fileeditor.fileCreated') ?>');
+                                    alert('<?php echo lang('Fileeditor.fileCreated') ?>');
                                 } else {
-                                    alert('<?= lang('Fileeditor.fileCreateFailed') ?>');
+                                    alert('<?php echo lang('Fileeditor.fileCreateFailed') ?>');
                                 }
                             },
                             error: function() {
-                                alert('<?= lang('Fileeditor.fileCreateFailed') ?>');
+                                alert('<?php echo lang('Fileeditor.fileCreateFailed') ?>');
                             }
                         });
                     }
                 }
             },
             "createFolder": {
-                name: "<?= lang('Fileeditor.newFolder') ?>",
+                name: "<?php echo lang('Fileeditor.newFolder') ?>",
                 icon: "folder",
                 callback: function(key, opt) {
                     var node = $.ui.fancytree.getNode(opt.$trigger);
                     var folderName = prompt("Yeni klasör adı:");
                     if (folderName) {
                         $.ajax({
-                            url: '<?= route_to("createFolder") ?>',
+                            url: '<?php echo route_to("createFolder") ?>',
                             method: 'POST',
                             data: {
                                 path: node.key,
@@ -278,13 +261,13 @@
                                         key: node.key + '/' + folderName,
                                         folder: true
                                     });
-                                    alert('<?= lang('Fileeditor.folderCreated') ?>');
+                                    alert('<?php echo lang('Fileeditor.folderCreated') ?>');
                                 } else {
-                                    alert('<?= lang('Fileeditor.folderCreateFailed') ?>');
+                                    alert('<?php echo lang('Fileeditor.folderCreateFailed') ?>');
                                 }
                             },
                             error: function() {
-                                alert('<?= lang('Fileeditor.folderCreateFailed') ?>');
+                                alert('<?php echo lang('Fileeditor.folderCreateFailed') ?>');
                             }
                         });
                     }
@@ -292,7 +275,7 @@
             },
             "sep1": "---------",
             "rename": {
-                name: "<?= lang('Fileeditor.rename') ?>",
+                name: "<?php echo lang('Fileeditor.rename') ?>",
                 icon: "edit",
                 callback: function(key, opt) {
                     var node = $.ui.fancytree.getNode(opt.$trigger);
@@ -300,13 +283,13 @@
                 }
             },
             "delete": {
-                name: '<?= lang('Fileeditor.delete') ?>',
+                name: '<?php echo lang('Fileeditor.delete') ?>',
                 icon: "delete",
                 callback: function(key, opt) {
                     var node = $.ui.fancytree.getNode(opt.$trigger);
-                    if (confirm("<?= lang('Fileeditor.confirmDelete') ?>")) {
+                    if (confirm("<?php echo lang('Fileeditor.confirmDelete') ?>")) {
                         $.ajax({
-                            url: '<?= route_to("deleteFileOrFolder") ?>',
+                            url: '<?php echo route_to("deleteFileOrFolder") ?>',
                             method: 'POST',
                             data: {
                                 path: node.key
@@ -314,13 +297,13 @@
                             success: function(response) {
                                 if (response.success) {
                                     node.remove();
-                                    alert('<?= lang('Fileeditor.deleteSuccess') ?>');
+                                    alert('<?php echo lang('Fileeditor.deleteSuccess') ?>');
                                 } else {
-                                    alert('<?= lang('Fileeditor.deleteFailed') ?>');
+                                    alert('<?php echo lang('Fileeditor.deleteFailed') ?>');
                                 }
                             },
                             error: function() {
-                                alert('<?= lang('Fileeditor.deleteFailed') ?>');
+                                alert('<?php echo lang('Fileeditor.deleteFailed') ?>');
                             }
                         });
                     }
@@ -380,10 +363,26 @@
         $("input[name=search]").keyup();
     });
 
+    const getLanguageFromExtension = (fileName) => {
+        const ext = fileName.split('.').pop().toLowerCase();
+        const map = {
+            'php': 'php',
+            'js': 'javascript',
+            'css': 'css',
+            'md': 'markdown',
+            'json': 'json',
+            'html': 'html',
+            'txt': 'plaintext',
+            'sql': 'sql',
+            'env': 'properties'
+        };
+        return map[ext] || undefined;
+    };
+
     // Load file content
     const loadFileContent = (path, fileName) => {
         $.ajax({
-            url: `<?= route_to('readFile') ?>`,
+            url: `<?php echo route_to('readFile') ?>`,
             data: {
                 path: path
             },
@@ -392,25 +391,24 @@
                 if (data.content) {
                     const currentModel = editor.getModel();
                     if (currentModel) {
-                        currentModel.dispose(); // Eski modeli temizle (hafıza yönetimi için)
+                        currentModel.dispose();
                     }
 
-                    // Yeni model: Dil undefined bırak, URI ile dosya adını ver (otomatik algılama için)
+                    const language = getLanguageFromExtension(fileName);
                     const newModel = monaco.editor.createModel(
                         data.content,
-                        undefined, // Dil otomatik algılansın (uzantıya göre)
-                        monaco.Uri.file(fileName) // Dosya adından uzantı algılanır
+                        language,
+                        monaco.Uri.file(fileName)
                     );
 
-                    // Editör'e yeni modeli ata
                     editor.setModel(newModel);
                     currentPath = path;
                 } else {
-                    alert('<?= lang('Fileeditor.fileReadFailed') ?>');
+                    alert('<?php echo lang('Fileeditor.fileReadFailed') ?>');
                 }
             },
             error: function() {
-                console.error('<?= lang('Fileeditor.fileContentLoadFailed') ?>');
+                console.error('<?php echo lang('Fileeditor.fileContentLoadFailed') ?>');
             }
         });
     };
@@ -419,7 +417,7 @@
     $saveButton.on('click', function() {
         const content = editor.getValue();
         $.ajax({
-            url: `<?= route_to('saveFile') ?>`,
+            url: `<?php echo route_to('saveFile') ?>`,
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -429,16 +427,16 @@
             dataType: 'json',
             success: function(data) {
                 if (data.success) {
-                    alert('<?= lang('Fileeditor.fileSaveSuccess') ?>');
+                    alert('<?php echo lang('Fileeditor.fileSaveSuccess') ?>');
                 } else {
-                    alert('<?= lang('Fileeditor.fileSaveFailed') ?>');
+                    alert('<?php echo lang('Fileeditor.fileSaveFailed') ?>');
                 }
             },
             error: function() {
-                console.error('<?= lang('Fileeditor.fileSaveFailed') ?>');
+                console.error('<?php echo lang('Fileeditor.fileSaveFailed') ?>');
             }
         });
     });
 </script>
 
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

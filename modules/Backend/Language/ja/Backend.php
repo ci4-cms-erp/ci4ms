@@ -40,13 +40,14 @@ return [
     'reset' => 'リセット',
     'filter' => 'フィルター',
     'ok' => 'OK',
+    'areYouSure' => 'よろしいですか？',
+    'youWillNotBeAbleToRecoverThis' => 'このデータを復旧することはできません。',
 
     //pages
     'homepage' => 'ダッシュボード',
     'draft' => '下書き',
     'publish' => '公開済み',
     'logs' => 'ログ',
-    'locked_accounts' => 'アカウントロック記録',
     'coverImage' => 'カバー画像',
     'coverImgURL' => '画像URL',
     'coverImgWith' => '画像の幅',

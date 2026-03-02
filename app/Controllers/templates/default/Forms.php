@@ -2,36 +2,44 @@
 
 namespace App\Controllers\templates\default;
 
-use App\Libraries\CommonLibrary;
 
 class Forms extends \App\Controllers\BaseController
 {
     public function contactForm_post()
     {
         $valData = ([
-            'name' => ['label' => 'Full Name', 'rules' => 'required'],
+            'name' => ['label' => 'Full Name', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
             'email' => ['label' => 'Email Address', 'rules' => 'required|valid_email'],
-            'phone' => ['label' => 'Phone Number', 'rules' => 'required'],
+            'phone' => ['label' => 'Phone Number', 'rules' => 'required|regex_match[/^[\d\s\+\-\(\)]{7,20}$/]'],
             'message' => ['label' => 'Message', 'rules' => 'required']
         ]);
         if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        $commonLibrary = new CommonLibrary();
-        $settings = (object)cache('settings');
-        $mailResult = $commonLibrary->phpMailer($this->request->getPost('email'), $this->request->getPost('name'), [['mail' => $settings->company->email]], $this->request->getPost('email'), $this->request->getPost('name'), 'İletişim Formu - ' . $this->request->getPost('phone'), $this->request->getPost('message'));
-        if ($mailResult === true) return redirect()->back()->with('message', 'Mesajınız tarafımıza iletildi. En kısa zamanda geri dönüş sağlanacaktır');
-        else return redirect()->back()->withInput()->with('error', $mailResult);
+        try {
+            $email = service('email');
+
+            $email->setFrom($this->request->getPost('email'), $this->request->getPost('name'));
+            $email->setTo($this->defData['settings']->contact->email);
+
+            $email->setSubject('İletişim Formu - ' . $this->request->getPost('phone'));
+            $email->setMessage($this->request->getPost('message'));
+
+            $email->send();
+            return redirect()->back()->with('message', 'Mesajınız tarafımıza iletildi. En kısa zamanda geri dönüş sağlanacaktır');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
     }
 
     public function searchForm()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([
-            'term' => ['label' => '', 'rules' => 'required'],
+            'term' => ['label' => '', 'rules' => 'required|min_length[2]'],
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $result = [];
-        $term = $this->request->getPost('term');
-        $results = $this->commonModel->lists('pages', '*', [], 'title ASC', 0, 0, ['title' => $this->request->getGet('term'), 'content' => $this->request->getGet('term')]);
+        $term = strip_tags(trim($this->request->getPost('term')));
+        $results = $this->commonModel->lists('pages', '*', [], 'title ASC', 0, 0, ['title' => $term, 'content' => $term]);
         $filtered = array_values(array_filter($results, static function ($row) use ($term) {
             $html = $row->content ?? '';         // HTML veriniz
             if ($term === '') {
@@ -64,7 +72,7 @@ class Forms extends \App\Controllers\BaseController
             $result = array_merge($result, $pages);
         }
 
-        $results = $this->commonModel->lists('blog', '*', [], 'title ASC', 0, 0, ['title' => $this->request->getGet('term'), 'content' => $this->request->getGet('term')]);
+        $results = $this->commonModel->lists('blog', '*', [], 'title ASC', 0, 0, ['title' => $term, 'content' => $term]);
         if (!empty($results)) {
             $blogs = array_map(function ($page) {
                 return [
@@ -75,7 +83,7 @@ class Forms extends \App\Controllers\BaseController
             $result = array_merge($result, $blogs);
         }
 
-        $results = $this->commonModel->lists('tags', '*', [], 'tag ASC', 0, 0, ['tag' => $this->request->getGet('term')]);
+        $results = $this->commonModel->lists('tags', '*', [], 'tag ASC', 0, 0, ['tag' => $term]);
         if (!empty($results)) {
             $tags = array_map(function ($page) {
                 return [
@@ -86,7 +94,7 @@ class Forms extends \App\Controllers\BaseController
             $result = array_merge($result, $tags);
         }
 
-        $results = $this->commonModel->lists('categories', '*', [], 'title ASC', 0, 0, ['title' => $this->request->getGet('term')]);
+        $results = $this->commonModel->lists('categories', '*', [], 'title ASC', 0, 0, ['title' => $term]);
         if (!empty($results)) {
             $tags = array_map(function ($page) {
                 return [

@@ -3,6 +3,7 @@
 This document explains how the components inside `app/` and `modules/` work together, how requests flow through the system, and where you can extend the platform.
 
 ## Application bootstrap & request lifecycle
+
 - Every request passes through `app/Filters/Ci4ms.php`:
   - Redirects to `/install` if `.env` is missing (fresh setup).
   - Redirects to `maintenance-mode` if the cached settings flag is enabled.
@@ -13,11 +14,13 @@ This document explains how the components inside `app/` and `modules/` work toge
 - `app/Config/Routes.php` preloads settings, loads template routes, then includes each module’s routes before defining front-end routes.
 
 ## CommonModel abstraction
+
 - Almost every module uses `bertugfahriozer/ci4commonmodel`’s `CommonModel` for CRUD.
 - Core helpers: `lists`, `selectOne`, `create`, `createMany`, `edit`, `remove`, `isHave`, `count`.
 - Backend `BaseController` instances instantiate `CommonModel` once and share it via `$this->commonModel`.
 
 ## Authentication & authorization
+
 - `Modules\Auth\Libraries\AuthLibrary`:
   - Handles login/logout, remember-me cookies, lockouts, password reset tokens, and mail notifications.
   - Sets session keys (`logged_in`, `redirect_url`) and caches user permissions per user ID.
@@ -34,7 +37,9 @@ This document explains how the components inside `app/` and `modules/` work toge
   - `Modules\Methods` manages these tables and can auto-scan routes to populate permissions.
 
 ## Module pattern
+
 Each module (under `modules/<Name>/`) includes:
+
 - `Config/Routes.php` with backend routes and metadata (`role`, etc.).
 - `Config/*.php` for module-specific configuration.
 - `Controllers/` (usually extend the backend base controller).
@@ -45,6 +50,7 @@ Each module (under `modules/<Name>/`) includes:
 Use `php spark make:module Foo` (provided by `ci4-cms-erp/ext_module_generator`) to scaffold a new module skeleton.
 
 ## Installation flow
+
 - **Web installer** (`Modules\Install`):
   - Copies `env` to `.env`, updates base settings, triggers migrations, and seeds defaults via `InstallService`.
   - Regenerates `app/Config/Routes.php` from the command template.
@@ -52,17 +58,19 @@ Use `php spark make:module Foo` (provided by `ci4-cms-erp/ext_module_generator`)
   - Seeds initial modules, permissions, admin user, sample pages/blog entries, and settings.
 
 ## Caching & configuration
+
 - `settings`: JSON values are decoded and cached for 24h.
 - `menus`: cached for 24h after edits.
 - `{userId}_permissions`: cached per user; cleared when permissions change.
-- Mail settings: stored encrypted in `settings.mail`, decoded in backend base controller and `CommonLibrary::phpMailer()`.
 
 ## Theme system
+
 - Themes live under `public/templates/<theme>/` (plus optional app-level template directories).
 - `Modules\Theme` handles ZIP uploads to `writable/tmp/`, detects duplicates, and installs assets/views/helpers.
 - Backend filter warns administrators if required files are missing.
 
 ## Content & SEO
+
 - `App\Controllers\Home` renders front-end pages/blogs:
   - Parses inline shortcodes via `CommonLibrary::parseInTextFunctions()`.
   - Builds meta tags and JSON-LD with `Ci4msseoLibrary`.
@@ -70,17 +78,20 @@ Use `php spark make:module Foo` (provided by `ci4-cms-erp/ext_module_generator`)
 - Blog/Pages modules store SEO data as JSON (`coverImage`, `description`, `keywords`).
 
 ## Media, file management & logs
+
 - `Modules\Media` integrates elFinder, with MIME allowlist from settings and optional WebP conversion (`claviska/simpleimage`).
 - `Modules\Fileeditor` provides project-level file browse/edit operations with `realpath` guardrails.
-- `Modules\Logs` wraps `seunmatt/codeigniter-log-viewer` so administrators can inspect `writable/logs/` from `/backend/logs` without shell access.
+- `Modules\Logs` implements a custom, highly-optimized `LogViewer` library so administrators can securely inspect `writable/logs/` from `/backend/logs` without shell access.
 - `Modules\Backup` provides database backup and restore functionality, allowing administrators to download `.zip` archives of the database or restore from server-stored backups.
 
 ## CLI & automation
+
 - `app/Commands/*` includes backend generators (`make:acontroller`, etc.) and route regeneration (`create:route`).
 - Module scaffolding is provided by the Composer package `ci4-cms-erp/ext_module_generator` via `php spark make:module`.
 - `Modules\Methods::moduleScan()` inspects the router to align routes with permission records.
 
 ## Development tips
+
 - Extend the backend base controller for consistent session and view data.
 - Update `Modules\Methods` when adding new secured routes.
 - Clear caches (`php spark cache:clear`) after updating settings, menus, or permissions.
@@ -88,6 +99,7 @@ Use `php spark make:module Foo` (provided by `ci4-cms-erp/ext_module_generator`)
 - Captcha auto-disables in development via the environment check in the login controller.
 
 ## Common data tables
+
 - `users`, `auth_groups`, `auth_permissions_pages`, `auth_users_permissions`, `modules`, `pages`, `blog`, `blog_categories_pivot`, `tags`, `tags_pivot`, `menu`, `settings`, `login_rules`, etc.
 
 This document should help you navigate, extend, and maintain CI4MS safely. For clarification or enhancements, use the project issue tracker.

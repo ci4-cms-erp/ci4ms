@@ -7,7 +7,7 @@ class MediaConfig extends \CodeIgniter\Config\BaseConfig
     ];
 
     public $filters = [
-        'backendAfterLoginFilter' => ['before' => [
+        'backendGuard' => ['before' => [
             'backend/media','backend/media/*'
         ]]
     ];

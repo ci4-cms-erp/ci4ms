@@ -40,13 +40,14 @@ return [
     'reset' => '重置',
     'filter' => '筛选',
     'ok' => '确定',
+    'areYouSure' => '你确定吗？',
+    'youWillNotBeAbleToRecoverThis' => '您将无法恢复此数据。',
 
     //pages
     'homepage' => '控制面板',
     'draft' => '草稿',
     'publish' => '已发布',
     'logs' => '日志',
-    'locked_accounts' => '账户锁定记录',
     'coverImage' => '封面图片',
     'coverImgURL' => '图片链接',
     'coverImgWith' => '图片宽度',

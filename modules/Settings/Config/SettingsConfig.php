@@ -9,10 +9,11 @@ class SettingsConfig extends \CodeIgniter\Config\BaseConfig
         'backend/settings/setTemplate',
         'backend/settings/elfinderConvertWebp',
         'backend/settings/testMail',
+        'backend/settings/updateVersion',
     ];
 
     public $filters = [
-        'backendAfterLoginFilter' => ['before' => [
+        'backendGuard' => ['before' => [
             'backend/settings',
             'backend/settings/*',
         ]]

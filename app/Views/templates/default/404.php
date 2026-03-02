@@ -1,8 +1,8 @@
-<?= $this->extend('Views/templates/default/base') ?>
-<?= $this->section('head') ?>
-<?=link_tag('templates/default/assets/404.css')?>
-<?= $this->endSection() ?>
-<?= $this->section('content') ?>
+<?php echo $this->extend('Views/templates/default/base') ?>
+<?php echo $this->section('head') ?>
+<?php echo link_tag('templates/default/assets/404.css') ?>
+<?php echo $this->endSection() ?>
+<?php echo $this->section('content') ?>
 <section class="page_404">
     <div class="container-fluid">
         <div class="row">
@@ -19,7 +19,7 @@
                         <?php if (empty($referer)) : ?>
                             <a href="/" class="link_404">Go to Home</a>
                         <?php else : ?>
-                            <a href="<?= esc($referer) ?>" class="link_404">Go Back</a>
+                            <a href="<?php echo esc($referer) ?>" class="link_404">Go Back</a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -27,4 +27,4 @@
         </div>
     </div>
 </section>
-<?= $this->endSection() ?>
+<?php echo $this->endSection() ?>

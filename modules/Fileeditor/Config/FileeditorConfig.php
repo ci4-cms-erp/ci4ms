@@ -1,4 +1,6 @@
-<?php namespace Modules\Fileeditor\Config;
+<?php
+
+namespace Modules\Fileeditor\Config;
 
 class FileeditorConfig extends \CodeIgniter\Config\BaseConfig
 {
@@ -8,8 +10,9 @@ class FileeditorConfig extends \CodeIgniter\Config\BaseConfig
     ];
 
     public $filters = [
-        'backendAfterLoginFilter' => ['before' => [
-            'backend/fileeditor', 'backend/fileeditor/*'
+        'backendGuard' => ['before' => [
+            'backend/fileeditor',
+            'backend/fileeditor/*'
         ]]
     ];
 }

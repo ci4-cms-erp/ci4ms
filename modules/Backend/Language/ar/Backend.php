@@ -40,13 +40,14 @@ return [
     'reset' => 'إعادة تعيين',
     'filter' => 'تصفية',
     'ok' => 'حسناً',
+    'areYouSure' => 'هل أنت متأكد؟',
+    'youWillNotBeAbleToRecoverThis' => 'لن تتمكن من استعادة هذه البيانات.',
 
     //pages
     'homepage' => 'لوحة التحكم',
     'draft' => 'مسودة',
     'publish' => 'منشور',
     'logs' => 'السجلات',
-    'locked_accounts' => 'سجلات حظر الحسابات',
     'coverImage' => 'صورة الغلاف',
     'coverImgURL' => 'رابط الصورة',
     'coverImgWith' => 'عرض الصورة',

@@ -5,11 +5,11 @@ $routes->group('backend/settings', ['namespace' => 'Modules\Settings\Controllers
     $routes->post('compInfos', 'Settings::compInfosPost', ['as' => 'compInfosPost','role'=>'update']);
     $routes->post('socialMedia', 'Settings::socialMediaPost', ['as' => 'socialMediaPost','role'=>'update']);
     $routes->post('mailSettings', 'Settings::mailSettingsPost', ['as' => 'mailSettingsPost','role'=>'update']);
-    $routes->post('loginSettings', 'Settings::loginSettingsPost', ['as' => 'loginSettingsPost','role'=>'delete']);
     $routes->post('setTemplate', 'Settings::templateSelectPost', ['as' => 'setTemplate','role'=>'update']);
     $routes->post('saveAllowedFiles', 'Settings::saveAllowedFiles', ['as' => 'saveAllowedFiles','role'=>'update']);
     $routes->get('templateSettings', 'Settings::templateSettings', ['as' => 'templateSettings','role'=>'update']);
     $routes->post('templateSettings_post', 'Settings::templateSettings_post', ['as' => 'templateSettings_post','role'=>'update']);
     $routes->post('elfinderConvertWebp', 'Settings::elfinderConvertWebp', ['as' => 'elfinderConvertWebp','role'=>'update']);
     $routes->post('testMail', 'Settings::testMail', ['as' => 'testMail','role'=>'read']);
+    $routes->post('updateVersion', 'Settings::checkVersion', ['as' => 'updateVersion','role'=>'update']);
 });
