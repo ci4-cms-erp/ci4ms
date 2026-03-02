@@ -174,6 +174,7 @@ class Filters extends BaseFilters
             \CodeIgniter\Shield\Filters\SessionAuth::class,
             \CodeIgniter\Shield\Filters\ForcePasswordResetFilter::class,
             \Modules\Auth\Filters\Ci4MsAuthFilter::class,
+            \Modules\Backend\Filters\BackendLogFilter::class,
         ];
         foreach ($directories as $directory) {
             if (is_dir($directory)) {
@@ -203,14 +204,17 @@ class Filters extends BaseFilters
 
     /**
      * Merges CSRF exceptions.
-     *
-     * @param array $csrfExcept
      */
-    private function mergeCsrfExcept(array $csrfExcept): void
+    public function mergeCsrfExcept($csrfExcept): void
     {
+        $currentExcept = $this->globals['before']['csrf']['except'] ?? [];
+        if (!is_array($currentExcept)) {
+            $currentExcept = (array) $currentExcept;
+        }
+
         $this->globals['before']['csrf']['except'] = array_merge(
-            $this->globals['before']['csrf']['except'],
-            $csrfExcept
+            $currentExcept,
+            is_array($csrfExcept) ? $csrfExcept : [$csrfExcept]
         );
     }
 

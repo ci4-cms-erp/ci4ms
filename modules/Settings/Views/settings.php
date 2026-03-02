@@ -21,7 +21,9 @@
                 <h1><?php echo lang($title->pagename) ?></h1>
             </div>
             <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right"></ol>
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><button class="btn btn-sm btn-info" id="updateVersion"><i class="fas fa-sync-alt"></i> <?php echo lang('Settings.updateVersion') ?></button></li>
+                </ol>
             </div>
         </div>
     </div><!-- /.container-fluid -->
@@ -347,7 +349,7 @@
 
 <?php echo $this->section('javascript') ?>
 <?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/node_modules/jquery.repeater/jquery.repeater.js") ?>
+<?php echo script_tag("be-assets/plugins/jquery-repeater/jquery.repeater.js") ?>
 <!-- Bootstrap Switch -->
 <?php echo script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js") ?>
 <?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.min.js") ?>
@@ -446,6 +448,45 @@
                     Swal.fire('Test e-mail başarıyla gönderildi.', '', 'success');
                 } else {
                     Swal.fire('Test e-mail gönderilemedi. Lütfen ayarları kontrol ediniz.', '', 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Bir hata oluştu. Lütfen tekrar deneyiniz.', '', 'error');
+            }
+        });
+    });
+    $('#updateVersion').on('click', function(e) {
+        e.preventDefault();
+        $.ajax({
+            type: 'POST',
+            url: '<?php echo route_to('updateVersion') ?>',
+            beforeSend: function() {
+                Swal.fire({
+                    title: 'Lütfen bekleyin...',
+                    text: 'Yeni sürüm indiriliyor.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            success: function(data) {
+                if (data.result === true) {
+                    Swal.close();
+                    Swal.fire({
+                        title: '<?php echo lang('Backend.success') ?>',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                    });
+                } else {
+                    Swal.close();
+                    Swal.fire({
+                        title: '<?php echo lang('Backend.error') ?>',
+                        text: data.error,
+                        icon: 'error',
+                        confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                    });
                 }
             },
             error: function() {

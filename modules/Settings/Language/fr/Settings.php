@@ -30,4 +30,6 @@ return [
     'socialMediaNameMustBeText' => 'Le nom du réseau social doit être une valeur textuelle !',
     'socialMediaNameRequired' => 'Le nom du réseau social ne peut pas être vide !',
     'testEmailSent' => 'E-mail test envoyé avec succès.',
+    'updateVersion' => 'Mettre à jour la version',
+    'alreadyLastVersion' => 'Vous utilisez déjà la dernière version.',
 ];

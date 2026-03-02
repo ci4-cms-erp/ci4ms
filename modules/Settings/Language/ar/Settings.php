@@ -30,4 +30,6 @@ return [
     'socialMediaNameMustBeText' => 'يجب أن يكون اسم الوسائط الاجتماعية قيمة نصية!',
     'socialMediaNameRequired' => 'لا يمكن أن يكون اسم الوسائط الاجتماعية فارغًا!',
     'testEmailSent' => 'تم إرسال البريد الإلكتروني التجريبي بنجاح.',
+    'updateVersion' => 'تحديث الإصدار',
+    'alreadyLastVersion' => 'أنت تستخدم بالفعل أحدث إصدار.',
 ];

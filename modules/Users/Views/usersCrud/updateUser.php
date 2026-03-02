@@ -20,7 +20,7 @@
         </div>
     </div><!-- /.container-fluid -->
 </section>
-
+<?php d($userInfo->inGroup('Karım'),$groups); ?>
 <!-- Main content -->
 <section class="content">
     <div class="card card-outline card-shl">
@@ -48,7 +48,7 @@
                         <select name="group" class="form-control" required>
                             <option value=""><?php echo lang('Backend.select') ?></option>
                             <?php foreach ($groups as $group): ?>
-                                <option value="<?php echo $group->id ?>" <?php echo set_select('group', $group->id, $userInfo->group === $group->group) ?>><?php echo $group->group ?></option>
+                                <option value="<?php echo $group->id ?>" <?php echo set_select('group', $group->id, $userInfo->inGroup($group->group)) ?>><?php echo $group->group ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>

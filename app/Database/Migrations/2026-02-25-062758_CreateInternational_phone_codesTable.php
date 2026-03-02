@@ -3,33 +3,37 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use CodeIgniter\Database\RawSql;
 
-class Internationalphonecodes extends Migration
+class CreateInternational_phone_codesTable extends Migration
 {
     public function up()
     {
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
-                'constraint' => 11,
+                'constraint' => '11',
                 'unsigned' => true,
-                'auto_increment' => true
+                'auto_increment' => true,
+                'null' => false,
             ],
             'code' => [
                 'type' => 'VARCHAR',
-                'constraint'=>255
+                'constraint' => '255',
+                'null' => false,
             ],
             'dial_code' => [
                 'type' => 'VARCHAR',
-                'constraint'=>255
+                'constraint' => '255',
+                'null' => false,
             ],
             'name' => [
                 'type' => 'VARCHAR',
-                'constraint'=>255
-            ]
+                'constraint' => '255',
+                'null' => false,
+            ],
         ]);
-        $this->forge->addKey('id',true);
-        $this->forge->addKey(['code','dial_code','name']);
+        $this->forge->addKey('id', true);
         $this->forge->createTable('international_phone_codes');
     }
 

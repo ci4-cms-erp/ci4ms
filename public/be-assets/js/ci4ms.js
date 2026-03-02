@@ -7,7 +7,7 @@ function pageImgelfinderDialog() {
         height: 768,
         workerBaseUrl:"/be-assets/plugins/elFinder/js/worker",
         destroyOnClose: true,
-        cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme.css'],
+        cssAutoLoad: [window.location.origin+'/be-assets/plugins/elfinder-material-theme/Material/css/theme.css'],
         getFileCallback: function (files, fm) {
             $('.pageimg-input').val(files.url.replace(location.origin,''));
             $('.pageimg').attr('src',files.url);
@@ -65,7 +65,7 @@ function pageMultipleImgelfinderDialog(id) {
         width: '80%',
         height: 768,
         destroyOnClose: true,
-        cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme.css'],
+        cssAutoLoad: [window.location.origin+'/be-assets/plugins/elfinder-material-theme/Material/css/theme.css'],
         getFileCallback: function (files) {
             $('[name="imgs['+id+'][pageimg]"]').val(files.url.replace(location.origin, ''));
             $('[name="imgs['+id+'][img]"]').attr('src', files.url);
@@ -138,7 +138,7 @@ function elfinderDialog() {
         width: '100%',
         height: 768,
         destroyOnClose: true,
-        cssAutoLoad: [window.location.origin+'/be-assets/node_modules/elfinder-material-theme/Material/css/theme.css'],
+        cssAutoLoad: [window.location.origin+'/be-assets/plugins/elfinder-material-theme/Material/css/theme.css'],
         getFileCallback: function (files, fm) {
             $('.editor').summernote('editor.insertImage', files.url.replace('https://'+location.hostname,''));
         },
@@ -172,19 +172,23 @@ function tags(data) {
     });
 }
 
-$('.editor').summernote({
-    height: 300,
-    toolbar: [
-        ['style', ['style']],
-        ['style', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
-        ['fontname', ['fontname']],
-        ['fontsize', ['fontsize']],
-        ['color', ['color']],
-        ['para', ['ul', 'ol', 'paragraph']],
-        ['height', ['height']],
-        ['table', ['table']],
-        ['insert', ['link', 'picture', 'video', 'hr', 'readmore']],
-        ['media', ['elfinder']],
-        ['view', ['fullscreen', 'codeview']]
-    ]
+$(document).ready(function() {
+    if ($('.editor').length > 0) {
+        $('.editor').summernote({
+            height: 300,
+            toolbar: [
+                ['style', ['style']],
+                ['style', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
+                ['fontname', ['fontname']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['height', ['height']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video', 'hr', 'readmore']],
+                ['media', ['elfinder']],
+                ['view', ['fullscreen', 'codeview']]
+            ]
+        });
+    }
 });

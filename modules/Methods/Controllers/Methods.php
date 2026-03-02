@@ -311,6 +311,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 ];
             }
             $this->commonModel->createMany('auth_permissions_pages', $insertBach);
+            cache()->delete('sidebar_menu');
             return $this->respondCreated(['result' => true]);
         } else return $this->respond(['result' => false]);
     }

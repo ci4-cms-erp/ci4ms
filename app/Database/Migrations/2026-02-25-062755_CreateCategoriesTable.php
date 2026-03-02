@@ -3,46 +3,50 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use CodeIgniter\Database\RawSql;
 
-class Categories extends Migration
+class CreateCategoriesTable extends Migration
 {
     public function up()
     {
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
-                'constraint' => 11,
+                'constraint' => '11',
                 'unsigned' => true,
-                'auto_increment' => true
+                'auto_increment' => true,
+                'null' => false,
             ],
             'isActive' => [
                 'type' => 'TINYINT',
-                'constraint' => 1,
-                'default' => 0
+                'constraint' => '1',
+                'null' => false,
+                'default' => 0,
             ],
             'title' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint' => '255',
+                'null' => false,
             ],
             'seflink' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint' => '255',
+                'null' => false,
             ],
             'parent' => [
                 'type' => 'INT',
-                'constraint' => 11,
+                'constraint' => '11',
                 'unsigned' => true,
-                'null' => true
+                'null' => true,
+                'default' => null,
             ],
             'seo' => [
                 'type' => 'LONGTEXT',
-                'null' => true
+                'null' => true,
+                'default' => null,
             ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey('title');
-        $this->forge->addUniqueKey('seflink');
-        $this->forge->addForeignKey('parent', 'categories', 'id', 'CASCADE', 'SET NULL');
         $this->forge->createTable('categories');
     }
 

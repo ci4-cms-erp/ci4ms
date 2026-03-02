@@ -3,61 +3,69 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use CodeIgniter\Database\RawSql;
 
-class Menu extends Migration
+class CreateMenuTable extends Migration
 {
     public function up()
     {
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
-                'constraint' => 11,
+                'constraint' => '11',
                 'unsigned' => true,
-                'auto_increment' => true
+                'auto_increment' => true,
+                'null' => false,
             ],
             'pages_id' => [
                 'type' => 'INT',
-                'constraint' => 11,
+                'constraint' => '11',
                 'unsigned' => true,
-                'null' => true
+                'null' => true,
+                'default' => null,
             ],
             'parent' => [
                 'type' => 'INT',
-                'constraint' => 11,
+                'constraint' => '11',
                 'unsigned' => true,
-                'null' => true
+                'null' => true,
+                'default' => null,
             ],
             'queue' => [
                 'type' => 'INT',
-                'constraint' => 11,
-                'unsigned' => true
+                'constraint' => '11',
+                'unsigned' => true,
+                'null' => false,
             ],
             'urlType' => [
                 'type' => 'ENUM',
-                'constraint' => ['pages', 'blogs', 'url']
+                'constraint' => ['pages', 'blog', 'url'],
+                'null' => false,
             ],
             'title' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint' => '255',
+                'null' => false,
             ],
             'seflink' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint' => '255',
+                'null' => false,
             ],
             'target' => [
                 'type' => 'ENUM',
-                'constraint' => ['_blank', '_self', '_parent', '_top']
+                'constraint' => ['_blank', '_self', '_parent', '_top'],
+                'null' => true,
+                'default' => null,
             ],
             'hasChildren' => [
                 'type' => 'TINYINT',
-                'constraint' => 1,
-                'default' => 0
+                'constraint' => '1',
+                'null' => false,
+                'default' => 0,
             ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->addKey(['title', 'seflink', 'queue']);
-        $this->forge->addForeignKey('pages_id', 'pages', 'id', 'CASCADE', 'CASCADE', 'ci4ms_menu_ibfk_1');
-        $this->forge->addForeignKey('parent',  'menu', 'id', 'CASCADE', 'SET_NULL', 'ci4ms_menu_ibfk_2');
         $this->forge->createTable('menu');
     }
 

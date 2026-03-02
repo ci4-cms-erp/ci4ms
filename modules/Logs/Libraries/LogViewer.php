@@ -18,6 +18,7 @@ class LogViewer
         'NOTICE'    => 'fas fa-info-circle',
         'INFO'      => 'fas fa-info-circle',
         'DEBUG'     => 'fas fa-vial',
+        'BACKEND_ACTIVITY' => 'fas fa-shield-alt',
         'ALL'       => 'fas fa-list',
     ];
 
@@ -29,11 +30,12 @@ class LogViewer
         'WARNING'   => 'warning',
         'NOTICE'    => 'info',
         'INFO'      => 'info',
+        'BACKEND_ACTIVITY' => 'info',
         'DEBUG'     => 'secondary',
         'ALL'       => 'dark',
     ];
 
-    private const LOG_LINE_PATTERN = '/^([A-Z]+)\s*-\s*([\d-]+\s+[\d:]+)\s*-->\s*(.*)$/Us';
+    private const LOG_LINE_PATTERN = '/([A-Z_]+)\s*-\s*([\d\-\s:]+)\s*-->\s*(.*)/';
 
     public function getFiles(): array
     {

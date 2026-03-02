@@ -30,4 +30,6 @@ return [
     'socialMediaNameMustBeText' => 'Sosyal Medya Adı yazı değeri olmalıdır!',
     'socialMediaNameRequired' => 'Sosyal Medya Adı boş bırakılamaz!',
     'testEmailSent' => 'Test e-mail başarıyla gönderildi.',
+    'updateVersion' => 'Versiyon Güncelleme',
+    'alreadyLastVersion' => 'Zaten en son versiyonu kullanıyorsunuz.',
 ];

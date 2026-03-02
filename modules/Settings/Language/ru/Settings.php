@@ -30,4 +30,6 @@ return [
     'socialMediaNameMustBeText' => 'Имя социальной сети должно быть текстовым значением!',
     'socialMediaNameRequired' => 'Имя в социальной сети не может быть пустым!',
     'testEmailSent' => 'Тестовое письмо отправлено успешно.',
+    'updateVersion' => 'Обновить версию',
+    'alreadyLastVersion' => 'Вы уже используете последнюю версию.',
 ];

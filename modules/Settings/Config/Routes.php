@@ -11,4 +11,5 @@ $routes->group('backend/settings', ['namespace' => 'Modules\Settings\Controllers
     $routes->post('templateSettings_post', 'Settings::templateSettings_post', ['as' => 'templateSettings_post','role'=>'update']);
     $routes->post('elfinderConvertWebp', 'Settings::elfinderConvertWebp', ['as' => 'elfinderConvertWebp','role'=>'update']);
     $routes->post('testMail', 'Settings::testMail', ['as' => 'testMail','role'=>'read']);
+    $routes->post('updateVersion', 'Settings::checkVersion', ['as' => 'updateVersion','role'=>'update']);
 });

@@ -5,34 +5,39 @@ namespace App\Database\Migrations;
 use CodeIgniter\Database\Migration;
 use CodeIgniter\Database\RawSql;
 
-class Modules extends Migration
+class CreateModulesTable extends Migration
 {
     public function up()
     {
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
-                'constraint' => 11,
+                'constraint' => '11',
                 'unsigned' => true,
-                'auto_increment' => true
+                'auto_increment' => true,
+                'null' => false,
             ],
             'create_time' => [
                 'type' => 'DATETIME',
-                'default' => new RawSql('CURRENT_TIMESTAMP')
+                'null' => false,
+                'default' => new RawSql('CURRENT_TIMESTAMP'),
             ],
             'name' => [
                 'type' => 'VARCHAR',
-                'constraint' => 255
+                'constraint' => '255',
+                'null' => false,
             ],
             'isActive' => [
                 'type' => 'TINYINT',
-                'constraint' => 1,
-                'default' => 1
+                'constraint' => '1',
+                'null' => false,
+                'default' => 1,
             ],
             'icon' => [
                 'type' => 'VARCHAR',
-                'constraint' => 100,
-                'null'=>true
+                'constraint' => '100',
+                'null' => true,
+                'default' => null,
             ],
         ]);
         $this->forge->addKey('id', true);

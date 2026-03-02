@@ -28,5 +28,7 @@
         </div>
     </header>
 <?php endif; ?>
-<?php echo $pageInfo->content ?>
+<div id="ci4ms-content">
+    <?php echo $pageInfo->content ?>
+</div>
 <?php echo $this->endSection() ?>

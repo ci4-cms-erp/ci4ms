@@ -137,9 +137,9 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 $email->setMessage('Mail working correctly.');
 
                 $email->send();
-                return $this->response->setJSON(['result' => true, 'message' => lang('Settings.testEmailSent')]);
+                return $this->respond(['result' => true, 'message' => lang('Settings.testEmailSent')]);
             } catch (\Exception $e) {
-                return $this->response->setJSON(['result' => false, 'message' => $e->getMessage()]);
+                return $this->respond(['result' => false, 'message' => $e->getMessage()], 500);
             }
         }
     }
@@ -162,9 +162,9 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                     'name' => esc($this->request->getPost('name'))
                 ], JSON_UNESCAPED_UNICODE));
                 cache()->delete('settings');
-                return $this->response->setJSON(['result' => true]);
+                return $this->respond(['result' => true]);
             } catch (\Exception $e) {
-                return $this->response->setJSON(['result' => false]);
+                return $this->respond(['result' => false], 500);
             }
         } else return $this->failForbidden();
     }
@@ -201,17 +201,18 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function templateSettings_post()
     {
-        $valData = (['settings' => ['label' => 'widgets', 'rules' => 'required']]);
-        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
-
-            $current = (array)$this->defData['settings']->templateInfos;
+            $postSettings = $this->request->getPost('settings') ?? [];
             $protectedKeys = ['path', 'name'];
-            $postSettings = array_diff_key($this->request->getPost('settings'), array_flip($protectedKeys));
-            $data = array_merge($current, $postSettings);
-            setting()->set('App.templateInfos', json_encode($data, JSON_UNESCAPED_UNICODE));
+            $postSettings = array_diff_key($postSettings, array_flip($protectedKeys));
 
+            // Merge with existing (preserve path, name and any other untouched keys)
+            $current = (array)$this->defData['settings']->templateInfos;
+            $data = array_merge($current, $postSettings);
+
+            setting()->set('App.templateInfos', json_encode($data, JSON_UNESCAPED_UNICODE));
             cache()->delete('settings');
+
             return redirect()->route('settings')->with('success', lang('Backend.updated', [lang('Settings.templateSettings')]));
         } catch (\Exception $e) {
             return redirect()->route('settings')->with('error', lang('Backend.notUpdated', [lang('Settings.templateSettings')]));
@@ -233,5 +234,45 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 return $this->fail(['pr' => false]);
             }
         } else return $this->failForbidden();
+    }
+
+    public function checkVersion()
+    {
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $client = service('curlrequest');
+
+        try {
+            $response = $client->request('GET', 'https://api.github.com/repos/ci4-cms-erp/ci4ms/tags', [
+                'headers' => [
+                    'User-Agent' => 'CI4ms-Auto-Updater',
+                    'Accept'     => 'application/vnd.github.v3+json',
+                ],
+                'http_errors' => false
+            ]);
+
+            $data = json_decode($response->getBody());
+
+            if (!empty($data) && is_array($data) && isset($data[0]->name)) {
+                $latestTag = $data[0];
+
+                $latestVersion = ltrim($latestTag->name, 'v');
+
+                if (version_compare($latestVersion, env('app.version'), '>')) {
+                    return $this->respond([
+                        'result'           => true,
+                        'update_available' => true,
+                        'message'          => lang('Backend.updateAvailable', [$latestVersion]),
+                        'new_version'      => $latestVersion,
+                        'download_url'     => $latestTag->zipball_url ?? ''
+                    ]);
+                }
+
+                return $this->respond(['result' => true, 'message' => lang('Settings.alreadyLastVersion')]);
+            }
+
+            return $this->respond(['result' => false, 'message' => 'No tags found'], 404);
+        } catch (\Exception $e) {
+            return $this->respond(['result' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 }

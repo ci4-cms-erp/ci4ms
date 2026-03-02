@@ -48,7 +48,7 @@
                                 alt="<?php echo esc($infos->title) ?>" /><?php } ?>
                     </figure>
                     <!-- Post content-->
-                    <section class="mb-5">
+                    <section class="mb-5" id="ci4ms-content">
                         <?php echo $infos->content ?>
                     </section>
                     <hr>

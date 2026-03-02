@@ -45,7 +45,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
                 return redirect()->route('group_create')->withInput()->with('errors', $this->validator->getErrors());
 
             $data = [
-                'group' => esc($this->request->getPost('groupName')),
+                'group' => esc(seflink($this->request->getPost('groupName'))),
                 'description' => esc($this->request->getPost('description')),
                 'redirect' => esc($this->request->getPost('seflink')),
                 'who_created' => user_id()
@@ -84,8 +84,12 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             ]);
 
             if ($this->validate($valData) == false) return redirect()->route('group_update', [$id])->withInput()->with('errors', $this->validator->getErrors());
+            $oldGroupName = $this->commonModel->selectOne('auth_groups', ['id' => $id], 'group')->group;
+            if (esc(seflink($this->request->getPost('groupName'))) != $oldGroupName) {
+                $this->commonModel->edit('auth_groups_users', ['group' => esc(seflink($this->request->getPost('groupName')))], ['group' => $oldGroupName]);
+            }
             $data = [
-                'group' => esc($this->request->getPost('groupName')),
+                'group' => esc(seflink($this->request->getPost('groupName'))),
                 'description' => esc($this->request->getPost('description')),
                 'redirect' => esc($this->request->getPost('seflink')),
                 'who_created' => user_id()

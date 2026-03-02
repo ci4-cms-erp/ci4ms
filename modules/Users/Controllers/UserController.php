@@ -184,8 +184,8 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             if ($this->validate($valData) == false) return redirect()->route('update_user', [$id])->withInput()->with('errors', $this->validator->getErrors());
 
             $user = auth()->getProvider();
-            if ($user->inGroup('superadmin')) return redirect()->route('403');
-            $u = $user->findById($id);
+            $u = $user->withGroups()->findById($id);
+            if ($u->inGroup('superadmin')) return redirect()->route('403');
             $data = [
                 'email' => $this->request->getPost('email'),
                 'firstname' => esc($this->request->getPost('firstname')),
@@ -201,12 +201,15 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             }
 
             $u->fill($data);
-            if ($user->save($u)) return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
-            else return redirect()->route('update_user', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$data['username']]));
+            if ($user->save($u)) {
+                $group = $this->commonModel->selectOne('auth_groups', ['id' => $this->request->getPost('group')]);
+                $u->syncGroups($group->group);
+                return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
+            } else return redirect()->route('update_user', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$data['username']]));
         }
         $user = auth()->getProvider();
         $this->defData['groups'] = $this->commonModel->lists('auth_groups', '*', ['group!=' => 'superadmin']);
-        $this->defData['userInfo'] = $user->findById($id);
+        $this->defData['userInfo'] = $user->withGroups()->findById($id);
 
         return view('Modules\Users\Views\usersCrud\updateUser', $this->defData);
     }
