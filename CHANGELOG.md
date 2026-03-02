@@ -4,21 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
-## [featured/shield-integration] - 2026-02-24
+## [featured/shield-integration] - 2026-03-02
 
 ### Security
 
-- **XSS Protection:** Implemented global input validation using `regex_match[/^[^<>{}]*$/u]` for common fields to prevent HTML/Script injection.
-- **CSRF Protection:** Verified and refined CSRF settings. Added logic to update CSRF tokens in the UI after AJAX operations to prevent token expiration.
+- **CodeIgniter Shield Integration:** Fully replaced custom authentication migrations with Shield-compatible structures (`auth_groups`, `auth_identities`, `auth_groups_users`). Removed 14 legacy migration files and introduced 6 new Shield-aligned migrations with proper foreign keys.
+- **BackendLogFilter:** Added `modules/Backend/Filters/BackendLogFilter.php` to record detailed user activities (IP, user agent, action, module) in the backend for audit trail and security monitoring.
+- **XSS Protection:** Implemented global input validation using `regex_match[/^[<>{}]*$/u]` for common fields to prevent HTML/Script injection.
+- **CSRF Protection:** Verified and refined CSRF settings. Enhanced `mergeCsrfExcept` method for improved robustness. Added logic to update CSRF tokens in the UI after AJAX operations to prevent token expiration.
 - **Improved Validation:** Relaxed `seflink` regex to allow natural characters while strictly forbidding dangerous ones. Added `is_natural_no_zero` and `valid_email` checks where missing.
-- Removed 'seunmatt/codeigniter-log-viewer' vendor dependency
-- Implemented 'Modules\Logs\Libraries\LogViewer' for better performance and CI4 integration
-- Standardized log deletion with AJAX POST and SweetAlert2 confirmation
-- Improved security by escaping log content and removing external vendor code
-- Updated Logs controller and views to follow internal architecture patterns
+- Removed 'seunmatt/codeigniter-log-viewer' vendor dependency.
+- Implemented `Modules\Logs\Libraries\LogViewer` for better performance and CI4 integration.
+- Standardized log deletion with AJAX POST and SweetAlert2 confirmation.
+- Improved security by escaping log content and removing external vendor code.
+- Updated Logs controller and views to follow internal architecture patterns.
 
 ### Added
 
+- **Template Settings UI:** Comprehensive user-friendly interface for:
+  - Dynamically managing theme assets (CSS, JavaScript).
+  - Injecting custom CSS and JavaScript code globally.
+  - Configuring footer content, including copyright and navigation links.
+  - Selecting and previewing Google Fonts.
+  - Toggling general display features (breadcrumbs, back-to-top button, dark mode).
+  - Controlling sidebar widgets visibility.
+- **Version Checker:** Implemented version checking mechanism to notify administrators of available application updates.
 - **Development Tools:** Added a custom module generator hook for streamlined backend module creation.
 - **Dynamic Confirmation:** Integrated SweetAlert2 for all delete operations across the dashboard.
 - **Localization:** Added new translation keys (`areYouSure`, `youWillNotBeAbleToRecoverThis`, `ok`, `success`, `error`) to all 11 supported languages:
@@ -27,15 +37,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Changed
 
+- **Auth System Overhaul:** Refactored user and permission group management to fully leverage CodeIgniter Shield's capabilities. Removed legacy `Backend/Models/UserModel.php` in favour of Shield's built-in user entity.
+- **Standardized API Responses:** Unified response formats across backend Settings endpoints using `ResponseTrait`.
+- **Cache Invalidation:** Ensured proper sidebar menu cache invalidation upon permission page creation.
 - **Asset Optimization:** Migrated heavy frontend dependencies from `node_modules` to standalone `vendor` and `plugins` directories in `be-assets` and `templates`. Drastically reduced repository size (~147MB saved) by removing source maps, unminified files, and unused package logic.
 - **Fileeditor Enhancements:**
   - Implemented robust client-side alphabetical sorting (folders first, with Turkish locale character support).
   - Enhanced Monaco Editor integration with accurate language detection (PHP, JS, CSS, MD, ENV) and `vs-dark` theme optimization.
   - Cleaned up redundant logic and syntax issues in the file tree view.
 - **AJAX Refactoring:** Converted all "Delete" actions from `GET` routes to secure AJAX `POST` requests.
-- **DataTables Improvements:** Fixed dynamic element initialization (Bootstrap Switch) by moving logic to the DataTables `drawCallback`. This ensures elements work after pagination or searching.
+- **DataTables Improvements:** Fixed dynamic element initialization (Bootstrap Switch) by moving logic to the DataTables `drawCallback`.
 - **Module Consistency:** Standardized variable names and status indicators across `Blog` and `Pages` modules.
 - **Routes:** Updated `Routes.php` in multiple modules to support `POST` method for sensitive actions.
+- **Frontend:** Updated `ci4ms.js` with improved global utilities and event handlers.
+- **Template Views:** Refined `base.php`, `pages.php`, `post.php`, and `temp-settings.php` for Shield compatibility and new settings UI.
 
 ### Fixed
 
@@ -45,6 +60,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - **PHP Logic:** Fixed ternary operator precedence bugs that caused incorrect 'checked' states for status switches.
 - **Database Search:** Resolved a linting error in `count()` method calls in controllers.
 - **View Cleanup:** Deleted unused `commentList.php` and restructured comment management views.
+
+### Removed
+
+- Deleted 14 legacy authentication/authorization migration files replaced by Shield-compatible schemas.
+- Removed `Backend/Models/UserModel.php` (superseded by Shield's user management).
 
 ## [0.26.3.4] - 2025-09-27
 
