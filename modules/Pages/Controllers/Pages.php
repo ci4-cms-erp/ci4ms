@@ -19,12 +19,11 @@ class Pages extends \Modules\Backend\Controllers\BaseController
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = $data['search']['value'];
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $l = [];
             $postData = [];
-            if (!empty($like)) $l = ['title' => trim(strip_tags($like))];
-            $results = $this->commonModel->lists('pages', 'id,title,isActive', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
+            if (!empty($parsed['searchString'])) $l = ['title' => $parsed['searchString']];
+            $results = $this->commonModel->lists('pages', 'id,title,isActive', $postData, 'id DESC', $parsed['length'], $parsed['start'], $l);
             $totalRecords = $this->commonModel->count('pages', $postData, $l);
             foreach ($results as $result) {
                 $result->status = '<input type="checkbox" name="my-checkbox" class="bswitch" ' . ((bool)$result->isActive === true ? 'checked' : '') . ' data-id="' . $result->id . '" data-off-color="danger" data-on-color="success">';
@@ -34,7 +33,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                                    class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>';
             }
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalRecords,
                 'aaData' => $results,
@@ -49,7 +48,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[pages.seflink]'],
+                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9\-\/]+$/u]|is_unique[pages.seflink]'],
                 'content' => ['label' => lang('Backend.content'), 'rules' => 'required'],
                 'isActive' => ['label' => lang('Backend.draft') . ' / ' . lang('Backend.publish'), 'rules' => 'required|in_list[0,1]']
             ]);
@@ -71,21 +70,10 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                 'inMenu' => false
             ];
 
-            if (!empty($this->request->getPost('pageimg'))) {
-                $data['seo']['coverImage'] = strip_tags(trim($this->request->getPost('pageimg')));
-                $data['seo']['IMGWidth'] = strip_tags(trim($this->request->getPost('pageIMGWidth')));
-                $data['seo']['IMGHeight'] = strip_tags(trim($this->request->getPost('pageIMGHeight')));
+            $seoData = $this->commonBackendLibrary->buildSeoData($this->request->getPost());
+            if (!empty($seoData)) {
+                $data['seo'] = $seoData;
             }
-            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = strip_tags(trim($this->request->getPost('description')));
-            if (!empty($this->request->getPost('keywords'))) {
-                $keywords = json_decode($this->request->getPost('keywords'));
-                foreach($keywords as $key=>$keyword){
-                    $value=strip_tags(trim($keyword->value));
-                    if(empty($value)) unset($keywords[$key]);
-                }
-                $data['seo']['keywords']=$keywords;
-            }
-            if (!empty($data['seo'])) $data['seo'] = strip_tags(trim(json_encode($data['seo'], JSON_UNESCAPED_UNICODE)));
             if ($this->commonModel->create('pages', $data)) return redirect()->route('pages', [1])->with('message', lang('Backend.created', [$this->request->getPost('title')]));
             else return redirect()->route('pageCreate')->withInput()->with('error', lang('Backend.notCreated', [$this->request->getPost('title')]));
         }
@@ -119,22 +107,10 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                 'seflink' => strip_tags(trim($this->request->getPost('seflink')))
             ];
 
-            if (!empty($this->request->getPost('pageimg'))) {
-                $data['seo']['coverImage'] = strip_tags(trim($this->request->getPost('pageimg')));
-                $data['seo']['IMGWidth'] = strip_tags(trim($this->request->getPost('pageIMGWidth')));
-                $data['seo']['IMGHeight'] = strip_tags(trim($this->request->getPost('pageIMGHeight')));
+            $seoData = $this->commonBackendLibrary->buildSeoData($this->request->getPost());
+            if (!empty($seoData)) {
+                $data['seo'] = $seoData;
             }
-
-            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = strip_tags(trim($this->request->getPost('description')));
-            if (!empty($this->request->getPost('keywords'))) {
-                $keywords = json_decode($this->request->getPost('keywords'));
-                foreach($keywords as $key=>$keyword){
-                    $value=strip_tags(trim($keyword->value));
-                    if(empty($value)) unset($keywords[$key]);
-                }
-                $data['seo']['keywords']=$keywords;
-            }
-            if (!empty($data['seo'])) $data['seo'] = strip_tags(trim(json_encode($data['seo'], JSON_UNESCAPED_UNICODE)));
             if ($this->commonModel->edit('pages', $data, ['id' => $id])) return redirect()->route('pages', [1])->with('message', lang('Backend.updated', [$this->request->getPost('title')]));
             else return redirect()->route('pageUpdate', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('title')]));
         }

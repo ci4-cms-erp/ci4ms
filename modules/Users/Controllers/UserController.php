@@ -13,8 +13,8 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     public function users()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = $data['search']['value'];
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
+            $like = $parsed['searchString'];
             $l = [];
             $users = auth()->getProvider();
             $users->select('users.*, auth_identities.secret as email, auth_identities.force_reset')
@@ -33,7 +33,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 }
                 $users->groupEnd();
             }
-            $results = $users->findAll(($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start']);
+            $results = $users->findAll($parsed['length'], $parsed['start']);
 
             $users->select('users.*, auth_identities.secret as email')
                 ->join('auth_identities', 'auth_identities.user_id = users.id')
@@ -82,7 +82,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                                    class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>';
             }
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalRecords,
                 'aaData' => array_values($results)

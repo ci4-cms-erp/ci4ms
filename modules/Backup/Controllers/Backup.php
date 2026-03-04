@@ -7,13 +7,11 @@ class Backup extends \Modules\Backend\Controllers\BaseController
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = $data['search']['value'];
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $l = [];
             $postData = [];
-
-            if (!empty($like)) $l = ['filename' => $like];
-            $results = $this->commonModel->lists('db_backups', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
+            if (!empty($parsed['searchString'])) $l = ['filename' => $parsed['searchString']];
+            $results = $this->commonModel->lists('db_backups', '*', $postData, 'id DESC', $parsed['length'], $parsed['start'], $l);
             $totalRecords = $this->commonModel->count('db_backups', $postData, $l);
             $totalDisplayRecords = $totalRecords;
             helper('number');
@@ -25,7 +23,7 @@ class Backup extends \Modules\Backend\Controllers\BaseController
             }
 
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalDisplayRecords,
                 'aaData' => $results,

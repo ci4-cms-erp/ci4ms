@@ -7,12 +7,11 @@ class Categories extends \Modules\Backend\Controllers\BaseController
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = trim(strip_tags($data['search']['value']));
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $l = [];
             $postData = [];
-            if (!empty($like)) $l = ['title' => $like];
-            $results = $this->commonModel->lists('categories', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
+            if (!empty($parsed['searchString'])) $l = ['title' => $parsed['searchString']];
+            $results = $this->commonModel->lists('categories', '*', $postData, 'id DESC', $parsed['length'], $parsed['start'], $l);
             $totalRecords = $this->commonModel->count('categories', $postData, $l);
             foreach ($results as $result) {
                 $result->actions = '<a href="' . route_to('categoryUpdate', $result->id) . '"
@@ -21,7 +20,7 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                                    class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>';
             }
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalRecords,
                 'aaData' => $results,
@@ -47,20 +46,10 @@ class Categories extends \Modules\Backend\Controllers\BaseController
             if ($this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 0) {
                 $data = ['title' => trim(strip_tags($this->request->getPost('title'))), 'seflink' => trim(strip_tags($this->request->getPost('seflink'))), 'isActive' => $this->request->getPost('isActive')];
                 if (!empty($this->request->getPost('parent'))) $data['parent'] = $this->request->getPost('parent');
-                $seo = [];
-                if (!empty($this->request->getPost('description'))) $seo['description'] = trim(strip_tags($this->request->getPost('description')));
-                if (!empty($this->request->getPost('pageimg'))) $seo['coverImage'] = trim(strip_tags($this->request->getPost('pageimg')));
-                if (!empty($this->request->getPost('pageIMGWidth'))) $seo['IMGWidth'] = trim(strip_tags($this->request->getPost('pageIMGWidth')));
-                if (!empty($this->request->getPost('pageIMGHeight'))) $seo['IMGHeight'] = trim(strip_tags($this->request->getPost('pageIMGHeight')));
-                if (!empty($this->request->getPost('keywords'))) {
-                    $keywords = json_decode($this->request->getPost('keywords'));
-                    foreach ($keywords as $key => $keyword) {
-                        $value = strip_tags(trim($keyword->value));
-                        if (empty($value)) unset($keywords[$key]);
-                    }
-                    $data['seo']['keywords'] = $keywords;
+                $seoData = $this->commonBackendLibrary->buildSeoData($this->request->getPost());
+                if (!empty($seoData)) {
+                    $data['seo'] = $seoData;
                 }
-                $data['seo'] = json_encode($seo, JSON_UNESCAPED_UNICODE);
                 if ($this->commonModel->create('categories', $data)) return redirect()->route('categories', [1])->with('message', lang('Backend.created', [esc($data['title'])]));
                 else return redirect()->route('categories')->withInput()->with('error', lang('Backend.created', [esc($data['title'])]));
             } else return redirect()->route('categories')->withInput()->with('error', lang('Backend.notCreated', [esc($this->request->getPost('title'))]));
@@ -86,20 +75,10 @@ class Categories extends \Modules\Backend\Controllers\BaseController
             if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->get_where(['seflink' => $this->request->getPost('seflink')], 'categories') === 1) return redirect()->route('categories')->withInput()->with('error', lang('Backend.slugExists', [esc($this->request->getPost('seflink'))]));
             $data = ['title' => trim(strip_tags($this->request->getPost('title'))), 'seflink' => trim(strip_tags($this->request->getPost('seflink'))), 'isActive' => $this->request->getPost('isActive')];
             if (!empty($this->request->getPost('parent'))) $data['parent'] = $this->request->getPost('parent');
-            $seo = [];
-            if (!empty($this->request->getPost('description'))) $seo['description'] = trim(strip_tags($this->request->getPost('description')));
-            if (!empty($this->request->getPost('pageimg'))) $seo['coverImage'] = trim(strip_tags($this->request->getPost('pageimg')));
-            if (!empty($this->request->getPost('pageIMGWidth'))) $seo['IMGWidth'] = trim(strip_tags($this->request->getPost('pageIMGWidth')));
-            if (!empty($this->request->getPost('pageIMGHeight'))) $seo['IMGHeight'] = trim(strip_tags($this->request->getPost('pageIMGHeight')));
-            if (!empty($this->request->getPost('keywords'))) {
-                $keywords = json_decode($this->request->getPost('keywords'));
-                foreach ($keywords as $key => $keyword) {
-                    $value = strip_tags(trim($keyword->value));
-                    if (empty($value)) unset($keywords[$key]);
-                }
-                $data['seo']['keywords'] = $keywords;
+            $seoData = $this->commonBackendLibrary->buildSeoData($this->request->getPost());
+            if (!empty($seoData)) {
+                $data['seo'] = $seoData;
             }
-            $data['seo'] = json_encode($seo, JSON_UNESCAPED_UNICODE);
             if ($this->commonModel->edit('categories', $data, ['id' => $id])) return redirect()->route('categories', [1])->with('message', lang('Backend.updated', [esc($data['title'])]));
             else return redirect()->route('categories')->withInput()->with('error', lang('Backend.notUpdated', [esc($data['title'])]));
         }

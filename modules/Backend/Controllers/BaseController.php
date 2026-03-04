@@ -4,6 +4,7 @@ namespace Modules\Backend\Controllers;
 
 use ci4commonmodel\Models\CommonModel;
 use CodeIgniter\Controller;
+use Modules\Backend\Libraries\CommonBackendLibrary;
 use Modules\Backend\Config\BackendConfig;
 use CodeIgniter\API\ResponseTrait;
 
@@ -18,6 +19,7 @@ class BaseController extends Controller
     public $defData;
     public $authLib;
     public $config;
+    public $commonBackendLibrary;
     public $encrypter;
     /**
      * An array of helpers to be loaded automatically upon
@@ -45,6 +47,7 @@ class BaseController extends Controller
         $this->encrypter = \Config\Services::encrypter();
         $this->backConfig = new BackendConfig();
         $this->commonModel = new CommonModel();
+        $this->commonBackendLibrary = new CommonBackendLibrary();
         $router = service('router');
         $dbClassName = str_replace('\\', '-', $router->controllerName());
         if (substr($dbClassName, 0, 1) !== '-') {
@@ -71,7 +74,13 @@ class BaseController extends Controller
             'encrypter' => $this->encrypter
         ];
 
-        if (count(directory_map(ROOTPATH . 'public/templates')) >= 1) $this->defData['templates'] = directory_map(ROOTPATH . 'public/templates');
+        if (! $templates = cache('templates_list')) {
+            $templates = directory_map(ROOTPATH . 'public/templates');
+            cache()->save('templates_list', $templates, 86400);
+        }
+        if (count($templates ?? []) >= 1) {
+            $this->defData['templates'] = $templates;
+        }
     }
 
     protected function generateSidebar()

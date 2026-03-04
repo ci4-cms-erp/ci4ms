@@ -31,12 +31,11 @@ class Blog extends \Modules\Backend\Controllers\BaseController
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = trim(strip_tags($data['search']['value']));
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $l = [];
             $postData = [];
-            if (!empty($like)) $l = ['title' => $like];
-            $results = $this->commonModel->lists('blog', 'id,title,isActive', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
+            if (!empty($parsed['searchString'])) $l = ['title' => $parsed['searchString']];
+            $results = $this->commonModel->lists('blog', 'id,title,isActive', $postData, 'id DESC', $parsed['length'], $parsed['start'], $l);
             $totalRecords = $this->commonModel->count('blog', $postData, $l);
             foreach ($results as $result) {
                 $result->isActive = '<input type="checkbox" name="my-checkbox" class="bswitch" ' . ((bool)$result->isActive === true ? 'checked' : '') . ' data-id="' . $result->id . '" data-off-color="danger" data-on-color="success">';
@@ -46,7 +45,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                                    class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>';
             }
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalRecords,
                 'aaData' => $results,
@@ -83,13 +82,10 @@ class Blog extends \Modules\Backend\Controllers\BaseController
 
             $data = ['title' => trim(strip_tags($this->request->getPost('title'))), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => trim(strip_tags($this->request->getPost('seflink'))), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
 
-            if (!empty($this->request->getPost('pageimg'))) {
-                $data['seo']['coverImage'] = trim(strip_tags($this->request->getPost('pageimg')));
-                $data['seo']['IMGWidth'] = trim(strip_tags($this->request->getPost('pageIMGWidth')));
-                $data['seo']['IMGHeight'] = trim(strip_tags($this->request->getPost('pageIMGHeight')));
+            $seoData = $this->commonBackendLibrary->buildSeoData($this->request->getPost());
+            if (!empty($seoData)) {
+                $data['seo'] = $seoData;
             }
-            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = trim(strip_tags($this->request->getPost('description')));
-            if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
             $insertID = $this->commonModel->create('blog', $data);
             if ($insertID) {
                 if (!empty($this->request->getPost('categories'))) {
@@ -134,14 +130,10 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->route('blogUpdate', [$id])->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
             $data = ['title' => trim(strip_tags($this->request->getPost('title'))), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => trim(strip_tags($this->request->getPost('seflink'))), 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
 
-            if (!empty($this->request->getPost('pageimg'))) {
-                $data['seo']['coverImage'] = trim(strip_tags($this->request->getPost('pageimg')));
-                $data['seo']['IMGWidth'] = trim(strip_tags($this->request->getPost('pageIMGWidth')));
-                $data['seo']['IMGHeight'] = trim(strip_tags($this->request->getPost('pageIMGHeight')));
+            $seoData = $this->commonBackendLibrary->buildSeoData($this->request->getPost());
+            if (!empty($seoData)) {
+                $data['seo'] = $seoData;
             }
-            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
-
-            if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
             if ($this->commonModel->edit('blog', $data, ['id' => $id])) {
                 if (!empty($this->request->getPost('keywords')))
                     $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', $id, 'tags', true);
@@ -191,23 +183,22 @@ class Blog extends \Modules\Backend\Controllers\BaseController
     public function commentList()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = $data['search']['value'] ?? '';
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $searchData = ['isApproved' => $this->request->getPost('isApproved') == 'true' ? true : false];
             $l = [];
-            if (!empty($like)) $l = ['comFullName' => $like, 'comEmail' => $like];
+            if (!empty($parsed['searchString'])) $l = ['comFullName' => $parsed['searchString'], 'comEmail' => $parsed['searchString']];
             $results = $this->commonModel->lists(
                 'comments',
                 '*',
                 $searchData,
                 'id DESC',
-                (int)$data['length'],
-                (int)$data['start'],
+                $parsed['length'],
+                $parsed['start'],
                 $l
             );
             $totalRecords = $this->commonModel->count('comments', $searchData);
             $totalDisplayRecords = $totalRecords;
-            $c = ($data['start'] > 0) ? $data['start'] + 1 : 1;
+            $c = ($parsed['start'] > 0) ? $parsed['start'] + 1 : 1;
             $aaData = [];
             foreach ($results as $result) {
                 $aaData[] = [
@@ -225,7 +216,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             }
 
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalDisplayRecords,
                 'aaData' => $aaData,
