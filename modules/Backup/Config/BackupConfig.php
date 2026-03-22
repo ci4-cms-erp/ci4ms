@@ -12,4 +12,19 @@ class BackupConfig {
             ]
         ]
     ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-hdd',
+    ];
+
+    public $menus = [
+
+        'Backup.backups' => [
+            'icon'         => 'fas fa-hdd',
+            'inNavigation' => true,
+            'hasChild'     => false,
+            'pageSort'     => 15,
+            'parent_pk'    => null
+        ]
+        ];
 }

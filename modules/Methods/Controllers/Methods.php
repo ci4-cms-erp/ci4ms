@@ -186,11 +186,11 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                     }
                 }
                 foreach ($autoRoutes as $row) {
-                    // $row: [Method, Route, Name, Handler, Before Filters, After Filters]
+                    // $row: [0 => Method, 1 => Route, 2 => Name, 3 => Handler]
                     if ($row[1] === '__hot-reload') continue;
                     $filters = $filterCollector->get($row[0], $uriGenerator->get($row[1]));
-                    if (count(array_intersect($findFilter, $row[4])) < 1) continue;
-                    preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $row[4], $m);
+                    if (count(array_intersect($findFilter, (array)$filters['before'])) < 1) continue;
+                    preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $row[3], $m);
                     $role = $collection->getRoutesOptions(ltrim($row[1], '\\'), $row[0])['role'];
                     $roles = explode(',', $role);
                     $r = [
@@ -311,29 +311,87 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
         
         $insertBach = [];
+        $menusFromConfig = []; // İkinci turda parent_pk atamaları için
+
         if (!empty($uniqueKeys)) {
             $module_id = null;
             foreach ($uniqueKeys as $uniqueKey) {
-                $module_id = $this->commonModel->selectOne('modules', ['name' => $tbody[$uniqueKey]['module']], 'id');
+                // Modül adını ve Config sınıfını bul
+                $modName = $tbody[$uniqueKey]['module'];
+                $configClass = "Modules\\{$modName}\\Config\\{$modName}Config";
+                $modConfig = class_exists($configClass) ? new $configClass() : null;
+
+                $moduleIcon = 'fas fa-cogs'; // Default ikon
+                if ($modConfig && isset($modConfig->moduleInfo['icon'])) {
+                    $moduleIcon = $modConfig->moduleInfo['icon'];
+                }
+
+                $module_id = $this->commonModel->selectOne('modules', ['name' => $modName], 'id');
                 if (empty($module_id) || empty($module_id->id)) {
                     $newId = $this->commonModel->create('modules', [
-                        'name' => $tbody[$uniqueKey]['module'],
+                        'name' => $modName,
+                        'icon' => $moduleIcon,
                         'isActive' => true
                     ]);
                     $module_id = (object) ['id' => $newId];
+                } else {
+                    // Modül varsa bile ikon bilgisini Config'den güncel tut
+                    if ($modConfig && isset($modConfig->moduleInfo['icon'])) {
+                        $this->commonModel->edit('modules', ['icon' => $moduleIcon], ['id' => $module_id->id]);
+                    }
                 }
+
+                $pageName = $tbody[$uniqueKey]['pagename'];
+                // Varsayılan sayfa/menü ayarları
+                $symbol = '';
+                $inNavigation = 0;
+                $hasChild = 0;
+                $pageSort = null;
+                $parent_pk = null;
+
+                // Eğer Config dosyasında bu sayfa (route) için ayar varsa ez:
+                if ($modConfig && isset($modConfig->menus) && isset($modConfig->menus[$pageName])) {
+                    $m = $modConfig->menus[$pageName];
+                    $symbol       = $m['icon'] ?? '';
+                    $inNavigation = $m['inNavigation'] === true ? 1 : 0;
+                    $hasChild     = $m['hasChild'] === true ? 1 : 0;
+                    $pageSort     = $m['pageSort'] ?? null;
+                    $parent_pk    = $m['parent_pk'] ?? null;
+                }
+
                 $insertBach[] = [
-                    'pagename' => $tbody[$uniqueKey]['pagename'],
-                    'className' => $tbody[$uniqueKey]['className'],
-                    'methodName' => $tbody[$uniqueKey]['methodName'],
-                    'seflink' => $tbody[$uniqueKey]['seflink'],
+                    'pagename'          => $pageName,
+                    'className'         => $tbody[$uniqueKey]['className'],
+                    'methodName'        => $tbody[$uniqueKey]['methodName'],
+                    'seflink'           => $tbody[$uniqueKey]['seflink'],
                     'typeOfPermissions' => $tbody[$uniqueKey]['typeOfPermissions'],
-                    'module_id' => $module_id->id,
-                    'isBackoffice' => 1,
-                    'isActive' => 1
+                    'module_id'         => $module_id->id,
+                    'isBackoffice'      => 1,
+                    'isActive'          => 1,
+                    'symbol'            => $symbol,
+                    'inNavigation'      => $inNavigation,
+                    'hasChild'          => $hasChild,
+                    'pageSort'          => $pageSort,
+                    'parent_pk'         => null // parent_pk'yi 2. döngüde DB ID'si ile eşleştireceğiz
                 ];
+
+                if (!empty($parent_pk)) {
+                    $menusFromConfig[$pageName] = $parent_pk;
+                }
             }
+            
             $this->commonModel->createMany('auth_permissions_pages', $insertBach);
+            
+            // İkinci Tur: parent_pk eşleştirmesi (String route adından -> DB ID alanına dönüşüm)
+            if (!empty($menusFromConfig)) {
+                foreach ($menusFromConfig as $childPageName => $parentPageName) {
+                    $parentObj = $this->commonModel->selectOne('auth_permissions_pages', ['pagename' => $parentPageName], 'id');
+                    if (!empty($parentObj) && !empty($parentObj->id)) {
+                        $this->commonModel->edit('auth_permissions_pages', ['parent_pk' => $parentObj->id], ['pagename' => $childPageName]);
+                    }
+                }
+            }
+
             $isChanged = true;
         }
 

@@ -11,4 +11,19 @@ class MediaConfig extends \CodeIgniter\Config\BaseConfig
             'backend/media','backend/media/*'
         ]]
     ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-images',
+    ];
+
+    public $menus = [
+
+        'Media.media' => [
+            'icon'         => 'fas fa-photo-video',
+            'inNavigation' => true,
+            'hasChild'     => false,
+            'pageSort'     => 6,
+            'parent_pk'    => null
+        ]
+        ];
 }

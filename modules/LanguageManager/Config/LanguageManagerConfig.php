@@ -15,4 +15,19 @@ class LanguageManagerConfig
             'backend/language-manager/*'
         ]],
     ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-language',
+    ];
+
+    public $menus = [
+
+        'LanguageManager.languageManagerList' => [
+            'icon'         => 'fas fa-language',
+            'inNavigation' => true,
+            'hasChild'     => false,
+            'pageSort'     => 13,
+            'parent_pk'    => null
+        ]
+        ];
 }

@@ -21,4 +21,11 @@ class AuthConfig extends BaseConfig
             ]
         ]
     ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-lock',
+    ];
+
+    public $menus = [
+    ];
 }

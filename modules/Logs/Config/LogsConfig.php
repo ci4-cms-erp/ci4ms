@@ -12,4 +12,19 @@ class LogsConfig {
             ]
         ]
     ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-file-alt',
+    ];
+
+    public $menus = [
+
+        'Logs.logs' => [
+            'icon'         => 'fas fa-file-alt',
+            'inNavigation' => true,
+            'hasChild'     => false,
+            'pageSort'     => 12,
+            'parent_pk'    => null
+        ]
+        ];
 }

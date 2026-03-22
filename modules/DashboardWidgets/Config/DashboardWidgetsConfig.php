@@ -15,4 +15,19 @@ class DashboardWidgetsConfig
             'backend/dashboard-widgets/*'
         ]]
     ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-th-large',
+    ];
+
+    public $menus = [
+
+        'DashboardWidgets.dashboardWidgets' => [
+            'icon'         => 'fas fa-th-large',
+            'inNavigation' => true,
+            'hasChild'     => false,
+            'pageSort'     => 14,
+            'parent_pk'    => null
+        ]
+        ];
 }
