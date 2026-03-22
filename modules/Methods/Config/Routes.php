@@ -5,4 +5,6 @@ $routes->group('backend/methods', ['namespace' => 'Modules\Methods\Controllers']
     $routes->match(['GET', 'POST'], 'update/(:num)', 'Methods::update/$1', ['as' => 'methodUpdate', 'role' => 'update']);
     $routes->get('delete/(:num)', 'Methods::delete/$1', ['as' => 'methodDelete', 'role' => 'delete']);
     $routes->post('moduleScan', 'Methods::moduleScan', ['as' => 'moduleScan', 'role' => 'read,create']);
+    $routes->post('moduleUpload', 'Methods::moduleUpload', ['as' => 'moduleUpload','role'=>'create']);
+    $routes->post('moduleCreate', 'Methods::moduleCreate', ['as' => 'moduleCreate','role'=>'create']);
 });

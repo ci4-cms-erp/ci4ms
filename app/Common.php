@@ -23,11 +23,24 @@ if (!function_exists('clearFilter')) {
      */
     function clearFilter(array $array)
     {
-        return array_map(function ($value){
-            if(is_array($value)) return clearFilter($value);
-            if($value==='' || $value===null) return $value;
+        return array_map(function ($value) {
+            if (is_array($value)) return clearFilter($value);
+            if ($value === '' || $value === null) return $value;
             return is_string($value) ? esc($value) : $value;
-        },$array);
+        }, $array);
+    }
+}
+
+if (!function_exists('clear2darray')) {
+    function clear2darray($array)
+    {
+        $clear = array_filter(
+            $array,
+            function ($subArray) {
+                return !empty(array_filter($subArray));
+            }
+        );
+        return array_values($clear);
     }
 }
 
@@ -117,24 +130,43 @@ if (!function_exists('seflink')) {
 }
 
 if (!function_exists('menu')) {
-    function menu($kategori, $parent = null)
+    function menu($navigations, $parent = null)
     {
-        foreach ($kategori as $menu) {
+        foreach ($navigations as $menu) {
             if ($menu->parent == $parent) {
                 echo '<li class="';
-                if (empty($menu->parent)) echo 'nav-item';
-                if ((bool)$menu->hasChildren === true) echo ' dropdown';
+                if (empty($menu->parent)) {
+                    echo 'nav-item';
+                    if ((bool)$menu->hasChildren === true) echo ' dropdown';
+                } else {
+                    if ((bool)$menu->hasChildren === true) echo ' dropdown';
+                }
                 echo '">';
                 echo '<a class="';
-                if (empty($menu->parent)) echo 'nav-link';
-                else echo 'dropdown-item';
+                if (empty($menu->parent)) {
+                    echo 'nav-link';
+                } else {
+                    echo 'dropdown-item';
+                }
                 if ((bool)$menu->hasChildren === true) echo ' dropdown-toggle';
-                echo '" href="' . (str_starts_with($menu->seflink, 'http://') || str_starts_with($menu->seflink, 'https://') ? $menu->seflink : site_url($menu->seflink)) . '"';
-                if ((bool)$menu->hasChildren === true) echo ' role="button" data-bs-toggle="dropdown" aria-expanded="false"';
-                echo '>' . esc($menu->title) . '</a>';
-                if ((bool)$menu->hasChildren === true) echo '<ul class="dropdown-menu dropdown-menu-end">';
-                menu($kategori, $menu->id);
-                if ((bool)$menu->hasChildren === true) echo '</ul>';
+
+                $isExternal = str_starts_with($menu->seflink, 'http://') || str_starts_with($menu->seflink, 'https://');
+                $href = $isExternal ? $menu->seflink : site_url($menu->seflink);
+                $dropdownId = 'navbarDropdown' . (!empty($menu->slug) ? ucfirst($menu->slug) : $menu->id);
+
+                echo '" href="' . $href . '"';
+                if ((bool)$menu->hasChildren === true) {
+                    echo ' id="' . $dropdownId . '" role="button" data-bs-toggle="dropdown" aria-expanded="false"';
+                }
+                $title = (str_starts_with($menu->title, 'Frontend.')) ? lang($menu->title) : esc($menu->title);
+                echo '>' . $title . '</a>';
+                
+                if ((bool)$menu->hasChildren === true) {
+                    $menuClass = empty($menu->parent) ? 'dropdown-menu dropdown-menu-end' : 'dropdown-menu';
+                    echo '<ul class="' . $menuClass . '" aria-labelledby="' . $dropdownId . '">';
+                    menu($navigations, $menu->id);
+                    echo '</ul>';
+                }
                 echo '</li>';
             }
         }
@@ -219,4 +251,3 @@ function sanitizePost(array $data, array $allowRaw = []): array
     }
     return $sanitized;
 }
-

@@ -2,7 +2,7 @@
 
 namespace Modules\Backend\Controllers;
 
-use ci4commonmodel\Models\CommonModel;
+use ci4commonmodel\CommonModel;
 use CodeIgniter\Controller;
 use Modules\Backend\Libraries\CommonBackendLibrary;
 use Modules\Backend\Config\BackendConfig;

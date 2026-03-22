@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -14,7 +14,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('comments') ?>" class="btn btn-outline-info"><i
+                    <a href="<?php echo route_to('comments') ?>" class="btn btn-sm btn-outline-info"><i
                             class="fas fa-arrow-circle-left"></i> Listeye Dön</a>
                 </ol>
             </div>
@@ -26,7 +26,7 @@
 <section class="content">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
@@ -50,10 +50,10 @@
                         </a>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons">
                             <label class="btn btn-outline-primary <?php echo ((bool)$commentInfo->isApproved === true) ? 'checked' : '' ?>">
-                                <input type="radio" name="options" value="1" id="option1" <?php echo set_radio('options',1,(int)$commentInfo->isApproved === 1 ) ?> required> <?php echo lang('Backend.publish') ?>
+                                <input type="radio" name="options" value="1" id="option1" <?php echo set_radio('options', 1, (int)$commentInfo->isApproved === 1) ?> required> <?php echo lang('Backend.publish') ?>
                             </label>
                             <label class="btn btn-outline-danger">
-                                <input type="radio" name="options" value="2" id="option2" <?php echo set_radio('options',2,(int)$commentInfo->isApproved === 2 ) ?> required> <?php echo lang('Backend.delete') ?>
+                                <input type="radio" name="options" value="2" id="option2" <?php echo set_radio('options', 2, (int)$commentInfo->isApproved === 2) ?> required> <?php echo lang('Backend.delete') ?>
                             </label>
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -18,7 +18,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right"><a href="<?php echo route_to('create_user') ?>"
-                        class="btn btn-outline-success"><i
+                        class="btn btn-sm btn-outline-success"><i
                             class="fas fa-user-plus"></i> <?php echo lang('Users.addUser') ?></a></ol>
             </div>
         </div>
@@ -27,7 +27,7 @@
 
 <!-- Main content -->
 <section class="content">
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <!-- /.card-header -->
         <div class="card-body">
             <div class="table-responsive">
@@ -223,7 +223,7 @@
                                 table.ajax.reload();
                             }
                         });
-                    }else{
+                    } else {
                         Swal.fire({
                             title: '<?php echo lang('Backend.error') ?>',
                             text: response.message,

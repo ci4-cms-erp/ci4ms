@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -6,41 +6,21 @@
 
 <?php echo $this->section('head') ?>
 <?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
-<link rel="stylesheet" type="text/css"
-    href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+<?php echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css") ?>
 <?php echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
 <?php echo link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1><?php echo lang($title->pagename) ?></h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><button class="btn btn-sm btn-info" id="updateVersion"><i class="fas fa-sync-alt"></i> <?php echo lang('Settings.updateVersion') ?></button></li>
-                </ol>
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
-
-<!-- Main content -->
-<section class="content">
+<section class="content pt-3">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang('Settings.siteSettings') ?></h3>
 
             <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
-                </button>
+                <button class="btn btn-sm btn-info" id="updateVersion"><i class="fas fa-sync-alt"></i> <?php echo lang('Settings.updateVersion') ?></button>
             </div>
         </div>
         <div class="card-body">
@@ -109,26 +89,48 @@
                                     <input type="text" name="cMap" class="form-control"
                                         value='<?php echo (!empty($settings->map_iframe)) ? $settings->map_iframe : '' ?>'>
                                 </div>
-                                <div class="col-md-6 form-group">
+                                <div class="col-md-6"></div>
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-secondary h-100">
+                                        <div class="card-body">
+                                            <!-- Bakım Modu -->
+                                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                                <label class="mb-0 font-weight-bold">
+                                                    <i class="fas fa-tools mr-2 text-secondary"></i>
+                                                    <?php echo lang('Settings.maintenanceMode') ?>
+                                                </label>
+                                                <input type="checkbox" name="my-checkbox" id="my-checkbox"
+                                                    class="bswitch" <?php echo ((bool)$settings->maintenanceMode->scalar === true) ? 'checked' : '' ?>
+                                                    data-id="maintenanceMode" data-off-color="danger" data-on-color="success">
+                                            </div>
+
+                                            <!-- Dil Modu -->
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <label class="mb-0 font-weight-bold">
+                                                    <i class="fas fa-language mr-2 text-secondary"></i>
+                                                    <?php echo lang('Settings.languageMode') ?? 'Site Dil Modu' ?>
+                                                </label>
+                                                <input type="checkbox" name="language-mode-checkbox" id="language-mode-checkbox"
+                                                    class="bswitch" <?php echo (setting('App.siteLanguageMode') === 'multi') ? 'checked' : '' ?>
+                                                    data-id="languageMode" data-off-text="Single" data-on-text="Multi" data-off-color="secondary" data-on-color="success">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 form-group rounded bg-dark p-3">
+                                    <img src="<?php echo (!empty($settings->logo)) ? esc($settings->logo) : '' ?>"
+                                        class="img-fluid pageimg">
+                                    <hr>
                                     <label for=""><?php echo lang('Settings.companyLogo') ?></label>
                                     <button type="button"
                                         class="pageIMG btn btn-info w-100"><?php echo lang('Backend.selectCoverImg') ?></button>
                                     <input hidden class="pageimg-input" name="cLogo">
                                 </div>
-                                <div class="col-md-6 form-group rounded bg-dark p-3">
-                                    <img src="<?php echo (!empty($settings->logo)) ? esc($settings->logo) : '' ?>"
-                                        class="img-fluid pageimg">
-                                </div>
                                 <div class="col-md-12 form-group">
                                     <button class="btn btn-success float-right mt-5"><?php echo lang('Backend.update') ?></button>
                                 </div>
                             </form>
-                            <div class="w-100">
-                                <label><?php echo lang('Settings.maintenanceMode') ?></label>
-                                <input type="checkbox" name="my-checkbox" id="my-checkbox"
-                                    class="bswitch" <?php echo ((bool)$settings->maintenanceMode->scalar === true) ? 'checked' : '' ?>
-                                    data-id="maintenanceMode" data-off-color="danger" data-on-color="success">
-                            </div>
                         </div>
                         <div class="tab-pane fade" id="vert-tabs-templates" role="tabpanel"
                             aria-labelledby="vert-tabs-templates-tab">
@@ -404,6 +406,35 @@
             if (data.result === true) Swal.fire('Bakım Aşaması Sayfası yayına alındı.', '', 'success');
             else Swal.fire('Bakım Aşaması Sayfası devre dışı bırakıldı.', '', 'warning');
             if (data.pr === false) Swal.fire('Bakım Aşaması Sayfası Aktif edilemedi.', '', 'error');
+        });
+    });
+
+    $('#language-mode-checkbox').on('switchChange.bootstrapSwitch', function(event, state) {
+        var mode = state ? 'multi' : 'single';
+        $.ajax({
+            url: '<?php echo route_to('saveLanguageMode') ?>',
+            type: 'POST',
+            data: {
+                'mode': mode
+            },
+            dataType: 'json',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(res) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '<?php echo lang('Backend.success') ?>',
+                    text: 'Site dil modu ' + mode + ' olarak güncellendi.'
+                });
+            },
+            error: function(xhr) {
+                Swal.fire({
+                    icon: 'error',
+                    title: '<?php echo lang('Backend.error') ?>',
+                    text: 'Dil modu güncellenemedi.'
+                });
+            }
         });
     });
 

@@ -36,5 +36,6 @@ return [
 
     // Placeholders
     'siteNamePlaceholder' => 'Site adınız buraya',
-    'siteSloganPlaceholder' => 'Sloganınız buraya'
+    'siteSloganPlaceholder' => 'Sloganınız buraya',
+    'routeFileError' => 'Routes dosyası oluşturulamadı.',
 ];

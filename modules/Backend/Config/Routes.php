@@ -7,6 +7,7 @@
 $routes->group('backend', ['namespace' => 'Modules\Backend\Controllers'], function ($routes) {
     $routes->get('/', 'Backend::index', ['as' => 'backend', 'role' => 'read']);
     $routes->get('403', 'Errors::error_403', ["as" => "403"]);
+    $routes->get('404', 'Errors::error_404', ["as" => "404"]);
 
     // Other Pages
     $routes->post('tagify', 'AJAX::limitTags_ajax', ['as' => 'tagify', 'role' => 'delete']);

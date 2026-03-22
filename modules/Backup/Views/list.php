@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -25,7 +25,7 @@
 <!-- Main content -->
 <section class="content">
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4">

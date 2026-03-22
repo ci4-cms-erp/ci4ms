@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('head') ?>
 <title>Ci4ms <?php echo $config->vers ?> | 404 File Not Found</title>

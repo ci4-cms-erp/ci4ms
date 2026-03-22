@@ -129,20 +129,15 @@ class Email extends BaseConfig
         $settings = (object)cache('settings');
 
         if (! $settings) {
-            // Cache'de yoksa veritabanına bağlan
             try {
-
-                $commonModel = new \ci4commonmodel\Models\CommonModel();
+                $commonModel = new \ci4commonmodel\CommonModel();
                 $$settings->mail = \json_decode($commonModel->selectOne('settings', ['key' => 'mail'], 'value')->value, \JSON_UNESCAPED_UNICODE);
             } catch (\Throwable $e) {
-                // Veritabanı hatası olursa (kurulum aşaması vb.) sessiz kal veya logla
                 log_message('error', 'Email Config DB Error: ' . $e->getMessage());
                 return;
             }
         }
 
-        // 2. Ayarları Config Dosyasına Enjekte Et
-        // $settings->mail objesinin dolu olduğundan emin olalım
         if (isset($settings->mail)) {
             $this->fromEmail  = 'noreply@' . $_SERVER['HTTP_HOST'];
             $this->fromName   = 'noreply@' . $_SERVER['HTTP_HOST'];
@@ -150,28 +145,22 @@ class Email extends BaseConfig
 
             $mailConfig = $settings->mail;
 
-            // Protokol (smtp, mail, sendmail)
             $this->protocol = $mailConfig->protocol ?? 'smtp';
 
-            // SMTP Ayarları
             $this->SMTPHost = $mailConfig->server ?? '';
             $this->SMTPUser = $mailConfig->address ?? '';
             $this->SMTPPort = (int) ($mailConfig->port ?? 587);
             $this->SMTPCrypto = $mailConfig->tls ?? 'tls'; // ssl veya tls
 
-            // 3. Şifre Çözme (Decryption)
-            // BaseController'daki şifre çözme mantığını buraya alıyoruz
             if (! empty($mailConfig->password)) {
                 try {
                     $encrypter = \Config\Services::encrypter();
-                    // BaseController'daki kodunuz: base64_decode ve decrypt
                     $this->SMTPPass = $encrypter->decrypt(base64_decode($mailConfig->password));
                 } catch (\Throwable $e) {
                     log_message('error', 'Email SMTP Password Decrypt Error: ' . $e->getMessage());
                 }
             }
 
-            // Diğer Ayarlar
             $this->mailType = 'html';
             $this->charset  = 'UTF-8';
             $this->newline  = "\r\n";

@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
@@ -10,7 +10,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('users', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
+                    <a href="<?php echo route_to('users', 1) ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
                 </ol>
             </div>
         </div>
@@ -21,7 +21,7 @@
 <section class="content">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo $userInfos->firstname . ' ' . $userInfos->surname ?> <?php echo lang('Users.permUpdate') ?></h3>
 

@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
 <?php echo $this->endSection() ?>
@@ -17,7 +17,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('list') ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
+                    <a href="<?php echo route_to('list') ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
                 </ol>
             </div>
         </div>
@@ -26,7 +26,7 @@
 
 <!-- Main content -->
 <section class="content">
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 

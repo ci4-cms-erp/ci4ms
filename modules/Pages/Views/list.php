@@ -127,6 +127,32 @@
         }
     });
 
+    function setHomePage(id) {
+        $.post('/backend/pages/setHomePage/'+id, {
+            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+        }, 'json').done(function(response) {
+            if (response.status == true) {
+                Swal.fire({
+                    title: '<?php echo lang('Backend.success') ?>',
+                    text: response.message,
+                    icon: 'success',
+                    confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        table.ajax.reload();
+                    }
+                });
+            } else {
+                Swal.fire({
+                    title: '<?php echo lang('Backend.error') ?>',
+                    text: response.message,
+                    icon: 'error',
+                    confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                });
+            }
+        });
+    }
+
     function deleteItem(id) {
         Swal.fire({
             title: '<?php echo lang('Backend.areYouSure') ?>',

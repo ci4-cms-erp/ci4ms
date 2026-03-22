@@ -2,13 +2,15 @@
 
 return [
     //common
+    'id' => 'ID',
     'title' => 'Başlık',
     'url' => 'URL',
+    'description' => 'Açıklama',
     'content' => 'İçerik',
     'add' => '<i class="fas fa-plus"></i> Ekle',
     'update' => '<i class="fas fa-edit"></i> Düzenle',
     'delete' => '<i class="fas fa-trash"></i> Sil',
-    'delText'=>'Sil',
+    'delText' => 'Sil',
     'backToList' => '<i class="fas fa-arrow-circle-left"></i> Listeye Dön',
     'cancel' => 'Vazgeç',
     'fullName' => 'Ad Soyad',
@@ -18,6 +20,7 @@ return [
     'name' => 'Adı',
     'surname' => 'Soyadı',
     'transactions' => 'İşlemler',
+    'actions' => 'İşlemler',
     'status' => 'Durumu',
     'save' => 'Kaydet',
     'start' => 'Başlangıç',
@@ -34,18 +37,36 @@ return [
     'confirmDelete' => '{0} silmek istediğinize emin misiniz?',
     'active' => 'Aktif',
     'passive' => 'Pasif',
+    'inactive' => 'Pasif',
     'search' => 'Arama',
     'clearFilter' => 'Filtreyi Temizle',
     'send' => 'Gönder',
     'operationFailed' => 'İşlem Başarısız!',
-    'reset'=>'Sıfırla',
+    'reset' => 'Sıfırla',
     'filter' => 'Filtrele',
-    'ok'=>'Tamam',
-    'areYouSure'=>'Emin misiniz?',
-    'youWillNotBeAbleToRecoverThis'=>'Bu veriyi geri getiremeyeceksiniz.',
+    'ok' => 'Tamam',
+    'areYouSure' => 'Emin misiniz?',
+    'youWillNotBeAbleToRecoverThis' => 'Bu veriyi geri getiremeyeceksiniz.',
+
+    // Common CRUD messages
+    'createSuccess' => '{0} oluşturuldu.',
+    'updateSuccess' => '{0} güncellendi.',
+    'deleteSuccess' => '{0} silindi.',
+    'saveFailed' => 'Kaydetme başarısız.',
+    'recordNotFound' => 'Kayıt bulunamadı.',
+    'toggleSuccess' => 'Durum değiştirildi.',
+    'deleteConfirmTitle' => '{0} silmek istiyor musunuz?',
+    'deleteConfirmBtn' => 'Evet, Sil',
+    'titleRequired' => 'Başlık zorunludur.',
+    'slugRequired' => 'Slug zorunludur.',
+    'nameRequired' => 'Ad zorunludur.',
+
+    // Common field labels
+    'ipAddress' => 'IP Adresi',
+    'userAgent' => 'Tarayıcı',
 
     //pages
-    'homepage' => 'Anasayfa',
+    'backend' => 'Anasayfa',
     'draft' => 'Taslak',
     'publish' => 'Yayında',
     'logs' => 'Günlükler',
@@ -70,8 +91,9 @@ return [
     'ipFormatsDifferent' => 'IP formatları aynı değil. <b>{0}</b>',
     'leftValueNotGreater' => 'Soldaki değer sağdakinden büyük yada eşit olamaz. <b>{0}</b>',
     'invalidPhoneNumber' => 'Telefon Numarası Uygun formatta değil. Lütfen doğru formatta yazınız.',
-    'success'=>'Başarılı !',
-    'error'=>'Hata !',
+    'htmlPurifierNotFound' => 'HTMLPurifier kütüphanesi bulunamadı. Lütfen "composer require ezyang/htmlpurifier" çalıştırın.',
+    'success' => 'Başarılı !',
+    'error' => 'Hata !',
 
     // DataTables
     'showColumns' => 'Sütunlar',

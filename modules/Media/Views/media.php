@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -6,8 +6,7 @@
 
 <?php echo $this->section('head') ?>
 <?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
-<link rel="stylesheet" type="text/css"
-    href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css" {csp-style-nonce}>
+<?php echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css") ?>
 <?php echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
 <?php echo $this->endSection() ?>
 
@@ -30,7 +29,7 @@
 <section class="content">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold">Media</h3>
 

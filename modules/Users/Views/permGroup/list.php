@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -18,7 +18,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('group_create') ?>" class="btn btn-outline-success"><?php echo lang('Backend.add') ?></a>
+                    <a href="<?php echo route_to('group_create') ?>" class="btn btn-sm btn-outline-success"><?php echo lang('Backend.add') ?></a>
                 </ol>
             </div>
         </div>
@@ -29,7 +29,7 @@
 <section class="content">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 

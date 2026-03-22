@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -17,7 +17,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('tags', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
+                    <a href="<?php echo route_to('tags', 1) ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
                 </ol>
             </div>
         </div>
@@ -27,7 +27,7 @@
 <!-- Main content -->
 <section class="content">
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
@@ -67,7 +67,9 @@
         $.post('<?php echo route_to('checkSeflink') ?>', {
             "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
             'makeSeflink': $(this).val(),
-            'where': 'tags'
+            'where': 'tags',
+            'id': <?php echo $infos->id ?>,
+            'update':1
         }, 'json').done(function(data) {
             $('.seflink').val(data.seflink);
         });
@@ -77,7 +79,9 @@
         $.post('<?php echo route_to('checkSeflink') ?>', {
             "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
             'makeSeflink': $(this).val(),
-            'where': 'tags'
+            'where': 'tags',
+            'id': <?php echo $infos->id ?>,
+            'update':1
         }, 'json').done(function(data) {
             $('.seflink').val(data.seflink);
         });

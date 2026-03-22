@@ -60,19 +60,44 @@ class AJAX extends BaseController
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([
             'makeSeflink' => ['label' => 'makeSeflink', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-            'where' => ['label' => 'where', 'rules' => 'required|in_list[pages,blog,categories,tags]']
+            'where' => ['label' => 'where', 'rules' => 'required|in_list[pages_langs,blog_langs,categories_langs,tags]']
         ]);
 
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
-        $locale = !empty($this->request->getPost('locale')) ? ['locale' => $this->request->getPost('locale')] : ['locale' => 'tr'];
+
+        $whereTable = $this->request->getPost('where');
+        $locale = $this->request->getPost('locale') ?: ($this->request->getLocale() ?: 'tr');
+
+        // Tabloya göre ID kolonunu belirle
+        $idField = 'id';
+        if ($whereTable === 'pages_langs') $idField = 'pages_id';
+        elseif ($whereTable === 'blog_langs') $idField = 'blog_id';
+        elseif ($whereTable === 'categories_langs') $idField = 'categories_id';
+
         if ($this->request->getPost('update') == 1) {
-            $oldSeflink = $this->commonModel->selectOne($this->request->getPost('where'), ['id' => $this->request->getPost('id')]);
-            if (seflink($this->request->getPost('makeSeflink'), $locale) == $oldSeflink->seflink)
+            $whereArr = [$idField => $this->request->getPost('id')];
+            // Lang tabloları için dili de ekle
+            if (strpos($whereTable, '_langs') !== false || $whereTable === 'categories_langs') {
+                $whereArr['lang'] = $locale;
+            }
+
+            $oldSeflink = $this->commonModel->selectOne($whereTable, $whereArr);
+
+            if ($oldSeflink && seflink($this->request->getPost('makeSeflink'), ['locale' => $locale]) == $oldSeflink->seflink) {
                 return $this->respond(['seflink' => $oldSeflink->seflink], 200);
+            }
         }
-        $existingSeflinks = $this->commonModel->lists($this->request->getPost('where'), 'seflink');
-        $desiredSeflink = seflink($this->request->getPost('makeSeflink'), $locale);
-        if (in_array($desiredSeflink, array_column($existingSeflinks, 'seflink')) === true) {
+
+        // Mevcut seflinkleri alırken dile göre filtrele (varsa)
+        $listWhere = [];
+        if (strpos($whereTable, '_langs') !== false || $whereTable === 'categories_langs') {
+            $listWhere = ['lang' => $locale];
+        }
+
+        $existingSeflinks = $this->commonModel->lists($whereTable, 'seflink', $listWhere);
+        $desiredSeflink = seflink($this->request->getPost('makeSeflink'), ['locale' => $locale]);
+
+        if (!empty($existingSeflinks) && in_array($desiredSeflink, array_column($existingSeflinks, 'seflink')) === true) {
             $i = 1;
             while (in_array($desiredSeflink . '-' . $i, array_column($existingSeflinks, 'seflink'))) {
                 $i++;
@@ -110,11 +135,11 @@ class AJAX extends BaseController
             'isActive' => ['label' => 'isActive', 'rules' => 'required|in_list[0,1]']
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
-        if ($this->commonModel->edit('settings', ['content' => (bool)$this->request->getPost('isActive')], ['option' => 'maintenanceMode'])) {
+        try {
+            setting()->set('App.maintenanceMode', (bool)$this->request->getPost('isActive'));
             cache()->delete('settings');
             return $this->respond(['result' => (bool)$this->request->getPost('isActive')], 200);
-        } else {
-            cache()->delete('settings');
+        } catch (\Exception $e) {
             return $this->fail(['pr' => false]);
         }
     }

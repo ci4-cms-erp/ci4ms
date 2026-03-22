@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -13,17 +13,17 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('users', 1) ?>" class="btn btn-outline-info">
+                    <a href="<?php echo route_to('users', 1) ?>" class="btn btn-sm btn-outline-info">
                         <?php echo lang('Backend.backToList') ?></a>
                 </ol>
             </div>
         </div>
     </div><!-- /.container-fluid -->
 </section>
-<?php d($userInfo->inGroup('Karım'),$groups); ?>
+<?php d($userInfo->inGroup('Karım'), $groups); ?>
 <!-- Main content -->
 <section class="content">
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-body">
             <form action="<?php echo route_to('update_user', $userInfo->id) ?>" method="post" class="form-row">
                 <?php echo csrf_field() ?>

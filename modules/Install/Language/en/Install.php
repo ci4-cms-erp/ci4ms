@@ -37,4 +37,5 @@ return [
     // Placeholders
     'siteNamePlaceholder' => 'Your site name here',
     'siteSloganPlaceholder' => 'Your slogan here',
+    'routeFileError' => 'Routes file could not be created.',
 ];

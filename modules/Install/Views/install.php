@@ -12,7 +12,7 @@
       </div>
       <div class="card-body p-0">
         <?php echo view('Modules\Auth\Views\_message_block') ?>
-        <form action="/install" method="post">
+        <form action="<?php echo route_to('install') ?>" method="post">
           <?php echo csrf_field() ?>
           <div class="bs-stepper">
             <div class="bs-stepper-header" role="tablist">

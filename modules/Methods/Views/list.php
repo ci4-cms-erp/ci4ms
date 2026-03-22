@@ -1,43 +1,33 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
 <?php echo $this->endSection() ?>
-
+<?php echo $this->section('head') ?>
+<?php echo link_tag('be-assets/plugins/dropzone/min/dropzone.min.css') ?>
+<?php echo $this->endSection() ?>
 <?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1><?php echo lang($title->pagename) ?></h1>
-            </div>
-            <div class="col-sm-6">
-                <div class="btn-group float-sm-right" role="group" aria-label="Basic example">
-                    <button class="btn btn-outline-info" id="moduleScan">
-                        <i class="fas fa-recycle"></i> <?php echo lang('Methods.scanModules') ?>
-                    </button>
-                    <a href="<?php echo route_to('methodCreate') ?>" class="btn btn-outline-success">
-                        <?php echo lang('Backend.add') ?>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
-
 <!-- Main content -->
-<section class="content">
+<section class="content pt-3">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
+                <button class="btn btn-sm btn-outline-info" id="moduleScan">
+                    <i class="fas fa-recycle"></i> <?php echo lang('Methods.scanModules') ?>
                 </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#modal-create-module">
+                    <i class="fas fa-plus-circle"></i> <?php echo lang('Methods.createModule') ?? 'Modül Oluştur' ?>
+                </button>
+                <a href="<?php echo route_to('uploadModule') ?>" class="btn btn-sm btn-outline-success" data-toggle="modal" data-target="#modal-default">
+                    <i class="fas fa-plug"></i> <?php echo lang('Methods.uploadModule') ?>
+                </a>
+                <a href="<?php echo route_to('methodCreate') ?>" class="btn btn-sm btn-outline-success">
+                    <?php echo lang('Backend.add') ?>
+                </a>
             </div>
         </div>
         <div class="card-body">
@@ -200,7 +190,7 @@
                                             <label class="toggle-switch page-toggle">
                                                 <input type="checkbox" <?php echo $page->isActive ? 'checked' : '' ?>>
                                                 <span class="toggle-slider"></span>
-                                                <a href="<?php echo route_to('methodUpdate', $page->id) ?>" class="btn btn-info float-right mt-3 btn-sm"><?php echo lang('Backend.update') ?></a>
+                                                <a href="<?php echo !empty($page->id) ? route_to('methodUpdate', $page->id) : '#' ?>" class="btn btn-info float-right mt-3 btn-sm"><?php echo lang('Backend.update') ?></a>
                                             </label>
                                         </div>
                                 <?php endforeach;
@@ -215,12 +205,183 @@
     </div>
     <!-- /.card -->
 
+    <div class="modal fade" id="modal-default">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><?php echo lang('Methods.uploadModule') ?></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="card-body">
+                        <div id="actions" class="row">
+                            <div class="col-lg-12">
+                                <div class="btn-group w-100">
+                                    <span class="btn btn-success col fileinput-button">
+                                        <i class="fas fa-plus"></i>
+                                        <span><?php echo lang('Methods.addFiles') ?></span>
+                                    </span>
+                                    <button type="submit" class="btn btn-primary col start">
+                                        <i class="fas fa-upload"></i>
+                                        <span><?php echo lang('Methods.startUpload') ?></span>
+                                    </button>
+                                    <button type="reset" class="btn btn-warning col cancel">
+                                        <i class="fas fa-times-circle"></i>
+                                        <span><?php echo lang('Methods.cancelUpload') ?></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 d-flex align-items-center">
+                                <div class="fileupload-process w-100">
+                                    <div id="total-progress" class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                        <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table table-striped files" id="previews">
+                            <div id="template" class="row mt-2">
+                                <div class="col-auto">
+                                    <span class="preview"><img src="data:," alt="" data-dz-thumbnail /></span>
+                                </div>
+                                <div class="col d-flex align-items-center">
+                                    <p class="mb-0">
+                                        <span class="lead" data-dz-name></span>
+                                        (<span data-dz-size></span>)
+                                    </p>
+                                    <strong class="error text-danger" data-dz-errormessage></strong>
+                                </div>
+                                <div class="col-4 d-flex align-items-center">
+                                    <div class="progress progress-striped active w-100" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                        <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+                                    </div>
+                                </div>
+                                <div class="col-auto d-flex align-items-center">
+                                    <div class="btn-group">
+                                        <button class="btn btn-primary start">
+                                            <i class="fas fa-upload"></i>
+                                            <span><?php echo lang('Methods.start') ?></span>
+                                        </button>
+                                        <button data-dz-remove class="btn btn-warning cancel">
+                                            <i class="fas fa-times-circle"></i>
+                                            <span><?php echo lang('Backend.cancel') ?></span>
+                                        </button>
+                                        <button data-dz-remove class="btn btn-danger delete">
+                                            <i class="fas fa-trash"></i>
+                                            <span><?php echo lang('Backend.delete') ?></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo lang('Backend.cancel') ?></button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+
+    <!-- Modal for Create Module -->
+    <div class="modal fade" id="modal-create-module">
+        <div class="modal-dialog modal-dialog-centered">
+            <form id="form-create-module" class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><?php echo lang('Methods.createModule') ?? 'Modül Oluştur' ?></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="module_name"><?php echo lang('Methods.moduleName') ?? 'Modül Adı' ?></label>
+                        <input type="text" name="module_name" id="module_name" class="form-control" placeholder="Örn: Blog, Product, Admin" required>
+                        <small class="form-text text-muted"><?php echo lang('Methods.moduleNameDesc') ?? 'Boşluk veya özel karakter kullanmadan sadece harf ve rakam kullanın.' ?></small>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo lang('Backend.cancel') ?></button>
+                    <button type="submit" class="btn btn-success"><?php echo lang('Backend.add') ?? 'Oluştur' ?></button>
+                </div>
+            </form>
+        </div>
+    </div>
 </section>
 <!-- /.content -->
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('javascript') ?>
+<?php echo script_tag("be-assets/plugins/dropzone/min/dropzone.min.js") ?>
 <script {csp-script-nonce}>
+    // Get the template HTML and remove it from the doumenthe template HTML and remove it from the doument
+    var previewNode = document.querySelector("#template");
+    previewNode.id = "";
+    var previewTemplate = previewNode.parentNode.innerHTML;
+    previewNode.parentNode.removeChild(previewNode);
+
+    var myDropzone = new Dropzone(document.body, { // Make the whole body a dropzone
+        url: "<?php echo route_to('moduleUpload') ?>", // Set the url
+        thumbnailWidth: 80,
+        thumbnailHeight: 80,
+        parallelUploads: 20,
+        uploadMultiple: false,
+        paramName: "modules",
+        acceptedFiles: "application/zip, application/octet-stream, application/x-zip-compressed, multipart/x-zip",
+        previewTemplate: previewTemplate,
+        autoQueue: false, // Make sure the files aren't queued until manually added
+        previewsContainer: "#previews", // Define the container to display the previews
+        clickable: ".fileinput-button" // Define the element that should be used as click trigger to select files.
+    })
+    myDropzone.on('successmultiple', function(files, response) {
+        console.log(response);
+        if (response.status == 'success')
+            Swal.fire({
+                icon: 'success',
+                title: 'Yükleme Sonucu',
+                text: response.message
+            });
+        if (response.status == 'error')
+            Swal.fire({
+                icon: 'error',
+                title: 'Yükleme Sonucu',
+                text: response.message
+            });
+        myDropzone.removeAllFiles(true);
+    });
+    myDropzone.on("addedfile", function(file) {
+        // Hookup the start button
+        file.previewElement.querySelector(".start").onclick = function() {
+            myDropzone.enqueueFile(file)
+        }
+    })
+
+    myDropzone.on("totaluploadprogress", function(progress) {
+        document.querySelector("#total-progress .progress-bar").style.width = progress + "%"
+    })
+
+    myDropzone.on("sending", function(file) {
+        // Show the total progress bar when upload starts
+        document.querySelector("#total-progress").style.opacity = "1"
+        // And disable the start button
+        file.previewElement.querySelector(".start").setAttribute("disabled", "disabled")
+    })
+
+    myDropzone.on("queuecomplete", function(progress) {
+        document.querySelector("#total-progress").style.opacity = "0"
+    })
+
+    document.querySelector("#actions .start").onclick = function() {
+        myDropzone.enqueueFiles(myDropzone.getFilesWithStatus(Dropzone.ADDED))
+    }
+    document.querySelector("#actions .cancel").onclick = function() {
+        myDropzone.removeAllFiles(true)
+    }
+
     $('#moduleScan').on('click', function() {
         $.ajax({
             url: '<?php echo route_to('moduleScan') ?>',
@@ -443,6 +604,56 @@
                     text: '<?php echo lang('Methods.serverConnectionError') ?>',
                     icon: 'error',
                     confirmButtonText: '<?php echo lang('Backend.ok') ?>'
+                });
+            }
+        });
+    });
+
+    // Create Module Form Submit
+    $('#form-create-module').on('submit', function(e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        var submitButton = $(this).find('button[type="submit"]');
+
+        $.ajax({
+            url: '<?php echo route_to('moduleCreate') ?>',
+            type: 'POST',
+            data: formData,
+            beforeSend: function() {
+                submitButton.prop('disabled', true);
+                Swal.fire({
+                    title: '<?php echo lang('Methods.working') ?? 'Lütfen Bekleyin...' ?>',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            success: function(response) {
+                submitButton.prop('disabled', false);
+                if (response.status === 'success') {
+                    $('#modal-create-module').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: '<?php echo lang('Backend.success') ?>',
+                        text: response.message
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '<?php echo lang('Backend.error') ?>',
+                        text: response.message
+                    });
+                }
+            },
+            error: function() {
+                submitButton.prop('disabled', false);
+                Swal.fire({
+                    icon: 'error',
+                    title: '<?php echo lang('Backend.error') ?>',
+                    text: '<?php echo lang('Methods.serverConnectionError') ?? 'Sunucu ile bağlantı kurulamadı!' ?>'
                 });
             }
         });

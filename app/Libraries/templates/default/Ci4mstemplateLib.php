@@ -1,6 +1,8 @@
-<?php namespace App\Libraries\templates\default;
+<?php
 
-use ci4commonModel\Models\CommonModel;
+namespace App\Libraries\templates\default;
+
+use ci4commonmodel\CommonModel;
 
 class Ci4mstemplateLib
 {

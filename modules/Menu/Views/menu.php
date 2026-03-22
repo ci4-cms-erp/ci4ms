@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -84,7 +84,7 @@
 <section class="content">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
@@ -135,7 +135,7 @@
     function addPages(id) {
         $.post('<?php echo route_to('createMenu') ?>', {
             "id": id,
-            'where': 'pages'
+            'where': 'pages_langs'
         }).done(function(data) {
             $('.dd').nestable('destroy');
             $('.dd').html(data);
@@ -153,11 +153,11 @@
         var formData = $('#addCheckedPages').serializeArray();
         formData.push({
             name: "where",
-            value: "pages"
+            value: "pages_langs"
         });
         formData.push({
             name: "type",
-            value: "pages"
+            value: "pages_langs"
         });
         $.post('<?php echo route_to('addMultipleMenu') ?>', formData).done(function(data) {
             $('.dd').nestable('destroy');
@@ -174,7 +174,7 @@
     function addBlog(id) {
         $.post('<?php echo route_to('createMenu') ?>', {
             "id": id,
-            'where': 'blog'
+            'where': 'blog_langs'
         }).done(function(data) {
             $('.dd').nestable('destroy');
             $('.dd').html(data);
@@ -192,11 +192,11 @@
         var formData = $('#addCheckedBlog').serializeArray();
         formData.push({
             name: "where",
-            value: "blog"
+            value: "blog_langs"
         });
         formData.push({
             name: "type",
-            value: "blog"
+            value: "blog_langs"
         });
         $.post('<?php echo route_to('addMultipleMenu') ?>', formData).done(function(data) {
             $('.dd').nestable('destroy');

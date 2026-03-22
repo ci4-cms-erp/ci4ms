@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -11,34 +11,16 @@
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1><?php echo lang($title->pagename) ?></h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('categoryCreate') ?>" class="btn btn-outline-success"><?php echo lang('Backend.add') ?></a>
-                </ol>
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
-
 <!-- Main content -->
-<section class="content">
+<section class="content pt-3">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
-                </button>
+                <a href="<?php echo route_to('categoryCreate') ?>" class="btn btn-sm btn-outline-success"><?php echo lang('Backend.add') ?></a>
             </div>
         </div>
         <div class="card-body">
@@ -144,7 +126,7 @@
                                 table.ajax.reload();
                             }
                         });
-                    }else{
+                    } else {
                         Swal.fire({
                             title: '<?php echo lang('Backend.error') ?>',
                             text: response.message,

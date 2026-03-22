@@ -10,20 +10,22 @@ class Install extends Controller
     public function index()
     {
         if ($this->request->is('post')) {
-            $valData = ([
-                'baseUrl' => ['label' => '', 'rules' => 'required|valid_url'],
-                'dbname' => ['label' => '', 'rules' => 'required|alpha_dash'],
-                'dbusername' => ['label' => '', 'rules' => 'required|alpha_dash'],
-                'dbpassword' => ['label' => '', 'rules' => 'required'],
-                'dbdriver' => ['label' => '', 'rules' => 'required|in_list[MySQLi]'],
-                'dbpre' => ['label' => '', 'rules' => 'required|permit_empty|alpha_dash'],
-                'dbport' => ['label' => '', 'rules' => 'required|is_natural_no_zero|less_than[65536]'],
-                'name' => ['label' => '', 'rules' => 'required|alpha_space'],
-                'surname' => ['label' => '', 'rules' => 'required|alpha_space'],
-                'username' => ['label' => '', 'rules' => 'required|alpha_numeric'],
-                'email' => ['label' => '', 'rules' => 'required|valid_email'],
-                'siteName' => ['label' => '', 'rules' => 'required|alpha_numeric_space']
-            ]);
+            $valData = [
+                'baseUrl' => ['label' => lang('Install.baseUrl'), 'rules' => 'required|valid_url'],
+                'dbname' => ['label' => lang('Install.databaseName'), 'rules' => 'required|alpha_dash|max_length[100]'],
+                'dbusername' => ['label' => lang('Install.databaseUsername'), 'rules' => 'required|alpha_dash|max_length[100]'],
+                'dbpassword' => ['label' => lang('Install.databasePassword'), 'rules' => 'permit_empty|max_length[255]'],
+                'dbdriver' => ['label' => lang('Install.databaseDriver'), 'rules' => 'required|in_list[MySQLi]'],
+                'dbpre' => ['label' => lang('Install.databasePrefix'), 'rules' => 'permit_empty|alpha_dash|max_length[20]'],
+                'dbport' => ['label' => lang('Install.databasePort'), 'rules' => 'required|is_natural_no_zero|less_than[65536]'],
+                'name' => ['label' => lang('Install.firstName'), 'rules' => 'required|max_length[100]|regex_match[/^[^<>{}=]+$/u]'],
+                'surname' => ['label' => lang('Install.lastName'), 'rules' => 'required|max_length[100]|regex_match[/^[^<>{}=]+$/u]'],
+                'username' => ['label' => lang('Install.username'), 'rules' => 'required|alpha_numeric|min_length[3]|max_length[50]'],
+                'password' => ['label' => lang('Install.password'), 'rules' => 'required|min_length[8]'],
+                'email' => ['label' => lang('Install.email'), 'rules' => 'required|valid_email|max_length[255]'],
+                'siteName' => ['label' => lang('Install.siteName'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]']
+            ];
+
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
             $this->copyEnvFile();
@@ -62,7 +64,7 @@ class Install extends Controller
                 'app.defaultLocale' => '\'en\'',
                 'app.supportedLocales' => '[\'ar\',\'de\',\'en\',\'es\',\'fr\',\'hi\',\'ja\',\'pt\',\'ru\',\'tr\',\'zh\']',
                 'app.negotiateLocale' => 'true',
-                'app.appTimzezone' => '\'Europe/Istanbul\'',
+                'app.appTimezone' => '\'Europe/Istanbul\'',
                 'app.version' => '0.29.5.0'
             ];
             if ($this->updateEnvSettings($updates)) $this->generateEncryptionKey();
@@ -151,7 +153,7 @@ class Install extends Controller
         ]);
 
         @unlink(APPPATH . 'Config/Routes.php');
-        $file = APPPATH . 'Commands/Views/routes.tpl.php';
+        $file = ROOTPATH . 'modules/Backend/Commands/Views/routes.tpl.php';
         $content = file_get_contents($file);
         $content = str_replace('<@', '<?', $content);
         if (! is_dir(WRITEPATH . 'backups/') && !is_dir(PUBLICPATH . 'media/.tmb') && !is_dir(PUBLICPATH . 'media/.trash')) {
@@ -161,7 +163,7 @@ class Install extends Controller
             mkdir(PUBLICPATH . 'uploads/.trash', 0755, true);
         }
         if (!write_file(APPPATH . 'Config/Routes.php', $content)) {
-            return redirect()->to($baseURL)->withInput()->with('errors', ['route' => 'Routes dosyası oluşturulamadı.']);
+            return redirect()->to($baseURL)->withInput()->with('errors', ['route' => lang('Install.routeFileError')]);
         }
 
         return redirect()->to($baseURL, 301);

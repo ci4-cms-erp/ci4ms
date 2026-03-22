@@ -122,6 +122,32 @@ class App extends BaseConfig
      */
     public array $supportedLocales = [];
 
+    public function __construct()
+    {
+        parent::__construct();
+
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
+            $this->baseURL = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/";
+        }
+
+        // Load supported locales dynamically if we have a DB connection
+        if (is_file(ROOTPATH . '.env')) {
+            try {
+                $db = \Config\Database::connect();
+                if ($db->getDatabase() !== '' && $db->tableExists('languages')) {
+                    $builder = $db->table('languages');
+                    $langs = $builder->select('code')->where(['is_active' => 1, 'is_frontend' => 1])->get()->getResult();
+                    if ($langs) {
+                        $this->supportedLocales = array_column($langs, 'code');
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Ignore DB errors during early boot
+            }
+        }
+    }
+
     /**
      * --------------------------------------------------------------------------
      * Application Timezone

@@ -20,45 +20,95 @@ class Home extends BaseController
         $this->ci4msModel = new Ci4ms();
     }
 
-    public function index(string $seflink = '/')
+    public function index(string $seflink = '')
     {
-        $page = $this->commonModel->selectOne('pages', ['seflink' => $seflink]);
-        if (!empty($page)) {
-            $this->defData['pageInfo'] = $page;
-            $this->defData['pageInfo']->content = $this->commonLibrary->parseInTextFunctions($this->defData['pageInfo']->content);
-            $this->defData['pageInfo']->seo = json_decode($this->defData['pageInfo']->seo);
-            $this->defData['pageInfo']->seo = (object)$this->defData['pageInfo']->seo;
-            if (!empty($this->defData['pageInfo']->seo->keywords)) {
-                $keywords = array_column($this->defData['pageInfo']->seo->keywords, 'value');
-                $this->seo()->keywords($keywords);
-            }
-            $this->seo()->set('title', esc($this->defData['pageInfo']->title))
-                ->set('excerpt', esc($this->defData['pageInfo']->seo->description))
-                ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
-                ->addSchema(
-                    [
-                        '@context' => 'https://schema.org',
-                        '@type' => 'Organization',
-                        'url' => site_url(),
-                        'logo' => $this->defData['settings']->logo,
-                        'name' => esc($this->defData['settings']->siteName),
-                        'ContactPoint' =>
-                        [
-                            '@type' => 'ContactPoint',
-                            'telephone' => $this->defData['settings']->contact->phone,
-                            'contactType' => 'customer support'
-                        ],
-                        'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
-                    ]
+        $locale      = $this->request->getLocale();
+        $homePageId  = setting('App.homePage');
+        $defaultLang = cache('default_frontend_language') ?? setting('App.defaultLocale') ?? 'tr';
+
+        if (!empty($homePageId) && empty($seflink)) {
+            // Önce istenen locale'de dene
+            $pages = $this->commonModel->lists(
+                'pages',
+                'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
+                ['pages.id' => $homePageId, 'pages_langs.lang' => $locale],
+                'pages.id DESC', 1, 0, [], [],
+                [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
+                ['isReset' => true]
+            );
+            // Çeviri yoksa varsayılan dile düş
+            if (empty($pages) && $locale !== $defaultLang) {
+                $pages = $this->commonModel->lists(
+                    'pages',
+                    'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
+                    ['pages.id' => $homePageId, 'pages_langs.lang' => $defaultLang],
+                    'pages.id DESC', 1, 0, [], [],
+                    [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
+                    ['isReset' => true]
                 );
-            if (!empty($this->defData['pageInfo']->seo->coverImage))
-                $this->seo()->set('image', $this->defData['pageInfo']->seo->coverImage ? site_url($this->defData['pageInfo']->seo->coverImage) : '');
-            if ($seflink != '/') {
-                $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id, 'page')));
-                $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id, 'page');
             }
-            return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
-        } else return show_404();
+        } else {
+            // Önce istenen locale'de slug'a göre bul
+            $pages = $this->commonModel->lists(
+                'pages',
+                'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
+                ['pages_langs.seflink' => $seflink, 'pages_langs.lang' => $locale],
+                'pages.id DESC', 1, 0, [], [],
+                [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
+                ['isReset' => true]
+            );
+            // Çeviri yoksa varsayılan dile düş
+            if (empty($pages) && $locale !== $defaultLang) {
+                $pages = $this->commonModel->lists(
+                    'pages',
+                    'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
+                    ['pages_langs.seflink' => $seflink, 'pages_langs.lang' => $defaultLang],
+                    'pages.id DESC', 1, 0, [], [],
+                    [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
+                    ['isReset' => true]
+                );
+            }
+        }
+
+        if (empty($pages)) return show_404();
+        $this->defData['pageInfo'] = $pages;
+        $this->defData['breadcrumbs'] = [];
+        $this->defData['pageInfo']->content = $this->commonLibrary->parseInTextFunctions($this->defData['pageInfo']->content);
+        $this->defData['pageInfo']->seo = json_decode($this->defData['pageInfo']->seo);
+        $this->defData['pageInfo']->seo = (object)$this->defData['pageInfo']->seo;
+        if (!empty($this->defData['pageInfo']->seo->keywords)) {
+            $keywords = array_column($this->defData['pageInfo']->seo->keywords, 'value');
+            $this->seo()->keywords($keywords);
+        }
+        $this->seo()->set('title', esc($this->defData['pageInfo']->title))
+            ->set('excerpt', esc($this->defData['pageInfo']->seo->description ?? ''))
+            ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
+            ->addSchema(
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Organization',
+                    'url' => site_url(),
+                    'logo' => $this->defData['settings']->logo,
+                    'name' => esc($this->defData['settings']->siteName),
+                    'ContactPoint' =>
+                    [
+                        '@type' => 'ContactPoint',
+                        'telephone' => $this->defData['settings']->contact->phone,
+                        'contactType' => 'customer support'
+                    ],
+                    'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
+                ]
+            );
+        if (!empty($this->defData['pageInfo']->seo->coverImage))
+            $this->seo()->set('image', $this->defData['pageInfo']->seo->coverImage ? site_url($this->defData['pageInfo']->seo->coverImage) : '');
+        if ($pages->id != $homePageId) {
+            $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id, 'page')));
+            $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['pageInfo']->id, 'page');
+        }
+
+        $this->calculateAlternateLinks('pages', (int)$this->defData['pageInfo']->id);
+
+        return view('templates/' . $this->defData['settings']->templateInfos->path . '/pages', $this->defData);
     }
 
     public function maintenanceMode()
@@ -69,10 +119,15 @@ class Home extends BaseController
 
     public function blog(int $page = 1)
     {
+        $locale = $this->request->getLocale();
         $perPage = 12;
-        $page = $this->request->getUri()->getSegment(2, 1);
         $offset = ($page - 1) * $perPage;
-        $this->defData['blogs'] = $this->commonModel->lists('blog', '*', ['isActive' => true], 'id ASC', $perPage, $offset);
+
+        $joins = [
+            ['table' => 'blog_langs', 'cond' => "blog_langs.blog_id = blog.id AND blog_langs.lang = '{$locale}'", 'type' => 'inner']
+        ];
+
+        $this->defData['blogs'] = $this->commonModel->lists('blog', 'blog.*, blog_langs.title, blog_langs.seflink, blog_langs.content, blog_langs.seo', ['blog.isActive' => true], 'blog.id DESC', $perPage, $offset, [], [], $joins);
         $totalBlogs = $this->commonModel->count('blog', ['isActive' => true]);
         $pager = \Config\Services::pager();
         $this->defData['pager'] = $pager->makeLinks($page, $perPage, $totalBlogs, $this->defData['settings']->templateInfos->path, 2);
@@ -83,7 +138,9 @@ class Home extends BaseController
             $this->defData['blogs'][$key]->tags = $modelTag->limitTags_ajax(['tags_pivot.piv_id' => $blog->id]);
             $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,surname');
         }
-        $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
+        $this->defData['categories'] = $this->commonModel->lists('categories', 'categories.id, categories_langs.title, categories_langs.seflink', ['categories.isActive' => true], 'categories.id ASC', 0, 0, [], [], [
+            ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'inner']
+        ]);
         $this->seo()->set('title', 'Blog')
             ->set('excerpt', 'Blog Posts')
             ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
@@ -104,32 +161,36 @@ class Home extends BaseController
                 ]
             );
         $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs('/blog/1', 'page')));
-        $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs('/blog/1', 'page');
+        $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs('/blog/1');
         return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
     }
 
     public function blogDetail(string $seflink)
     {
-        if ($this->commonModel->isHave('blog', ['seflink' => $seflink, 'isActive' => true]) === 1) {
-            $this->defData['infos'] = $this->commonModel->lists(
+        $locale = $this->request->getLocale();
+        if ($this->commonModel->isHave('blog_langs', ['seflink' => $seflink, 'lang' => $locale]) === 1) {
+            $infosArray = $this->commonModel->lists(
                 'blog',
-                'blog.*,
-                GROUP_CONCAT(' . getenv('database.default.DBPrefix') . 'categories.title SEPARATOR \',\') as categories,
+                'blog.*, blog_langs.title, blog_langs.seflink, blog_langs.content, blog_langs.seo,
+                GROUP_CONCAT(' . getenv('database.default.DBPrefix') . 'categories_langs.title SEPARATOR \',\') as categories,
                 CONCAT(' . getenv('database.default.DBPrefix') . 'users.firstname,\' \',' . getenv('database.default.DBPrefix') . 'users.surname) as author,
                 users.profileIMG',
-                ['blog.seflink' => strip_tags(trim($seflink))],
-                'id ASC',
-                0,
+                ['blog_langs.seflink' => strip_tags(trim($seflink)), 'blog_langs.lang' => $locale],
+                'blog.id ASC',
+                1,
                 0,
                 [],
                 [],
                 [
+                    ['table' => 'blog_langs', 'cond' => "blog_langs.blog_id = blog.id", 'type' => 'inner'],
                     ['table' => 'blog_categories_pivot', 'cond' => 'blog_categories_pivot.blog_id = blog.id', 'type' => 'left'],
                     ['table' => 'categories', 'cond' => 'categories.id = blog_categories_pivot.categories_id', 'type' => 'left'],
+                    ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'left'],
                     ['table' => 'users', 'cond' => 'users.id = blog.author', 'type' => 'left'],
                 ],
                 ['isReset' => true]
             );
+            $this->defData['infos'] = isset($infosArray) ? $infosArray : null;
             $this->defData['dateI18n'] = new Time();
             $modelTag = new AjaxModel();
             $this->defData['tags'] = $modelTag->limitTags_ajax(['piv_id' => $this->defData['infos']->id]);
@@ -141,7 +202,9 @@ class Home extends BaseController
             $this->defData['comments'] = $this->commonModel->lists('comments', '*', ['blog_id' => $this->defData['infos']->id], 'id ASC', 5);
             $this->defData['infos']->seo = json_decode($this->defData['infos']->seo);
             $this->defData['infos']->seo = (object)$this->defData['infos']->seo;
-            $this->defData['categories'] = $this->commonModel->lists('categories');
+            $this->defData['categories'] = $this->commonModel->lists('categories', 'categories.id, categories_langs.title, categories_langs.seflink', ['categories.isActive' => true], 'categories.id ASC', 0, 0, [], [], [
+                ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'inner']
+            ]);
             $this->seo()->set('title', esc($this->defData['infos']->title))
                 ->set('excerpt', esc($this->defData['infos']->title))
                 ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
@@ -169,6 +232,9 @@ class Home extends BaseController
                 ));
             $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs((int)$this->defData['infos']->id, 'blog')));
             $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['infos']->id, 'blog');
+
+            $this->calculateAlternateLinks('blog', (int)$this->defData['infos']->id);
+
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/post', $this->defData);
         } else return show_404();
     }
@@ -176,9 +242,10 @@ class Home extends BaseController
     public function tagList(string $seflink, int $page = 1)
     {
         if ($this->commonModel->isHave('tags', ['seflink' => $seflink]) === 1) {
+            $locale = $this->request->getLocale();
             $perPage = 12;
             $offset = ($page - 1) * $perPage;
-            $this->defData['blogs'] = $this->ci4msModel->taglist(['tags.seflink' => $seflink, 'blog.isActive' => true], $perPage, $offset, 'blog.*');
+            $this->defData['blogs'] = $this->ci4msModel->taglist(['tags.seflink' => $seflink, 'blog.isActive' => true], $perPage, $offset, 'blog.*, blog_langs.title, blog_langs.seflink, blog_langs.content, blog_langs.seo');
             $totalBlogs = count($this->defData['blogs']);
             $pager = \Config\Services::pager();
             $this->defData['pager'] = $pager->makeLinks($page, $perPage, $totalBlogs, $this->defData['settings']->templateInfos->path, 3);
@@ -189,7 +256,9 @@ class Home extends BaseController
                 $this->defData['blogs'][$key]->tags = $modelTag->limitTags_ajax(['piv_id' => $blog->id]);
                 $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,surname');
             }
-            $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
+            $this->defData['categories'] = $this->commonModel->lists('categories', 'categories.id, categories_langs.title, categories_langs.seflink', ['categories.isActive' => true], 'categories.id ASC', 0, 0, [], [], [
+                ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'inner']
+            ]);
             $this->defData['tagInfo'] = $this->commonModel->selectOne('tags', ['seflink' => $seflink]);
             $this->seo()->set('title', $this->defData['tagInfo']->tag)
                 ->set('excerpt', $this->defData['tagInfo']->tag)
@@ -218,7 +287,14 @@ class Home extends BaseController
 
     public function category(string $seflink, int $page = 1)
     {
-        $this->defData['category'] = $this->commonModel->selectOne('categories', ['seflink' => $seflink]);
+        $locale = $this->request->getLocale();
+        $categoriesArray = $this->commonModel->lists('categories', 'categories.id, categories_langs.title, categories_langs.seflink, categories_langs.seo', ['categories_langs.seflink' => $seflink, 'categories_langs.lang' => $locale], 'categories.id ASC', 1, 0, [], [], [
+            ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id", 'type' => 'inner']
+        ]);
+
+        if (empty($categoriesArray)) return show_404();
+
+        $this->defData['category'] = $categoriesArray[0];
         $this->defData['category']->seo = json_decode($this->defData['category']->seo);
         $this->defData['category']->seo = (object)$this->defData['category']->seo;
         if (!empty($this->defData['category']->seo->keywords)) {
@@ -238,7 +314,9 @@ class Home extends BaseController
             $this->defData['blogs'][$key]->tags = $modelTag->limitTags_ajax(['tags_pivot.piv_id' => $blog->id]);
             $this->defData['blogs'][$key]->author = $this->commonModel->selectOne('users', ['id' => $blog->author], 'firstname,surname');
         }
-        $this->defData['categories'] = $this->commonModel->lists('categories', '*', ['isActive' => true]);
+        $this->defData['categories'] = $this->commonModel->lists('categories', 'categories.id, categories_langs.title, categories_langs.seflink', ['categories.isActive' => true], 'categories.id ASC', 0, 0, [], [], [
+            ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'inner']
+        ]);
         $this->seo()->set('title', $this->defData['category']->title)
             ->set('excerpt', $this->defData['category']->seo->description ?? '')
             ->set('logo', site_url(ltrim($this->defData['settings']->logo, '/')))
@@ -259,8 +337,10 @@ class Home extends BaseController
                     'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
                 ]
             );
-        $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs($this->defData['category']->id, 'category')));
         $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['category']->id, 'category');
+
+        $this->calculateAlternateLinks('category', (int)$this->defData['category']->id);
+
         return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/list', $this->defData);
     }
 

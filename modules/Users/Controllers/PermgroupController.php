@@ -12,11 +12,11 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post') && $this->request->isAJAX()) {
             $data = clearFilter($this->request->getPost());
             $like = $data['search']['value'];
-            $l = [];
+            $like = [];
             $postData = ['group!=' => 'superadmin'];
-            if (!empty($like)) $l = ['title' => $like];
-            $results = $this->commonModel->lists('auth_groups', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
-            $totalRecords = $this->commonModel->count('auth_groups', $postData, $l);
+            if (!empty($like)) $like = ['title' => $like];
+            $results = $this->commonModel->lists('auth_groups', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $like);
+            $totalRecords = $this->commonModel->count('auth_groups', $postData, $like);
             foreach ($results as $result) {
                 $result->actions = '<a href="' . route_to('group_update', $result->id) . '" class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>';
             }
@@ -35,9 +35,9 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'groupName' => ['label' => 'Yetki Grubu Adı', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[auth_groups.group]'],
-                'description' => ['label' => 'Grup Açıklaması', 'rules' => 'required'],
-                'seflink' => ['label' => 'Seflink', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+                'groupName' => ['label' => 'Yetki Grubu Adı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]|is_unique[auth_groups.group]'],
+                'description' => ['label' => 'Grup Açıklaması', 'rules' => 'required|regex_match[/^[^<>{}=]*$/u]'],
+                'seflink' => ['label' => 'Seflink', 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
                 'perms' => ['label' => 'İzinler', 'rules' => 'required']
             ]);
 
@@ -77,7 +77,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'groupName' => ['label' => 'Yetki Grubu Adı', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+                'groupName' => ['label' => 'Yetki Grubu Adı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'description' => ['label' => 'Grup Açıklaması', 'rules' => 'required'],
                 'seflink' => ['label' => 'Seflink', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
                 'perms' => ['label' => 'İzinler', 'rules' => 'required']

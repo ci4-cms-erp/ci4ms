@@ -1,51 +1,60 @@
 //multi level menu
 (function ($bs) {
   const CLASS_NAME = "has-child-dropdown-show";
-  $bs.Dropdown.prototype.toggle = (function (_orginal) {
-    return function () {
-      document.querySelectorAll("." + CLASS_NAME).forEach(function (e) {
-        e.classList.remove(CLASS_NAME);
-      });
-      let dd = this._element
-        .closest(".dropdown")
-        .parentNode.closest(".dropdown");
-      for (; dd && dd !== document; dd = dd.parentNode.closest(".dropdown")) {
-        dd.classList.add(CLASS_NAME);
-      }
-      return _orginal.call(this);
-    };
-  })($bs.Dropdown.prototype.toggle);
 
+  // Bootstrap 5 nested dropdown support
+  document
+    .querySelectorAll(".dropdown-menu a.dropdown-toggle")
+    .forEach(function (element) {
+      element.addEventListener("click", function (e) {
+        if (!this.nextElementSibling.classList.contains("show")) {
+          this.closest(".dropdown-menu")
+            .querySelectorAll(".show")
+            .forEach(function (el) {
+              el.classList.remove("show");
+            });
+        }
+        this.nextElementSibling.classList.toggle("show");
+
+        // Parent menu items should stay open
+        let parent = this.closest(".dropdown");
+        if (parent) {
+          parent.classList.add(CLASS_NAME);
+        }
+
+        e.stopPropagation();
+        e.preventDefault();
+      });
+    });
+
+  // Reset nested classes when main dropdown hidden
   document.querySelectorAll(".dropdown").forEach(function (dd) {
     dd.addEventListener("hide.bs.dropdown", function (e) {
-      if (this.classList.contains(CLASS_NAME)) {
-        this.classList.remove(CLASS_NAME);
-        e.preventDefault();
-      }
-      e.stopPropagation(); // do not need pop in multi level mode
+      this.querySelectorAll(".show").forEach(function (showEl) {
+        showEl.classList.remove("show");
+      });
+      this.classList.remove(CLASS_NAME);
     });
   });
 
-  //for hover
+  // Hover support
   document
     .querySelectorAll(".dropdown-hover, .dropdown-hover-all .dropdown")
     .forEach(function (dd) {
       dd.addEventListener("mouseenter", function (e) {
         let toggle = e.target.querySelector(
-          ':scope>[data-bs-toggle="dropdown"]'
+          ':scope>[data-bs-toggle="dropdown"]',
         );
-        if (!toggle.classList.contains("show")) {
-          $bs.Dropdown.getOrCreateInstance(toggle).toggle();
-          dd.classList.add(CLASS_NAME);
-          $bs.Dropdown.clearMenus();
+        if (toggle && !toggle.classList.contains("show")) {
+          $bs.Dropdown.getOrCreateInstance(toggle).show();
         }
       });
       dd.addEventListener("mouseleave", function (e) {
         let toggle = e.target.querySelector(
-          ':scope>[data-bs-toggle="dropdown"]'
+          ':scope>[data-bs-toggle="dropdown"]',
         );
-        if (toggle.classList.contains("show")) {
-          $bs.Dropdown.getOrCreateInstance(toggle).toggle();
+        if (toggle && toggle.classList.contains("show")) {
+          $bs.Dropdown.getOrCreateInstance(toggle).hide();
         }
       });
     });
@@ -85,7 +94,7 @@ $(".sendComment").on("click", function () {
         Swal.fire("You send successfully your comment", "", "success").then(
           function (isConfirm) {
             if (isConfirm) location.reload(true);
-          }
+          },
         );
     },
     statusCode: {
@@ -154,36 +163,38 @@ function captchaF() {
 
 captchaF();
 
-$(function() {
-  $('#product-search').autocomplete({
-      source: function(request, response) {
-          $.ajax({
-              url: '/forms/searchForm',
-              dataType: 'json',
-              method: 'GET',
-              data: {
-                  term: request.term
-              },
-              success: function(data) {
-                response($.map(data, function(item) {
-                  return {
-                      label: item.value,
-                      value: item.value,
-                      url: item.url
-                    };
-                }));
-              }
-          });
-      },
-      minLength: 2,
-      select: function(event, ui) {
-        if (ui.item.url) {
-            window.location.href = ui.item.url;
-        }
+$(function () {
+  $("#product-search").autocomplete({
+    source: function (request, response) {
+      $.ajax({
+        url: "/forms/searchForm",
+        dataType: "json",
+        method: "GET",
+        data: {
+          term: request.term,
+        },
+        success: function (data) {
+          response(
+            $.map(data, function (item) {
+              return {
+                label: item.value,
+                value: item.value,
+                url: item.url,
+              };
+            }),
+          );
+        },
+      });
+    },
+    minLength: 2,
+    select: function (event, ui) {
+      if (ui.item.url) {
+        window.location.href = ui.item.url;
       }
+    },
   });
 
-  $('#searchModal').on('shown.bs.modal', function () {
-      $('#product-search').focus();
+  $("#searchModal").on("shown.bs.modal", function () {
+    $("#product-search").focus();
   });
 });

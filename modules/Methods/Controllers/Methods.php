@@ -2,6 +2,9 @@
 
 namespace Modules\Methods\Controllers;
 
+use ZipArchive;
+use Modules\Methods\Libraries\ModuleInstaller;
+
 class Methods extends \Modules\Backend\Controllers\BaseController
 {
     public function index()
@@ -101,6 +104,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'isBackoffice' => (bool)$this->request->getPost('isBackoffice') == true ? 1 : 0,
                 'typeOfPermissions' => $roles
             ], ['id' => $pk])) {
+                cache()->delete('sidebar_menu');
                 return redirect()->route('list')->with('success', lang('Backend.updated', [$this->request->getPost('pagename')]));
             } else
                 return redirect()->route('methodUpdate', [$pk])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('pagename')]));
@@ -278,26 +282,45 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             $newKeys[$key] = $index;
         }
 
+        // --- Modül Temizleme (Fiziksel klasörü silinen modüller) ---
+        $isChanged = false;
+        $existingModules = $this->commonModel->lists('modules');
+        $moduleFolders = array_map(function($path) {
+            return strtolower(basename($path));
+        }, glob(ROOTPATH . 'modules/*', GLOB_ONLYDIR));
+
+        foreach ($existingModules as $exModule) {
+            if (!in_array(strtolower($exModule->name), $moduleFolders)) {
+                $this->commonModel->remove('auth_permissions_pages', ['module_id' => $exModule->id]);
+                $this->commonModel->remove('modules', ['id' => $exModule->id]);
+                $isChanged = true;
+            }
+        }
+
         $uniqueKeys = array_diff_key($newKeys, $existingKeys);
         $removedPages = array_diff_key($existingKeys, $newKeys);
+        
         if (!empty($removedPages)) {
             foreach ($removedPages as $key => $removedPage) {
                 $remove = explode('\0', $key);
                 if (!empty(str_replace('\0', '', $key))) {
                     $this->commonModel->remove('auth_permissions_pages', ['className' => $remove['0'], 'methodName' => $remove['1']]);
+                    $isChanged = true;
                 }
             }
         }
+        
         $insertBach = [];
         if (!empty($uniqueKeys)) {
             $module_id = null;
             foreach ($uniqueKeys as $uniqueKey) {
                 $module_id = $this->commonModel->selectOne('modules', ['name' => $tbody[$uniqueKey]['module']], 'id');
-                if (empty($module_id->id)) {
-                    $module_id->id = $this->commonModel->create('modules', [
+                if (empty($module_id) || empty($module_id->id)) {
+                    $newId = $this->commonModel->create('modules', [
                         'name' => $tbody[$uniqueKey]['module'],
                         'isActive' => true
                     ]);
+                    $module_id = (object) ['id' => $newId];
                 }
                 $insertBach[] = [
                     'pagename' => $tbody[$uniqueKey]['pagename'],
@@ -311,8 +334,109 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 ];
             }
             $this->commonModel->createMany('auth_permissions_pages', $insertBach);
+            $isChanged = true;
+        }
+
+        if ($isChanged) {
             cache()->delete('sidebar_menu');
             return $this->respondCreated(['result' => true]);
-        } else return $this->respond(['result' => false]);
+        } else {
+            return $this->respond(['result' => false]);
+        }
+    }
+
+    public function moduleUpload()
+    {
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $file = $this->request->getFile('modules');
+
+        if (!$file->isValid() || $file->getClientExtension() !== 'zip') {
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipFile')]);
+        }
+
+        $tempPath = WRITEPATH . 'tmp/';
+        $zip = new ZipArchive();
+
+        if ($zip->open($file->getTempName()) === true) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = $zip->getNameIndex($i);
+                $realEntry = realpath($tempPath . $entryName);
+                if ($realEntry !== false && strpos($realEntry, realpath($tempPath)) !== 0) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains invalid paths']);
+                }
+                if (preg_match('/\.\./', $entryName)) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains path traversal']);
+                }
+            }
+            $zip->extractTo($tempPath);
+            $zip->close();
+        } else {
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipOpenFailed')]);
+        }
+
+        $folders = array_filter(glob($tempPath . '*'), 'is_dir');
+        $moduleFolder = basename(reset($folders));
+        $finalPath = ROOTPATH . "modules/" . $moduleFolder;
+
+        if (is_dir($finalPath)) {
+            helper('filesystem');
+            delete_files($tempPath, true);
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.moduleAlreadyExists')]);
+        }
+
+        rename(reset($folders), $finalPath);
+
+        helper('filesystem');
+        delete_files($tempPath, true);
+
+        // Run migrations for the newly installed module
+        $installer = new ModuleInstaller();
+        $migResult = $installer->runModuleMigrations($moduleFolder);
+
+        $message = lang('Methods.moduleInstallSuccess', [$moduleFolder]);
+        if ($migResult['migrated'] > 0) {
+            $message .= ' ' . lang('Methods.migrationsRun', [$migResult['migrated']]);
+        }
+        if (!$migResult['success']) {
+            $message .= ' ' . lang('Methods.migrationWarning', [$migResult['error']]);
+        }
+
+        return $this->response->setJSON(['status' => 'success', 'message' => $message]);
+    }
+
+    public function moduleCreate()
+    {
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $valData = ([
+            'module_name' => ['label' => lang('Methods.moduleName'), 'rules' => 'required|alpha_dash'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        $moduleName = $this->request->getPost('module_name');
+
+        $moduleName = ucfirst((string)$moduleName);
+        $modulePath = ROOTPATH . 'modules/' . $moduleName;
+
+        if (is_dir($modulePath)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.moduleAlreadyExists')]);
+        }
+
+        try {
+            command('make:module ' . escapeshellarg($moduleName));
+
+            // Run migrations for the newly created module
+            $installer = new ModuleInstaller();
+            $migResult = $installer->runModuleMigrations($moduleName);
+
+            $message = "'{$moduleName}' " . lang('Methods.moduleCreatedSuccess');
+            if ($migResult['migrated'] > 0) {
+                $message .= ' ' . lang('Methods.migrationsRun', [$migResult['migrated']]);
+            }
+
+            return $this->response->setJSON(['status' => 'success', 'message' => $message]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 }

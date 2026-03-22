@@ -12,4 +12,5 @@ $routes->group('backend/settings', ['namespace' => 'Modules\Settings\Controllers
     $routes->post('elfinderConvertWebp', 'Settings::elfinderConvertWebp', ['as' => 'elfinderConvertWebp','role'=>'update']);
     $routes->post('testMail', 'Settings::testMail', ['as' => 'testMail','role'=>'read']);
     $routes->post('updateVersion', 'Settings::checkVersion', ['as' => 'updateVersion','role'=>'update']);
+    $routes->post('saveLanguageMode', 'Settings::saveLanguageMode', ['as' => 'saveLanguageMode','role'=>'update']);
 });

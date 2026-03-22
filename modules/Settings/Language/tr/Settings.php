@@ -32,4 +32,5 @@ return [
     'testEmailSent' => 'Test e-mail başarıyla gönderildi.',
     'updateVersion' => 'Versiyon Güncelleme',
     'alreadyLastVersion' => 'Zaten en son versiyonu kullanıyorsunuz.',
+    'languageMode' => 'Site Dil Modu',
 ];

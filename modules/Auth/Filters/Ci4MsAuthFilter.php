@@ -28,20 +28,12 @@ class Ci4MsAuthFilter implements FilterInterface
             $dbClassName = '-' . $dbClassName;
         }
 
-        $commonModel = new \ci4commonmodel\Models\CommonModel();
+        $commonModel = new \ci4commonmodel\CommonModel();
         $cacheKey = 'backend_page_info_' . md5($dbClassName . $router->methodName());
         if (! $page = cache($cacheKey)) {
-            $page = $commonModel->lists(
+            $page = $commonModel->selectOne(
                 'auth_permissions_pages',
-                '*',
-                ['className' => $dbClassName, 'methodName' => $router->methodName()],
-                'id ASC',
-                0,
-                0,
-                [],
-                [],
-                [],
-                ['isArray' => true, 'isReset' => true]
+                ['className' => $dbClassName, 'methodName' => $router->methodName()]
             );
 
             if ($page) {
@@ -51,12 +43,12 @@ class Ci4MsAuthFilter implements FilterInterface
 
         if (auth()->user()->inGroup('superadmin')) {
             if (! $page) {
-                return redirect()->to('/403');
+                return redirect('403');
             }
             return;
         } else {
             if (! $page) {
-                return redirect()->to('/403');
+                return redirect('403');
             }
         }
 

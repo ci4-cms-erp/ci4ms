@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -19,7 +19,7 @@
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModalCenter"
-                        href="<?php echo route_to('tagCreate') ?>" class="btn btn-outline-success"><?php echo lang('Backend.add') ?>
+                        href="<?php echo route_to('tagCreate') ?>" class="btn btn-sm btn-outline-success"><?php echo lang('Backend.add') ?>
                     </button>
                 </ol>
             </div>
@@ -31,7 +31,7 @@
 <section class="content">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
@@ -196,7 +196,7 @@
                                 table.ajax.reload();
                             }
                         });
-                    }else{
+                    } else {
                         Swal.fire({
                             title: '<?php echo lang('Backend.error') ?>',
                             text: response.message,

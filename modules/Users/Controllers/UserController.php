@@ -15,7 +15,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post') && $this->request->isAJAX()) {
             $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $like = $parsed['searchString'];
-            $l = [];
+            $like = [];
             $users = auth()->getProvider();
             $users->select('users.*, auth_identities.secret as email, auth_identities.force_reset')
                 ->withGroups()
@@ -26,9 +26,9 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                     return $builder->select('user_id')->from('auth_groups_users')->join('auth_groups', 'auth_groups.group = auth_groups_users.group')->where('auth_groups.group', 'superadmin');
                 });
             if (!empty($like)) {
-                $l = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
+                $like = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
                 $users->groupStart();
-                foreach ($l as $field => $value) {
+                foreach ($like as $field => $value) {
                     $users->orLike($field, $value);
                 }
                 $users->groupEnd();
@@ -42,9 +42,9 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                     return $builder->select('user_id')->from('auth_groups_users')->join('auth_groups', 'auth_groups.group = auth_groups_users.group')->where('auth_groups.group', 'superadmin');
                 });
             if (!empty($like)) {
-                $l = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
+                $like = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
                 $users->groupStart();
-                foreach ($l as $field => $value) {
+                foreach ($like as $field => $value) {
                     $users->orLike($field, $value);
                 }
                 $users->groupEnd();
@@ -100,10 +100,10 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]|is_unique[users.username]',
-                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
+                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email|is_unique[auth_identities.secret]'],
-                'group' => ['label' => 'Yetkisi', 'rules' => 'required'],
+                'group' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero'],
                 'password' => ['label' => 'Şifre', 'rules' => 'required|min_length[8]']
             ]);
 
@@ -173,10 +173,10 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]',
-                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
+                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
-                'group' => ['label' => 'Yetkisi', 'rules' => 'required']
+                'group' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero']
             ]);
 
             if ($this->request->getPost('password')) $valData['password'] = ['label' => 'Şifre', 'rules' => 'required|min_length[8]'];

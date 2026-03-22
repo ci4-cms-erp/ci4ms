@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -8,8 +8,7 @@
 <?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
 <?php echo link_tag("be-assets/plugins/summernote/summernote-bs4.css") ?>
 <?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
-<link rel="stylesheet" type="text/css"
-    href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+<?php echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css") ?>
 <?php echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
 <?php echo link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
 <!-- Select2 -->
@@ -18,53 +17,69 @@
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1><?php echo lang($title->pagename) ?></h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('blogs', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
-                </ol>
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
-
 <!-- Main content -->
-<section class="content">
+<section class="content pt-3">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
-                </button>
+                <a href="<?php echo route_to('blogs', 1) ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
             </div>
         </div>
         <div class="card-body">
             <form action="<?php echo route_to('blogCreate') ?>" class="form-row" method="post">
                 <?php echo csrf_field() ?>
                 <div class="col-md-8 form-group row">
-                    <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
-                        <input type="text" name="title" class="form-control ptitle" placeholder="<?php echo lang('Backend.title') ?>"
-                            value="<?php echo old('title') ?>" required>
-                    </div>
-                    <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
-                        <input type="text" class="form-control seflink" name="seflink" value="<?php echo old('seflink') ?>" required>
-                    </div>
-                    <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.content') . ' ' . lang('Backend.required') ?></label>
-                        <textarea name="content" rows="60" class="form-control editor" required><?php echo old('content') ?></textarea>
-                    </div>
+                    <?php if (setting('App.siteLanguageMode') === 'multi' && !empty($languages)): ?>
+                        <div class="col-md-12">
+                            <ul class="nav nav-tabs" id="custom-tabs-lang" role="tablist">
+                                <?php $i = 0;
+                                foreach ($languages as $lang): ?>
+                                    <li class="nav-item">
+                                        <a class="nav-link <?php echo $i === 0 ? 'active' : '' ?>" id="custom-tabs-lang-<?php echo $lang->code ?>-tab" data-toggle="pill" href="#custom-tabs-lang-<?php echo $lang->code ?>" role="tab" aria-controls="custom-tabs-lang-<?php echo $lang->code ?>" aria-selected="<?php echo $i === 0 ? 'true' : 'false' ?>"><?php echo esc($lang->name) ?></a>
+                                    </li>
+                                <?php $i++;
+                                endforeach; ?>
+                            </ul>
+                            <div class="tab-content" id="custom-tabs-lang-tabContent">
+                                <?php $i = 0;
+                                foreach ($languages as $lang): ?>
+                                    <div class="tab-pane fade <?php echo $i === 0 ? 'show active' : '' ?>" id="custom-tabs-lang-<?php echo $lang->code ?>" role="tabpanel" aria-labelledby="custom-tabs-lang-<?php echo $lang->code ?>-tab">
+                                        <div class="form-group mt-3">
+                                            <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
+                                            <input type="text" name="lang[<?php echo $lang->code ?>][title]" class="form-control ptitle" data-lang="<?php echo $lang->code ?>" placeholder="<?php echo lang('Backend.title') ?>" value="<?php echo old("lang.{$lang->code}.title") ?>" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
+                                            <input type="text" class="form-control seflink" data-lang="<?php echo $lang->code ?>" name="lang[<?php echo $lang->code ?>][seflink]" value="<?php echo old("lang.{$lang->code}.seflink") ?>" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for=""><?php echo lang('Backend.content') . ' ' . lang('Backend.required') ?></label>
+                                            <textarea name="lang[<?php echo $lang->code ?>][content]" rows="60" class="form-control editor" required><?php echo old("lang.{$lang->code}.content") ?></textarea>
+                                        </div>
+                                    </div>
+                                <?php $i++;
+                                endforeach; ?>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <?php $defaultLocale = setting('App.defaultLocale') ?: 'tr'; ?>
+                        <div class="form-group col-md-12">
+                            <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
+                            <input type="text" name="lang[<?php echo $defaultLocale ?>][title]" data-lang="<?php echo $defaultLocale ?>" class="form-control ptitle" placeholder="<?php echo lang('Backend.title') ?>" value="<?php echo old("lang.{$defaultLocale}.title") ?>" required>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
+                            <input type="text" class="form-control seflink" data-lang="<?php echo $defaultLocale ?>" name="lang[<?php echo $defaultLocale ?>][seflink]" value="<?php echo old("lang.{$defaultLocale}.seflink") ?>" required>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label for=""><?php echo lang('Backend.content') . ' ' . lang('Backend.required') ?></label>
+                            <textarea name="lang[<?php echo $defaultLocale ?>][content]" rows="60" class="form-control editor" required><?php echo old("lang.{$defaultLocale}.content") ?></textarea>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <div class="col-md-4 form-group row">
                     <div class="form-group col-md-12">
@@ -183,22 +198,24 @@
     });
 
     $('.ptitle').on('change', function() {
+        let lang = $(this).data('lang');
         $.post('<?php echo route_to('checkSeflink') ?>', {
             "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
             'makeSeflink': $(this).val(),
-            'where': 'blog'
+            'where': 'blog_langs'
         }, 'json').done(function(data) {
-            $('.seflink').val(data.seflink);
+            $('.seflink[data-lang="' + lang + '"]').val(data.seflink);
         });
     });
 
     $('.seflink').on('change', function() {
+        let lang = $(this).data('lang');
         $.post('<?php echo route_to('checkSeflink') ?>', {
             "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
             'makeSeflink': $(this).val(),
             'where': 'blog'
         }, 'json').done(function(data) {
-            $('.seflink').val(data.seflink);
+            $('.seflink[data-lang="' + lang + '"]').val(data.seflink);
         });
     });
 

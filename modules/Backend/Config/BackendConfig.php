@@ -5,15 +5,6 @@ namespace Modules\Backend\Config;
 class BackendConfig extends \CodeIgniter\Config\BaseConfig
 {
     //--------------------------------------------------------------------
-    // Default User Group
-    //--------------------------------------------------------------------
-    // The name of a group a user will be added to when they register
-    //
-    // i.e. $defaultUserGroup = 'guests';
-    //
-    public $defaultUserGroup;
-
-    //--------------------------------------------------------------------
     // Views used by Auth Controllers
     //--------------------------------------------------------------------
 

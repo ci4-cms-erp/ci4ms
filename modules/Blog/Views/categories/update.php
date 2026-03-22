@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
@@ -7,8 +7,7 @@
 <?php echo $this->section('head') ?>
 <?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
 <?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
-<link rel="stylesheet" type="text/css"
-    href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+<?php echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css") ?>
 <?php echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
 <?php echo link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
 <!-- Select2 -->
@@ -26,7 +25,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('categories', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
+                    <a href="<?php echo route_to('categories', 1) ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
                 </ol>
             </div>
         </div>
@@ -37,7 +36,7 @@
 <section class="content">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
@@ -51,17 +50,48 @@
             <form action="<?php echo route_to('categoryUpdate', $infos->id) ?>" class="form-row" method="post">
                 <?php echo csrf_field() ?>
                 <div class="col-md-8">
-                    <div class="form-group">
-                        <label for=""><?php echo lang('Backend.title') ?></label>
-                        <input type="text" class="form-control ptitle" required name="title" value="<?php echo old('title', $infos->title) ?>">
-                    </div>
-                    <div class="form-group">
-                        <label for=""><?php echo lang('Backend.url') ?></label>
-                        <input type="text" class="form-control seflink" name="seflink" required value="<?php echo old('seflink', $infos->seflink) ?>">
-                    </div>
+                    <?php if (setting('App.siteLanguageMode') === 'multi' && !empty($languages)): ?>
+                        <ul class="nav nav-tabs" id="custom-tabs-lang" role="tablist">
+                            <?php $i = 0;
+                            foreach ($languages as $lang): ?>
+                                <li class="nav-item">
+                                    <a class="nav-link <?php echo $i === 0 ? 'active' : '' ?>" id="custom-tabs-lang-<?php echo $lang->code ?>-tab" data-toggle="pill" href="#custom-tabs-lang-<?php echo $lang->code ?>" role="tab" aria-controls="custom-tabs-lang-<?php echo $lang->code ?>" aria-selected="<?php echo $i === 0 ? 'true' : 'false' ?>"><?php echo esc($lang->name) ?></a>
+                                </li>
+                            <?php $i++;
+                            endforeach; ?>
+                        </ul>
+                        <div class="tab-content" id="custom-tabs-lang-tabContent">
+                            <?php $i = 0;
+                            foreach ($languages as $lang):
+                                $langInfo = isset($langsData[$lang->code]) ? $langsData[$lang->code] : null; ?>
+                                <div class="tab-pane fade <?php echo $i === 0 ? 'show active' : '' ?>" id="custom-tabs-lang-<?php echo $lang->code ?>" role="tabpanel" aria-labelledby="custom-tabs-lang-<?php echo $lang->code ?>-tab">
+                                    <div class="form-group mt-3">
+                                        <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
+                                        <input type="text" name="lang[<?php echo $lang->code ?>][title]" data-lang="<?php echo $lang->code ?>" class="form-control ptitle" placeholder="<?php echo lang('Backend.title') ?>" value="<?php echo old("lang.{$lang->code}.title", $langInfo ? $langInfo->title : '') ?>" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
+                                        <input type="text" class="form-control seflink" data-lang="<?php echo $lang->code ?>" name="lang[<?php echo $lang->code ?>][seflink]" value="<?php echo old("lang.{$lang->code}.seflink", $langInfo ? $langInfo->seflink : '') ?>" required>
+                                    </div>
+                                </div>
+                            <?php $i++;
+                            endforeach; ?>
+                        </div>
+                    <?php else:
+                        $defaultLocale = setting('App.defaultLocale') ?: 'tr';
+                        $langInfo = isset($langsData[$defaultLocale]) ? $langsData[$defaultLocale] : null; ?>
+                        <div class="form-group mt-3">
+                            <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
+                            <input type="text" name="lang[<?php echo $defaultLocale ?>][title]" data-lang="<?php echo $defaultLocale ?>" class="form-control ptitle" placeholder="<?php echo lang('Backend.title') ?>" value="<?php echo old("lang.{$defaultLocale}.title", $langInfo ? $langInfo->title : '') ?>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
+                            <input type="text" class="form-control seflink" data-lang="<?php echo $defaultLocale ?>" name="lang[<?php echo $defaultLocale ?>][seflink]" value="<?php echo old("lang.{$defaultLocale}.seflink", $langInfo ? $langInfo->seflink : '') ?>" required>
+                        </div>
+                    <?php endif; ?>
                     <div class="form-group">
                         <label for=""><?php echo lang('Backend.seoDescription') ?></label>
-                        <textarea name="description" class="form-control" rows="10"><?php echo old('description', !empty($infos->seo->description) ? $infos->seo->description : '') ?></textarea>
+                        <textarea name="description" class="form-control" rows="10"><?php echo old('description', !empty($langInfo->seo->description) ? $langInfo->seo->description : '') ?></textarea>
                     </div>
                 </div>
                 <div class="col-md-4 row">
@@ -88,31 +118,31 @@
                     </div>
                     <div class="col-md-12 form-group">
                         <label for=""><?php echo lang('Backend.coverImage') ?></label>
-                        <img src="<?php echo old('pageimg', !empty($infos->seo->coverImage) ? $infos->seo->coverImage : '') ?>" class="pageimg img-fluid">
+                        <img src="<?php echo old('pageimg', !empty($langInfo->seo->coverImage) ? $langInfo->seo->coverImage : '') ?>" class="pageimg img-fluid">
                     </div>
                     <div class="col-md-12 form-group">
                         <label for=""><?php echo lang('Backend.coverImgURL') ?></label>
                         <input type="text" name="pageimg" class="form-control pageimg-input"
-                            placeholder="<?php echo lang('Backend.coverImgURL') ?>" value="<?php echo old('pageimg', !empty($infos->seo->coverImage) ? $infos->seo->coverImage : '') ?>">
+                            placeholder="<?php echo lang('Backend.coverImgURL') ?>" value="<?php echo old('pageimg', !empty($langInfo->seo->coverImage) ? $langInfo->seo->coverImage : '') ?>">
                     </div>
                     <div class="col-md-12 row form-group">
                         <div class="col-sm-6">
                             <label for=""><?php echo lang('Backend.coverImgWith') ?></label>
                             <input type="number" name="pageIMGWidth" class="form-control" id="pageIMGWidth"
-                                readonly value="<?php echo old('pageIMGWidth', !empty($infos->seo->IMGWidth) ? $infos->seo->IMGWidth : '') ?>">
+                                readonly value="<?php echo old('pageIMGWidth', !empty($langInfo->seo->IMGWidth) ? $langInfo->seo->IMGWidth : '') ?>">
                         </div>
                         <div class="col-sm-6">
                             <label for=""><?php echo lang('Backend.coverImgHeight') ?></label>
                             <input type="number" name="pageIMGHeight" class="form-control" id="pageIMGHeight"
-                                readonly value="<?php echo old('pageIMGHeight', !empty($infos->seo->IMGHeight) ? $infos->seo->IMGHeight : '') ?>">
+                                readonly value="<?php echo old('pageIMGHeight', !empty($langInfo->seo->IMGHeight) ? $langInfo->seo->IMGHeight : '') ?>">
                         </div>
                     </div>
                     <div class="col-md-12 form-group">
-                        <button type="button" class="pageIMG btn btn-info w-100"><?php echo lang('Backend.parentCategory') ?></button>
+                        <button type="button" class="pageIMG btn btn-info w-100"><?php echo lang('Backend.selectCoverImg') ?></button>
                     </div>
                     <div class="col-md-12 form-group">
                         <label for=""><?php echo lang('Backend.seoKeywords') ?></label>
-                        <textarea name="keywords" class="keywords" placeholder="<?php echo lang('Backend.tagPlaceholder') ?>"><?php echo old('keywords', !empty($infos->seo->keywords) ? $infos->seo->keywords : '') ?></textarea>
+                        <textarea name="keywords" class="keywords" placeholder="<?php echo lang('Backend.tagPlaceholder') ?>"><?php echo old('keywords', !empty($langInfo->seo->keywords) ? $langInfo->seo->keywords : '') ?></textarea>
                     </div>
                 </div>
                 <div class="form-group col-md-12">
@@ -142,25 +172,30 @@
     tags([]);
 
     $('.ptitle').on('change', function() {
+        let lang = $(this).data('lang');
         $.post('<?php echo route_to('checkSeflink') ?>', {
             "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
             'makeSeflink': $(this).val(),
-            'where': 'categories',
+            'where': 'categories_langs',
             'update': 1,
-            'id': <?php echo $infos->id ?>
+            'id': <?php echo $infos->id ?>,
+            'locale': lang
         }, 'json').done(function(data) {
-            $('.seflink').val(data.seflink);
+            $('.seflink[data-lang="' + lang + '"]').val(data.seflink);
         });
     });
 
     $('.seflink').on('change', function() {
+        let lang = $(this).data('lang');
         $.post('<?php echo route_to('checkSeflink') ?>', {
+            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
             'makeSeflink': $(this).val(),
+            'where': 'categories_langs',
             'update': 1,
-            'where': 'categories',
-            'id': <?php echo $infos->id ?>
+            'id': <?php echo $infos->id ?>,
+            'locale': lang
         }, 'json').done(function(data) {
-            $('.seflink').val(data.seflink);
+            $('.seflink[data-lang="' + lang + '"]').val(data.seflink);
         });
     });
 

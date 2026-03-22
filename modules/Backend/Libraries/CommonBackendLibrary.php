@@ -32,7 +32,7 @@ class CommonBackendLibrary
             }
         }
 
-        return !empty($seo) ? json_encode($seo, JSON_UNESCAPED_UNICODE) : null;
+        return !empty($seo) ? json_encode($seo,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
     }
 
     /**

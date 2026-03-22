@@ -7,9 +7,7 @@ class SettingsConfig extends \CodeIgniter\Config\BaseConfig
 
     public $csrfExcept = [
         'backend/settings/setTemplate',
-        'backend/settings/elfinderConvertWebp',
-        'backend/settings/testMail',
-        'backend/settings/updateVersion',
+        'backend/settings/*',
     ];
 
     public $filters = [

@@ -45,19 +45,53 @@
             <form action="<?php echo route_to('pageUpdate', $pageInfo->id) ?>" class="form-row" method="post">
                 <?php echo csrf_field() ?>
                 <div class="col-md-8 form-group row">
-                    <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.title') ?></label>
-                        <input type="text" name="title" class="form-control ptitle" placeholder="<?php echo lang('Backend.title') ?>" value="<?php echo old('title', $pageInfo->title) ?>"
-                            required>
-                    </div>
-                    <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.url') ?></label>
-                        <input type="text" class="form-control seflink" name="seflink" required value="<?php echo old('seflink', $pageInfo->seflink) ?>">
-                    </div>
-                    <div class="form-group col-md-12">
-                        <label for=""><?php echo lang('Backend.content') ?></label>
-                        <textarea name="content" rows="60" class="form-control editor" required><?php echo old('content', $pageInfo->content) ?></textarea>
-                    </div>
+                    <?php if (setting('App.siteLanguageMode') === 'multi' && !empty($languages)): ?>
+                        <div class="col-md-12">
+                            <ul class="nav nav-tabs" id="custom-tabs-lang" role="tablist">
+                                <?php $i = 0;
+                                foreach ($languages as $lang): ?>
+                                    <li class="nav-item">
+                                        <a class="nav-link <?php echo $i === 0 ? 'active' : '' ?>" id="custom-tabs-lang-<?php echo $lang->code ?>-tab" data-toggle="pill" href="#custom-tabs-lang-<?php echo $lang->code ?>" role="tab" aria-controls="custom-tabs-lang-<?php echo $lang->code ?>" aria-selected="<?php echo $i === 0 ? 'true' : 'false' ?>"><?php echo esc($lang->name) ?></a>
+                                    </li>
+                                <?php $i++;
+                                endforeach; ?>
+                            </ul>
+                            <div class="tab-content" id="custom-tabs-lang-tabContent">
+                                <?php $i = 0;
+                                foreach ($languages as $lang): ?>
+                                    <div class="tab-pane fade <?php echo $i === 0 ? 'show active' : '' ?>" id="custom-tabs-lang-<?php echo $lang->code ?>" role="tabpanel" aria-labelledby="custom-tabs-lang-<?php echo $lang->code ?>-tab">
+                                        <div class="form-group mt-3">
+                                            <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
+                                            <input type="text" name="lang[<?php echo $lang->code ?>][title]" class="form-control ptitle" data-lang="<?php echo $lang->code ?>" placeholder="<?php echo lang('Backend.title') ?>" value="<?php echo old("lang.{$lang->code}.title", $langsData[$lang->code]->title ?? '') ?>" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
+                                            <input type="text" class="form-control seflink" data-lang="<?php echo $lang->code ?>" name="lang[<?php echo $lang->code ?>][seflink]" value="<?php echo old("lang.{$lang->code}.seflink", $langsData[$lang->code]->seflink ?? '') ?>" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for=""><?php echo lang('Backend.content') . ' ' . lang('Backend.required') ?></label>
+                                            <textarea name="lang[<?php echo $lang->code ?>][content]" rows="60" class="form-control editor" required><?php echo old("lang.{$lang->code}.content", $langsData[$lang->code]->content ?? '') ?></textarea>
+                                        </div>
+                                    </div>
+                                <?php $i++;
+                                endforeach; ?>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <?php $defaultLocale = setting('App.defaultLocale') ?: 'tr'; ?>
+                        <div class="form-group col-md-12">
+                            <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
+                            <input type="text" name="lang[<?php echo $defaultLocale ?>][title]" data-lang="<?php echo $defaultLocale ?>" class="form-control ptitle" placeholder="<?php echo lang('Backend.title') ?>" value="<?php echo old("lang.{$defaultLocale}.title", $langsData[$defaultLocale]->title ?? '') ?>" required>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label for=""><?php echo lang('Backend.url') . ' ' . lang('Backend.required') ?></label>
+                            <input type="text" class="form-control seflink" data-lang="<?php echo $defaultLocale ?>" name="lang[<?php echo $defaultLocale ?>][seflink]" value="<?php echo old("lang.{$defaultLocale}.seflink", $langsData[$defaultLocale]->seflink ?? '') ?>" required>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label for=""><?php echo lang('Backend.content') . ' ' . lang('Backend.required') ?></label>
+                            <textarea name="lang[<?php echo $defaultLocale ?>][content]" rows="60" class="form-control editor" required><?php echo old("lang.{$defaultLocale}.content", $langsData[$defaultLocale]->content ?? '') ?></textarea>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <div class="col-md-4 form-group row">
                     <div class="form-group col-md-12">

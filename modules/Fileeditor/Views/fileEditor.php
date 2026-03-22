@@ -1,4 +1,4 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout) ?>
 <?php echo $this->section('title') ?>
 <?php echo lang($title->pagename) ?>
 <?php echo $this->endSection() ?>
@@ -31,7 +31,7 @@
 <!-- Main content -->
 <section class="content">
 
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 

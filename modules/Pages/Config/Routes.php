@@ -4,4 +4,5 @@ $routes->group('backend/pages', ['namespace' => 'Modules\Pages\Controllers'], fu
     $routes->match(['GET', 'POST'], 'create', 'Pages::create', ['as' => 'pageCreate', 'role' => 'create,read']);
     $routes->match(['GET', 'POST'], 'pageUpdate/(:any)', 'Pages::update/$1', ['as' => 'pageUpdate', 'role' => 'update,read']);
     $routes->post('pageDelete', 'Pages::delete_post', ['as' => 'pageDelete', 'role' => 'delete']);
+    $routes->post('setHomePage/(:num)', 'Pages::setHomePage/$1', ['as' => 'pageSetHomePage', 'role' => 'update']);
 });

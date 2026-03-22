@@ -109,7 +109,7 @@ class AuthGroups extends ShieldAuthGroups
 
     public function loadFromDatabase()
     {
-        $commonModel = new \ci4commonmodel\Models\CommonModel();
+        $commonModel = new \ci4commonmodel\CommonModel();
 
         // 1. Grupları Yükle
         $groups = $commonModel->lists('auth_groups');

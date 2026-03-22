@@ -8,11 +8,11 @@ class Backup extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
             $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
-            $l = [];
+            $like = [];
             $postData = [];
-            if (!empty($parsed['searchString'])) $l = ['filename' => $parsed['searchString']];
-            $results = $this->commonModel->lists('db_backups', '*', $postData, 'id DESC', $parsed['length'], $parsed['start'], $l);
-            $totalRecords = $this->commonModel->count('db_backups', $postData, $l);
+            if (!empty($parsed['searchString'])) $like = ['filename' => $parsed['searchString']];
+            $results = $this->commonModel->lists('db_backups', '*', $postData, 'id DESC', $parsed['length'], $parsed['start'], $like);
+            $totalRecords = $this->commonModel->count('db_backups', $postData, $like);
             $totalDisplayRecords = $totalRecords;
             helper('number');
             foreach ($results as $result) {

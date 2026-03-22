@@ -34,11 +34,11 @@ class CreateInternational_phone_codesTable extends Migration
             ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->createTable('international_phone_codes');
+        $this->forge->createTable('international_phone_codes', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('international_phone_codes');
+        $this->forge->dropTable('international_phone_codes', true);
     }
 }
