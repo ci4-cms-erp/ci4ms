@@ -48,4 +48,7 @@ return [
 
     'invalidLayoutData'  => 'Geçersiz layout verisi.',
     'slugAlreadyUsed'    => 'Bu slug zaten kullanılıyor.',
+    'allowedGroups'      => 'Erişim İzni Olan Gruplar',
+    'allowedGroupsPlaceholder' => 'Boş bırakılırsa herkes görebilir',
+    'superAdminNote'     => 'Not: Superadmin her zaman tüm widgetları görür.',
 ];

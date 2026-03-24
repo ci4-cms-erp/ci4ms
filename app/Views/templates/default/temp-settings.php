@@ -1,10 +1,8 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('head') ?>
+<?php echo $this->extend('Modules\Backend\Views\base');
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head'); ?>
 <style>
     .btn-add-row {
         background: none;
@@ -100,9 +98,8 @@
         transition: font-family .3s;
     }
 </style>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Content Header -->
 <section class="content-header">
     <div class="container-fluid">
@@ -492,10 +489,9 @@
         </form>
     </div>
 </section>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag('be-assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag('be-assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js'); ?>
 <script>
     // ── Tab switching ──
     document.querySelectorAll('.settings-tab').forEach(function(tab) {

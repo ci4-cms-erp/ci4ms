@@ -1,24 +1,10 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang('Theme.' . $title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-12">
-                <h1><?php echo lang('Theme.' . $title->pagename) ?></h1>
-            </div>
-
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
-
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang('Theme.' . $title->pagename);
+echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Main content -->
-<section class="content">
+<section class="content pt-3">
 
     <!-- Default box -->
     <div class="card card-outline shadow-sm">
@@ -63,9 +49,9 @@
 
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag('be-assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag('be-assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js'); ?>
 <script {csp-script-nonce}>
     $(function() {
         bsCustomFileInput.init();

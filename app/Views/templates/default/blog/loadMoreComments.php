@@ -1,2 +1,1 @@
-<?php
-echo comments($comments, $blogID);
+<?php echo comments($comments, $blogID); ?>

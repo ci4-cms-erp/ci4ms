@@ -80,4 +80,30 @@ class ModuleInstaller
 
         return $results;
     }
+
+    /**
+     * Varsayılan veritabanı tohumlamasını (Seed) çalıştırır.
+     *
+     * @param string $moduleName
+     * @return array{success: bool, error: string|null}
+     */
+    public function runModuleSeeder(string $moduleName): array
+    {
+        $seederName = "Modules\\{$moduleName}\\Database\\Seeds\\{$moduleName}Seeder";
+        
+        // Eğer böyle bir Seeder sınıfı mevcutsa çalıştır
+        if (class_exists($seederName)) {
+            try {
+                $seeder = \Config\Database::seeder();
+                $seeder->call($seederName);
+                return ['success' => true, 'error' => null];
+            } catch (\Throwable $e) {
+                log_message('error', "[ModuleInstaller] Seeder failed for {$moduleName}: {$e->getMessage()}");
+                return ['success' => false, 'error' => $e->getMessage()];
+            }
+        }
+
+        // Seeder dosyası yoksa başarılı sayılır
+        return ['success' => true, 'error' => null];
+    }
 }

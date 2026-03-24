@@ -75,13 +75,26 @@ class WidgetService
      */
     public function getUserWidgets(int $userId): array
     {
-        return $this->commonModel->lists('dashboard_widgets', 'dashboard_widgets.*,
+        $widgets = $this->commonModel->lists('dashboard_widgets', 'dashboard_widgets.*,
         COALESCE(' . getenv('database.default.DBPrefix') . 'user_widget_preferences.position, ' . getenv('database.default.DBPrefix') . 'dashboard_widgets.id) as pos,
         COALESCE(' . getenv('database.default.DBPrefix') . 'user_widget_preferences.size, ' . getenv('database.default.DBPrefix') . 'dashboard_widgets.default_size) as display_size,
         COALESCE(' . getenv('database.default.DBPrefix') . 'user_widget_preferences.is_visible, 1) as visible,
-        ' . getenv('database.default.DBPrefix') . 'user_widget_preferences.config_json', ['dashboard_widgets.is_active' => 1, 'user_widget_preferences.user_id' => $userId], 'pos ASC', 0, 0, [], [], [
-            ['table' => 'user_widget_preferences', 'cond' => 'user_widget_preferences.widget_id=dashboard_widgets.id', 'type' => 'left']
+        ' . getenv('database.default.DBPrefix') . 'user_widget_preferences.config_json', ['dashboard_widgets.is_active' => 1], 'pos ASC', 0, 0, [], [], [
+            ['table' => 'user_widget_preferences', 'cond' => 'user_widget_preferences.widget_id=dashboard_widgets.id AND user_widget_preferences.user_id=' . $userId, 'type' => 'left']
         ]);
+
+        $user = auth()->getProvider()->findById($userId);
+        $userGroups = $user ? $user->getGroups() : [];
+        $isSuperAdmin = $user ? $user->inGroup('superadmin') : false;
+
+        $filtered = [];
+        foreach ($widgets as $w) {
+            $allowed = json_decode($w->allowed_groups ?? '[]', true);
+            if (empty($allowed) || $isSuperAdmin || array_intersect($userGroups, $allowed)) {
+                $filtered[] = $w;
+            }
+        }
+        return $filtered;
     }
 
     /**
@@ -92,19 +105,32 @@ class WidgetService
      */
     public function getAvailableWidgets(int $userId): array
     {
-        return $this->commonModel->lists(
+        $widgets = $this->commonModel->lists(
             'dashboard_widgets',
-            'dashboard_widgets.id, dashboard_widgets.slug, dashboard_widgets.title, dashboard_widgets.icon, dashboard_widgets.color, dashboard_widgets.type, dashboard_widgets.default_size, COALESCE(user_widget_preferences.is_visible, 1) as visible',
-            ['dashboard_widgets.is_active' => 1, 'user_widget_preferences.user_id' => $userId],
+            'dashboard_widgets.id, dashboard_widgets.slug, dashboard_widgets.title, dashboard_widgets.icon, dashboard_widgets.color, dashboard_widgets.type, dashboard_widgets.default_size, dashboard_widgets.allowed_groups, COALESCE(user_widget_preferences.is_visible, 1) as visible',
+            ['dashboard_widgets.is_active' => 1],
             'dashboard_widgets.title ASC',
             0,
             0,
             [],
             [],
             [
-                ['table' => 'user_widget_preferences', 'cond' => 'user_widget_preferences.widget_id=dashboard_widgets.id', 'type' => 'left']
+                ['table' => 'user_widget_preferences', 'cond' => 'user_widget_preferences.widget_id=dashboard_widgets.id AND user_widget_preferences.user_id=' . $userId, 'type' => 'left']
             ]
         );
+
+        $user = auth()->getProvider()->findById($userId);
+        $userGroups = $user ? $user->getGroups() : [];
+        $isSuperAdmin = $user ? $user->inGroup('superadmin') : false;
+
+        $filtered = [];
+        foreach ($widgets as $w) {
+            $allowed = json_decode($w->allowed_groups ?? '[]', true);
+            if (empty($allowed) || $isSuperAdmin || array_intersect($userGroups, $allowed)) {
+                $filtered[] = $w;
+            }
+        }
+        return $filtered;
     }
 
     // ══════════════════════════════════════════════════

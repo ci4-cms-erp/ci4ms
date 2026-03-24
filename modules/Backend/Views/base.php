@@ -173,16 +173,14 @@
     <!-- ./wrapper -->
 
     <!-- jQuery -->
-    <?php echo script_tag("be-assets/plugins/jquery/jquery.min.js") ?>
-    <!-- Bootstrap 4 -->
-    <?php echo script_tag("be-assets/plugins/bootstrap/js/bootstrap.bundle.min.js") ?>
-    <!-- AdminLTE App -->
-    <?php echo script_tag("be-assets/js/adminlte.min.js") ?>
-    <!-- AdminLTE for demo purposes -->
-    <?php echo script_tag("be-assets/js/demo.js") ?>
-    <?php echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js") ?>
-    <?php echo view('Modules\Backend\Views\sweetalert_message_block', [], ['debug' => false]) ?>
-    <?php echo $this->renderSection('javascript') ?>
+    <?php echo script_tag("be-assets/plugins/jquery/jquery.min.js");
+    echo script_tag("be-assets/plugins/bootstrap/js/bootstrap.bundle.min.js");
+    echo script_tag("be-assets/js/adminlte.min.js");
+
+    echo script_tag("be-assets/js/demo.js");
+    echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js");
+    echo view('Modules\Backend\Views\sweetalert_message_block', [], ['debug' => false]);
+    echo $this->renderSection('javascript'); ?>
 </body>
 
 </html>

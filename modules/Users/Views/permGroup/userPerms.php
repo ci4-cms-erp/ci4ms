@@ -1,6 +1,5 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">

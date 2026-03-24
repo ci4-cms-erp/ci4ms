@@ -1,10 +1,10 @@
-<?php echo $this->extend('Views/templates/default/base') ?>
-<?php echo $this->section('metatags') ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('head') ?>
-<?php echo link_tag('templates/' . $settings->templateInfos->path . '/assets/vendor/sweetalert2/sweetalert2.min.css') ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
+<?php echo $this->extend('Views/templates/default/base');
+echo $this->section('metatags');
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag('templates/' . $settings->templateInfos->path . '/assets/vendor/sweetalert2/sweetalert2.min.css');
+echo $this->endSection();
+echo $this->section('content'); ?>
 <section class="py-5">
     <div class="container px-5 my-5">
         <div class="row gx-5">
@@ -18,9 +18,9 @@
                             <?php foreach ($breadcrumbs as $breadcrumb) { ?>
                                 <li class="breadcrumb-item<?php echo ($breadcrumb['url'] == current_url()) ? ' active' : '' ?>"
                                     <?php echo (empty($breadcrumb['url'])) ? 'aria-current="page"' : '' ?>>
-                                    <?php if ($breadcrumb['url'] == site_url('blog/' . esc($infos->seflink))) { ?>
-                                        <?php echo esc($breadcrumb['title']) ?>
-                                    <?php } else { ?>
+                                    <?php if ($breadcrumb['url'] == site_url('blog/' . esc($infos->seflink))) {
+                                        echo esc($breadcrumb['title']);
+                                    } else { ?>
                                         <a href="<?php echo esc($breadcrumb['url']) ?>">
                                             <?php echo esc($breadcrumb['title']) ?>
                                         </a>
@@ -35,9 +35,8 @@
                         <!-- Post meta content-->
                         <? if ($infos->created_at != '0000-00-00 00:00:00'): ?>
                             <div class="text-muted fst-italic mb-2"><?php echo $dateI18n->createFromTimestamp(strtotime($infos->created_at), app_timezone(), 'tr_TR')->toFormattedDateString(); ?></div>
-                        <?php endif; ?>
-                        <!-- Post categories-->
-                        <?php foreach ($tags as $tag): ?>
+                        <?php endif;
+                        foreach ($tags as $tag): ?>
                             <a class="badge bg-secondary text-decoration-none link-light"
                                 href="<?php echo route_to('tag', $tag->seflink) ?>"><?php echo esc($tag->tag) ?></a>
                         <?php endforeach; ?>
@@ -118,7 +117,7 @@
         </div>
     </div>
 </section>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag('templates/' . $settings->templateInfos->path . '/assets/vendor/sweetalert2/sweetalert2.all.min.js') ?>
-<?php echo $this->endSection() ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag('templates/' . $settings->templateInfos->path . '/assets/vendor/sweetalert2/sweetalert2.all.min.js');
+echo $this->endSection(); ?>

@@ -1,9 +1,8 @@
-<?php echo $this->extend('Modules\Install\Views\base') ?>
-<?php echo $this->section('head') ?>
+<?php echo $this->extend('Modules\Install\Views\base');
+echo $this->section('head'); ?>
 <link rel="stylesheet" href="/be-assets/plugins/bs-stepper/css/bs-stepper.min.css">
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->endSection();
+echo $this->section('content'); ?>
 <div class="row">
   <div class="col-md-12">
     <div class="card card-success">
@@ -126,8 +125,8 @@
     <!-- /.card -->
   </div>
 </div>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('javascript') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript'); ?>
 <script src="/be-assets/plugins/bs-stepper/js/bs-stepper.min.js"></script>
 <script src="/be-assets/plugins/zxcvbn/zxcvbn.js"></script>
 <script src="/be-assets/plugins/pwstrength-bootstrap/pwstrength-bootstrap.min.js"></script>

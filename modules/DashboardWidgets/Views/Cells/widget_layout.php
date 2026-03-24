@@ -1,5 +1,5 @@
-<?php if (!empty($widgets)): ?>
-    <?php foreach ($widgets as $widget) : ?>
+<?php if (!empty($widgets)):
+    foreach ($widgets as $widget) : ?>
         <div class="<?php echo esc($widget->display_size) ?> widget-item mb-4" data-id="<?php echo $widget->id ?>">
             <?php if ($widget->type === 'stat'): ?>
                 <!-- Stat / Counter Widget -->
@@ -80,8 +80,8 @@
                 </div>
             <?php endif; ?>
         </div>
-    <?php endforeach; ?>
-<?php else: ?>
+    <?php endforeach;
+else: ?>
     <!-- Fallback to old hardcoded dashboard widgets if no DB widgets are found -->
     <div class="col-12 text-center text-muted py-5">
         <i class="fas fa-cubes fa-3x mb-3 text-light"></i>

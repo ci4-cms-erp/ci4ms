@@ -1,13 +1,8 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('head') ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -69,7 +64,4 @@
 
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo $this->endSection() ?>
+<?php echo $this->endSection(); ?>

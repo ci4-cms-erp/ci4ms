@@ -9,36 +9,36 @@
 <?php echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
 <?php echo $this->endSection() ?>
 <?php echo $this->section('content') ?>
-
-<div class="card card-outline card-primary shadow-sm">
-    <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-th-large mr-2"></i><?php echo lang('DashboardWidgets.manageWidgets') ?></h3>
-        <div class="card-tools">
-            <a href="<?php echo site_url('backend/dashboard-widgets/seed') ?>" class="btn btn-sm btn-outline-info mr-1" id="btnSeed">
-                <i class="fas fa-database mr-1"></i><?php echo lang('DashboardWidgets.seedDefaults') ?>
-            </a>
-            <a href="<?php echo site_url('backend/dashboard-widgets/create') ?>" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus mr-1"></i><?php echo lang('DashboardWidgets.createWidget') ?>
-            </a>
+<section class="content pt-3">
+    <div class="card card-outline card-primary shadow-sm">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-th-large mr-2"></i><?php echo lang('DashboardWidgets.manageWidgets') ?></h3>
+            <div class="card-tools">
+                <a href="<?php echo site_url('backend/dashboard-widgets/seed') ?>" class="btn btn-sm btn-outline-info mr-1" id="btnSeed">
+                    <i class="fas fa-database mr-1"></i><?php echo lang('DashboardWidgets.seedDefaults') ?>
+                </a>
+                <a href="<?php echo site_url('backend/dashboard-widgets/create') ?>" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus mr-1"></i><?php echo lang('DashboardWidgets.createWidget') ?>
+                </a>
+            </div>
+        </div>
+        <div class="card-body table-responsive p-0">
+            <table id="widgetsTable" class="table table-hover table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th width="40"><?php echo lang('Backend.id') ?></th>
+                        <th><?php echo lang('Backend.title') ?></th>
+                        <th><?php echo lang('DashboardWidgets.slug') ?></th>
+                        <th width="80"><?php echo lang('DashboardWidgets.type') ?></th>
+                        <th width="100"><?php echo lang('DashboardWidgets.defaultSize') ?></th>
+                        <th width="120"><?php echo lang('Backend.status') ?></th>
+                        <th width="120"><?php echo lang('Backend.actions') ?></th>
+                    </tr>
+                </thead>
+            </table>
         </div>
     </div>
-    <div class="card-body table-responsive p-0">
-        <table id="widgetsTable" class="table table-hover table-striped" style="width:100%">
-            <thead>
-                <tr>
-                    <th width="40"><?php echo lang('Backend.id') ?></th>
-                    <th><?php echo lang('Backend.title') ?></th>
-                    <th><?php echo lang('DashboardWidgets.slug') ?></th>
-                    <th width="80"><?php echo lang('DashboardWidgets.type') ?></th>
-                    <th width="100"><?php echo lang('DashboardWidgets.defaultSize') ?></th>
-                    <th width="120"><?php echo lang('Backend.status') ?></th>
-                    <th width="120"><?php echo lang('Backend.actions') ?></th>
-                </tr>
-            </thead>
-        </table>
-    </div>
-</div>
-
+</section>
 <?php echo $this->endSection() ?>
 
 <?php echo $this->section('javascript') ?>

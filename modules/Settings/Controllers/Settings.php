@@ -299,6 +299,10 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             cache()->delete('settings');
             cache()->delete('frontend_languages');
             cache()->delete('default_frontend_language');
+            $langs = $this->commonModel->lists('languages');
+            foreach ($langs as $lang) {
+                cache()->delete('menus_' . $lang->code);
+            }
 
             return $this->respond([
                 'status'  => 'success',
@@ -307,7 +311,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         } catch (\Exception $e) {
             return $this->respond([
                 'status'  => 'error',
-                'message' => lang('Backend.notUpdated', [lang('Settings.languageMode')]),
+                'message' => lang('Backend.notUpdated', [lang('Settings.languageMode')]) . $e->getMessage(),
             ], 500);
         }
     }

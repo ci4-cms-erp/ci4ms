@@ -1,37 +1,62 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
+<!DOCTYPE html>
+<html>
 <head>
-    <meta name="x-apple-disable-message-reformatting">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo lang('Auth.magicLinkSubject') ?></title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        .button:hover { background-color: #123a49 !important; }
+    </style>
 </head>
+<body style="margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f7f6; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(18, 58, 73, 0.1); border-top: 5px solid #2da592;">
+                    <tr>
+                        <td align="center" style="background-color: #123a49; padding: 30px 20px; color: #ffffff; font-size: 28px; font-weight: bold; letter-spacing: 1px;">
+                            CI4MS
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px 30px; text-align: left; color: #333333; line-height: 1.6; font-size: 16px;">
+                            <h2 style="margin-top: 0; color: #123a49; font-size: 22px;">Merhaba <?php echo esc($user->username) ?>,</h2>
 
-<body>
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-radius: 6px; border-collapse: separate !important;">
-        <tbody>
-            <tr>
-                <td style="line-height: 24px; font-size: 16px; border-radius: 6px; margin: 0;" align="center" bgcolor="#0d6efd">
-                    <a href="<?php echo url_to('verify-magic-link') ?>?token=<?php echo $token ?>" style="color: #ffffff; font-size: 16px; font-family: Helvetica, Arial, sans-serif; text-decoration: none; border-radius: 6px; line-height: 20px; display: inline-block; font-weight: normal; white-space: nowrap; background-color: #0d6efd; padding: 8px 12px; border: 1px solid #0d6efd;"><?php echo lang('Auth.login') ?></a>
-                </td>
-            </tr>
-        </tbody>
+                            <p style="font-size: 16px; margin-bottom: 30px;">
+                                Sisteme güvenle giriş yapmak için aşağıdaki <strong>Magic Link</strong> butonuna tıklayın:
+                            </p>
+
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding: 10px 0 30px 0;">
+                                        <a href="<?php echo url_to('verify-magic-link') ?>?token=<?php echo $token ?>" target="_blank" class="button" style="display: inline-block; padding: 14px 40px; background-color: #2da592; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; transition: background-color 0.3s; letter-spacing: 0.5px;">
+                                            <?php echo lang('Auth.login') ?>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="background-color: #f9fbfb; border-left: 4px solid #8bcbb7; padding: 15px; margin-top: 40px; font-size: 14px; border-radius: 0 6px 6px 0; color: #333333;">
+                                <p style="margin: 0 0 10px 0; font-weight: bold; color: #123a49;"><?php echo lang('Auth.emailInfo') ?></p>
+                                <ul style="margin: 0; padding-left: 20px; color: #666666; line-height: 1.8;">
+                                    <li><strong><?php echo lang('Auth.username') ?>:</strong> <?php echo esc($user->username) ?></li>
+                                    <li><strong><?php echo lang('Auth.emailIpAddress') ?>:</strong> <?php echo esc($ipAddress) ?></li>
+                                    <li><strong><?php echo lang('Auth.emailDevice') ?>:</strong> <?php echo esc($userAgent) ?></li>
+                                    <li><strong><?php echo lang('Auth.emailDate') ?>:</strong> <?php echo esc($date) ?></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="background-color: #f9fbfb; padding: 20px; font-size: 13px; color: #666666; border-top: 1px solid #eeeeee;">
+                            <p style="margin: 0;">&copy; <?php echo date('Y') ?> CI4MS Yönetim Paneli. Tüm hakları saklıdır.</p>
+                            <p style="margin: 5px 0 0 0;">Bu mail otomatik olarak gönderilmiştir, lütfen cevaplamayınız.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
     </table>
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
-        <tbody>
-            <tr>
-                <td style="line-height: 20px; font-size: 20px; width: 100%; height: 20px; margin: 0;" align="left" width="100%" height="20">
-                    &#160;
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <b><?php echo lang('Auth.emailInfo') ?></b>
-    <p><?php echo lang('Auth.username') ?>: <?php echo esc($user->username) ?></p>
-    <p><?php echo lang('Auth.emailIpAddress') ?> <?php echo esc($ipAddress) ?></p>
-    <p><?php echo lang('Auth.emailDevice') ?> <?php echo esc($userAgent) ?></p>
-    <p><?php echo lang('Auth.emailDate') ?> <?php echo esc($date) ?></p>
 </body>
-
 </html>

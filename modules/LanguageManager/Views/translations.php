@@ -1,5 +1,5 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('content'); ?>
 <!-- Main content -->
 <section class="content pt-3">
     <div class="card card-outline card-primary shadow-sm">
@@ -45,10 +45,8 @@
                         </div>
                     </div>
                 </div>
-            <?php endif; ?>
-
-            <!-- Translations Table -->
-            <?php if (!empty($result) && !empty($result['keys'])): ?>
+            <?php endif;
+            if (!empty($result) && !empty($result['keys'])): ?>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm table-striped">
                         <thead class="thead-dark">
@@ -91,9 +89,8 @@
                             <?php endfor; ?>
                         </ul>
                     </nav>
-                <?php endif; ?>
-
-            <?php elseif (!empty($currentGroup)): ?>
+                <?php endif;
+            elseif (!empty($currentGroup)): ?>
                 <div class="text-center text-muted py-4"><i class="fas fa-inbox fa-3x mb-2 d-block"></i><?php echo lang('LanguageManager.noTranslations') ?></div>
             <?php else: ?>
                 <div class="text-center text-muted py-4"><i class="fas fa-hand-pointer fa-3x mb-2 d-block"></i>Bir grup seçin</div>
@@ -101,8 +98,8 @@
         </div>
     </div>
 </section>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('javascript') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript'); ?>
 <script type="text/javascript" {csp-script-nonce}>
     $(function() {
         // Inline save on blur

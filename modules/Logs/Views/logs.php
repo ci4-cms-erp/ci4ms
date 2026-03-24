@@ -68,8 +68,8 @@
                 <button type="button" onclick="deleteItem('<?php echo base64_encode($currentFile); ?>')" class="btn btn-light"><?php echo lang('Backend.delete') ?></button>
                 <?php if (count($files) > 1): ?>
                     <button type="button" onclick="deleteItem('<?php echo base64_encode("all"); ?>')" class="btn btn-light"><span class="far fa-trash"></span> Delete all files</button>
-                <?php endif; ?>
-            <?php endif; ?>
+            <?php endif;
+            endif; ?>
         </div>
     </div>
 </div>

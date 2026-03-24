@@ -1,16 +1,13 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('head') ?>
-<?php echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
-<?php echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
-<?php echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css');
+echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css');
+echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css');
+echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -61,19 +58,19 @@
 <!-- /.content -->
 <?php echo $this->endSection() ?>
 
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
-<?php echo script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
-<?php echo script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
-<?php echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
+<?php echo $this->section('javascript');
+echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
+echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
+echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
+echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js');
+echo script_tag('be-assets/plugins/jszip/jszip.min.js');
+echo script_tag('be-assets/plugins/pdfmake/pdfmake.min.js');
+echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js'); ?>
 <script {csp-script-nonce}>
     let isApprove = true;
     var table = $("#example1").DataTable({

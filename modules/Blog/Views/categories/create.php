@@ -1,20 +1,17 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
-<?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
-<?php echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css") ?>
-<?php echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
-<?php echo link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
-<?php echo link_tag("be-assets/plugins/select2/css/select2.min.css") ?>
-<?php echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css") ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag("be-assets/plugins/tagify/tagify.css");
+echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
+echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css");
+echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css");
+echo link_tag("be-assets/plugins/elFinder/css/theme.css");
+echo link_tag("be-assets/plugins/select2/css/select2.min.css");
+echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css");
+echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Main content -->
 <section class="content pt-3">
 
@@ -33,14 +30,17 @@
                 <div class="col-md-8">
                     <?php if (setting('App.siteLanguageMode') === 'multi' && !empty($languages)): ?>
                         <ul class="nav nav-tabs" id="custom-tabs-lang" role="tablist">
-                            <?php $i = 0; foreach ($languages as $lang): ?>
+                            <?php $i = 0;
+                            foreach ($languages as $lang): ?>
                                 <li class="nav-item">
                                     <a class="nav-link <?php echo $i === 0 ? 'active' : '' ?>" id="custom-tabs-lang-<?php echo $lang->code ?>-tab" data-toggle="pill" href="#custom-tabs-lang-<?php echo $lang->code ?>" role="tab" aria-controls="custom-tabs-lang-<?php echo $lang->code ?>" aria-selected="<?php echo $i === 0 ? 'true' : 'false' ?>"><?php echo esc($lang->name) ?></a>
                                 </li>
-                            <?php $i++; endforeach; ?>
+                            <?php $i++;
+                            endforeach; ?>
                         </ul>
                         <div class="tab-content" id="custom-tabs-lang-tabContent">
-                            <?php $i = 0; foreach ($languages as $lang): ?>
+                            <?php $i = 0;
+                            foreach ($languages as $lang): ?>
                                 <div class="tab-pane fade <?php echo $i === 0 ? 'show active' : '' ?>" id="custom-tabs-lang-<?php echo $lang->code ?>" role="tabpanel" aria-labelledby="custom-tabs-lang-<?php echo $lang->code ?>-tab">
                                     <div class="form-group mt-3">
                                         <label for=""><?php echo lang('Backend.title') . ' ' . lang('Backend.required') ?></label>
@@ -51,7 +51,8 @@
                                         <input type="text" class="form-control seflink" data-lang="<?php echo $lang->code ?>" name="lang[<?php echo $lang->code ?>][seflink]" value="<?php echo old("lang.{$lang->code}.seflink") ?>" required>
                                     </div>
                                 </div>
-                            <?php $i++; endforeach; ?>
+                            <?php $i++;
+                            endforeach; ?>
                         </div>
                     <?php else: ?>
                         <?php $defaultLocale = setting('App.defaultLocale') ?: 'tr'; ?>
@@ -129,18 +130,16 @@
 
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js") ?>
-<?php echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js") ?>
-<!-- Select2 -->
-<?php echo script_tag("be-assets/plugins/select2/js/select2.full.min.js") ?>
-<?php echo script_tag("be-assets/js/ci4ms.js") ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
+echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js");
+echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js");
+echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js");
+echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
+echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js");
+echo script_tag("be-assets/plugins/select2/js/select2.full.min.js");
+echo script_tag("be-assets/js/ci4ms.js"); ?>
 <script {csp-script-nonce}>
     tags([]);
 
@@ -151,7 +150,7 @@
             'makeSeflink': $(this).val(),
             'where': 'categories'
         }, 'json').done(function(data) {
-            $('.seflink[data-lang="'+lang+'"]').val(data.seflink);
+            $('.seflink[data-lang="' + lang + '"]').val(data.seflink);
         });
     });
 
@@ -162,7 +161,7 @@
             'makeSeflink': $(this).val(),
             'where': 'categories'
         }, 'json').done(function(data) {
-            $('.seflink[data-lang="'+lang+'"]').val(data.seflink);
+            $('.seflink[data-lang="' + lang + '"]').val(data.seflink);
         });
     });
 

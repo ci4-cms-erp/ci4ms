@@ -1,9 +1,8 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('content'); ?>
 <section class="content-header">
     <div class="container-fluid">
         <div class="row pb-3 border-bottom">
@@ -77,8 +76,8 @@
         </div>
     </div>
 </section>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('javascript') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript'); ?>
 <script>
     document.getElementById('avatarInput').addEventListener('change', function(e) {
         const file = e.target.files[0];

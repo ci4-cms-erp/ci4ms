@@ -1,19 +1,15 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
-<?php echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css") ?>
-<?php echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
-<?php echo link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
+echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css");
+echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css");
+echo link_tag("be-assets/plugins/elFinder/css/theme.css");
+echo $this->endSection();
+echo $this->section('content'); ?>
 <section class="content pt-3">
-
     <!-- Default box -->
     <div class="card card-outline shadow-sm">
         <div class="card-header">
@@ -347,17 +343,15 @@
 
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/plugins/jquery-repeater/jquery.repeater.js") ?>
-<!-- Bootstrap Switch -->
-<?php echo script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.min.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js") ?>
-<?php echo script_tag("be-assets/js/ci4ms.js") ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
+echo script_tag("be-assets/plugins/jquery-repeater/jquery.repeater.js");
+echo script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js");
+echo script_tag("be-assets/plugins/elFinder/js/elfinder.min.js");
+echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js");
+echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
+echo script_tag("be-assets/js/ci4ms.js") ?>
 <script {csp-script-nonce}>
     $('.repeater').repeater({
         defaultValues: {},

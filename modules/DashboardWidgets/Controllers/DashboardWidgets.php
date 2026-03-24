@@ -44,9 +44,7 @@ class DashboardWidgets extends \Modules\Backend\Controllers\BaseController
                 $actions = '<div class="btn-group btn-group-sm">';
                 $actions .= '<a href="' . site_url('backend/dashboard-widgets/update/' . $row->id) . '" class="btn btn-outline-primary"><i class="fas fa-edit"></i></a>';
                 $actions .= '<button class="btn btn-outline-warning btn-toggle-widget" data-id="' . $row->id . '"><i class="fas fa-power-off"></i></button>';
-                if (!$row->is_system) {
-                    $actions .= '<button class="btn btn-outline-danger btn-delete-widget" data-id="' . $row->id . '"><i class="fas fa-trash"></i></button>';
-                }
+                $actions .= '<button class="btn btn-outline-danger btn-delete-widget" data-id="' . $row->id . '"><i class="fas fa-trash"></i></button>';
                 $actions .= '</div>';
 
                 $data[] = [
@@ -113,6 +111,7 @@ class DashboardWidgets extends \Modules\Backend\Controllers\BaseController
         }
 
         $this->defData['widget'] = $widget;
+        $this->defData['authGroups'] = $this->commonModel->lists('auth_groups', 'group, description');
         return view('Modules\DashboardWidgets\Views\form', $this->defData);
     }
 
@@ -122,7 +121,6 @@ class DashboardWidgets extends \Modules\Backend\Controllers\BaseController
     {
         $widget = $this->commonModel->selectOne('dashboard_widgets', ['id' => $id]);
         if (!$widget) return $this->respond(['status' => 'error', 'message' => lang('Backend.recordNotFound')], 404);
-        if ($widget->is_system) return $this->respond(['status' => 'error', 'message' => lang('DashboardWidgets.deleteFailed')], 403);
 
         $this->commonModel->remove('dashboard_widgets', ['id' => $id]);
         return $this->respond(['status' => 'success', 'message' => lang('Backend.deleteSuccess')]);
@@ -193,6 +191,7 @@ class DashboardWidgets extends \Modules\Backend\Controllers\BaseController
     {
         $userId  = auth()->user()->id;
         $widgets = $this->widgetService->getAvailableWidgets($userId);
+        
 
         return $this->respond(['widgets' => $widgets]);
     }
@@ -209,6 +208,9 @@ class DashboardWidgets extends \Modules\Backend\Controllers\BaseController
 
     protected function getPostData(): array
     {
+        $allowedGroups = $this->request->getPost('allowed_groups');
+        $allowedGroupsJson = (!empty($allowedGroups) && is_array($allowedGroups)) ? json_encode($allowedGroups, JSON_UNESCAPED_UNICODE) : null;
+
         return [
             'slug'            => url_title(trim($this->request->getPost('slug') ?? ''), '-', true),
             'title'           => trim($this->request->getPost('title') ?? ''),
@@ -220,6 +222,7 @@ class DashboardWidgets extends \Modules\Backend\Controllers\BaseController
             'default_size'    => $this->request->getPost('default_size') ?? 'col-lg-3',
             'refresh_seconds' => max(0, (int) ($this->request->getPost('refresh_seconds') ?? 0)),
             'is_active'       => (int) ($this->request->getPost('is_active') ?? 1),
+            'allowed_groups'  => $allowedGroupsJson,
         ];
     }
 

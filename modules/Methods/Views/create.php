@@ -1,13 +1,12 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/plugins/select2/css/select2.min.css") ?>
-<?php echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css") ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag("be-assets/plugins/select2/css/select2.min.css");
+echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css");
+echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -123,10 +122,9 @@
     </div>
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag('be-assets/plugins/select2/js/select2.full.min.js') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag('be-assets/plugins/select2/js/select2.full.min.js'); ?>
 <script {csp-script-nonce}>
     $('.select2').select2({
         theme: 'bootstrap4'

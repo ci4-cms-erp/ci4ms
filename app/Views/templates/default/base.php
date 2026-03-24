@@ -9,19 +9,17 @@
     <link rel="icon" type="image/x-icon" href="<?php echo base_url('templates/default/assets/vendor/modern-business/favicon.ico') ?>" />
 
     <!-- ── Google Font (from theme settings) ── -->
-    <?php if (!empty($settings->templateInfos->fonts['googleFont'])): ?>
-        <?php $gf = urlencode($settings->templateInfos->fonts['googleFont']);
+    <?php if (!empty($settings->templateInfos->fonts['googleFont'])):
+        $gf = urlencode($settings->templateInfos->fonts['googleFont']);
         $gw = $settings->templateInfos->fonts['weights'] ?? '400,600,700'; ?>
         <link href="https://fonts.googleapis.com/css2?family=<?php echo $gf ?>:wght@<?php echo esc($gw) ?>&display=swap" rel="stylesheet">
-    <?php endif; ?>
-
-    <!-- ── Theme CSS (from settings, with fallback) ── -->
-    <?php if (!empty($settings->templateInfos->theme_assets['styles'])): ?>
-        <?php foreach ($settings->templateInfos->theme_assets['styles'] as $styleUrl): ?>
-            <?php $styleUrl = (str_starts_with($styleUrl, 'http') || str_starts_with($styleUrl, '//')) ? $styleUrl : base_url(ltrim($styleUrl, '/')); ?>
+        <?php endif;
+    if (!empty($settings->templateInfos->theme_assets['styles'])):
+        foreach ($settings->templateInfos->theme_assets['styles'] as $styleUrl):
+            $styleUrl = (str_starts_with($styleUrl, 'http') || str_starts_with($styleUrl, '//')) ? $styleUrl : base_url(ltrim($styleUrl, '/')); ?>
             <link href="<?php echo esc($styleUrl) ?>" rel="stylesheet" />
-        <?php endforeach; ?>
-    <?php else: ?>
+        <?php endforeach;
+    else: ?>
         <link href="<?php echo base_url('templates/default/assets/vendor/modern-business/styles.css') ?>" rel="stylesheet" />
         <link href="<?php echo base_url('templates/default/assets/ci4ms.css') ?>" rel="stylesheet" />
     <?php endif; ?>
@@ -37,9 +35,8 @@
         <style>
             <?php echo $settings->templateInfos->customCss ?>
         </style>
-    <?php endif; ?>
-
-    <?php echo $this->renderSection('head') ?>
+    <?php endif;
+    echo $this->renderSection('head') ?>
 </head>
 
 <body class="d-flex flex-column h-100">
@@ -155,12 +152,12 @@
     </div>
 
     <!-- ── Theme JS (from settings, with fallback) ── -->
-    <?php if (!empty($settings->templateInfos->theme_assets['scripts'])): ?>
-        <?php foreach ($settings->templateInfos->theme_assets['scripts'] as $scriptUrl): ?>
-            <?php $scriptUrl = (str_starts_with($scriptUrl, 'http') || str_starts_with($scriptUrl, '//')) ? $scriptUrl : base_url(ltrim($scriptUrl, '/')); ?>
+    <?php if (!empty($settings->templateInfos->theme_assets['scripts'])):
+        foreach ($settings->templateInfos->theme_assets['scripts'] as $scriptUrl):
+            $scriptUrl = (str_starts_with($scriptUrl, 'http') || str_starts_with($scriptUrl, '//')) ? $scriptUrl : base_url(ltrim($scriptUrl, '/')); ?>
             <script src="<?php echo esc($scriptUrl) ?>"></script>
-        <?php endforeach; ?>
-    <?php else: ?>
+        <?php endforeach;
+    else: ?>
         <script src="<?php echo base_url('templates/default/assets/vendor/jquery/jquery.min.js') ?>"></script>
         <script src="<?php echo base_url('templates/default/assets/vendor/popperjs/popper.min.js') ?>"></script>
         <script src="<?php echo base_url('templates/default/assets/vendor/bootstrap/bootstrap.bundle.min.js') ?>"></script>
@@ -169,10 +166,10 @@
     <script src="<?php echo base_url('be-assets/plugins/jquery-ui/jquery-ui.min.js') ?>"></script>
 
     <!-- ── Admin Edit Button ── -->
-    <?php if (auth()->loggedIn() && (auth()->user()->inGroup('admin', 'superadmin', 'editor'))): ?>
-        <?php $editId = $pageInfo->id ?? $infos->id ?? 0; ?>
-        <?php $editModule = isset($pageInfo) ? 'pages' : 'blog'; ?>
-        <?php if ($editId > 0): ?>
+    <?php if (auth()->loggedIn() && (auth()->user()->inGroup('admin', 'superadmin', 'editor'))):
+        $editId = $pageInfo->id ?? $infos->id ?? 0;
+        $editModule = isset($pageInfo) ? 'pages' : 'blog';
+        if ($editId > 0): ?>
             <a href="<?php echo route_to('grapesUpdate', $editId) ?>?module=<?php echo $editModule ?>"
                 class="btn btn-primary shadow-lg position-fixed bottom-0 end-0 m-4 rounded d-flex align-items-center justify-content-center"
                 style="width:50px;height:50px;z-index:1050;transition:transform .2s;"
@@ -181,11 +178,9 @@
                 title="GrapesJS ile Düzenle">
                 <i class="bi bi-pencil-square fs-4"></i>
             </a>
-        <?php endif; ?>
-    <?php endif; ?>
-
-    <!-- ── Back to Top ── -->
-    <?php if (!empty($settings->templateInfos->display['backToTop'])): ?>
+        <?php endif;
+    endif;
+    if (!empty($settings->templateInfos->display['backToTop'])): ?>
         <button id="back-to-top" style="position:fixed;bottom:90px;right:28px;z-index:1040;width:40px;height:40px;border-radius:50%;background:#804f7b;color:#fff;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:18px;" title="Üste Dön" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
         <script>
             window.addEventListener('scroll', function() {
@@ -202,9 +197,9 @@
         <script>
             <?php echo $settings->templateInfos->customJs ?>
         </script>
-    <?php endif; ?>
+    <?php endif;
 
-    <?php echo $this->renderSection('javascript') ?>
+    echo $this->renderSection('javascript') ?>
 </body>
 
 </html>

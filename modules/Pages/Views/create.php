@@ -1,35 +1,19 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
-<?php echo link_tag("be-assets/plugins/summernote/summernote-bs4.css") ?>
-<?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
+<?php echo $this->extend('Modules\Backend\Views\base');
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag("be-assets/plugins/tagify/tagify.css");
+echo link_tag("be-assets/plugins/summernote/summernote-bs4.css");
+echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
+echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css");
+echo link_tag("be-assets/plugins/elFinder/css/theme.css"); ?>
 <link rel="stylesheet" type="text/css"
     href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
-<?php echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
-<?php echo link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1><?php echo lang($title->pagename) ?></h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('pages', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
-                </ol>
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
-
+<?php echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Main content -->
-<section class="content">
+<section class="content pt-3">
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
@@ -37,7 +21,7 @@
 
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
+                    <a href="<?php echo route_to('pages', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
                 </button>
             </div>
         </div>
@@ -148,16 +132,16 @@
     <!-- /.card -->
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js") ?>
-<?php echo script_tag("be-assets/plugins/summernote/summernote-bs4.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js") ?>
-<?php echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js") ?>
-<?php echo script_tag("be-assets/js/ci4ms.js") ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
+echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js");
+echo script_tag("be-assets/plugins/summernote/summernote-bs4.js");
+echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js");
+echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js");
+echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
+echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js");
+echo script_tag("be-assets/js/ci4ms.js"); ?>
 <script {csp-script-nonce}>
     tags([]);
 

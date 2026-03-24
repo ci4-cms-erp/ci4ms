@@ -1,12 +1,11 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('head') ?>
-<?php echo link_tag('be-assets/plugins/dropzone/min/dropzone.min.css') ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag('be-assets/plugins/dropzone/min/dropzone.min.css');
+echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Main content -->
 <section class="content pt-3">
 
@@ -313,10 +312,9 @@
     </div>
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag("be-assets/plugins/dropzone/min/dropzone.min.js") ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag("be-assets/plugins/dropzone/min/dropzone.min.js"); ?>
 <script {csp-script-nonce}>
     // Get the template HTML and remove it from the doumenthe template HTML and remove it from the doument
     var previewNode = document.querySelector("#template");

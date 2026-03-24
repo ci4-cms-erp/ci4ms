@@ -1,13 +1,10 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('head') ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo $this->endSection();
+echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -59,9 +56,8 @@
     <!-- /.card -->
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript'); ?>
 <script {csp-script-nonce}>
     $('.ptitle').on('change', function() {
         $.post('<?php echo route_to('checkSeflink') ?>', {
@@ -69,7 +65,7 @@
             'makeSeflink': $(this).val(),
             'where': 'tags',
             'id': <?php echo $infos->id ?>,
-            'update':1
+            'update': 1
         }, 'json').done(function(data) {
             $('.seflink').val(data.seflink);
         });
@@ -81,7 +77,7 @@
             'makeSeflink': $(this).val(),
             'where': 'tags',
             'id': <?php echo $infos->id ?>,
-            'update':1
+            'update': 1
         }, 'json').done(function(data) {
             $('.seflink').val(data.seflink);
         });

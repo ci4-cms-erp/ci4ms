@@ -1,19 +1,19 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('head') ?>
-<?php echo link_tag('be-assets/plugins/jquery-fancytree/skin-bootstrap/ui.fancytree.min.css') ?>
-<?php echo link_tag('be-assets/plugins/jquery-ui/jquery-ui.min.css') ?>
-<?php echo link_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.css') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+ echo $this->section('title');
+ echo lang($title->pagename);
+ echo $this->endSection();
+ echo $this->section('head');
+ echo link_tag('be-assets/plugins/jquery-fancytree/skin-bootstrap/ui.fancytree.min.css');
+ echo link_tag('be-assets/plugins/jquery-ui/jquery-ui.min.css');
+ echo link_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.css'); ?>
 <style {csp-style-nonce}>
     .ui-menu kbd {
         /* Keyboard shortcuts for ui-contextmenu titles */
         float: right;
     }
 </style>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
+<?php echo $this->endSection();
+ echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -63,18 +63,17 @@
         </div>
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag('be-assets/plugins/jquery-ui/jquery-ui.min.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/jquery.fancytree.min.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.edit.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.filter.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.dnd.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.glyph.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.ui.position.min.js') ?>
-<?php echo script_tag('be-assets/plugins/monaco-editor/vs/loader.js') ?>
+<?php echo $this->endSection();
+ echo $this->section('javascript');
+ echo script_tag('be-assets/plugins/jquery-ui/jquery-ui.min.js');
+ echo script_tag('be-assets/plugins/jquery-fancytree/jquery.fancytree.min.js');
+ echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.edit.js');
+ echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.filter.js');
+ echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.dnd.js');
+ echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.glyph.js');
+ echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.js');
+ echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.ui.position.min.js');
+ echo script_tag('be-assets/plugins/monaco-editor/vs/loader.js'); ?>
 <script {csp-script-nonce}>
     $('body').addClass('sidebar-collapse');
 

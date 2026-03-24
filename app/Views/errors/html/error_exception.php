@@ -63,9 +63,8 @@ $errorId = uniqid('error', true);
 
             <pre>
     Caused by:
-    <?php echo esc($prevException::class), esc($prevException->getCode() ? ' #' . $prevException->getCode() : '') ?>
-
-    <?php echo nl2br(esc($prevException->getMessage())) ?>
+    <?php echo esc($prevException::class), esc($prevException->getCode() ? ' #' . $prevException->getCode() : '');
+            echo nl2br(esc($prevException->getMessage())) ?>
     <a href="https://www.duckduckgo.com/?q=<?php echo urlencode($prevException::class . ' ' . preg_replace('#\'.*\'|".*"#Us', '', $prevException->getMessage())) ?>"
        rel="noreferrer" target="_blank">search &rarr;</a>
     <?php echo esc(clean_path($prevException->getFile()) . ':' . $prevException->getLine()) ?>
@@ -109,10 +108,8 @@ $errorId = uniqid('error', true);
                                         ?>
                                     <?php else: ?>
                                         {PHP internal code}
-                                    <?php endif; ?>
-
-                                    <!-- Class/Method -->
-                                    <?php if (isset($row['class'])) : ?>
+                                    <?php endif;
+                                    if (isset($row['class'])) : ?>
                                         &nbsp;&nbsp;&mdash;&nbsp;&nbsp;<?php echo esc($row['class'] . $row['type'] . $row['function']) ?>
                                         <?php if (! empty($row['args'])) : ?>
                                             <?php $argsId = $errorId . 'args' . $index ?>
@@ -141,10 +138,9 @@ $errorId = uniqid('error', true);
                                 </div>
                             <?php else : ?>
                                 ()
-                            <?php endif; ?>
-                        <?php endif; ?>
-
-                        <?php if (! isset($row['class']) && isset($row['function'])) : ?>
+                            <?php endif;
+                                    endif;
+                                    if (! isset($row['class']) && isset($row['function'])) : ?>
                             &nbsp;&nbsp;&mdash;&nbsp;&nbsp; <?php echo esc($row['function']) ?>()
                         <?php endif; ?>
                         </p>
@@ -164,8 +160,7 @@ $errorId = uniqid('error', true);
 
                 <!-- Server -->
                 <div class="content" id="server">
-                    <?php foreach (['_SERVER', '_SESSION'] as $var) : ?>
-                        <?php
+                    <?php foreach (['_SERVER', '_SESSION'] as $var) :
                         if (empty($GLOBALS[$var]) || ! is_array($GLOBALS[$var])) {
                             continue;
                         } ?>
@@ -195,11 +190,9 @@ $errorId = uniqid('error', true);
                             </tbody>
                         </table>
 
-                    <?php endforeach ?>
-
-                    <!-- Constants -->
-                    <?php $constants = get_defined_constants(true); ?>
-                    <?php if (! empty($constants['user'])) : ?>
+                    <?php endforeach;
+                    $constants = get_defined_constants(true);
+                    if (! empty($constants['user'])) : ?>
                         <h3>Constants</h3>
 
                         <table>
@@ -266,14 +259,12 @@ $errorId = uniqid('error', true);
                     </table>
 
 
-                    <?php $empty = true; ?>
-                    <?php foreach (['_GET', '_POST', '_COOKIE'] as $var) : ?>
-                        <?php
+                    <?php $empty = true;
+                    foreach (['_GET', '_POST', '_COOKIE'] as $var) :
                         if (empty($GLOBALS[$var]) || ! is_array($GLOBALS[$var])) {
                             continue;
-                        } ?>
-
-                        <?php $empty = false; ?>
+                        }
+                        $empty = false; ?>
 
                         <h3>$<?php echo esc($var) ?></h3>
 
@@ -300,18 +291,15 @@ $errorId = uniqid('error', true);
                             </tbody>
                         </table>
 
-                    <?php endforeach ?>
-
-                    <?php if ($empty) : ?>
+                    <?php endforeach;
+                    if ($empty) : ?>
 
                         <div class="alert">
                             No $_GET, $_POST, or $_COOKIE Information to show.
                         </div>
-
-                    <?php endif; ?>
-
-                    <?php $headers = $request->headers(); ?>
-                    <?php if (! empty($headers)) : ?>
+                    <?php endif;
+                    $headers = $request->headers();
+                    if (! empty($headers)) : ?>
 
                         <h3>Headers</h3>
 
@@ -358,8 +346,8 @@ $errorId = uniqid('error', true);
                         </tr>
                     </table>
 
-                    <?php $headers = $response->headers(); ?>
-                    <?php if (! empty($headers)) : ?>
+                    <?php $headers = $response->headers();
+                    if (! empty($headers)) : ?>
                         <h3>Headers</h3>
 
                         <table>

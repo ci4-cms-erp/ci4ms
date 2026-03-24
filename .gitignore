@@ -63,6 +63,12 @@ writable/uploads/*
 writable/debugbar/*
 !writable/debugbar/.gitkeep
 
+writable/backups/*
+!writable/backups/index.html
+
+writable/tmp/*
+!writable/tmp/index.html
+
 php_errors.log
 
 #-------------------------
@@ -149,10 +155,10 @@ modules/LicenseServer
 modules/LicenseClient
 modules/TaskManager
 public/be-assets/plugins/grapesjs
-.continue
 .agent
 build/
 dist/
 composer.lock.json
 .antigravityignore
 .claude
+modules/Notifications

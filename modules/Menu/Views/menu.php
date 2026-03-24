@@ -1,11 +1,9 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/plugins/nestable2/jquery.nestable.min.css") ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag("be-assets/plugins/nestable2/jquery.nestable.min.css"); ?>
 <style {csp-style-nonce}>
     .dd-content {
         display: block;
@@ -62,9 +60,8 @@
         background: #ddd;
     }
 </style>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -115,10 +112,9 @@
 
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js") ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
 <script {csp-script-nonce}>
     $('.dd').nestable();
 

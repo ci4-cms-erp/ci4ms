@@ -1,22 +1,21 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
+<?php echo $this->extend($backConfig->viewLayout);
 
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
 
-<?php echo $this->section('head') ?>
-<?php echo link_tag("be-assets/plugins/tagify/tagify.css") ?>
-<?php echo link_tag("be-assets/plugins/summernote/summernote-bs4.css") ?>
-<?php echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css") ?>
-<?php echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css") ?>
-<?php echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css") ?>
-<?php echo link_tag("be-assets/plugins/elFinder/css/theme.css") ?>
-<!-- Select2 -->
-<?php echo link_tag("be-assets/plugins/select2/css/select2.min.css") ?>
-<?php echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css") ?>
-<?php echo $this->endSection() ?>
+echo $this->section('head');
+echo link_tag("be-assets/plugins/tagify/tagify.css");
+echo link_tag("be-assets/plugins/summernote/summernote-bs4.css");
+echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
+echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css");
+echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css");
+echo link_tag("be-assets/plugins/elFinder/css/theme.css");
+echo link_tag("be-assets/plugins/select2/css/select2.min.css");
+echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css");
+echo $this->endSection();
 
-<?php echo $this->section('content') ?>
+echo $this->section('content'); ?>
 <!-- Main content -->
 <section class="content pt-3">
 
@@ -164,21 +163,19 @@
 
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js") ?>
-<?php echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js") ?>
-<?php echo script_tag("be-assets/plugins/summernote/summernote-bs4.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js") ?>
-<?php echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js") ?>
-<?php echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js") ?>
-<?php echo script_tag("be-assets/plugins/select2/js/select2.full.min.js") ?>
-<?php echo script_tag("be-assets/js/ci4ms.js") ?>
-<!-- InputMask -->
-<?php echo script_tag("be-assets/plugins/moment/moment.min.js") ?>
-<?php echo script_tag("be-assets/plugins/inputmask/jquery.inputmask.min.js") ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
+echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js");
+echo script_tag("be-assets/plugins/summernote/summernote-bs4.js");
+echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js");
+echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js");
+echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
+echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js");
+echo script_tag("be-assets/plugins/select2/js/select2.full.min.js");
+echo script_tag("be-assets/js/ci4ms.js");
+echo script_tag("be-assets/plugins/moment/moment.min.js");
+echo script_tag("be-assets/plugins/inputmask/jquery.inputmask.min.js") ?>
 <script {csp-script-nonce}>
     $.ajax({
         method: "POST",

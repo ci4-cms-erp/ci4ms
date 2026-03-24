@@ -1,35 +1,22 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('head') ?>
-<?php echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
-<?php echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
-<?php echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1><?php echo lang($title->pagename) ?></h1>
-            </div>
-            <div class="col-sm-6">
-                <a href="<?php echo route_to('pageCreate') ?>" class="btn btn-outline-success float-right"><?php echo lang('Backend.add') ?></a>
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
+<?php echo $this->extend('Modules\Backend\Views\base');
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css');
+echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css');
+echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css');
+echo $this->endSection();
+echo $this->section('content') ?>
 <!-- Main content -->
-<section class="content">
+<section class="content pt-3">
     <!-- Default box -->
     <div class="card card-outline card-shl">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
             <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
+                    <a href="<?php echo route_to('pageCreate') ?>" class="btn btn-outline-success float-right"><?php echo lang('Backend.add') ?></a>
                 </button>
             </div>
         </div>
@@ -55,21 +42,21 @@
     <!-- /.card -->
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js") ?>
-<?php echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
-<?php echo script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
-<?php echo script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
-<?php echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js");
+echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
+echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
+echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
+echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js');
+echo script_tag('be-assets/plugins/jszip/jszip.min.js');
+echo script_tag('be-assets/plugins/pdfmake/pdfmake.min.js');
+echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js');
+echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js'); ?>
 <script {csp-script-nonce}>
     function btstpSwitch() {
         $('.bswitch').bootstrapSwitch();
@@ -128,7 +115,7 @@
     });
 
     function setHomePage(id) {
-        $.post('/backend/pages/setHomePage/'+id, {
+        $.post('/backend/pages/setHomePage/' + id, {
             "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
         }, 'json').done(function(response) {
             if (response.status == true) {
@@ -180,7 +167,7 @@
                                 table.ajax.reload();
                             }
                         });
-                    }else{
+                    } else {
                         Swal.fire({
                             title: '<?php echo lang('Backend.error') ?>',
                             text: response.message,

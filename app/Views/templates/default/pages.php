@@ -1,8 +1,8 @@
-<?php echo $this->extend('Views/templates/default/base') ?>
-<?php echo $this->section('metatags') ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
-<?php if ((int)setting('App.homePage') != $pageInfo->id): ?>
+<?php echo $this->extend('Views/templates/default/base');
+echo $this->section('metatags');
+echo $this->endSection();
+echo $this->section('content');
+if ((int)setting('App.homePage') != $pageInfo->id): ?>
     <header class="py-5 bg-light border-bottom mb-4">
         <div class="container">
             <div class="text-center my-5">

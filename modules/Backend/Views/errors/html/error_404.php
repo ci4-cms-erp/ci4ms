@@ -1,10 +1,8 @@
-<?php echo $this->extend($backConfig->viewLayout) ?>
-
-<?php echo $this->section('head') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('head'); ?>
 <title>Ci4ms <?php echo $config->vers ?> | 404 File Not Found</title>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -31,9 +29,9 @@
             <h3><i class="fas fa-exclamation-triangle text-warning"></i> Oops! Page not found.</h3>
 
             <p>
-                <?php if (!empty($message) && $message !== '(null)') : ?>
-                    <?php echo esc($message) ?>
-                <?php else : ?>
+                <?php if (!empty($message) && $message !== '(null)') :
+                    echo esc($message);
+                else : ?>
                     Sorry! Cannot seem to find the page you were looking for.
                 <?php endif ?>
             </p>
