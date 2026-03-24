@@ -213,7 +213,8 @@ Every backend module controller extends this. It:
 - Uses `ResponseTrait` for JSON API responses
 - Loads `BackendConfig`, `CommonModel`, `Encrypter`
 - Builds `$defData` with: auth config, logged-in user, sidebar navigation, page title, URI, settings, encrypter, template list
-- **`generateSidebar()`**: Queries `auth_permissions_pages` for `inNavigation=1`, filters by user permissions (superadmin sees all, others see only permitted pages), caches for 24 hours
+- **`generateSidebar()`**: Queries `auth_permissions_pages` for `inNavigation=1`, filters by user permissions (superadmin sees all, others see only permitted pages), caches for 24 hours. (Note: Sidebar items and icons are increasingly auto-configured via each module's `Config` parameters).
+- **`CommonBackendLibrary`**: Exported globally for backend controllers to handle shared logic like DataTables pagination parsing and SEO data handling.
 
 ### 6.2 [AJAX.php](modules/Backend/Controllers/AJAX.php) — Shared AJAX Endpoints
 
@@ -281,7 +282,7 @@ auth_users_permissions (user-specific overrides)
 
 ### 8.1 [Methods.php](modules/Methods/Controllers/Methods.php)
 
-**`moduleScan()`** is the most sophisticated method in the system:
+**`moduleScan()`** is the most sophisticated method in the system. It inspects routes to align them with permission records and auto-configures sidebar menus and icons from module Config parameters:
 
 1. Loads all defined routes from the route collection
 2. For each route, checks if `backendGuard` is in the filter chain
