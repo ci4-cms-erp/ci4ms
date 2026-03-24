@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
-## [featured/shield-integration] - 2026-03-02
+## [new-modules] - 2026-03-24
 
 ### Security
 
@@ -21,6 +21,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Added
 
+- **Framework Configurations:** Added `WorkerMode.php` and `Hostnames.php` to support high-performance environments (e.g., Swoole, FrankenPHP).
+- **Migration Safeguards:** Implemented `$lock` feature in `app/Config/Migrations.php` to prevent concurrent migration execution conflicts.
+- **Dynamic Sidebar:** Implemented auto-configuration for sidebar menus and icons, populated directly from module `Config` parameters.
+- **Shared Logic:** Introduced `CommonBackendLibrary` to centralize common backend operational logic across controllers.
 - **Template Settings UI:** Comprehensive user-friendly interface for:
   - Dynamically managing theme assets (CSS, JavaScript).
   - Injecting custom CSS and JavaScript code globally.
@@ -37,6 +41,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Changed
 
+- **System Requirements:** Upgraded minimum PHP requirement to **8.2** across `composer.json`, `public/index.php`, and `spark` to comply with CodeIgniter 4.7.1 standards.
+- **Core Dependencies:** Bumped `codeigniter4/framework` to `4.7.1`, `codeigniter4/shield` to `1.3.0`, `codeigniter4/translations` to `4.7.0`, and `claviska/simpleimage` to `4.4.0`.
+- **Module Management:** Refined `moduleScan` capabilities and introduced new interactive UI elements for better backend module oversight.
 - **Auth System Overhaul:** Refactored user and permission group management to fully leverage CodeIgniter Shield's capabilities. Removed legacy `Backend/Models/UserModel.php` in favour of Shield's built-in user entity.
 - **Standardized API Responses:** Unified response formats across backend Settings endpoints using `ResponseTrait`.
 - **Cache Invalidation:** Ensured proper sidebar menu cache invalidation upon permission page creation.
