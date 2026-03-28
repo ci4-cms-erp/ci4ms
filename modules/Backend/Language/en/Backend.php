@@ -114,4 +114,11 @@ return [
     'fileInput' => 'File Upload',
     'chooseFile' => 'Choose file',
     'upload' => 'Upload',
+    'updateAvailable' => 'Update Available',
+    'operations' => 'Operations',
+    'warning' => 'Warning',
+    'htmlPurifierNotFound' => 'Html Purifier Not Found',
+    'requiredContent' => 'Required Content',
+    'published' => 'Content published',
+    'drafted' => 'Content drafted',
 ];

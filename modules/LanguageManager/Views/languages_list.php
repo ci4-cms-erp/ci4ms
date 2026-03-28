@@ -5,130 +5,122 @@ echo $this->endSection();
 echo $this->section('head');
 echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css');
 echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css');
-echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css');
+echo link_tag('be-assets/plugins/flag-icons/css/flag-icons.min.css');
 echo $this->endSection();
 echo $this->section('content'); ?>
-<!-- Main content -->
+
 <section class="content pt-3">
-    <div class="card card-outline card-primary shadow-sm">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-globe mr-2"></i><?php echo lang('LanguageManager.languages') ?></h3>
-            <div class="card-tools">
-                <a href="<?php echo site_url('backend/language-manager/translations') ?>" class="btn btn-sm btn-outline-info mr-1"><i class="fas fa-language mr-1"></i><?php echo lang('LanguageManager.translations') ?></a>
-                <a href="<?php echo site_url('backend/language-manager/languages/create') ?>" class="btn btn-sm btn-primary"><i class="fas fa-plus mr-1"></i><?php echo lang('LanguageManager.createLanguage') ?></a>
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="m-stat-card">
+                <div class="m-stat-icon st-total"><i class="fas fa-language"></i></div>
+                <div><div class="m-stat-value"><?php echo $stats['total'] ?></div><div class="m-stat-label"><?php echo lang('LanguageManager.totalLanguages') ?? 'Toplam Dil' ?></div></div>
             </div>
         </div>
-        <div class="card-body table-responsive p-0">
-            <table id="langsTable" class="table table-hover table-striped" style="width:100%">
-                <thead>
-                    <tr>
-                        <th width="40"><?php echo lang('LanguageManager.id') ?></th>
-                        <th><?php echo lang('LanguageManager.code') ?></th>
-                        <th><?php echo lang('LanguageManager.name') ?></th>
-                        <th><?php echo lang('LanguageManager.nativeName') ?></th>
-                        <th width="60"><?php echo lang('LanguageManager.direction') ?></th>
-                        <th width="60"><?php echo lang('LanguageManager.sortOrder') ?></th>
-                        <th width="140"><?php echo lang('LanguageManager.status') ?></th>
-                        <th width="140"><?php echo lang('LanguageManager.actions') ?></th>
-                    </tr>
-                </thead>
-            </table>
+        <div class="col-md-4">
+            <div class="m-stat-card">
+                <div class="m-stat-icon st-active"><i class="fas fa-check-double"></i></div>
+                <div><div class="m-stat-value"><?php echo $stats['active'] ?></div><div class="m-stat-label"><?php echo lang('LanguageManager.activeLanguages') ?? 'Aktif Diller' ?></div></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="m-stat-card">
+                <div class="m-stat-icon st-default"><i class="fas fa-star"></i></div>
+                <div><div class="m-stat-value"><?php echo strtoupper($stats['default']) ?></div><div class="m-stat-label"><?php echo lang('LanguageManager.defaultLanguage') ?? 'Varsayılan Dil' ?></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card premium-card">
+        <div class="card-header d-flex align-items-center">
+            <h3 class="card-title font-weight-bold mb-0">
+                <i class="fas fa-globe mr-2 text-primary"></i> <?php echo lang('LanguageManager.languages') ?>
+            </h3>
+            <div class="ml-auto">
+                <a href="<?php echo site_url('backend/language-manager/translations') ?>" class="btn btn-sm btn-outline-info mr-1" style="border-radius:10px">
+                    <i class="fas fa-list mr-1"></i><?php echo lang('LanguageManager.translations') ?>
+                </a>
+                <a href="<?php echo site_url('backend/language-manager/languages/create') ?>" class="btn btn-sm btn-success px-4" style="border-radius:10px">
+                    <i class="fas fa-plus mr-1"></i><?php echo lang('LanguageManager.addLanguage') ?>
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="p-4">
+                <table id="languagesTable" class="table table-hover w-100">
+                    <thead>
+                        <tr>
+                            <th width="40">ID</th>
+                            <th><?php echo lang('LanguageManager.code') ?></th>
+                            <th><?php echo lang('LanguageManager.name') ?></th>
+                            <th><?php echo lang('LanguageManager.nativeName') ?></th>
+                            <th><?php echo lang('LanguageManager.direction') ?></th>
+                            <th><?php echo lang('LanguageManager.sortOrder') ?></th>
+                            <th><?php echo lang('Backend.status') ?></th>
+                            <th style="text-align:right"><?php echo lang('Backend.transactions') ?></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>
+
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
-echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js');
-echo script_tag('be-assets/plugins/jszip/jszip.min.js');
-echo script_tag('be-assets/plugins/pdfmake/pdfmake.min.js');
-echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js'); ?>
+echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
 <script type="text/javascript" {csp-script-nonce}>
     $(function() {
-        var table = $('#langsTable').DataTable({
+        var table = $('#languagesTable').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
-                url: '<?php echo site_url('backend/language-manager/languages') ?>',
+                url: '<?php echo route_to('languages') ?>',
                 type: 'POST',
-                data: function(d) {
-                    d['<?php echo csrf_token() ?>'] = '<?php echo csrf_hash() ?>';
-                }
+                data: (d) => { d['<?php echo csrf_token() ?>'] = '<?php echo csrf_hash() ?>'; }
             },
-            columns: [{
-                data: 0
-            }, {
-                data: 1
-            }, {
-                data: 2
-            }, {
-                data: 3
-            }, {
-                data: 4
-            }, {
-                data: 5
-            }, {
-                data: 6,
-                orderable: false
-            }, {
-                data: 7,
-                orderable: false,
-                searchable: false
-            }],
-            order: [
-                [5, 'asc']
+            columns: [
+                { data: 0 }, { data: 1 }, { data: 2 }, { data: 3 }, { data: 4 }, { data: 5 }, { data: 6 }, { data: 7, className: 'text-right' }
             ],
-            language: {
-                url: '<?php echo site_url('be-assets/plugins/datatables/i18n/' . service('request')->getLocale() . '.json') ?>'
-            },
-            drawCallback: function() {
-                $('.btn-toggle-lang').off('click').on('click', function() {
-                    $.post('<?php echo site_url('backend/language-manager/languages/toggle/') ?>' + $(this).data('id'), {
-                        '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>'
-                    }, function() {
-                        table.ajax.reload(null, false);
-                    }, 'json');
-                });
-                $('.btn-set-default').off('click').on('click', function() {
-                    $.post('<?php echo site_url('backend/language-manager/languages/set-default/') ?>' + $(this).data('id'), {
-                        '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>'
-                    }, function(r) {
-                        Swal.fire({
-                            title: r.message,
-                            icon: 'success',
-                            timer: 1500
-                        });
-                        table.ajax.reload(null, false);
-                    }, 'json');
-                });
-                $('.btn-delete-lang').off('click').on('click', function() {
-                    var id = $(this).data('id');
-                    Swal.fire({
-                        title: '<?php echo lang('LanguageManager.deleteConfirmTitle') ?>',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        confirmButtonText: '<?php echo lang('LanguageManager.deleteConfirmBtn') ?>',
-                        cancelButtonText: '<?php echo lang('LanguageManager.cancel') ?>'
-                    }).then(function(r) {
-                        if (r.isConfirmed) {
-                            $.post('<?php echo site_url('backend/language-manager/languages/delete/') ?>' + id, {
-                                '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>'
-                            }, function(r) {
-                                table.ajax.reload(null, false);
-                            }, 'json');
-                        }
-                    });
-                });
-            }
+            language: ci4msDtLanguage('<?php echo lang('LanguageManager.searchPlaceholder') ?>'),
+            drawCallback: function() { bindActions(); }
         });
+
+        function bindActions() {
+            $('.btn-toggle-lang').off('click').on('click', function() {
+                $.post('<?php echo site_url('backend/language-manager/languages/toggle/') ?>' + $(this).data('id'), {
+                    '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>'
+                }, function(r) { showToast(r.message); table.ajax.reload(null, false); }, 'json');
+            });
+
+            $('.btn-set-default').off('click').on('click', function() {
+                $.post('<?php echo site_url('backend/language-manager/languages/set-default/') ?>' + $(this).data('id'), {
+                    '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>'
+                }, function(r) { showToast(r.message); table.ajax.reload(null, false); }, 'json');
+            });
+
+            $('.btn-delete-lang').off('click').on('click', function() {
+                var id = $(this).data('id');
+                Swal.fire({
+                    title: '<?php echo lang('Backend.areYouSure') ?>',
+                    icon: 'warning', showCancelButton: true,
+                    confirmButtonColor: '#e53e3e',
+                    confirmButtonText: '<?php echo lang('Backend.delete') ?>',
+                    cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        $.post('<?php echo site_url('backend/language-manager/languages/delete/') ?>' + id, {
+                            '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>'
+                        }, function(r) { showToast(r.message, r.status === 'success' ? 'success' : 'error'); table.ajax.reload(null, false); }, 'json');
+                    }
+                });
+            });
+        }
     });
 </script>
 <?php echo $this->endSection() ?>

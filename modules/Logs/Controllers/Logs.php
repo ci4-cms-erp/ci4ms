@@ -25,7 +25,18 @@ class Logs extends \Modules\Backend\Controllers\BaseController
         $this->defData['files'] = $files;
         $this->defData['currentFile'] = $fileName;
         $this->defData['logs'] = $fileName ? $logViewer->getLogs($fileName) : [];
+        
+        $totalSize = 0;
+        foreach($files as $f) {
+            $path = WRITEPATH . 'logs/' . $f;
+            if(is_file($path)) $totalSize += filesize($path);
+        }
 
+        $this->defData['stats'] = [
+            'fileCount' => count($files),
+            'totalSize' => number_format($totalSize / 1024, 2) . ' KB',
+            'currentFile' => $fileName
+        ];
         return view('Modules\Logs\Views\list', $this->defData);
     }
 

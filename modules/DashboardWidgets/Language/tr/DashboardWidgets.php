@@ -51,4 +51,11 @@ return [
     'allowedGroups'      => 'Erişim İzni Olan Gruplar',
     'allowedGroupsPlaceholder' => 'Boş bırakılırsa herkes görebilir',
     'superAdminNote'     => 'Not: Superadmin her zaman tüm widgetları görür.',
+    'searchPlaceholder'  => 'Widget ara...',
+    'totalWidgets' => 'Toplam Widget',
+    'systemWidgets' => 'Sistem Widgetları',
+    'slug' => 'URL Uzantısı (Slug)',
+    'allowedGroups' => 'İzin Verilen Gruplar',
+    'allowedGroupsPlaceholder' => 'Grup Seçiniz',
+    'superAdminNote' => 'Not: Süper Adminlere her zaman açıktır.',
 ];

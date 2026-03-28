@@ -16,6 +16,7 @@
     <?php echo link_tag('be-assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') ?>
     <!-- Theme style -->
     <?php echo link_tag("be-assets/css/adminlte.min.css") ?>
+    <?php echo link_tag("be-assets/css/ci4ms-premium.css") ?>
     <?php echo link_tag("be-assets/custom.css") ?>
     <?php echo csrf_meta() ?>
     <?php echo $this->renderSection('head') ?>
@@ -61,10 +62,10 @@
                 </div>
                 <div class="collapse mb-2 border-bottom" id="collapseExample">
                     <div class="card card-body">
-                        <span><i class="fas fa-user"></i> <a class="link-black" href="<?php echo route_to('profile') ?>">Profil</a></span>
+                        <span><i class="fas fa-user"></i> <a class="link-black" href="<?php echo route_to('profile') ?>">Profile</a></span>
                         <div class="dropdown-divider"></div>
                         <span><i class="fas fa-sign-out-alt"></i> <a class="link-black"
-                                href="<?php echo route_to('logout') ?>">Çıkış Yap</a></span>
+                                href="<?php echo route_to('logout') ?>">Logout</a></span>
                     </div>
                 </div>
 
@@ -178,7 +179,9 @@
     echo script_tag("be-assets/js/adminlte.min.js");
 
     echo script_tag("be-assets/js/demo.js");
-    echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js");
+    echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js"); ?>
+    <script {csp-script-nonce}>window.CI4MS_LOCALE = '<?php echo env('app.defaultLocale', 'tr') ?>';</script>
+    <?php echo script_tag("be-assets/js/ci4ms.js");
     echo view('Modules\Backend\Views\sweetalert_message_block', [], ['debug' => false]);
     echo $this->renderSection('javascript'); ?>
 </body>

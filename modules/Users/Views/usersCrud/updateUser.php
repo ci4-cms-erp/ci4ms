@@ -2,6 +2,10 @@
 echo $this->section('title');
 echo lang($title->pagename);
 echo $this->endSection();
+echo $this->section('head');
+echo link_tag('be-assets/plugins/select2/css/select2.min.css');
+echo link_tag('be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css');
+echo $this->endSection();
 echo $this->section('content'); ?>
 <section class="content-header">
     <div class="container-fluid">
@@ -43,7 +47,7 @@ echo $this->section('content'); ?>
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for=""><?php echo lang('Users.authority') ?> <?php echo lang('Backend.required') ?></label>
-                        <select name="group" class="form-control" required>
+                        <select name="group[]" class="form-control select2bs4" multiple="multiple" data-placeholder="<?php echo lang('Backend.selectOption', [lang('Users.authority')]) ?>" required>
                             <option value=""><?php echo lang('Backend.select') ?></option>
                             <?php foreach ($groups as $group): ?>
                                 <option value="<?php echo $group->id ?>" <?php echo set_select('group', $group->id, $userInfo->inGroup($group->group)) ?>><?php echo $group->group ?></option>
@@ -73,4 +77,12 @@ echo $this->section('content'); ?>
 </section>
 
 <!-- /.content -->
-<?php echo $this->endSection() ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag("be-assets/plugins/select2/js/select2.full.min.js"); ?>
+<script>
+    $('.select2bs4').select2({
+        theme: 'bootstrap4'
+    });
+</script>
+<?php echo $this->endSection(); ?>

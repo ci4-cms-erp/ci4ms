@@ -66,6 +66,11 @@ class DashboardWidgets extends \Modules\Backend\Controllers\BaseController
             ]);
         }
 
+        $this->defData['stats'] = [
+            'total' => $this->commonModel->count('dashboard_widgets'),
+            'active' => $this->commonModel->count('dashboard_widgets', ['is_active' => 1]),
+            'system' => $this->commonModel->count('dashboard_widgets', ['is_system' => 1])
+        ];
         return view('Modules\DashboardWidgets\Views\list', $this->defData);
     }
 

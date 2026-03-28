@@ -7,6 +7,17 @@ use Modules\Methods\Libraries\ModuleInstaller;
 
 class Methods extends \Modules\Backend\Controllers\BaseController
 {
+    /**
+     * Silinmesi yasak çekirdek modüller
+     */
+    private const PROTECTED_MODULES = [
+        'Auth',
+        'Backend',
+        'Install',
+        'Methods',
+        'Settings',
+        'LanguageManager',
+    ];
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
@@ -223,5 +234,130 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         } catch (\Exception $e) {
             return $this->response->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Modül bilgilerini döndürür (silme öncesi bilgilendirme)
+     */
+    public function moduleInfo(int $moduleId)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->failForbidden();
+        }
+
+        $module = $this->commonModel->selectOne('modules', ['id' => $moduleId]);
+        if (empty($module)) {
+            return $this->failNotFound(lang('Methods.deleteModuleFailed'));
+        }
+
+        // Korumalı modül kontrolü
+        if (in_array($module->name, self::PROTECTED_MODULES)) {
+            return $this->respond([
+                'status'    => 'protected',
+                'message'   => lang('Methods.deleteModuleProtected'),
+            ]);
+        }
+
+        $installer = new ModuleInstaller();
+        $tables = $installer->getModuleTables($module->name);
+        $stats = $installer->getModuleTableStats($module->name);
+
+        $totalRecords = 0;
+        $tableInfo = [];
+        foreach ($stats as $tableName => $count) {
+            $tableInfo[] = [
+                'name'  => $tableName,
+                'count' => $count,
+            ];
+            if ($count > 0) {
+                $totalRecords += $count;
+            }
+        }
+
+        return $this->respond([
+            'status'       => 'ok',
+            'module_id'    => $module->id,
+            'module_name'  => $module->name,
+            'tables'       => $tableInfo,
+            'totalRecords' => $totalRecords,
+        ]);
+    }
+
+    /**
+     * Modülü siler (tablolar + dosya sistemi + kayıtlar)
+     */
+    public function moduleDelete()
+    {
+        if (!$this->request->isAJAX() || !$this->request->is('post')) {
+            return $this->failForbidden();
+        }
+
+        $valData = [
+            'module_id'    => ['label' => 'Module ID', 'rules' => 'required|is_natural_no_zero'],
+            'confirm_name' => ['label' => lang('Methods.moduleName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+        ];
+        if ($this->validate($valData) === false) {
+            return $this->fail($this->validator->getErrors());
+        }
+
+        $moduleId = (int) $this->request->getPost('module_id');
+        $confirmName = trim((string) $this->request->getPost('confirm_name'));
+
+        $module = $this->commonModel->selectOne('modules', ['id' => $moduleId]);
+        if (empty($module)) {
+            return $this->failNotFound(lang('Methods.deleteModuleFailed'));
+        }
+
+        // Korumalı modül kontrolü
+        if (in_array($module->name, self::PROTECTED_MODULES)) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('Methods.deleteModuleProtected'),
+            ]);
+        }
+
+        // İsim eşleşme kontrolü
+        if ($confirmName !== $module->name) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('Methods.deleteModuleNameMismatch'),
+            ]);
+        }
+
+        $installer = new ModuleInstaller();
+
+        // 1) Migration rollback (tabloları sil)
+        $rollbackResult = $installer->rollbackModuleMigrations($module->name);
+        if (!$rollbackResult['success']) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('Methods.rollbackFailed', [$rollbackResult['error']]),
+            ]);
+        }
+
+        // 2) auth_permissions_pages kayıtlarını sil
+        $this->commonModel->remove('auth_permissions_pages', ['module_id' => $moduleId]);
+
+        // 3) modules tablosundan kaydı sil
+        $this->commonModel->remove('modules', ['id' => $moduleId]);
+
+        // 4) Dosya sisteminden modül klasörünü sil
+        $fileResult = $installer->removeModuleFiles($module->name);
+
+        // 5) Cache temizliği
+        cache()->delete('sidebar_menu');
+        foreach ($this->commonModel->lists('users', 'id') as $user) {
+            cache()->delete("{$user->id}_permissions");
+        }
+
+        $message = lang('Methods.deleteModuleSuccess', [$module->name]);
+        if (!$fileResult['success']) {
+            $message .= ' ' . $fileResult['error'];
+        }
+
+        return $this->respond([
+            'status'  => 'success',
+            'message' => $message,
+        ]);
     }
 }

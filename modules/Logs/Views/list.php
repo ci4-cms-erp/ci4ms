@@ -8,39 +8,79 @@ echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4
 echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css');
 echo $this->endSection();
 echo $this->section('content'); ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1><?php echo lang($title->pagename) ?></h1>
-            </div>
-            <div class="col-sm-6"></div>
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
 
-<!-- Main content -->
-<section class="content">
-    <!-- Default box -->
-    <div class="card card-outline shadow-sm">
-        <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
-
-            <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
-                </button>
+<section class="content pt-3">
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="m-stat-card">
+                <div class="m-stat-icon st-files"><i class="fas fa-file-medical-alt"></i></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['fileCount'] ?></div>
+                    <div class="m-stat-label">Toplam Log Dosyası</div>
+                </div>
             </div>
         </div>
-        <div class="card-body">
-            <?php echo view('Modules\Logs\Views\logs', ['logs' => $logs, 'files' => $files, 'currentFile' => $currentFile]) ?>
+        <div class="col-md-4">
+            <div class="m-stat-card">
+                <div class="m-stat-icon st-size"><i class="fas fa-hdd"></i></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['totalSize'] ?></div>
+                    <div class="m-stat-label">Toplam Boyut</div>
+                </div>
+            </div>
         </div>
-        <!-- /.card-body -->
+        <div class="col-md-4">
+            <div class="m-stat-card">
+                <div class="m-stat-icon st-current"><i class="fas fa-eye"></i></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['currentFile'] ?? '-' ?></div>
+                    <div class="m-stat-label">Görüntülenen Dosya</div>
+                </div>
+            </div>
+        </div>
     </div>
-    <!-- /.card -->
+
+    <div class="row">
+        <!-- Sidebar - Log Files -->
+        <div class="col-md-3">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <h3 class="card-title font-weight-bold mb-0">Log Dosyaları</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($files as $file): ?>
+                            <div class="list-group-item d-flex align-items-center <?php echo $currentFile == $file ? 'bg-light font-weight-bold' : '' ?>">
+                                <a href="?f=<?php echo base64_encode($file) ?>" class="text-dark flex-grow-1"><?php echo $file ?></a>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="?dl=<?php echo base64_encode($file) ?>" class="btn btn-outline-info border-0"><i class="fas fa-download"></i></a>
+                                    <button class="btn btn-outline-danger border-0" onclick="deleteItem('<?php echo base64_encode($file) ?>')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content - Log Content -->
+        <div class="col-md-9">
+            <div class="card premium-card">
+                <div class="card-header d-flex align-items-center">
+                    <h3 class="card-title font-weight-bold mb-0">İçerik: <small class="text-muted ml-2"><?php echo $currentFile ?></small></h3>
+                    <div class="ml-auto">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()" title="Yenile"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                </div>
+                <div class="card-body p-3" style="max-height: 600px; overflow-y: auto; background: #fff;">
+                    <?php echo view('Modules\Logs\Views\logs', ['logs' => $logs, 'files' => $files, 'currentFile' => $currentFile]) ?>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
-<!-- /.content -->
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
@@ -54,7 +94,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             $('#' + $(this).data('display')).toggle();
         });
 
-        $('#table-log').DataTable({
+        var table = $('#table-log').DataTable({
             "order": [],
             "stateSave": true,
             "stateSaveCallback": function(settings, data) {
@@ -66,6 +106,8 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 return data;
             }
         });
+
+        $('#btnRefresh').click(() => table.ajax.reload());
     });
 
     function deleteItem(id) {

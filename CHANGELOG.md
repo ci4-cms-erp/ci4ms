@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - **Module Consistency:** Standardized variable names and status indicators across `Blog` and `Pages` modules.
 - **Routes:** Updated `Routes.php` in multiple modules to support `POST` method for sensitive actions.
 - **Frontend:** Updated `ci4ms.js` with improved global utilities and event handlers.
+- **User Management:** Configured user 'group' assignments in `UserController` to support multiple groups via Select2 array inputs. Refactored validation rules (`group.*`) and role synchronization logic (`syncGroups`) for user creation and updating. Enhanced user statistics counters to dynamically exclude `superadmin` accounts.
 - **Template Views:** Refined `base.php`, `pages.php`, `post.php`, and `temp-settings.php` for Shield compatibility and new settings UI.
 
 ### Fixed

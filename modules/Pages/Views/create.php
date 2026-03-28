@@ -6,8 +6,7 @@ echo $this->section('head');
 echo link_tag("be-assets/plugins/tagify/tagify.css");
 echo link_tag("be-assets/plugins/summernote/summernote-bs4.css");
 echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
-echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css");
-echo link_tag("be-assets/plugins/elFinder/css/theme.css"); ?>
+echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css"); ?>
 <link rel="stylesheet" type="text/css"
     href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 <?php echo $this->endSection();
@@ -138,7 +137,7 @@ echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
 echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js");
 echo script_tag("be-assets/plugins/summernote/summernote-bs4.js");
 echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js");
-echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js");
+echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaultLocale', 'tr') . ".js");
 echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
 echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js");
 echo script_tag("be-assets/js/ci4ms.js"); ?>

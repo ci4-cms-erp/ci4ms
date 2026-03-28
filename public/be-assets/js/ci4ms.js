@@ -1,13 +1,67 @@
+/* ═══════════════════════════════════════════════════════════
+   CI4MS — Shared JS Utilities
+   ═══════════════════════════════════════════════════════════ */
+
+// Auto-inject toast container if not present
+$(function() {
+    if ($('#toast-container').length === 0) {
+        $('body').append('<div id="toast-container"></div>');
+    }
+});
+
+/**
+ * showToast — Global notification function.
+ * Used by all modules — no need to redefine in views.
+ * @param {string} msg   Message to display
+ * @param {string} type  'success' | 'error'
+ */
+function showToast(msg, type) {
+    type = type || 'success';
+    var id = 'toast-' + Date.now();
+    var icon = type === 'success' ? 'fa-check-circle text-success' : 'fa-exclamation-circle text-danger';
+    var html = '<div id="' + id + '" class="m-toast m-toast-' + type + '"><i class="fas ' + icon + '"></i> ' + msg + '</div>';
+    $('#toast-container').append(html);
+    setTimeout(function() { $('#' + id).addClass('show'); }, 50);
+    setTimeout(function() {
+        $('#' + id).removeClass('show');
+        setTimeout(function() { $('#' + id).remove(); }, 300);
+    }, 3000);
+}
+
+/**
+ * ci4msDtLanguage — Central DataTables language configuration.
+ * Uses existing /be-assets/plugins/datatables/i18n/{locale}.json files.
+ * Usage: language: ci4msDtLanguage()   or   language: ci4msDtLanguage('searchPlaceholder')
+ * @param {string} [searchPlaceholder] Optional search placeholder text
+ * @returns {object} DataTables language config
+ */
+function ci4msDtLanguage(searchPlaceholder) {
+    var locale = window.CI4MS_LOCALE || 'tr';
+    var cfg = {
+        url: '/be-assets/plugins/datatables/i18n/' + locale + '.json',
+        search: '_INPUT_',
+        processing: '<i class="fas fa-spinner fa-spin"></i>',
+        paginate: {
+            previous: '<i class="fas fa-chevron-left"></i>',
+            next: '<i class="fas fa-chevron-right"></i>'
+        }
+    };
+    if (searchPlaceholder) {
+        cfg.searchPlaceholder = searchPlaceholder;
+    }
+    return cfg;
+}
+
 function pageImgelfinderDialog() {
     var syncInterval;
     var fm = $('<div/>').dialogelfinder({
-        url: '/backend/media/elfinderConnection', // change with the url of your connector
-        lang: 'en',
+        url: '/backend/media/elfinderConnection',
+        lang: window.CI4MS_LOCALE || 'en',
         width: 1024,
         height: 768,
         workerBaseUrl:"/be-assets/plugins/elFinder/js/worker",
         destroyOnClose: true,
-        cssAutoLoad: [window.location.origin+'/be-assets/plugins/elfinder-material-theme/Material/css/theme.css'],
+        cssAutoLoad: [window.location.origin + '/be-assets/css/ci4ms-elfinder.css?v=' + Date.now()],
         getFileCallback: function (files, fm) {
             $('.pageimg-input').val(files.url.replace(location.origin,''));
             $('.pageimg').attr('src',files.url);
@@ -31,15 +85,15 @@ function pageImgelfinderDialog() {
                 $('.elfinder-dialog-error').hide();
             },
             open: function(event, instance) {
-                // elFinder açıldığında sync başlat
+                // Start sync when elFinder opens
                 startSync(instance);
             },
             close: function(event, instance) {
-                // elFinder kapandığında sync durdur
+                // Stop sync when elFinder closes
                 stopSync();
             },
             destroy: function(event, instance) {
-                // elFinder destroy edildiğinde sync durdur
+                // Stop sync when elFinder is destroyed
                 stopSync();
             }
         }
@@ -60,12 +114,12 @@ function pageMultipleImgelfinderDialog(id) {
     var syncInterval;
 
     var fm = $('<div/>').dialogelfinder({
-        url: '/backend/media/elfinderConnection', // change with the url of your connector
-        lang: 'en',
+        url: '/backend/media/elfinderConnection',
+        lang: window.CI4MS_LOCALE || 'en',
         width: '80%',
         height: 768,
         destroyOnClose: true,
-        cssAutoLoad: [window.location.origin+'/be-assets/plugins/elfinder-material-theme/Material/css/theme.css'],
+        cssAutoLoad: [window.location.origin+'/be-assets/css/ci4ms-elfinder.css?v=' + Date.now()],
         getFileCallback: function (files) {
             $('[name="imgs['+id+'][pageimg]"]').val(files.url.replace(location.origin, ''));
             $('[name="imgs['+id+'][img]"]').attr('src', files.url);
@@ -133,12 +187,12 @@ $('.pageimg-input').change(function () {
 
 function elfinderDialog() {
     var fm = $('<div/>').dialogelfinder({
-        url: '/backend/media/elfinderConnection', // change with the url of your connector
-        lang: 'en',
+        url: '/backend/media/elfinderConnection',
+        lang: window.CI4MS_LOCALE || 'en',
         width: '100%',
         height: 768,
         destroyOnClose: true,
-        cssAutoLoad: [window.location.origin+'/be-assets/plugins/elfinder-material-theme/Material/css/theme.css'],
+        cssAutoLoad: [window.location.origin + '/be-assets/css/ci4ms-elfinder.css?v=' + Date.now()],
         getFileCallback: function (files, fm) {
             $('.editor').summernote('editor.insertImage', files.url.replace('https://'+location.hostname,''));
         },

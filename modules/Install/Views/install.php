@@ -32,7 +32,7 @@ echo $this->section('content'); ?>
               <div class="line"></div>
               <div class="step" data-target="#site-infos-part">
                 <button type="button" class="step-trigger" role="tab" aria-controls="site-infos-part" id="site-infos-part-trigger">
-                  <span class="bs-stepper-circle bg-success">2</span>
+                  <span class="bs-stepper-circle bg-success">3</span>
                   <span class="bs-stepper-label"><?php echo lang('Install.siteInformation') ?></span>
                 </button>
               </div>
@@ -113,7 +113,7 @@ echo $this->section('content'); ?>
                   <label for=""><?php echo lang('Install.siteSlogan') ?></label>
                   <input type="text" name="slogan" value="<?php echo old('slogan') ?>" class="form-control" placeholder="<?php echo lang('Install.siteSloganPlaceholder') ?>" required>
                 </div>
-                <button class="btn btn-success" type="button" onclick="stepper.previous()">Previous</button>
+                <button class="btn btn-success" type="button" onclick="stepper.previous()"><?php echo lang('Install.previous') ?></button>
                 <button type="submit" class="btn btn-success"><?php echo lang('Install.submit') ?></button>
               </div>
             </div>

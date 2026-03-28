@@ -62,4 +62,8 @@ return [
     'codeAlreadyUsed'    => 'This code is already in use.',
     'invalidFile'        => 'Invalid file.',
     'invalidJsonFormat'  => 'Invalid JSON format.',
+    'totalLanguages' => 'Total Language',
+    'activeLanguages' => 'Active Languages',
+    'defaultLanguage' => 'Default Language',
+    'addLanguage' => 'Add Language',
 ];

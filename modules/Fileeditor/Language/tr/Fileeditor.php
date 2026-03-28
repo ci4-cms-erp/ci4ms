@@ -25,5 +25,6 @@ return [
     'fileSaveSuccess' => 'Dosya başarıyla kaydedildi',
     'fileSaveFailed' => 'Dosya kaydedilemedi',
     'fileTypeNotAllowed' => 'Bu dosya tipini oluşturamazsınız!',
-    'fileTypeEditNotAllowed' => 'Bu dosya tipini düzenleyemezsiniz!'
+    'fileTypeEditNotAllowed' => 'Bu dosya tipini düzenleyemezsiniz!',
+    'confirmDelete' => 'Silme işlemini onaylıyor musunuz?',
 ];

@@ -8,7 +8,7 @@ use CodeIgniter\Shield\Entities\User;
 class UserController extends \Modules\Backend\Controllers\BaseController
 {
     /**
-     * @return string
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function users()
     {
@@ -29,7 +29,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 $like = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
                 $users->groupStart();
                 foreach ($like as $field => $value) {
-                    $users->orLike($field, $value);
+                    $users->orLike($field, $parsed['searchString']);
                 }
                 $users->groupEnd();
             }
@@ -45,7 +45,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 $like = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
                 $users->groupStart();
                 foreach ($like as $field => $value) {
-                    $users->orLike($field, $value);
+                    $users->orLike($field, $parsed['searchString']);
                 }
                 $users->groupEnd();
             }
@@ -89,11 +89,20 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             ];
             return $this->respond($data, 200);
         }
+        $subquerySuperAdmin = function ($builder) {
+            return $builder->select('user_id')->from('auth_groups_users')->join('auth_groups', 'auth_groups.group = auth_groups_users.group')->where('auth_groups.group', 'superadmin');
+        };
+
+        $this->defData['stats'] = [
+            'total' => auth()->getProvider()->whereNotIn('users.id', $subquerySuperAdmin)->countAllResults(),
+            'active' => auth()->getProvider()->where('status', null)->whereNotIn('users.id', $subquerySuperAdmin)->countAllResults(),
+            'banned' => auth()->getProvider()->where('status', 'banned')->whereNotIn('users.id', $subquerySuperAdmin)->countAllResults()
+        ];
         return view('Modules\Users\Views\usersCrud\list', $this->defData);
     }
 
     /**
-     * @return string
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function create_user()
     {
@@ -103,7 +112,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email|is_unique[auth_identities.secret]'],
-                'group' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero'],
+                'group.*' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero'],
                 'password' => ['label' => 'Şifre', 'rules' => 'required|min_length[8]']
             ]);
 
@@ -125,8 +134,10 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 if (!$users->save($user)) return redirect()->route('create_user')->withInput()->with('errors', $users->errors());
                 $new_user = $users->findById($users->getInsertID());
 
-                $group = $this->commonModel->selectOne('auth_groups', ['id' => $this->request->getPost('group')]);
-                $new_user->syncGroups($group->group);
+                $groups = $this->commonModel->lists('auth_groups', 'group', [], 'id ASC', 0, 0, [], ['id' => $this->request->getPost('group')]);
+                $groupNames = array_column($groups, 'group');
+                $new_user->syncGroups(...$groupNames);
+
 
                 $activator = new EmailActivator();
 
@@ -165,8 +176,8 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * @param $id
-     * @return string
+     * @param int $id
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function update_user(int $id)
     {
@@ -176,7 +187,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
-                'group' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero']
+                'group.*' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero']
             ]);
 
             if ($this->request->getPost('password')) $valData['password'] = ['label' => 'Şifre', 'rules' => 'required|min_length[8]'];
@@ -190,7 +201,6 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'email' => $this->request->getPost('email'),
                 'firstname' => esc($this->request->getPost('firstname')),
                 'surname' => esc($this->request->getPost('surname')),
-                'group_id' => $this->request->getPost('group'),
                 'update_at' => date('Y-m-d H:i:s'),
                 'username' => esc($this->request->getPost('username')),
                 'who_created' => user_id(),
@@ -202,8 +212,9 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             $u->fill($data);
             if ($user->save($u)) {
-                $group = $this->commonModel->selectOne('auth_groups', ['id' => $this->request->getPost('group')]);
-                $u->syncGroups($group->group);
+                $groups = $this->commonModel->lists('auth_groups', 'group', [], 'id ASC', 0, 0, [], ['id' => $this->request->getPost('group')]);
+                $groupNames = array_column($groups, 'group');
+                $u->syncGroups(...$groupNames);
                 return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
             } else return redirect()->route('update_user', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$data['username']]));
         }
@@ -233,7 +244,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * @return string
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function profile()
     {

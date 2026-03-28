@@ -1,80 +1,105 @@
-<h4><strong><?php echo lang('Pages.pages') ?></strong></h4>
-<?php echo empty($pages) ? '<strong>' . lang('Menu.notFindinMenuPages') . '</strong>' : '' ?>
-<form class="list-group" id="addCheckedPages">
-    <?php foreach ($pages as $page): ?>
-        <div class="list-group-item" id="page-<?php echo $page->id ?>">
-            <div class="row d-flex justify-content-between align-items-center">
-                <div class="col-xs-8">
-                    <label class="ml-3">
-                        <input class="form-check-input me-1" type="checkbox" name="pageChecked[]"
-                            value="<?php echo $page->id ?>">
-                        <?php echo esc($page->title) ?>
-                    </label>
-                </div>
-                <div class="col-xs-4">
-                    <button class="btn btn-success addPages" type="button" onclick="addPages('<?php echo $page->id ?>')">
-                        <?php echo lang('Backend.add') ?>
-                    </button>
-                </div>
+<div id="accordion-menu">
+    <!-- Pages Section -->
+    <div class="card mb-3 border-0 shadow-none bg-light" style="border-radius:12px">
+        <div class="card-header border-0 bg-transparent p-3" id="headingPages">
+            <h6 class="mb-0">
+                <button class="btn btn-link btn-block text-left font-weight-bold text-dark p-0" data-toggle="collapse" data-target="#collapsePages">
+                    <i class="fas fa-file-alt mr-2 text-primary"></i> <?php echo lang('Pages.pages') ?>
+                    <i class="fas fa-chevron-down float-right mt-1 small"></i>
+                </button>
+            </h6>
+        </div>
+        <div id="collapsePages" class="collapse show" data-parent="#accordion-menu">
+            <div class="card-body p-3 pt-0">
+                <?php if(empty($pages)): ?>
+                    <p class="small text-muted mb-0"><?php echo lang('Menu.notFindinMenuPages') ?></p>
+                <?php else: ?>
+                    <form id="addCheckedPages">
+                        <div class="list-group list-group-flush mb-3">
+                            <?php foreach ($pages as $page): ?>
+                                <div class="list-group-item bg-transparent px-0 py-2 d-flex align-items-center" id="page-<?php echo $page->id ?>">
+                                    <div class="custom-control custom-checkbox mr-3">
+                                        <input type="checkbox" class="custom-control-input" id="chk-page-<?php echo $page->id ?>" name="pageChecked[]" value="<?php echo $page->id ?>">
+                                        <label class="custom-control-label" for="chk-page-<?php echo $page->id ?>"></label>
+                                    </div>
+                                    <span class="flex-grow-1 small font-weight-medium"><?php echo esc($page->title) ?></span>
+                                    <button class="btn btn-xs btn-outline-success px-2 py-0 border-0" type="button" onclick="addPages('<?php echo $page->id ?>')" title="Ekle"><i class="fas fa-plus"></i></button>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <button class="btn btn-sm btn-success btn-block" type="button" onclick="addCheckedPages()" style="border-radius:8px">Seçilenleri Ekle</button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
-    <?php endforeach;
-    if (!empty($pages)): ?>
-        <div class="list-group-item">
-            <button class="btn btn-success float-right" type="button" onclick="addCheckedPages()">
-                <?php echo lang('Backend.addSelected') ?>
-            </button>
+    </div>
+
+    <!-- Blogs Section -->
+    <div class="card mb-3 border-0 shadow-none bg-light" style="border-radius:12px">
+        <div class="card-header border-0 bg-transparent p-3" id="headingBlogs">
+            <h6 class="mb-0">
+                <button class="btn btn-link btn-block text-left font-weight-bold text-dark p-0" data-toggle="collapse" data-target="#collapseBlogs">
+                    <i class="fas fa-rss mr-2 text-warning"></i> <?php echo lang('Blog.blogs') ?>
+                    <i class="fas fa-chevron-down float-right mt-1 small"></i>
+                </button>
+            </h6>
         </div>
-    <?php endif; ?>
-</form>
-<hr>
-<h4><strong><?php echo lang('Blog.blogs') ?></strong></h4>
-<?php echo empty($blogs) ? '<strong>' . lang('Menu.notFindinMenuBlogs') . '</strong>' : '' ?>
-<form class="list-group" id="addCheckedBlog">
-    <?php foreach ($blogs as $blog): ?>
-        <div class="list-group-item" id="blog-<?php echo $blog->id ?>">
-            <div class="row d-flex justify-content-between align-items-center">
-                <div class="col-xs-8">
-                    <label class="ml-3">
-                        <input class="form-check-input me-1" type="checkbox" name="pageChecked[]"
-                            value="<?php echo $blog->id ?>">
-                        <?php echo esc($blog->title) ?>
-                    </label>
-                </div>
-                <div class="col-xs-4">
-                    <button class="btn btn-success" type="button" onclick="addBlog('<?php echo $blog->id ?>')">
-                        <?php echo lang('Backend.add') ?>
-                    </button>
-                </div>
+        <div id="collapseBlogs" class="collapse" data-parent="#accordion-menu">
+            <div class="card-body p-3 pt-0">
+                <?php if(empty($blogs)): ?>
+                    <p class="small text-muted mb-0"><?php echo lang('Menu.notFindinMenuBlogs') ?></p>
+                <?php else: ?>
+                    <form id="addCheckedBlog">
+                        <div class="list-group list-group-flush mb-3">
+                            <?php foreach ($blogs as $blog): ?>
+                                <div class="list-group-item bg-transparent px-0 py-2 d-flex align-items-center" id="blog-<?php echo $blog->id ?>">
+                                    <div class="custom-control custom-checkbox mr-3">
+                                        <input type="checkbox" class="custom-control-input" id="chk-blog-<?php echo $blog->id ?>" name="pageChecked[]" value="<?php echo $blog->id ?>">
+                                        <label class="custom-control-label" for="chk-blog-<?php echo $blog->id ?>"></label>
+                                    </div>
+                                    <span class="flex-grow-1 small font-weight-medium"><?php echo esc($blog->title) ?></span>
+                                    <button class="btn btn-xs btn-outline-success px-2 py-0 border-0" type="button" onclick="addBlog('<?php echo $blog->id ?>')" title="Ekle"><i class="fas fa-plus"></i></button>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <button class="btn btn-sm btn-success btn-block" type="button" onclick="addCheckedBlog()" style="border-radius:8px">Seçilenleri Ekle</button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
-    <?php endforeach;
-    if (!empty($blogs)): ?>
-        <div class="list-group-item">
-            <button class="btn btn-success float-right" type="button" onclick="addCheckedBlog()">
-                <?php echo lang('Backend.addSelected') ?>
-            </button>
+    </div>
+
+    <!-- Custom URL Section -->
+    <div class="card mb-3 border-0 shadow-none bg-light" style="border-radius:12px">
+        <div class="card-header border-0 bg-transparent p-3" id="headingURL">
+            <h6 class="mb-0">
+                <button class="btn btn-link btn-block text-left font-weight-bold text-dark p-0" data-toggle="collapse" data-target="#collapseURL">
+                    <i class="fas fa-link mr-2 text-info"></i> Özel Bağlantı
+                    <i class="fas fa-chevron-down float-right mt-1 small"></i>
+                </button>
+            </h6>
         </div>
-    <?php endif; ?>
-</form>
-<hr>
-<form id="addUrls" method="post" class="form-row mt-2">
-    <div class="col-md-5 form-group">
-        <input type="text" class="form-control" placeholder="<?php echo lang('Backend.title') ?>" name="URLname">
+        <div id="collapseURL" class="collapse" data-parent="#accordion-menu">
+            <div class="card-body p-3 pt-0">
+                <form id="addUrls" class="small">
+                    <div class="form-group mb-2">
+                        <label>Başlık</label>
+                        <input type="text" class="form-control form-control-sm" name="URLname" placeholder="örn: Ana Sayfa">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>URL</label>
+                        <input type="text" class="form-control form-control-sm" name="URL" placeholder="https://...">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Target</label>
+                        <select class="form-control form-control-sm" name="target">
+                            <option value="_self">_self (Aynı Pencere)</option>
+                            <option value="_blank">_blank (Yeni Pencere)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-sm btn-primary btn-block" type="button" onclick="addURL()" style="border-radius:8px">Ekle</button>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="col-md-5 form-group">
-        <input type="text" class="form-control" placeholder="<?php echo lang('Backend.url') ?>" name="URL">
-    </div>
-    <div class="col-md-5 form-group">
-        <select class="form-control" name="target">
-            <option value=""><?php echo lang('Backend.select') ?></option>
-            <option value="_blank">_blank</option>
-            <option value="_self">_self</option>
-            <option value="_parent">_parent</option>
-            <option value="_top">_top</option>
-        </select>
-    </div>
-    <div class="col-md-2 form-group">
-        <button class="btn btn-success w-100" type="button" onclick="addURL()"><?php echo lang('Backend.add') ?></button>
-    </div>
-</form>
+</div>

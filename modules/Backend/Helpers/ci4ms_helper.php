@@ -21,7 +21,7 @@ if (!function_exists('nestable')) {
                     echo '<button class="dd-nodrag btn btn-sm btn-light dd-collapse float-left" data-action="collapse"><i class="fas fa-sort-down"></i></button>
 <button class="dd-expand btn btn-sm btn-light float-left" data-action="expand" type="button"><i class="fas fa-caret-right"></i></button>';
 
-                echo '<span class="float-left">' . esc($menu->title) . '</span>
+                echo '<span class="float-left mr-3">' . esc($menu->title) . '</span>
                                         <div class="dd-nodrag btn-group float-right">
                                <button class="removeFromMenu btn btn-secondary btn-sm" onclick="removeFromMenu(\'' . $menu->id . '\',\'' . $menu->urlType .
                     '\')" type="button"><i class="fas fa-trash"></i></button>

@@ -114,4 +114,11 @@ return [
     'fileInput' => 'Dosya Yükle',
     'chooseFile' => 'Dosya seç',
     'upload' => 'Yükle',
+    'updateAvailable' => 'Güncelleme Mevcut',
+    'operations' => 'İşlemler',
+    'warning' => 'Uyarı',
+    'requiredContent' => 'Zorunlu İçerik',
+    'published' => 'İçerik yayına alındı',
+    'drafted' => 'İçerik taslağa çekildi',
+    'htmlPurifierNotFound' => 'HTML Purifier bulunamadı',
 ];

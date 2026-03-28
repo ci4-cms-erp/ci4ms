@@ -19,5 +19,11 @@
     'inBlackList' => 'In Blacklist',
     'authority' => 'Authority',
     'userList' => 'User List',
-    'addUser' => 'Add New User',
+    'searchPlaceholder' => 'Search users...',
+    'removeFromBlacklistBtn' => 'Remove from List',
+    'addToBlacklistBtn' => 'Add to Blacklist',
+    'removeFromBlacklistTitle' => 'Remove from Blacklist',
+    'addToBlacklistTitle' => 'Add to Blacklist',
+    'totalUsers' => 'Total Users',
+    'bannedUsers' => 'Banned List',
 ];

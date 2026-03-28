@@ -106,4 +106,154 @@ class ModuleInstaller
         // Seeder dosyası yoksa başarılı sayılır
         return ['success' => true, 'error' => null];
     }
+
+    /**
+     * Modülün migration dosyalarını parse ederek oluşturulan tablo isimlerini döndürür.
+     *
+     * @param string $moduleName
+     * @return string[]
+     */
+    public function getModuleTables(string $moduleName): array
+    {
+        $migrationPath = ROOTPATH . 'modules/' . $moduleName . '/Database/Migrations';
+        $tables = [];
+
+        if (!is_dir($migrationPath)) {
+            return $tables;
+        }
+
+        $files = glob($migrationPath . '/*.php');
+        if (!is_array($files)) {
+            return $tables;
+        }
+
+        $prefix = \Config\Database::connect()->getPrefix();
+
+        foreach ($files as $file) {
+            $content = file_get_contents($file);
+            // createTable('table_name' kalıplarını yakala
+            if (preg_match_all("/createTable\s*\(\s*['\"]([^'\"]+)['\"]/", $content, $matches)) {
+                foreach ($matches[1] as $tableName) {
+                    $tables[] = $prefix . $tableName;
+                }
+            }
+        }
+
+        return array_unique($tables);
+    }
+
+    /**
+     * Her tablo için kayıt sayısını döndürür.
+     *
+     * @param string $moduleName
+     * @return array<string, int>
+     */
+    public function getModuleTableStats(string $moduleName): array
+    {
+        $tables = $this->getModuleTables($moduleName);
+        $stats = [];
+        $db = \Config\Database::connect();
+        $forge = \Config\Database::forge();
+
+        foreach ($tables as $table) {
+            if ($db->tableExists($table)) {
+                try {
+                    $stats[$table] = $db->table($table)->countAllResults();
+                } catch (\Throwable $e) {
+                    $stats[$table] = -1;
+                }
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Modülün migration'larını geri alarak tabloları siler.
+     *
+     * @param string $moduleName
+     * @return array{success: bool, rolledBack: int, error: string|null}
+     */
+    public function rollbackModuleMigrations(string $moduleName): array
+    {
+        $migrationPath = ROOTPATH . 'modules/' . $moduleName . '/Database/Migrations';
+
+        if (!is_dir($migrationPath)) {
+            return ['success' => true, 'rolledBack' => 0, 'error' => null];
+        }
+
+        try {
+            /** @var \CodeIgniter\Database\MigrationRunner $migrate */
+            $migrate = Services::migrations();
+            $namespace = 'Modules\\' . $moduleName . '\\Database\\Migrations';
+
+            // Tüm migration'ları geri al (batch 0 = hepsini geri al)
+            $migrate->setNamespace($namespace)->regress(0);
+
+            $files = glob($migrationPath . '/*.php');
+            $rolledBack = is_array($files) ? count($files) : 0;
+
+            return ['success' => true, 'rolledBack' => $rolledBack, 'error' => null];
+        } catch (\Throwable $e) {
+            log_message('error', "[ModuleInstaller] Rollback failed for {$moduleName}: {$e->getMessage()}");
+            return ['success' => false, 'rolledBack' => 0, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Modül klasörünü dosya sisteminden siler.
+     *
+     * @param string $moduleName
+     * @return array{success: bool, error: string|null}
+     */
+    public function removeModuleFiles(string $moduleName): array
+    {
+        $modulePath = ROOTPATH . 'modules/' . $moduleName;
+
+        if (!is_dir($modulePath)) {
+            return ['success' => true, 'error' => null];
+        }
+
+        try {
+            helper('filesystem');
+            delete_files($modulePath, true);
+            // delete_files dizini silmez, sadece içindekileri siler
+            if (is_dir($modulePath)) {
+                $this->recursiveRemoveDir($modulePath);
+            }
+
+            return ['success' => true, 'error' => null];
+        } catch (\Throwable $e) {
+            log_message('error', "[ModuleInstaller] File removal failed for {$moduleName}: {$e->getMessage()}");
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Bir dizini recursive olarak siler.
+     *
+     * @param string $dir
+     * @return void
+     */
+    private function recursiveRemoveDir(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $items = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($items as $item) {
+            if ($item->isDir()) {
+                rmdir($item->getRealPath());
+            } else {
+                unlink($item->getRealPath());
+            }
+        }
+
+        rmdir($dir);
+    }
 }

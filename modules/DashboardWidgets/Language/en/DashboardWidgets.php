@@ -42,4 +42,11 @@ return [
 
     'invalidLayoutData'  => 'Invalid layout data.',
     'slugAlreadyUsed'    => 'This slug is already in use.',
+    'searchPlaceholder'  => 'Search widgets...',
+    'totalWidgets' => 'Total Widgets',
+    'systemWidgets' => 'System Widgets',
+    'slug' => 'Slug',
+    'allowedGroups' => 'Allowed Groups',
+    'allowedGroupsPlaceholder' => 'Allowed Groups Placeholder',
+    'superAdminNote' => 'Super Admin Note',
 ];

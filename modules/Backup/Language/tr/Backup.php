@@ -17,5 +17,16 @@ return [
     'backToBackup' => 'Bu yedeğe geri dön',
     'createBackupDescription' => 'Veritabanının tam bir kopyasını oluşturur ve `.zip` dosyası olarak indirir.',
     'dbRestore'=>'Veritabanı başarıyla geri yüklendi.',
-    'dbNotRestore'=>'Geri yükleme başarısız.'
+    'dbNotRestore'=>'Geri yükleme başarısız.',
+    'searchPlaceholder' => 'Yedek ara...',
+    'createNow' => 'Şimdi Yedek Al',
+    'backupCreated' => 'Yedek başarıyla oluşturuldu.',
+    'backingUp' => 'Yedekleniyor...',
+    'errorOccurred' => 'Hata oluştu',
+    'deleteConfirmTitle' => 'Yedek Silinsin mi?',
+    'deleteConfirmBtn' => 'Evet, Sil',
+    'lastBackupTime' => 'Son Yedekleme Zamanı',
+    'quickActions' => 'Hızlı İşlemler',
+    'restoreExternal' => 'Hariciden Geri Yükle',
+    'chooseFile' => 'Dosya Seç...',
 ];

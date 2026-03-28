@@ -25,5 +25,6 @@ return [
     'fileSaveSuccess' => 'File saved successfully',
     'fileSaveFailed' => 'Could not save file',
     'fileTypeNotAllowed' => 'You cannot create this file type!',
-    'fileTypeEditNotAllowed' => 'You cannot edit this file type!'
+    'fileTypeEditNotAllowed' => 'You cannot edit this file type!',
+    'confirmDelete' => 'Confirm Delete',
 ];

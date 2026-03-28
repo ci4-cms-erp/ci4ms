@@ -58,6 +58,12 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             ];
             return $this->respond($data, 200);
         }
+        $this->defData['stats'] = [
+            'total' => $this->commonModel->count('blog'),
+            'active' => $this->commonModel->count('blog', ['isActive' => 1]),
+            'categories' => $this->commonModel->count('categories'),
+            'comments' => $this->commonModel->count('comments')
+        ];
         return view('Modules\Blog\Views\list', $this->defData);
     }
 
@@ -269,7 +275,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
      * @param string $id
      * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
-    public function commentList(string $id)
+    public function commentList()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
             $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());

@@ -31,6 +31,10 @@ class Backup extends \Modules\Backend\Controllers\BaseController
             return $this->respond($data, 200);
         }
 
+        $this->defData['stats'] = [
+            'totalBackups' => $this->commonModel->count('db_backups'),
+            'lastBackup' => $this->commonModel->selectOne('db_backups', [], 'created_at', 'id DESC')->created_at ?? '-'
+        ];
         return view('Modules\Backup\Views\list', $this->defData);
     }
 

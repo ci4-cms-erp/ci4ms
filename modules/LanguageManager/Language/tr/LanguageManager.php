@@ -62,4 +62,8 @@ return [
     'codeAlreadyUsed'    => 'Bu kod zaten kullanılıyor.',
     'invalidFile'        => 'Geçersiz dosya.',
     'invalidJsonFormat'  => 'Geçersiz JSON formatı.',
+    'totalLanguages' => 'Toplam Dil',
+    'activeLanguages' => 'Aktif Diller',
+    'defaultLanguage' => 'Varsayılan Dil',
+    'addLanguage' => 'Dil Ekle',
 ];

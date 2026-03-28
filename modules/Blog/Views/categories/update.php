@@ -157,7 +157,7 @@ echo $this->section('javascript');
 echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
 echo script_tag("be-assets/plugins/tagify/jQuery.tagify.min.js");
 echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js");
-echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder.tr.js");
+echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaultLocale', 'tr') . ".js");
 echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
 echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js");
 echo script_tag("be-assets/plugins/select2/js/select2.full.min.js");

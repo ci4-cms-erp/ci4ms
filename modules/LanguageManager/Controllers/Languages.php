@@ -48,6 +48,7 @@ class Languages extends \Modules\Backend\Controllers\BaseController
             $data = [];
             foreach ($rows as $row) {
                 $badges = '';
+
                 $badges .= $row->is_active
                     ? '<span class="badge badge-success mr-1">' . lang('LanguageManager.active') . '</span>'
                     : '<span class="badge badge-secondary mr-1">' . lang('LanguageManager.inactive') . '</span>';
@@ -68,7 +69,7 @@ class Languages extends \Modules\Backend\Controllers\BaseController
 
                 $data[] = [
                     $row->id,
-                    esc($row->flag ?? '') . ' <strong>' . esc($row->code) . '</strong>',
+                    '<i class="' . esc($row->flag ?? '') . '"></i>' . ' <strong>' . esc($row->code) . '</strong>',
                     esc($row->name),
                     esc($row->native_name ?? ''),
                     '<code>' . esc($row->direction) . '</code>',
@@ -86,6 +87,11 @@ class Languages extends \Modules\Backend\Controllers\BaseController
             ]);
         }
 
+        $this->defData['stats'] = [
+            'total' => $this->commonModel->count('languages'),
+            'active' => $this->commonModel->count('languages', ['is_active' => 1]),
+            'default' => $this->commonModel->selectOne('languages', ['is_default' => 1])->code ?? '-'
+        ];
         return view('Modules\LanguageManager\Views\languages_list', $this->defData);
     }
 

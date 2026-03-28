@@ -65,6 +65,11 @@ class Pages extends \Modules\Backend\Controllers\BaseController
             ];
             return $this->respond($data, 200);
         }
+        $this->defData['stats'] = [
+            'total' => $this->commonModel->count('pages'),
+            'active' => $this->commonModel->count('pages', ['isActive' => 1]),
+            'homePage' => (int)setting('App.homePage')
+        ];
         return view('Modules\Pages\Views\list', $this->defData);
     }
 

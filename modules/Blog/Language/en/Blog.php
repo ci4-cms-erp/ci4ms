@@ -8,10 +8,13 @@ return [
     'categoryCreate' => 'Create Category',
     'categoryUpdate' => 'Update Category',
     'parentCategory' => 'Parent Category',
-    'commentList' => 'Comments',
+    'commentList' => 'Comments List',
     'comment' => 'Comment',
+    'comments' => 'Comments',
     'displayComment' => 'View Comment',
     'badwords' => 'Banned Words List',
+    'badwordsInfo' => 'Words entered here will be used to filter or auto-block comments. Enter each word on a new line.',
+    'badwordsList' => 'Word List',
     'author' => 'Author',
     'tags' => 'Tags',
     'tagCreate' => 'Create Tag',
@@ -19,7 +22,10 @@ return [
     'enableFiltering' => 'Enable Filtering',
     'autoReject' => 'Auto Reject',
     'autoAccept' => 'Auto Accept',
+    'totalBlogs' => 'Total Blogs',
+    'activeBlogs' => 'Published',
     // Comment Publishing
     'commentPublished' => 'The comment with an id of #{0,number} has been published.',
-    'commentPublishError' => 'Comment cannot be published. Please try again or check logs.'
+    'commentPublishError' => 'Comment cannot be published. Please try again or check logs.',
+    'searchPlaceholder' => 'Search blogs...',
 ];
