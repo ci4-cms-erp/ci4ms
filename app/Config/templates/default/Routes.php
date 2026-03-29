@@ -5,4 +5,3 @@ $routes->group('forms', ['namespace' => '\App\Controllers\templates\default'], f
     $routes->post('contactForm', 'Forms::contactForm_post', ['as' => 'contactForm']);
     $routes->get('searchForm', 'Forms::searchForm', ['as' => 'search']);
 });
-//$routes->get('sitemap.xml','\App\Controllers\templates\default\Seo::index',['as'=>'sitemap.xml']);

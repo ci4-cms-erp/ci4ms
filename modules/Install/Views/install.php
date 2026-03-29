@@ -1,9 +1,8 @@
-<?php echo $this->extend('Modules\Install\Views\base') ?>
-<?php echo $this->section('head') ?>
+<?php echo $this->extend('Modules\Install\Views\base');
+echo $this->section('head'); ?>
 <link rel="stylesheet" href="/be-assets/plugins/bs-stepper/css/bs-stepper.min.css">
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->endSection();
+echo $this->section('content'); ?>
 <div class="row">
   <div class="col-md-12">
     <div class="card card-success">
@@ -12,7 +11,7 @@
       </div>
       <div class="card-body p-0">
         <?php echo view('Modules\Auth\Views\_message_block') ?>
-        <form action="/install" method="post">
+        <form action="<?php echo route_to('install') ?>" method="post">
           <?php echo csrf_field() ?>
           <div class="bs-stepper">
             <div class="bs-stepper-header" role="tablist">
@@ -33,7 +32,7 @@
               <div class="line"></div>
               <div class="step" data-target="#site-infos-part">
                 <button type="button" class="step-trigger" role="tab" aria-controls="site-infos-part" id="site-infos-part-trigger">
-                  <span class="bs-stepper-circle bg-success">2</span>
+                  <span class="bs-stepper-circle bg-success">3</span>
                   <span class="bs-stepper-label"><?php echo lang('Install.siteInformation') ?></span>
                 </button>
               </div>
@@ -114,7 +113,7 @@
                   <label for=""><?php echo lang('Install.siteSlogan') ?></label>
                   <input type="text" name="slogan" value="<?php echo old('slogan') ?>" class="form-control" placeholder="<?php echo lang('Install.siteSloganPlaceholder') ?>" required>
                 </div>
-                <button class="btn btn-success" type="button" onclick="stepper.previous()">Previous</button>
+                <button class="btn btn-success" type="button" onclick="stepper.previous()"><?php echo lang('Install.previous') ?></button>
                 <button type="submit" class="btn btn-success"><?php echo lang('Install.submit') ?></button>
               </div>
             </div>
@@ -126,8 +125,8 @@
     <!-- /.card -->
   </div>
 </div>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('javascript') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript'); ?>
 <script src="/be-assets/plugins/bs-stepper/js/bs-stepper.min.js"></script>
 <script src="/be-assets/plugins/zxcvbn/zxcvbn.js"></script>
 <script src="/be-assets/plugins/pwstrength-bootstrap/pwstrength-bootstrap.min.js"></script>

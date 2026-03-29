@@ -15,4 +15,19 @@ class PagesConfig extends \CodeIgniter\Config\BaseConfig
             'backend/Pages/*'
         ]]
     ];
+
+    public $moduleInfo = [
+        'icon' => 'far fa-copy',
+    ];
+
+    public $menus = [
+
+        'Pages.pages' => [
+            'icon'         => 'far fa-copy',
+            'inNavigation' => true,
+            'hasChild'     => false,
+            'pageSort'     => 2,
+            'parent_pk'    => null
+        ]
+        ];
 }

@@ -275,4 +275,44 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return $this->respond(['result' => false, 'error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Save site language mode (single / multi).
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface
+     */
+    public function saveLanguageMode()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->failForbidden();
+        }
+
+        $valRules = [
+            'mode' => ['label' => 'Language Mode', 'rules' => 'required|in_list[single,multi]'],
+        ];
+        if ($this->validate($valRules) === false) {
+            return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+        }
+
+        try {
+            setting()->set('App.siteLanguageMode', $this->request->getPost('mode'));
+            cache()->delete('settings');
+            cache()->delete('frontend_languages');
+            cache()->delete('default_frontend_language');
+            $langs = $this->commonModel->lists('languages');
+            foreach ($langs as $lang) {
+                cache()->delete('menus_' . $lang->code);
+            }
+
+            return $this->respond([
+                'status'  => 'success',
+                'message' => lang('Backend.updated', [lang('Settings.languageMode')]),
+            ]);
+        } catch (\Exception $e) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('Backend.notUpdated', [lang('Settings.languageMode')]) . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

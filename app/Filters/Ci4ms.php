@@ -2,7 +2,7 @@
 
 namespace App\Filters;
 
-use ci4commonmodel\Models\CommonModel;
+use ci4commonmodel\CommonModel;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -55,6 +55,6 @@ class Ci4ms implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        if (empty(cache('menus'))) cache()->save('menus', $this->commonModel->lists('menu', 'id,title,seflink,parent,pages_id,hasChildren', [], 'queue ASC'), 86400);
+        // Menu caching is now handled in BaseController::getDefaultData() with localization support.
     }
 }

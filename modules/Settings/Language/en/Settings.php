@@ -32,4 +32,5 @@ return [
     'testEmailSent' => 'Test email sent successfully.',
     'updateVersion' => 'Update Version',
     'alreadyLastVersion' => 'You are already using the latest version.',
+    'languageMode' => 'Site Language Mode',
 ];

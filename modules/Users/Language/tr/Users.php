@@ -19,5 +19,11 @@
     'inBlackList' => 'Kara Listede',
     'authority' => 'Yetkisi',
     'userList' => 'Kullanıcı Listesi',
-    'addUser' => 'Yeni Kullanıcı Ekle',
+    'searchPlaceholder' => 'Kullanıcı ara...',
+    'removeFromBlacklistBtn' => 'Listeden Çıkar',
+    'addToBlacklistBtn' => 'Kara Listeye Al',
+    'removeFromBlacklistTitle' => 'Kara Listeden Çıkar',
+    'addToBlacklistTitle' => 'Kara Listeye Ekle',
+    'totalUsers' => 'Toplam Kullanıcı',
+    'bannedUsers' => 'Kara Liste',
 ];

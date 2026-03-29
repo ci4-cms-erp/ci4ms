@@ -1,10 +1,8 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -14,7 +12,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('groupList', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
+                    <a href="<?php echo route_to('groupList', 1) ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
                 </ol>
             </div>
         </div>
@@ -25,7 +23,7 @@
 <section class="content">
 
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
@@ -102,10 +100,12 @@
                                                 <?php endif; ?>
                                             </div>
                                             <label class="toggle-switch page-toggle">
-                                                <input type="checkbox" name="perms[<?php echo $page->id ?>][roles]" <?php if(!empty($perms)){foreach ($perms as $p) if ($p['page_id'] == $page->id && ($p['create_r'] || $p['read_r'] || $p['update_r'] || $p['delete_r'])) {
-                                                                                                                        echo 'checked';
-                                                                                                                        break;
-                                                                                                                    } } ?> value="<?php echo $page->typeOfPermissions ?>">
+                                                <input type="checkbox" name="perms[<?php echo $page->id ?>][roles]" <?php if (!empty($perms)) {
+                                                                                                                        foreach ($perms as $p) if ($p['page_id'] == $page->id && ($p['create_r'] || $p['read_r'] || $p['update_r'] || $p['delete_r'])) {
+                                                                                                                            echo 'checked';
+                                                                                                                            break;
+                                                                                                                        }
+                                                                                                                    } ?> value="<?php echo $page->typeOfPermissions ?>">
                                                 <span class="toggle-slider"></span>
                                             </label>
                                         </div>

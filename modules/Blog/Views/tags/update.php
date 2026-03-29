@@ -1,13 +1,10 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
-
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('head') ?>
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo $this->endSection();
+echo $this->section('content') ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
@@ -17,7 +14,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <a href="<?php echo route_to('tags', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
+                    <a href="<?php echo route_to('tags', 1) ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
                 </ol>
             </div>
         </div>
@@ -27,7 +24,7 @@
 <!-- Main content -->
 <section class="content">
     <!-- Default box -->
-    <div class="card card-outline card-shl">
+    <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
@@ -59,15 +56,16 @@
     <!-- /.card -->
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript'); ?>
 <script {csp-script-nonce}>
     $('.ptitle').on('change', function() {
         $.post('<?php echo route_to('checkSeflink') ?>', {
             "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
             'makeSeflink': $(this).val(),
-            'where': 'tags'
+            'where': 'tags',
+            'id': <?php echo $infos->id ?>,
+            'update': 1
         }, 'json').done(function(data) {
             $('.seflink').val(data.seflink);
         });
@@ -77,7 +75,9 @@
         $.post('<?php echo route_to('checkSeflink') ?>', {
             "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
             'makeSeflink': $(this).val(),
-            'where': 'tags'
+            'where': 'tags',
+            'id': <?php echo $infos->id ?>,
+            'update': 1
         }, 'json').done(function(data) {
             $('.seflink').val(data.seflink);
         });

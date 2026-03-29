@@ -7,14 +7,12 @@ class Backup extends \Modules\Backend\Controllers\BaseController
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = $data['search']['value'];
-            $l = [];
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
+            $like = [];
             $postData = [];
-
-            if (!empty($like)) $l = ['filename' => $like];
-            $results = $this->commonModel->lists('db_backups', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
-            $totalRecords = $this->commonModel->count('db_backups', $postData, $l);
+            if (!empty($parsed['searchString'])) $like = ['filename' => $parsed['searchString']];
+            $results = $this->commonModel->lists('db_backups', '*', $postData, 'id DESC', $parsed['length'], $parsed['start'], $like);
+            $totalRecords = $this->commonModel->count('db_backups', $postData, $like);
             $totalDisplayRecords = $totalRecords;
             helper('number');
             foreach ($results as $result) {
@@ -25,7 +23,7 @@ class Backup extends \Modules\Backend\Controllers\BaseController
             }
 
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalDisplayRecords,
                 'aaData' => $results,
@@ -33,6 +31,10 @@ class Backup extends \Modules\Backend\Controllers\BaseController
             return $this->respond($data, 200);
         }
 
+        $this->defData['stats'] = [
+            'totalBackups' => $this->commonModel->count('db_backups'),
+            'lastBackup' => $this->commonModel->selectOne('db_backups', [], 'created_at', 'id DESC')->created_at ?? '-'
+        ];
         return view('Modules\Backup\Views\list', $this->defData);
     }
 

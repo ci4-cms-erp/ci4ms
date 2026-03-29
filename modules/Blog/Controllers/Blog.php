@@ -26,18 +26,23 @@ class Blog extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * @return string
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = trim(strip_tags($data['search']['value']));
-            $l = [];
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
+            $defaultLocale = setting('App.defaultLocale') ?: 'tr';
+            $joins = [
+                ['table' => 'blog_langs', 'cond' => 'blog_langs.blog_id = blog.id AND blog_langs.lang = "' . $defaultLocale . '"', 'type' => 'left']
+            ];
+            $like = [];
             $postData = [];
-            if (!empty($like)) $l = ['title' => $like];
-            $results = $this->commonModel->lists('blog', 'id,title,isActive', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
-            $totalRecords = $this->commonModel->count('blog', $postData, $l);
+            if (!empty($parsed['searchString'])) {
+                $like = ['blog_langs.title' => $parsed['searchString']];
+            }
+            $results = $this->commonModel->lists('blog', 'blog.id, blog_langs.title, blog.isActive', $postData, 'blog.id DESC', $parsed['length'], $parsed['start'], $like, [], $joins);
+            $totalRecords = $this->commonModel->lists('blog', 'blog.id', $postData, 'blog.id DESC', 0, 0, $like, [], $joins, ['count' => true]);
             foreach ($results as $result) {
                 $result->isActive = '<input type="checkbox" name="my-checkbox" class="bswitch" ' . ((bool)$result->isActive === true ? 'checked' : '') . ' data-id="' . $result->id . '" data-off-color="danger" data-on-color="success">';
                 $result->actions = '<a href="' . route_to('blogUpdate', $result->id) . '"
@@ -46,28 +51,37 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                                    class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>';
             }
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalRecords,
                 'aaData' => $results,
             ];
             return $this->respond($data, 200);
         }
+        $this->defData['stats'] = [
+            'total' => $this->commonModel->count('blog'),
+            'active' => $this->commonModel->count('blog', ['isActive' => 1]),
+            'categories' => $this->commonModel->count('categories'),
+            'comments' => $this->commonModel->count('comments')
+        ];
         return view('Modules\Blog\Views\list', $this->defData);
     }
 
     /**
-     * @return string
+     * @return \CodeIgniter\HTTP\RedirectResponse|string
      */
     public function new()
     {
+        $translationService = new \Modules\LanguageManager\Libraries\TranslationService();
+        $languages = $translationService->getActiveLanguages();
+
         if ($this->request->is('post')) {
             $valData = ([
-                'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[blog.seflink]'],
-                'content' => ['label' => lang('Backend.content'), 'rules' => 'required'],
+                'lang.*.title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'lang.*.seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
+                'lang.*.content' => ['label' => lang('Backend.content'), 'rules' => 'required|html_purify'],
                 'isActive' => ['label' => lang('Backend.publish') . ' / ' . lang('Backend.draft'), 'rules' => 'required|in_list[0,1]'],
-                'categories' => ['label' => lang('Blog.categories'), 'rules' => 'required'],
+                'categories.*' => ['label' => lang('Blog.categories'), 'rules' => 'required|is_natural_no_zero'],
                 'author' => ['label' => lang('Blog.author'), 'rules' => 'required|is_natural_no_zero'],
                 'created_at' => ['label' => lang('Backend.createdAt'), 'rules' => 'required|valid_date[d.m.Y H:i:s]']
             ]);
@@ -76,49 +90,82 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
-            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
-            if ($this->validate($valData) == false) return redirect()->route('blogCreate')->withInput()->with('errors', $this->validator->getErrors());
-            if ($this->commonModel->isHave('blog', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->route('blogCreate')->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
 
-            $data = ['title' => trim(strip_tags($this->request->getPost('title'))), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => trim(strip_tags($this->request->getPost('seflink'))), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
-
-            if (!empty($this->request->getPost('pageimg'))) {
-                $data['seo']['coverImage'] = trim(strip_tags($this->request->getPost('pageimg')));
-                $data['seo']['IMGWidth'] = trim(strip_tags($this->request->getPost('pageIMGWidth')));
-                $data['seo']['IMGHeight'] = trim(strip_tags($this->request->getPost('pageIMGHeight')));
+            $langsPost = $this->request->getPost('lang');
+            // manual seflink unique check
+            foreach ($langsPost as $lanCode => $lanData) {
+                if ($this->commonModel->isHave('blog_langs', ['seflink' => $lanData['seflink']]) === 1) {
+                    return redirect()->route('blogCreate')->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz. Seflink: ' . $lanData['seflink']);
+                }
             }
-            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = trim(strip_tags($this->request->getPost('description')));
-            if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
+
+            if ($this->validate($valData) == false) return redirect()->route('blogCreate')->withInput()->with('errors', $this->validator->getErrors());
+
+            $data = ['isActive' => (bool)$this->request->getPost('isActive'), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
+
             $insertID = $this->commonModel->create('blog', $data);
             if ($insertID) {
+                // insert translatable fields
+                foreach ($langsPost as $lanCode => $lanData) {
+                    $seoData = clone $this->request;
+                    $seoData->setMethod('post'); // Mock a request to build seo data if needed?
+                    // Note: buildSeoData expects $_POST directly, we need to pass the isolated array or modify backend library.
+                    // simpler route: manually extract seo directly or use the whole post. Let's pass the language specific array:
+                    // we can't easily use buildSeoData if it expects global post. Let's send the merged array:
+                    $langDataMerged = array_merge($this->request->getPost(), $lanData);
+                    $seoData = $this->commonBackendLibrary->buildSeoData($langDataMerged);
+
+                    $this->commonModel->create('blog_langs', [
+                        'blog_id' => $insertID,
+                        'lang' => $lanCode,
+                        'title' => trim(strip_tags($lanData['title'])),
+                        'seflink' => trim(strip_tags($lanData['seflink'])),
+                        'content' => $lanData['content'],
+                        'seo' => !empty($seoData) ? $seoData : ''
+                    ]);
+                }
+
                 if (!empty($this->request->getPost('categories'))) {
                     foreach ($this->request->getPost('categories') as $item) {
                         $this->commonModel->create('blog_categories_pivot', ['blog_id' => $insertID, 'categories_id' => $item]);
                     }
                 }
+
+                // keywords are per language? For now, the existing form has one keyword field or multiple?
+                // Currently it has one. We'll add tags globally.
+                $firstLang = array_key_first($langsPost);
                 if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', (string)$insertID, 'tags');
-                return redirect()->route('blogs', [1])->with('message', lang('Backend.created', [esc($data['title'])]));
-            } else return redirect()->route('blogCreate')->withInput()->with('error', lang('Backend.notCreated', [esc($data['title'])]));
+                return redirect()->route('blogs', [1])->with('message', lang('Backend.created', [esc($langsPost[$firstLang]['title'])]));
+            } else return redirect()->route('blogCreate')->withInput()->with('error', lang('Backend.notCreated', ['Blog']));
         }
-        $this->defData['categories'] = $this->commonModel->lists('categories');
+        $locale = empty(session()->get('customLocale')) ? \Config\Services::request()->getLocale() : session()->get('customLocale');
+        $defaultLocale = setting('App.defaultLocale') ?: 'tr';
+        if (setting('App.siteLanguageMode') == 'single') $locale = $defaultLocale;
+
+        $this->defData['categories'] = $this->commonModel->lists('categories', 'categories.id, categories_langs.title, categories_langs.seflink', ['categories.isActive' => true], 'categories.id ASC', 0, 0, [], [], [
+             ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'left']
+        ]);
         $this->defData['authors'] = $this->commonModel->lists('users', '*', ['active' => 1]);
+        $this->defData['languages'] = $languages;
         return view('Modules\Blog\Views\create', $this->defData);
     }
 
     /**
      * @param string $id
-     * @return string
+     * @return \CodeIgniter\HTTP\RedirectResponse|string
      */
     public function edit(string $id)
     {
+        $translationService = new \Modules\LanguageManager\Libraries\TranslationService();
+        $languages = $translationService->getActiveLanguages();
+
         if ($this->request->is('post')) {
             $valData = ([
-                'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-                'content' => ['label' => lang('Backend.content'), 'rules' => 'required'],
+                'lang.*.title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'lang.*.seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
+                'lang.*.content' => ['label' => lang('Backend.content'), 'rules' => 'required|html_purify'],
                 'isActive' => ['label' => lang('Backend.publish') . ' / ' . lang('Backend.draft'), 'rules' => 'required|in_list[0,1]'],
-                'categories' => ['label' => lang('Blog.categories'), 'rules' => 'required'],
+                'categories.*' => ['label' => lang('Blog.categories'), 'rules' => 'required|is_natural_no_zero'],
                 'author' => ['label' => lang('Blog.author'), 'rules' => 'required|is_natural_no_zero'],
                 'created_at' => ['label' => lang('Backend.createdAt'), 'rules' => 'required|valid_date[d.m.Y H:i:s]']
             ]);
@@ -127,22 +174,41 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
-            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
-            if ($this->validate($valData) == false) return redirect()->route('blogUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
-            $info = $this->commonModel->selectOne('blog', ['id' => $id]);
-            if ($info->seflink != $this->request->getPost('seflink') && $this->commonModel->isHave('categories', ['seflink' => $this->request->getPost('seflink')]) === 1) return redirect()->route('blogUpdate', [$id])->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz.');
-            $data = ['title' => trim(strip_tags($this->request->getPost('title'))), 'content' => $this->request->getPost('content'), 'isActive' => (bool)$this->request->getPost('isActive'), 'seflink' => trim(strip_tags($this->request->getPost('seflink'))), 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
 
-            if (!empty($this->request->getPost('pageimg'))) {
-                $data['seo']['coverImage'] = trim(strip_tags($this->request->getPost('pageimg')));
-                $data['seo']['IMGWidth'] = trim(strip_tags($this->request->getPost('pageIMGWidth')));
-                $data['seo']['IMGHeight'] = trim(strip_tags($this->request->getPost('pageIMGHeight')));
+            $langsPost = $this->request->getPost('lang');
+            // Check unique seflink for languages, ignoring self
+            foreach ($langsPost as $lanCode => $lanData) {
+                // query blog_langs where seflink equals and blog_id != $id
+                $check = $this->commonModel->selectOne('blog_langs', ['seflink' => $lanData['seflink'], 'blog_id !=' => $id]);
+                if (!empty($check)) {
+                    return redirect()->route('blogUpdate', [$id])->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz. Seflink: ' . $lanData['seflink']);
+                }
             }
-            if (!empty($this->request->getPost('description'))) $data['seo']['description'] = $this->request->getPost('description');
 
-            if (!empty($data['seo'])) $data['seo'] = json_encode($data['seo'], JSON_UNESCAPED_UNICODE);
+            if ($this->validate($valData) == false) return redirect()->route('blogUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
+
+            $data = ['isActive' => (bool)$this->request->getPost('isActive'), 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
+
             if ($this->commonModel->edit('blog', $data, ['id' => $id])) {
+                foreach ($langsPost as $lanCode => $lanData) {
+                    $langDataMerged = array_merge($this->request->getPost(), $lanData);
+                    $seoData = $this->commonBackendLibrary->buildSeoData($langDataMerged);
+                    $langUpdateData = [
+                        'blog_id' => $id,
+                        'lang' => $lanCode,
+                        'title' => trim(strip_tags($lanData['title'])),
+                        'seflink' => trim(strip_tags($lanData['seflink'])),
+                        'content' => $lanData['content'],
+                        'seo' => !empty($seoData) ? $seoData : ''
+                    ];
+
+                    if ($this->commonModel->isHave('blog_langs', ['blog_id' => $id, 'lang' => $lanCode]) === 1) {
+                        $this->commonModel->edit('blog_langs', $langUpdateData, ['blog_id' => $id, 'lang' => $lanCode]);
+                    } else {
+                        $this->commonModel->create('blog_langs', $langUpdateData);
+                    }
+                }
+
                 if (!empty($this->request->getPost('keywords')))
                     $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', $id, 'tags', true);
                 if (!empty($this->request->getPost('categories'))) {
@@ -151,27 +217,42 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                         $this->commonModel->create('blog_categories_pivot', ['blog_id' => $id, 'categories_id' => $item]);
                     }
                 }
-                return redirect()->route('blogs', [1])->with('message', lang('Backend.updated', [esc($data['title'])]));
-            } else return redirect()->route('blogUpdate', [$id])->withInput()->with('error', lang('Backend.notUpdated', [esc($data['title'])]));
+                $firstLang = array_key_first($langsPost);
+                return redirect()->route('blogs', [1])->with('message', lang('Backend.updated', [esc($langsPost[$firstLang]['title'])]));
+            } else return redirect()->route('blogUpdate', [$id])->withInput()->with('error', lang('Backend.notUpdated', ['Blog']));
         }
         $this->defData['tags'] = $this->model->limitTags_ajax(['tags_pivot.tagType' => 'blogs', 'tags_pivot.piv_id' => $id]);
         $t = [];
         foreach ($this->defData['tags'] as $tag) {
             $t[] = ['id' => (string)$tag->id, 'value' => $tag->tag];
         }
-        $this->defData['categories'] = $this->commonModel->lists('categories');
+        $locale = empty(session()->get('customLocale')) ? \Config\Services::request()->getLocale() : session()->get('customLocale');
+        $defaultLocale = setting('App.defaultLocale') ?: 'tr';
+        if (setting('App.siteLanguageMode') == 'single') $locale = $defaultLocale;
+
+        $this->defData['categories'] = $this->commonModel->lists('categories', 'categories.id, categories_langs.title, categories_langs.seflink', ['categories.isActive' => true], 'categories.id ASC', 0, 0, [], [], [
+             ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'left']
+        ]);
         $this->defData['infos'] = $this->commonModel->selectOne('blog', ['id' => $id]);
-        $this->defData['infos']->seo = json_decode($this->defData['infos']->seo);
+
+        $langRows = $this->commonModel->lists('blog_langs', '*', ['blog_id' => $id]);
+        $langsData = [];
+        foreach ($langRows as $lr) {
+            $langsData[$lr->lang] = $lr;
+            $langsData[$lr->lang]->seo = json_decode($lr->seo);
+        }
+        $this->defData['langsData'] = $langsData;
+
         $this->defData['infos']->categories = $this->commonModel->lists('blog_categories_pivot', '*', ['blog_id' => $id]);
         $this->defData['tags'] = json_encode($t, JSON_UNESCAPED_UNICODE);
         $this->defData['authors'] = $this->commonModel->lists('users', '*', ['active' => 1]);
+        $this->defData['languages'] = $languages;
         unset($t);
         return view('Modules\Blog\Views\update', $this->defData);
     }
 
     /**
-     * @param $id
-     * @return \CodeIgniter\HTTP\RedirectResponse
+     * @return \CodeIgniter\HTTP\ResponseInterface
      */
     public function delete()
     {
@@ -180,34 +261,39 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
-        $blog = $this->commonModel->selectOne('blog', ['id' => $this->request->getPost('id')]);
-        if ($this->commonModel->remove('blog', ['id' => $this->request->getPost('id')]) === true) return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$blog->title])]);
-        else return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$blog->title])]);
+
+        $deleteId = $this->request->getPost('id');
+        $defaultLocale = setting('App.defaultLocale') ?: 'tr';
+        $blogLang = $this->commonModel->selectOne('blog_langs', ['blog_id' => $deleteId, 'lang' => $defaultLocale]);
+        $title = $blogLang ? $blogLang->title : 'Blog';
+
+        if ($this->commonModel->remove('blog', ['id' => $deleteId]) === true) return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$title])]);
+        else return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$title])]);
     }
 
     /**
-     * @return string
+     * @param string $id
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function commentList()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = $data['search']['value'] ?? '';
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $searchData = ['isApproved' => $this->request->getPost('isApproved') == 'true' ? true : false];
-            $l = [];
-            if (!empty($like)) $l = ['comFullName' => $like, 'comEmail' => $like];
+            $like = [];
+            if (!empty($parsed['searchString'])) $like = ['comFullName' => $parsed['searchString'], 'comEmail' => $parsed['searchString']];
             $results = $this->commonModel->lists(
                 'comments',
                 '*',
                 $searchData,
                 'id DESC',
-                (int)$data['length'],
-                (int)$data['start'],
-                $l
+                $parsed['length'],
+                $parsed['start'],
+                $like
             );
             $totalRecords = $this->commonModel->count('comments', $searchData);
             $totalDisplayRecords = $totalRecords;
-            $c = ($data['start'] > 0) ? $data['start'] + 1 : 1;
+            $c = ($parsed['start'] > 0) ? $parsed['start'] + 1 : 1;
             $aaData = [];
             foreach ($results as $result) {
                 $aaData[] = [
@@ -225,7 +311,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             }
 
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalDisplayRecords,
                 'aaData' => $aaData,

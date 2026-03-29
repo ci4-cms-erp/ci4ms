@@ -7,9 +7,7 @@ class SettingsConfig extends \CodeIgniter\Config\BaseConfig
 
     public $csrfExcept = [
         'backend/settings/setTemplate',
-        'backend/settings/elfinderConvertWebp',
-        'backend/settings/testMail',
-        'backend/settings/updateVersion',
+        'backend/settings/*',
     ];
 
     public $filters = [
@@ -17,5 +15,19 @@ class SettingsConfig extends \CodeIgniter\Config\BaseConfig
             'backend/settings',
             'backend/settings/*',
         ]]
+    ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-cogs',
+    ];
+
+    public $menus = [
+        'Settings.settings' => [
+            'icon'         => 'fas fa-cogs',
+            'inNavigation' => true,
+            'hasChild'     => false,
+            'pageSort'     => 100,
+            'parent_pk'    => null
+        ]
     ];
 }

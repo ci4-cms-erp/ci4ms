@@ -1,47 +1,29 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('head') ?>
-<?php echo link_tag('be-assets/plugins/jquery-fancytree/skin-bootstrap/ui.fancytree.min.css') ?>
-<?php echo link_tag('be-assets/plugins/jquery-ui/jquery-ui.min.css') ?>
-<?php echo link_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.css') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag('be-assets/plugins/jquery-fancytree/skin-bootstrap/ui.fancytree.min.css');
+echo link_tag('be-assets/plugins/jquery-ui/jquery-ui.min.css');
+echo link_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.css'); ?>
 <style {csp-style-nonce}>
     .ui-menu kbd {
         /* Keyboard shortcuts for ui-contextmenu titles */
         float: right;
     }
 </style>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1><?php echo lang($title->pagename) ?></h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right"></ol>
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
-
+<?php echo $this->endSection();
+echo $this->section('content'); ?>
 <!-- Main content -->
-<section class="content">
+<section class="content pt-3">
 
-    <div class="card card-outline card-shl">
-        <div class="card-header">
-            <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
-
-            <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
-                </button>
-            </div>
+    <div class="card premium-card">
+        <div class="card-header d-flex align-items-center">
+            <h3 class="card-title font-weight-bold mb-0">
+                <i class="far fa-folder mr-2 text-primary"></i> <?php echo lang($title->pagename) ?>
+            </h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="row">
                 <div class="col-3">
                     <div class="row">
@@ -56,25 +38,24 @@
                     <div id="editorContainer" class="h-100"></div>
                 </div>
 
-                <div class="col-12 float-end">
-                    <button id="saveFile" class="btn btn-primary float-right"><?php echo lang('Backend.save') ?></button>
+                <div class="col-12">
+                    <button id="saveFile" class="btn btn-success w-100"><i class="fas fa-save"></i> <?php echo lang('Backend.save') ?></button>
                 </div>
             </div>
         </div>
 </section>
 <!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag('be-assets/plugins/jquery-ui/jquery-ui.min.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/jquery.fancytree.min.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.edit.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.filter.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.dnd.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.glyph.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.js') ?>
-<?php echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.ui.position.min.js') ?>
-<?php echo script_tag('be-assets/plugins/monaco-editor/vs/loader.js') ?>
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag('be-assets/plugins/jquery-ui/jquery-ui.min.js');
+echo script_tag('be-assets/plugins/jquery-fancytree/jquery.fancytree.min.js');
+echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.edit.js');
+echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.filter.js');
+echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.dnd.js');
+echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.glyph.js');
+echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.js');
+echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.ui.position.min.js');
+echo script_tag('be-assets/plugins/monaco-editor/vs/loader.js'); ?>
 <script {csp-script-nonce}>
     $('body').addClass('sidebar-collapse');
 
@@ -245,7 +226,7 @@
                 icon: "folder",
                 callback: function(key, opt) {
                     var node = $.ui.fancytree.getNode(opt.$trigger);
-                    var folderName = prompt("Yeni klasör adı:");
+                    var folderName = prompt("<?php echo lang('Fileeditor.newFolderName') ?>");
                     if (folderName) {
                         $.ajax({
                             url: '<?php echo route_to("createFolder") ?>',

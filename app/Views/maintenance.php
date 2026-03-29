@@ -27,8 +27,8 @@
                         $sn = (object)$sn; ?>
                         <span class="pp-social-icon">
                             <link itemprop="url" href="#">
-                            <a itemprop="sameAs" href="<?php echoesc($sn->link) ?>" target="_blank" title="<?php echoesc($sn->smName) ?>" aria-label="<?php echoesc($sn->smName) ?>" role="button">
-                                <i class="fa fa-<?php echoesc($sn->smName) ?>"></i>
+                            <a itemprop="sameAs" href="<?php echo esc($sn->link) ?>" target="_blank" title="<?php echo esc($sn->smName) ?>" aria-label="<?php echo esc($sn->smName) ?>" role="button">
+                                <i class="fa fa-<?php echo esc($sn->smName) ?>"></i>
                             </a>
                         </span>
                 <?php endforeach;

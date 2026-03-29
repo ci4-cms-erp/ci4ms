@@ -2,7 +2,7 @@
 
 namespace Modules\Backend\Libraries;
 
-use ci4commonmodel\Models\CommonModel;
+use ci4commonmodel\CommonModel;
 
 class CommonTagsLibrary
 {

@@ -33,77 +33,111 @@ class Forms extends \App\Controllers\BaseController
     public function searchForm()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
+        $locale = $this->request->getLocale();
         $valData = ([
-            'term' => ['label' => '', 'rules' => 'required|min_length[2]'],
+            'term' => ['label' => '', 'rules' => 'required|min_length[2]|regex_match[/^[^<>{}=]+$/u]'],
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $result = [];
-        $term = strip_tags(trim($this->request->getPost('term')));
-        $results = $this->commonModel->lists('pages', '*', [], 'title ASC', 0, 0, ['title' => $term, 'content' => $term]);
-        $filtered = array_values(array_filter($results, static function ($row) use ($term) {
-            $html = $row->content ?? '';         // HTML veriniz
-            if ($term === '') {
-                return true;                       // Boş terimde hepsini tut
-            }
+        $term = strip_tags(trim($this->request->getGet('term')));
 
-            $commentPattern = '/<!--[\s\S]*?-->/';
-            preg_match_all($commentPattern, $html, $commentMatches);
+        // Helper function for content filtering
+        $filterByContent = static function ($results, $term) {
+            return array_values(array_filter($results, static function ($row) use ($term) {
+                if (stripos($row->title, $term) !== false) return true;
+                $html = $row->content ?? '';
+                $commentPattern = '/<!--[\s\S]*?-->/';
+                $withoutComments = preg_replace($commentPattern, '', $html);
+                return stripos($withoutComments, $term) !== false;
+            }));
+        };
 
-            $termInComments = false;
-            foreach ($commentMatches[0] ?? [] as $comment) {
-                if (stripos($comment, $term) !== false) {
-                    $termInComments = true;
-                    break;
-                }
-            }
+        // Pages Search
+        $results = $this->commonModel->lists('pages_langs', 'pages.id, pages_langs.title, pages_langs.seflink, pages_langs.content', [
+            'pages.isActive' => 1,
+            'pages_langs.lang' => $locale
+        ], 'pages_langs.title ASC', 10, 0, [
+            'pages_langs.title' => $term,
+            'pages_langs.content' => $term
+        ], [], [
+            ['table' => 'pages', 'cond' => 'pages.id = pages_langs.pages_id', 'type' => 'inner']
+        ]);
+        
+        $filteredPages = $filterByContent($results, $term);
 
-            $withoutComments = preg_replace($commentPattern, '', $html);
-            $termOutside     = stripos($withoutComments, $term) !== false;
-
-            return $termOutside || ! $termInComments;
-        }));
-        if (!empty($filtered)) {
+        if (!empty($filteredPages)) {
             $pages = array_map(function ($page) {
                 return [
                     'value' => $page->title,
-                    'url' => '/' . $page->seflink
+                    'url' => '/' . ($page->id == setting('App.homePage') ? '' : $page->seflink)
                 ];
-            }, $filtered);
+            }, $filteredPages);
             $result = array_merge($result, $pages);
         }
 
-        $results = $this->commonModel->lists('blog', '*', [], 'title ASC', 0, 0, ['title' => $term, 'content' => $term]);
-        if (!empty($results)) {
+        // Blog Search
+        $results = $this->commonModel->lists('blog_langs', 'blog_langs.title, blog_langs.seflink, blog_langs.content', [
+            'blog.isActive' => 1,
+            'blog_langs.lang' => $locale
+        ], 'blog_langs.title ASC', 10, 0, [
+            'blog_langs.title' => $term,
+            'blog_langs.content' => $term
+        ], [], [
+            ['table' => 'blog', 'cond' => 'blog.id = blog_langs.blog_id', 'type' => 'inner']
+        ]);
+        
+        $filteredBlogs = $filterByContent($results, $term);
+
+        if (!empty($filteredBlogs)) {
             $blogs = array_map(function ($page) {
                 return [
                     'value' => '[blog] ' . $page->title,
                     'url' => '/blog/' . $page->seflink
                 ];
-            }, $results);
+            }, $filteredBlogs);
             $result = array_merge($result, $blogs);
         }
 
-        $results = $this->commonModel->lists('tags', '*', [], 'tag ASC', 0, 0, ['tag' => $term]);
+        // Tags Search
+        $results = $this->commonModel->lists('tags', '*', [], 'tag ASC', 10, 0, ['tag' => $term]);
         if (!empty($results)) {
+            $filteredTags = array_values(array_filter($results, static function ($row) use ($term) {
+                return stripos($row->tag, $term) !== false;
+            }));
+            
             $tags = array_map(function ($page) {
                 return [
                     'value' => '[etiket] ' . $page->tag,
                     'url' => '/tag/' . $page->seflink
                 ];
-            }, $results);
+            }, $filteredTags);
             $result = array_merge($result, $tags);
         }
 
-        $results = $this->commonModel->lists('categories', '*', [], 'title ASC', 0, 0, ['title' => $term]);
+        // Categories Search
+        $results = $this->commonModel->lists('categories_langs', 'categories_langs.title, categories_langs.seflink', [
+            'categories.isActive' => 1,
+            'categories_langs.lang' => $locale
+        ], 'categories_langs.title ASC', 10, 0, [
+            'categories_langs.title' => $term
+        ], [], [
+            ['table' => 'categories', 'cond' => 'categories.id = categories_langs.categories_id', 'type' => 'inner']
+        ]);
+        
         if (!empty($results)) {
-            $tags = array_map(function ($page) {
+            $filteredCats = array_values(array_filter($results, static function ($row) use ($term) {
+                return stripos($row->title, $term) !== false;
+            }));
+
+            $cats = array_map(function ($page) {
                 return [
                     'value' => '[kategori] ' . $page->title,
                     'url' => '/category/' . $page->seflink
                 ];
-            }, $results);
-            $result = array_merge($result, $tags);
+            }, $filteredCats);
+            $result = array_merge($result, $cats);
         }
+
         if (!empty($result))
             return $this->respond($result, 200);
         else

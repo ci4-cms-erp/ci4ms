@@ -1,8 +1,8 @@
-<?php echo $this->extend('Views/templates/default/base') ?>
-<?php echo $this->section('head') ?>
-<?php echo link_tag('templates/default/assets/404.css') ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
+<?php echo $this->extend('Views/templates/default/base');
+echo $this->section('head');
+echo link_tag('templates/default/assets/404.css');
+echo $this->endSection();
+echo $this->section('content'); ?>
 <section class="page_404">
     <div class="container-fluid">
         <div class="row">

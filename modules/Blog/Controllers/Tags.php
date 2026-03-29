@@ -9,11 +9,11 @@ class Tags extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post') && $this->request->isAJAX()) {
             $data = clearFilter($this->request->getPost());
             $like = trim(strip_tags($data['search']['value']));
-            $l = [];
+            $like = [];
             $postData = [];
-            if (!empty($like)) $l = ['tag' => $like];
-            $results = $this->commonModel->lists('tags', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $l);
-            $totalRecords = $this->commonModel->count('tags', $postData, $l);
+            if (!empty($like)) $like = ['tag' => $like];
+            $results = $this->commonModel->lists('tags', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start'], $like);
+            $totalRecords = $this->commonModel->count('tags', $postData, $like);
             foreach ($results as $result) {
                 $result->actions = '<a href="' . route_to('tagUpdate', $result->id) . '"
                                    class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>
@@ -34,8 +34,8 @@ class Tags extends \Modules\Backend\Controllers\BaseController
     public function create()
     {
         $valData = ([
-            'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-            'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+            'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+            'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
         ]);
         if ($this->validate($valData) == false) return redirect()->route('tags')->withInput()->with('errors', $this->validator->getErrors());
         if ($this->commonModel->create('tags', ['tag' => trim(strip_tags($this->request->getPost('title'))), 'seflink' => trim(strip_tags($this->request->getPost('seflink')))])) return redirect()->route('tags', [1])->with('message', lang('Backend.created', [esc($this->request->getPost('title'))]));
@@ -46,8 +46,8 @@ class Tags extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]']
+                'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]']
             ]);
             if ($this->validate($valData) == false) return redirect()->route('tags')->withInput()->with('errors', $this->validator->getErrors());
             if ($this->commonModel->edit('tags', ['tag' => trim(strip_tags($this->request->getPost('title'))), 'seflink' => trim(strip_tags($this->request->getPost('seflink')))], ['id' => $id])) return redirect()->route('tags', [1])->with('message', lang('Backend.updated', [esc($this->request->getPost('title'))]));

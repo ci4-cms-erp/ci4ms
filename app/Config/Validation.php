@@ -24,7 +24,7 @@ class Validation extends BaseConfig
         Rules::class,
         FormatRules::class,
         FileRules::class,
-        CreditCardRules::class
+        CreditCardRules::class,
     ];
 
     /**
@@ -53,10 +53,9 @@ class Validation extends BaseConfig
         foreach ($modules as $module) {
             $validationDir =  $this->modulesPath . $module . '/Validation';
             if (is_dir($validationDir)) {
-                foreach (glob($validationDir . '*.php') as $file) {
+                foreach (glob($validationDir . '/*.php') as $file) {
                     $className = "\\Modules\\$module\\Validation\\" . basename($file, '.php');
                     if (!in_array($className, $this->ruleSets)) {
-                        $className .= '::class';
                         $this->ruleSets[] = $className;
                     }
                 }
@@ -64,21 +63,16 @@ class Validation extends BaseConfig
         }
 
         if (is_dir($this->themesPath)) {
-            $themes = array_filter(scandir($this->themesPath), function ($module) {
-                return !in_array($module, ['.', '..', '.DS_Store']) && is_dir($this->themesPath . DIRECTORY_SEPARATOR . $module);
+            $themes = array_filter(scandir($this->themesPath), function ($item) {
+                return !in_array($item, ['.', '..', '.DS_Store']) && is_dir($this->themesPath . DIRECTORY_SEPARATOR . $item);
             });
-            if (!empty($themes)) {
-                $settings = (object) cache('settings');
-                foreach ($themes as $theme) {
-                    if ($theme === '.' || $theme === '..') continue;
-                    $validationDir = $this->themesPath . $settings->templateInfos->path . '/';
-                    if (is_dir($validationDir)) {
-                        foreach (glob($validationDir . '*.php') as $file) {
-
-                            $className =  "\\App\\Validation\\templates\\" . $settings->templateInfos->path . "\\" . basename($file, '.php');
-                            if (!in_array($className, $this->ruleSets) && class_exists($className)) {
-                                $this->ruleSets[] = $className;
-                            }
+            foreach ($themes as $theme) {
+                $validationDir = $this->themesPath . $theme . '/';
+                if (is_dir($validationDir)) {
+                    foreach (glob($validationDir . '*.php') as $file) {
+                        $className = "\\App\\Validation\\templates\\" . $theme . "\\" . basename($file, '.php');
+                        if (!in_array($className, $this->ruleSets) && class_exists($className)) {
+                            $this->ruleSets[] = $className;
                         }
                     }
                 }

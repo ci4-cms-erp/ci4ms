@@ -257,12 +257,10 @@ input:checked + .toggle-slider:before {
 
 /* Sayfa Öğeleri */
 .page-item {
-  padding: 1rem;
   border-bottom: 1px solid #eee;
   background-color: #fff;
   transition: background-color 0.2s;
   position: relative;
-  padding-right: 70px;
 }
 
 .page-item.inactive {

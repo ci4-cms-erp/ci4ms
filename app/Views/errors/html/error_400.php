@@ -83,11 +83,11 @@
         <h1>400</h1>
 
         <p>
-            <?php if (ENVIRONMENT !== 'production') : ?>
-                <?php echo nl2br(esc($message)) ?>
-            <?php else : ?>
-                <?php echo lang('Errors.sorryBadRequest') ?>
-            <?php endif; ?>
+            <?php if (ENVIRONMENT !== 'production') :
+                echo nl2br(esc($message));
+            else :
+                echo lang('Errors.sorryBadRequest');
+            endif; ?>
         </p>
     </div>
 </body>

@@ -17,5 +17,16 @@ return [
     'backToBackup' => 'Return to this backup',
     'createBackupDescription' => 'Creates a full copy of the database and downloads it as a `.zip` file.',
     'dbRestore' => 'Database successfully restored.',
-    'dbNotRestore' => 'Restore failed.'
+    'dbNotRestore' => 'Restore failed.',
+    'searchPlaceholder' => 'Search backups...',
+    'createNow' => 'Create Backup Now',
+    'backupCreated' => 'Backup created successfully.',
+    'backingUp' => 'Backing up...',
+    'errorOccurred' => 'An error occurred',
+    'deleteConfirmTitle' => 'Delete this backup?',
+    'deleteConfirmBtn' => 'Yes, Delete',
+    'lastBackupTime' => 'Last Backup Time',
+    'quickActions' => 'Quick Actions',
+    'restoreExternal' => 'Restore External SQL (.zip)',
+    'chooseFile' => 'Choose file...',
 ];

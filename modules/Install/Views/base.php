@@ -29,9 +29,6 @@
             <?php echo $this->renderSection('content') ?>
             <div class="row p-3 bg-success">
                 <div class="col-12">
-                    <div class="float-right d-none d-sm-block">
-                        <b>Version</b> <?php echo getGitVersion() ?>
-                    </div>
                     <strong>Copyright &copy; <?php echo date('Y') ?>.</strong> All rights reserved.
                 </div>
             </div>

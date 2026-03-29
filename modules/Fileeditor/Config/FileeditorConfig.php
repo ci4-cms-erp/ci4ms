@@ -15,4 +15,19 @@ class FileeditorConfig extends \CodeIgniter\Config\BaseConfig
             'backend/fileeditor/*'
         ]]
     ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-file-code',
+    ];
+
+    public $menus = [
+
+        'Fileeditor.fileEditor' => [
+            'icon'         => 'far fa-folder',
+            'inNavigation' => true,
+            'hasChild'     => false,
+            'pageSort'     => 9,
+            'parent_pk'    => null
+        ]
+        ];
 }

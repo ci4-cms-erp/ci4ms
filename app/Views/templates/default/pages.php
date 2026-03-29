@@ -1,8 +1,8 @@
-<?php echo $this->extend('Views/templates/default/base') ?>
-<?php echo $this->section('metatags') ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
-<?php if ($pageInfo->seflink != '/'): ?>
+<?php echo $this->extend('Views/templates/default/base');
+echo $this->section('metatags');
+echo $this->endSection();
+echo $this->section('content');
+if ((int)setting('App.homePage') != $pageInfo->id): ?>
     <header class="py-5 bg-light border-bottom mb-4">
         <div class="container">
             <div class="text-center my-5">
@@ -17,7 +17,7 @@
                             <?php if ($breadcrumb['url'] == site_url(esc($pageInfo->seflink))) { ?>
                                 <?php echo esc($breadcrumb['title']) ?>
                             <?php } else { ?>
-                                <a href="<?php echo esc(site_url($breadcrumb['url']), 'url') ?>">
+                                <a href="<?php echo esc($breadcrumb['url']) ?>">
                                     <?php echo esc($breadcrumb['title']) ?>
                                 </a>
                             <?php } ?>

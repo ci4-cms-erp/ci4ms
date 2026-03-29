@@ -63,6 +63,12 @@ writable/uploads/*
 writable/debugbar/*
 !writable/debugbar/.gitkeep
 
+writable/backups/*
+!writable/backups/index.html
+
+writable/tmp/*
+!writable/tmp/index.html
+
 php_errors.log
 
 #-------------------------
@@ -136,3 +142,23 @@ public/uploads/.trash/
 public/media/.tmb/
 writable/tmp/*
 CONTRIBUTORS.md
+bertug_s_docs
+modules/Grapes
+modules/ActivityLog
+modules/Crm
+modules/Cronjobs
+modules/DocumentManager
+modules/EmailManagement
+modules/FormBuilder
+modules/TaskManager
+modules/LicenseServer
+modules/LicenseClient
+modules/TaskManager
+public/be-assets/plugins/grapesjs
+.agent
+build/
+dist/
+composer.lock.json
+.antigravityignore
+.claude
+modules/Notifications

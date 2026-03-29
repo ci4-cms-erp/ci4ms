@@ -1,198 +1,195 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title');
+echo lang($title->pagename);
+echo $this->endSection();
+echo $this->section('head');
+echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css');
+echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css');
+echo $this->endSection();
+echo $this->section('content'); ?>
 
-<?php echo $this->section('title') ?>
-<?php echo lang($title->pagename) ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('head') ?>
-<?php echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') ?>
-<?php echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') ?>
-<?php echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') ?>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row pb-3 border-bottom">
-            <div class="col-sm-6">
-                <h1><?php echo lang($title->pagename) ?></h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right"><a href="<?php echo route_to('create_user') ?>"
-                        class="btn btn-outline-success"><i
-                            class="fas fa-user-plus"></i> <?php echo lang('Users.addUser') ?></a></ol>
+<section class="content pt-3">
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="m-stat-card">
+                <div class="m-stat-icon st-total"><i class="fas fa-users"></i></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['total'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Users.totalUsers') ?? 'Toplam Kullanıcı' ?></div>
+                </div>
             </div>
         </div>
-    </div><!-- /.container-fluid -->
-</section>
+        <div class="col-md-4">
+            <div class="m-stat-card">
+                <div class="m-stat-icon st-active"><i class="fas fa-user-check"></i></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['active'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Backend.active') ?? 'Aktif Kullanıcı' ?></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="m-stat-card">
+                <div class="m-stat-icon st-banned"><i class="fas fa-user-slash"></i></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['banned'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Users.bannedUsers') ?? 'Kara Liste' ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Main content -->
-<section class="content">
-    <div class="card card-outline card-shl">
-        <!-- /.card-header -->
-        <div class="card-body">
-            <div class="table-responsive">
-                <table id="userTable" class="table table-bordered table-striped">
+    <!-- Main Table Card -->
+    <div class="card premium-card">
+        <div class="card-header d-flex align-items-center">
+            <h3 class="card-title font-weight-bold mb-0">
+                <i class="fas fa-user-shield mr-2 text-dark"></i> <?php echo lang($title->pagename) ?>
+            </h3>
+            <div class="ml-auto">
+                <a href="<?php echo route_to('create_user') ?>" class="btn btn-sm btn-success px-4" style="border-radius:10px">
+                    <i class="fas fa-user-plus mr-1"></i> <?php echo lang('Users.addUser') ?>
+                </a>
+                <button class="btn btn-sm btn-outline-secondary ml-1" id="btnRefresh" style="border-radius:10px" title="refresh">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="p-4">
+                <table id="userTable" class="table table-hover w-100">
                     <thead>
                         <tr>
                             <th><?php echo lang('Backend.fullName') ?></th>
                             <th><?php echo lang('Backend.email') ?></th>
-                            <th><?php echo lang('Backend.status') ?></th>
+                            <th style="text-align:center"><?php echo lang('Backend.status') ?></th>
                             <th><?php echo lang('Users.authority') ?></th>
-                            <th><?php echo lang('Backend.transactions') ?></th>
+                            <th style="text-align:right"><?php echo lang('Backend.transactions') ?></th>
                         </tr>
                     </thead>
-                    <tbody>
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
 
+            <!-- Blacklist Modal -->
             <div class="modal fade" id="blackListModal" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalTitle">Kara Liste İşlemi</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                    <div class="modal-content" style="border-radius:15px;overflow:hidden">
+                        <div class="modal-header" style="background:#f7f9fc;border-bottom:1px solid #edf2f7">
+                            <h5 class="modal-title font-weight-bold" id="modalTitle">Kara Liste İşlemi</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         </div>
                         <form id="blackListForm" method="post">
                             <?php echo csrf_field() ?>
                             <input type="hidden" name="uid" id="modal_uid">
-                            <div class="modal-body">
-                                <div id="modalNoteArea" class="mb-3">
-                                    <label>Mevcut Not:</label>
-                                    <div id="currentNote" class="alert alert-secondary"></div>
+                            <div class="modal-body p-4">
+                                <div id="modalNoteArea" class="mb-4">
+                                    <label class="text-muted small font-weight-bold uppercase">Mevcut Not:</label>
+                                    <div id="currentNote" class="alert alert-secondary border-0" style="border-radius:10px"></div>
                                 </div>
                                 <div class="form-group">
-                                    <label id="noteLabel">İşlem Notu</label>
-                                    <textarea name="note" id="noteInput" class="form-control" rows="4"></textarea>
+                                    <label id="noteLabel" class="font-weight-bold">İşlem Notu</label>
+                                    <textarea name="note" id="noteInput" class="form-control" rows="4" style="border-radius:10px;border:1px solid #e2e8f0"></textarea>
                                 </div>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Vazgeç</button>
-                                <button type="submit" id="modalSubmitBtn" class="btn btn-dark">Kaydet</button>
+                            <div class="modal-footer" style="background:#f7f9fc;border-top:1px solid #edf2f7">
+                                <button type="button" class="btn btn-light px-4" data-dismiss="modal" style="border-radius:10px">Vazgeç</button>
+                                <button type="submit" id="modalSubmitBtn" class="btn btn-dark px-4" style="border-radius:10px">Kaydet</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- /.card-body -->
     </div>
 </section>
 
-<!-- /.content -->
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript') ?>
-<?php echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') ?>
-<?php echo script_tag('be-assets/plugins/jszip/jszip.min.js') ?>
-<?php echo script_tag('be-assets/plugins/pdfmake/pdfmake.min.js') ?>
-<?php echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js') ?>
-<?php echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js') ?>
-<!-- SweetAlert2 -->
+<?php echo $this->endSection();
+echo $this->section('javascript');
+echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
+echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
+echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
+echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
 <script {csp-script-nonce}>
-    $('#modalNoteArea').hide();
-    var table = $('#userTable').DataTable({
-        "processing": true,
-        "serverSide": true, // Sunucu taraflı işlem için
-        "ajax": {
-            "url": "<?php echo route_to('users') ?>", // Controller'da bu rotayı tanımlamalısınız
-            "type": "POST"
-        },
-        "columns": [{
-                "data": "fullname"
+    $(function() {
+        var table = $('#userTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "<?php echo route_to('users') ?>",
+                type: "POST"
             },
-            {
-                "data": "email"
-            },
-            {
-                "data": "status"
-            },
-            {
-                "data": "groupName"
-            },
-            {
-                "data": "actions",
-                "orderable": false
-            }
-        ]
+            columns: [{
+                    data: "fullname",
+                    render: (d, t, r) => `<div class="d-flex align-items-center"><img src="${r.profileIMG || '/be-assets/img/avatar.png'}" class="user-avatar" onerror="this.src='/be-assets/img/avatar.png'"><span class="font-weight-600">${d}</span></div>`
+                },
+                {
+                    data: "email"
+                },
+                {
+                    data: "status",
+                    className: "text-center",
+                    render: (d) => d === 'banned' ? '<span class="m-status-pill pill-banned">Banned</span>' : '<span class="m-status-pill pill-active">Active</span>'
+                },
+                {
+                    data: "groupName",
+                    render: (d) => `<span class="badge badge-light border" style="border-radius:6px;font-weight:500;color:#718096">${d}</span>`
+                },
+                {
+                    data: "actions",
+                    orderable: false,
+                    className: "text-right"
+                }
+            ],
+            language: ci4msDtLanguage('<?php echo lang('Users.searchPlaceholder') ?>')
+        });
+
+        $('#btnRefresh').click(() => table.ajax.reload());
     });
 
-    // 2. Dinamik Modal Açma (Kara Liste için)
     $(document).on('click', '.open-blacklist-modal', function() {
-        var uid = $(this).data('id');
-        var status = $(this).data('status');
-        var note = $(this).data('note');
-
+        var uid = $(this).data('id'),
+            status = $(this).data('status'),
+            note = $(this).data('note');
         $('#modal_uid').val(uid);
-
         if (status === 'banned') {
-            $('#modalTitle').text('Kara Listeden Çıkar');
+            $('#modalTitle').text('<?php echo lang('Users.removeFromBlacklistTitle') ?>');
             $('#modalNoteArea').show();
             $('#currentNote').text(note);
-            $('#noteInput').hide();
-            $('#noteLabel').hide();
+            $('#noteInput, #noteLabel').hide();
             $('#blackListForm').attr('action', "<?php echo route_to('removeFromBlacklist') ?>");
-            $('#modalSubmitBtn').html('<i class="fas fa-user-check"></i> Listeden Çıkar');
+            $('#modalSubmitBtn').html('<i class="fas fa-user-check mr-1"></i> <?php echo lang('Users.removeFromBlacklistBtn') ?>');
         } else {
-            $('#modalTitle').text('Kara Listeye Ekle');
+            $('#modalTitle').text('<?php echo lang('Users.addToBlacklistTitle') ?>');
             $('#modalNoteArea').hide();
-            $('#noteInput').show();
-            $('#noteLabel').show();
+            $('#noteInput, #noteLabel').show();
             $('#blackListForm').attr('action', "<?php echo route_to('blackList') ?>");
-            $('#modalSubmitBtn').html('<i class="fas fa-user-slash"></i> Kara Listeye Al');
+            $('#modalSubmitBtn').html('<i class="fas fa-user-slash mr-1"></i> <?php echo lang('Users.addToBlacklistBtn') ?>');
         }
-
         $('#blackListModal').modal('show');
     });
 
-    // 3. Form Gönderimi (AJAX)
     $('#blackListForm').on('submit', function(e) {
         e.preventDefault();
         $.post($(this).attr('action'), $(this).serialize(), function(data) {
             if (data.result) {
-                Swal.fire({
-                    icon: 'success',
-                    title: data.error.message
-                });
+                showToast(data.error.message);
                 table.ajax.reload();
                 $('#blackListModal').modal('hide');
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'İşlem başarısız!'
-                });
+                showToast('İşlem başarısız!', 'error');
             }
         }, 'json');
     });
 
     function forceResetPassword(uid) {
-        $('.fpwd' + uid).addClass('disabled');
         $.post("<?php echo route_to('forceResetPassword') ?>", {
             uid: uid
         }, function(data) {
             if (data.result == true) {
-                Swal.fire({
-                    icon: data.error.type,
-                    title: data.error.message
-                }).then(function() {
-                    table.ajax.reload();
-                });
-            } else
-                Swal.fire({
-                    icon: 'warning',
-                    title: '<?php echo lang('Backend.operationFailed') ?>'
-                }).then(function() {
-                    $('.modal').modal('toggle');
-                });
+                showToast(data.error.message);
+                table.ajax.reload();
+            } else showToast('İşlem başarısız!', 'error');
         }, 'json');
     }
 
@@ -202,8 +199,8 @@
             text: "<?php echo lang('Backend.youWillNotBeAbleToRecoverThis') ?>",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
+            confirmButtonColor: '#e53e3e',
+            cancelButtonColor: '#6c757d',
             confirmButtonText: '<?php echo lang('Backend.delete') ?>',
             cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
         }).then((result) => {
@@ -213,24 +210,9 @@
                     "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
                 }, 'json').done(function(response) {
                     if (response.status == 'success') {
-                        Swal.fire({
-                            title: '<?php echo lang('Backend.success') ?>',
-                            text: response.message,
-                            icon: 'success',
-                            confirmButtonText: '<?php echo lang('Backend.ok') ?>'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                table.ajax.reload();
-                            }
-                        });
-                    }else{
-                        Swal.fire({
-                            title: '<?php echo lang('Backend.error') ?>',
-                            text: response.message,
-                            icon: 'error',
-                            confirmButtonText: '<?php echo lang('Backend.ok') ?>'
-                        });
-                    }
+                        showToast(response.message);
+                        table.ajax.reload();
+                    } else showToast(response.message, 'error');
                 });
             }
         });

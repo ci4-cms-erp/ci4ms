@@ -1,10 +1,9 @@
-<?php echo $this->extend('Modules\Backend\Views\base') ?>
-
-<?php echo $this->section('title') ?>
+<?php echo $this->extend($backConfig->viewLayout);
+echo $this->section('title'); ?>
 403 - Forbidden
-<?php echo $this->endSection() ?>
+<?php echo $this->endSection();
 
-<?php echo $this->section('content') ?>
+echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">

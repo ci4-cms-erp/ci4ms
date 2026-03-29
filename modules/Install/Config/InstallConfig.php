@@ -15,4 +15,11 @@ class InstallConfig extends \CodeIgniter\Config\BaseConfig
             'install/*'
         ]]
     ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-download',
+    ];
+
+    public $menus = [
+    ];
 }

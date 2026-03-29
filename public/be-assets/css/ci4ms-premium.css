@@ -1,0 +1,198 @@
+/* ═══════════════════════════════════════════════════════════
+   CI4MS Premium UI — Shared Design System
+   All backend modules use this file.
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- Stat Cards --- */
+.m-stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.04);
+    transition: transform .2s, box-shadow .2s;
+    height: 100%;
+}
+.m-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,.1);
+}
+.m-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+.m-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+.m-stat-label {
+    font-size: .8rem;
+    color: #718096;
+}
+
+/* Gradient Presets */
+.st-total   { background: linear-gradient(135deg, #667eea, #764ba2); }
+.st-active  { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.st-danger,
+.st-banned  { background: linear-gradient(135deg, #f56565, #c53030); }
+.st-info,
+.st-com     { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.st-cat,
+.st-home    { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.st-system  { background: linear-gradient(135deg, #4a5568, #2d3748); }
+.st-app     { background: linear-gradient(135deg, #667eea, #764ba2); }
+.st-version { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.st-template{ background: linear-gradient(135deg, #f093fb, #f5576c); }
+.st-default { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.st-menu    { background: linear-gradient(135deg, #667eea, #764ba2); }
+.st-pages   { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.st-blogs   { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.st-files   { background: linear-gradient(135deg, #667eea, #764ba2); }
+.st-size    { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.st-current { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.st-last    { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.st-storage { background: linear-gradient(135deg, #f093fb, #f5576c); }
+
+/* --- Premium Card --- */
+.premium-card {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,.08) !important;
+    overflow: hidden;
+}
+.premium-card .card-header {
+    background: linear-gradient(to right, #f8f9fa, #fff);
+    border-bottom: 1px solid #edf2f7;
+    padding: 1.25rem;
+}
+.premium-card .card-title {
+    font-size: 1.1rem;
+    color: #1a202c;
+}
+
+/* --- DataTables Overrides --- */
+div.dataTables_wrapper div.dataTables_filter { text-align: right; }
+div.dataTables_wrapper div.dataTables_filter input {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 5px 12px;
+    margin-left: .5em;
+    outline: none;
+    transition: all .2s;
+}
+div.dataTables_wrapper div.dataTables_filter input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,.1);
+}
+.table thead th {
+    background: #f8fafc;
+    color: #718096;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: .75rem;
+    letter-spacing: .025em;
+    border-bottom: 1px solid #edf2f7;
+}
+.table td {
+    vertical-align: middle;
+    color: #4a5568;
+    border-bottom: 1px solid #f7fafc;
+}
+
+/* --- Action Buttons --- */
+.btn-action { border-radius: 8px; padding: 5px 12px; font-size: .85rem; font-weight: 500; transition: all .2s; }
+.btn-edit { background: rgba(102,126,234,.1); color: #667eea; border: 1px solid transparent; }
+.btn-edit:hover { background: #667eea; color: #fff; }
+.btn-delete { background: rgba(229,62,62,.1); color: #e53e3e; border: 1px solid transparent; }
+.btn-delete:hover { background: #e53e3e; color: #fff; }
+
+/* --- Status Pills --- */
+.m-status-pill { font-size: .75rem; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
+.pill-active, .m-status-active { background: #f0fff4; color: #38a169; }
+.pill-banned, .m-status-inactive { background: #fff5f5; color: #e53e3e; }
+
+/* --- Toast Notifications --- */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+.m-toast {
+    background: #2d3748;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all .3s cubic-bezier(.68,-.55,.265,1.55);
+}
+.m-toast.show { opacity: 1; transform: translateY(0); }
+.m-toast-success { border-left: 4px solid #38ef7d; }
+.m-toast-error { border-left: 4px solid #e53e3e; }
+
+/* --- Misc Helpers --- */
+.user-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%; object-fit: cover;
+    border: 2px solid #fff; box-shadow: 0 0 5px rgba(0,0,0,.1);
+    margin-right: 10px;
+}
+.is-home-badge {
+    font-size: .7rem; background: #fff5f5; color: #e53e3e;
+    border: 1px solid #feb2b2; padding: 2px 6px; border-radius: 4px;
+    font-weight: 600; margin-left: 8px;
+}
+
+/* --- Settings specific --- */
+.v-tabs-column { background: #f8fafc; border-right: 1px solid #edf2f7; padding: 1rem; }
+.v-tabs-column .nav-pills .nav-link {
+    border-radius: 10px; padding: 12px 20px; color: #4a5568;
+    font-weight: 500; margin-bottom: 5px; transition: all .2s;
+}
+.v-tabs-column .nav-pills .nav-link.active {
+    background: #667eea !important; color: #fff !important;
+    box-shadow: 0 4px 12px rgba(102,126,234,.3);
+}
+.v-tabs-column .nav-pills .nav-link:hover:not(.active) { background: #edf2f7; color: #2d3748; }
+
+/* --- Logs specific --- */
+.log-entry { font-family: 'Courier New', Courier, monospace; font-size: 13px; padding: 8px 15px; border-left: 3px solid transparent; margin-bottom: 2px; }
+.log-DEBUG { border-left-color: #718096; background: #f8fafc; }
+.log-INFO { border-left-color: #3182ce; background: #ebf8ff; }
+.log-NOTICE { border-left-color: #38a169; background: #f0fff4; }
+.log-WARNING { border-left-color: #dd6b20; background: #fffaf0; }
+.log-ERROR { border-left-color: #e53e3e; background: #fff5f5; }
+.log-CRITICAL { border-left-color: #c53030; background: #fff5f5; font-weight: bold; }
+
+/* --- Form Enhancements (Settings) --- */
+.premium-card .form-group label { font-weight: 600; font-size: 0.9rem; color: #4a5568; margin-bottom: 0.5rem; }
+.premium-card .form-control { border-radius: 8px; border: 1px solid #e2e8f0; }
+.premium-card .form-control:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.1); }
+
+/* --- Menu Nestable Spacing --- */
+.dd-handle { display: flex; align-items: center; justify-content: space-between; padding: .65rem 1rem; }
+.dd-handle .dd-nodrag { margin-left: auto; display: flex; gap: 6px; }
+.dd-item > .dd-handle { border-radius: 8px; margin-bottom: 4px; border: 1px solid #e2e8f0; background: #fff; transition: background .2s; }
+.dd-item > .dd-handle:hover { background: #f7fafc; }

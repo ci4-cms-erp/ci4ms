@@ -36,5 +36,11 @@ return [
 
     // Placeholders
     'siteNamePlaceholder' => 'Site adınız buraya',
-    'siteSloganPlaceholder' => 'Sloganınız buraya'
+    'siteSloganPlaceholder' => 'Sloganınız buraya',
+    'routeFileError' => 'Routes dosyası oluşturulamadı.',
+    'baseUrl' => 'Site Adresi',
+    'firstName' => 'Adınız',
+    'lastName' => 'Soyadınız',
+    'password' => 'Şifreniz',
+    'foldersWithSameNameListItem' => 'Aynı İsimli Klasörler',
 ];

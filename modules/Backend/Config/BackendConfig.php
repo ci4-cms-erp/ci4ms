@@ -5,15 +5,6 @@ namespace Modules\Backend\Config;
 class BackendConfig extends \CodeIgniter\Config\BaseConfig
 {
     //--------------------------------------------------------------------
-    // Default User Group
-    //--------------------------------------------------------------------
-    // The name of a group a user will be added to when they register
-    //
-    // i.e. $defaultUserGroup = 'guests';
-    //
-    public $defaultUserGroup;
-
-    //--------------------------------------------------------------------
     // Views used by Auth Controllers
     //--------------------------------------------------------------------
 
@@ -45,4 +36,26 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
             'backend/profile',
         ]],
     ];
+
+    public $moduleInfo = [
+        'icon' => 'fas fa-server',
+    ];
+
+    public $menus = [
+
+        'Backend.backend' => [
+            'icon'         => 'fas fa-home',
+            'inNavigation' => true,
+            'hasChild'     => false,
+            'pageSort'     => 1,
+            'parent_pk'    => null
+        ],
+        'Backend.logs' => [
+            'icon'         => 'fas fa-fingerprint',
+            'inNavigation' => true,
+            'hasChild'     => true,
+            'pageSort'     => 7,
+            'parent_pk'    => null
+        ]
+        ];
 }

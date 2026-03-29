@@ -37,4 +37,10 @@ return [
     // Placeholders
     'siteNamePlaceholder' => 'Your site name here',
     'siteSloganPlaceholder' => 'Your slogan here',
+    'routeFileError' => 'Routes file could not be created.',
+    'baseUrl' => 'Base Url',
+    'firstName' => 'First Name',
+    'lastName' => 'Last Name',
+    'password' => 'Password',
+    'foldersWithSameNameListItem' => 'Folders With Same Name List Item',
 ];

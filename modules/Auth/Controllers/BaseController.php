@@ -15,7 +15,7 @@ namespace Modules\Auth\Controllers;
  * @package CodeIgniter
  */
 
-use ci4commonModel\Models\CommonModel;
+use ci4commonModel\CommonModel;
 use CodeIgniter\Controller;
 use Modules\Auth\Config\AuthConfig;
 

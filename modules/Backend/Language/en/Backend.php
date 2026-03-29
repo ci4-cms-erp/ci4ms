@@ -2,12 +2,15 @@
 
 return [
     //common
+    'id' => 'ID',
     'title' => 'Title',
     'url' => 'URL',
+    'description' => 'Description',
     'content' => 'Content',
     'add' => '<i class="fas fa-plus"></i> Add',
     'update' => '<i class="fas fa-edit"></i> Edit',
     'delete' => '<i class="fas fa-trash"></i> Delete',
+    'delText' => 'Delete',
     'backToList' => '<i class="fas fa-arrow-circle-left"></i> Back to List',
     'cancel' => 'Cancel',
     'fullName' => 'Full Name',
@@ -17,6 +20,7 @@ return [
     'name' => 'Name',
     'surname' => 'Surname',
     'transactions' => 'Actions',
+    'actions' => 'Actions',
     'status' => 'Status',
     'save' => 'Save',
     'start' => 'Start',
@@ -33,6 +37,7 @@ return [
     'confirmDelete' => 'Are you sure you want to delete {0}?',
     'active' => 'Active',
     'passive' => 'Passive',
+    'inactive' => 'Inactive',
     'search' => 'Search',
     'clearFilter' => 'Clear Filter',
     'send' => 'Send',
@@ -43,8 +48,25 @@ return [
     'areYouSure' => 'Are you sure?',
     'youWillNotBeAbleToRecoverThis' => 'You will not be able to recover this data.',
 
+    // Common CRUD messages
+    'createSuccess' => '{0} created.',
+    'updateSuccess' => '{0} updated.',
+    'deleteSuccess' => '{0} deleted.',
+    'saveFailed' => 'Save failed.',
+    'recordNotFound' => 'Record not found.',
+    'toggleSuccess' => 'Status changed.',
+    'deleteConfirmTitle' => 'Do you want to delete {0}?',
+    'deleteConfirmBtn' => 'Yes, Delete',
+    'titleRequired' => 'Title is required.',
+    'slugRequired' => 'Slug is required.',
+    'nameRequired' => 'Name is required.',
+
+    // Common field labels
+    'ipAddress' => 'IP Address',
+    'userAgent' => 'Browser',
+
     //pages
-    'homepage' => 'Dashboard',
+    'backend' => 'Dashboard',
     'draft' => 'Draft',
     'publish' => 'Published',
     'logs' => 'Logs',
@@ -78,7 +100,7 @@ return [
     'noRecords' => 'No records found',
     'loadingRecords' => 'Loading...',
     'processing' => 'Processing...',
-    'search' => 'Search:',
+    'dtSearch' => 'Search:',
     'first' => 'First',
     'last' => 'Last',
     'next' => 'Next',
@@ -92,4 +114,11 @@ return [
     'fileInput' => 'File Upload',
     'chooseFile' => 'Choose file',
     'upload' => 'Upload',
+    'updateAvailable' => 'Update Available',
+    'operations' => 'Operations',
+    'warning' => 'Warning',
+    'htmlPurifierNotFound' => 'Html Purifier Not Found',
+    'requiredContent' => 'Required Content',
+    'published' => 'Content published',
+    'drafted' => 'Content drafted',
 ];

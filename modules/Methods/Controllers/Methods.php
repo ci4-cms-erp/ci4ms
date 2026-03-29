@@ -2,8 +2,22 @@
 
 namespace Modules\Methods\Controllers;
 
+use ZipArchive;
+use Modules\Methods\Libraries\ModuleInstaller;
+
 class Methods extends \Modules\Backend\Controllers\BaseController
 {
+    /**
+     * Silinmesi yasak çekirdek modüller
+     */
+    private const PROTECTED_MODULES = [
+        'Auth',
+        'Backend',
+        'Install',
+        'Methods',
+        'Settings',
+        'LanguageManager',
+    ];
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
@@ -101,6 +115,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'isBackoffice' => (bool)$this->request->getPost('isBackoffice') == true ? 1 : 0,
                 'typeOfPermissions' => $roles
             ], ['id' => $pk])) {
+                cache()->delete('sidebar_menu');
                 return redirect()->route('list')->with('success', lang('Backend.updated', [$this->request->getPost('pagename')]));
             } else
                 return redirect()->route('methodUpdate', [$pk])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('pagename')]));
@@ -115,204 +130,234 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     public function moduleScan()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
+        
+        $scanner = new \Modules\Methods\Libraries\ModuleScanner();
+        $isChanged = $scanner->runScan();
 
-        $collection = service('routes')->loadRoutes();
-
-        $methods = \CodeIgniter\Router\Router::HTTP_METHODS;
-        $tbody = [];
-        $uriGenerator = new \CodeIgniter\Commands\Utilities\Routes\SampleURIGenerator();
-        $filterCollector = new \CodeIgniter\Commands\Utilities\Routes\FilterCollector();
-
-        $definedRouteCollector = new \CodeIgniter\Router\DefinedRouteCollector($collection);
-        $findFilter = ['backendGuard'];
-        foreach ($definedRouteCollector->collect() as $route) {
-            if ($route['route'] === '__hot-reload') continue;
-            $filters   = $filterCollector->get($route['method'], $uriGenerator->get($route['route']));
-            if (count(array_intersect($findFilter, $filters['before'])) < 1) continue;
-            preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $route['handler'], $m);
-            $routeName = ($route['route'] === $route['name']) ? '' : $route['name'];
-            $role = $collection->getRoutesOptions(ltrim($route['route'], '\\'), $route['method'])['role'];
-            $roles = explode(',', $role);
-            $r = [
-                'create_r' => in_array('create', $roles),
-                'update_r' => in_array('update', $roles),
-                'read_r' => in_array('read', $roles),
-                'delete_r' => in_array('delete', $roles),
-            ];
-            $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
-            $tbody[] = [
-                'method' => $route['method'],
-                'route' => $route['route'],
-                'seflink' => !empty($routeName) ? $routeName : 'backend',
-                'pagename' => $m[1] . '.' . $routeName,
-                'handler' => $route['handler'],
-                'className' => str_replace('\\', '-', preg_replace('/::.*$/', '', $route['handler'])),
-                'module' => $m[1],
-                'methodName'    =>  $m[2],
-                'role' => $role,
-                'typeOfPermissions' => $roles,
-                'isBackoffice' => 1
-            ];
-        }
-
-        // 2) Auto routes (if enabled)
-        if ($collection->shouldAutoRoute()) {
-            $autoRoutesImproved = (config(\Config\Feature::class)->autoRoutesImproved ?? false) === true;
-            if ($autoRoutesImproved) {
-                $autoRouteCollector = new \CodeIgniter\Commands\Utilities\Routes\AutoRouterImproved\AutoRouteCollector(
-                    $collection->getDefaultNamespace(),
-                    $collection->getDefaultController(),
-                    $collection->getDefaultMethod(),
-                    $methods,
-                    $collection->getRegisteredControllers('*')
-                );
-                $autoRoutes = $autoRouteCollector->get();
-                $routingConfig = config(\Config\Routing::class);
-                if ($routingConfig instanceof \Config\Routing) {
-                    foreach ($routingConfig->moduleRoutes as $uri => $namespace) {
-                        $autoRouteCollector = new \CodeIgniter\Commands\Utilities\Routes\AutoRouterImproved\AutoRouteCollector(
-                            $namespace,
-                            $collection->getDefaultController(),
-                            $collection->getDefaultMethod(),
-                            $methods,
-                            $collection->getRegisteredControllers('*'),
-                            $uri
-                        );
-                        $autoRoutes = [...$autoRoutes, ...$autoRouteCollector->get()];
-                    }
-                }
-                foreach ($autoRoutes as $row) {
-                    // $row: [Method, Route, Name, Handler, Before Filters, After Filters]
-                    if ($row[1] === '__hot-reload') continue;
-                    $filters = $filterCollector->get($row[0], $uriGenerator->get($row[1]));
-                    if (count(array_intersect($findFilter, $row[4])) < 1) continue;
-                    preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $row[4], $m);
-                    $role = $collection->getRoutesOptions(ltrim($row[1], '\\'), $row[0])['role'];
-                    $roles = explode(',', $role);
-                    $r = [
-                        'create_r' => in_array('create', $roles),
-                        'update_r' => in_array('update', $roles),
-                        'read_r' => in_array('read', $roles),
-                        'delete_r' => in_array('delete', $roles),
-                    ];
-                    $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
-                    $tbody[] = [
-                        'method' => $row[0],
-                        'route' => $row[1],
-                        'pagename' => $m[1] . '.' . $row[2],
-                        'seflink' => !empty($row[2]) ? $row[2] : 'backend',
-                        'handler' => $row[3],
-                        'className' => str_replace('\\', '-', preg_replace('/::.*$/', '', $row[3])),
-                        'module' => $m[1],
-                        'methodName' => $m[2],
-                        'role' => $role,
-                        'typeOfPermissions' => $roles,
-                        'isBackoffice' => 1
-                    ];
-                }
-            } else {
-                $autoRouteCollector = new \CodeIgniter\Commands\Utilities\Routes\AutoRouteCollector(
-                    $collection->getDefaultNamespace(),
-                    $collection->getDefaultController(),
-                    $collection->getDefaultMethod()
-                );
-
-                $autoRoutes = $autoRouteCollector->get();
-
-                foreach ($autoRoutes as $routes) {
-                    if ($routes[1] === '__hot-reload') continue;
-                    // There is no `AUTO` method, but it is intentional not to get route filters.
-                    $filters   = $filterCollector->get($route[0], $uriGenerator->get($route[1]));
-                    if (count(array_intersect($findFilter, $filters['before'])) < 1) continue;
-                    preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $routes[4], $m);
-                    $role = $collection->getRoutesOptions(ltrim($routes[1], '\\'), $routes[0])['role'];
-                    $roles = explode(',', $role);
-                    $r = [
-                        'create_r' => in_array('create', $roles),
-                        'update_r' => in_array('update', $roles),
-                        'read_r' => in_array('read', $roles),
-                        'delete_r' => in_array('delete', $roles),
-                    ];
-                    $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
-                    $tbody[] = [
-                        'method' => $routes[0],
-                        'route' => $routes[1],
-                        'pagename' => $m[1] . '.' . $routes[2],
-                        'seflink' => !empty($routes[2]) ? $routes[2] : 'backend',
-                        'handler' => $routes[3],
-                        'className' => str_replace('\\', '-', preg_replace('/::.*$/', '', $routes[3])),
-                        'module' => $m[1],
-                        'methodName' => $m[2],
-                        'role' => $role,
-                        'typeOfPermissions' => $roles,
-                        'isBackoffice' => 1
-                    ];
-                }
-            }
-        }
-        $seen = [];
-        $tbody = array_values(array_filter($tbody, function ($row) use (&$seen) {
-            $key = strtolower($row['handler']);
-            if (isset($seen[$key])) {
-                return false;
-            }
-            $seen[$key] = true;
-            return true;
-        }));
-
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        $this->response->setHeader('Content-Type', 'application/json; charset=utf-8');
-        $pages = $this->commonModel->lists('auth_permissions_pages');
-
-        $existingKeys = array_flip(
-            array_map(
-                fn($page) => $page->className . '\0' . $page->methodName,
-                $pages
-            )
-        );
-        $newKeys = [];
-        foreach ($tbody as $index => $row) {
-            $key = $row['className'] . '\0' . $row['methodName'];
-            $newKeys[$key] = $index;
-        }
-
-        $uniqueKeys = array_diff_key($newKeys, $existingKeys);
-        $removedPages = array_diff_key($existingKeys, $newKeys);
-        if (!empty($removedPages)) {
-            foreach ($removedPages as $key => $removedPage) {
-                $remove = explode('\0', $key);
-                if (!empty(str_replace('\0', '', $key))) {
-                    $this->commonModel->remove('auth_permissions_pages', ['className' => $remove['0'], 'methodName' => $remove['1']]);
-                }
-            }
-        }
-        $insertBach = [];
-        if (!empty($uniqueKeys)) {
-            $module_id = null;
-            foreach ($uniqueKeys as $uniqueKey) {
-                $module_id = $this->commonModel->selectOne('modules', ['name' => $tbody[$uniqueKey]['module']], 'id');
-                if (empty($module_id->id)) {
-                    $module_id->id = $this->commonModel->create('modules', [
-                        'name' => $tbody[$uniqueKey]['module'],
-                        'isActive' => true
-                    ]);
-                }
-                $insertBach[] = [
-                    'pagename' => $tbody[$uniqueKey]['pagename'],
-                    'className' => $tbody[$uniqueKey]['className'],
-                    'methodName' => $tbody[$uniqueKey]['methodName'],
-                    'seflink' => $tbody[$uniqueKey]['seflink'],
-                    'typeOfPermissions' => $tbody[$uniqueKey]['typeOfPermissions'],
-                    'module_id' => $module_id->id,
-                    'isBackoffice' => 1,
-                    'isActive' => 1
-                ];
-            }
-            $this->commonModel->createMany('auth_permissions_pages', $insertBach);
-            cache()->delete('sidebar_menu');
+        if ($isChanged) {
             return $this->respondCreated(['result' => true]);
-        } else return $this->respond(['result' => false]);
+        } else {
+            return $this->respond(['result' => false]);
+        }
+    }
+
+    public function moduleUpload()
+    {
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $file = $this->request->getFile('modules');
+
+        if (!$file->isValid() || $file->getClientExtension() !== 'zip') {
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipFile')]);
+        }
+
+        $tempPath = WRITEPATH . 'tmp/';
+        $zip = new ZipArchive();
+
+        if ($zip->open($file->getTempName()) === true) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = $zip->getNameIndex($i);
+                $realEntry = realpath($tempPath . $entryName);
+                if ($realEntry !== false && strpos($realEntry, realpath($tempPath)) !== 0) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains invalid paths']);
+                }
+                if (preg_match('/\.\./', $entryName)) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains path traversal']);
+                }
+            }
+            $zip->extractTo($tempPath);
+            $zip->close();
+        } else {
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipOpenFailed')]);
+        }
+
+        $folders = array_filter(glob($tempPath . '*'), 'is_dir');
+        $moduleFolder = basename(reset($folders));
+        $finalPath = ROOTPATH . "modules/" . $moduleFolder;
+
+        if (is_dir($finalPath)) {
+            helper('filesystem');
+            delete_files($tempPath, true);
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.moduleAlreadyExists')]);
+        }
+
+        rename(reset($folders), $finalPath);
+
+        helper('filesystem');
+        delete_files($tempPath, true);
+
+        // Run migrations for the newly installed module
+        $installer = new ModuleInstaller();
+        $migResult = $installer->runModuleMigrations($moduleFolder);
+
+        $message = lang('Methods.moduleInstallSuccess', [$moduleFolder]);
+        if ($migResult['migrated'] > 0) {
+            $message .= ' ' . lang('Methods.migrationsRun', [$migResult['migrated']]);
+        }
+        if (!$migResult['success']) {
+            $message .= ' ' . lang('Methods.migrationWarning', [$migResult['error']]);
+        }
+
+        return $this->response->setJSON(['status' => 'success', 'message' => $message]);
+    }
+
+    public function moduleCreate()
+    {
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $valData = ([
+            'module_name' => ['label' => lang('Methods.moduleName'), 'rules' => 'required|alpha_dash'],
+        ]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        $moduleName = $this->request->getPost('module_name');
+
+        $moduleName = ucfirst((string)$moduleName);
+        $modulePath = ROOTPATH . 'modules/' . $moduleName;
+
+        if (is_dir($modulePath)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.moduleAlreadyExists')]);
+        }
+
+        try {
+            command('make:module ' . escapeshellarg($moduleName));
+
+            // Run migrations for the newly created module
+            $installer = new ModuleInstaller();
+            $migResult = $installer->runModuleMigrations($moduleName);
+
+            $message = "'{$moduleName}' " . lang('Methods.moduleCreatedSuccess');
+            if ($migResult['migrated'] > 0) {
+                $message .= ' ' . lang('Methods.migrationsRun', [$migResult['migrated']]);
+            }
+
+            return $this->response->setJSON(['status' => 'success', 'message' => $message]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Modül bilgilerini döndürür (silme öncesi bilgilendirme)
+     */
+    public function moduleInfo(int $moduleId)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->failForbidden();
+        }
+
+        $module = $this->commonModel->selectOne('modules', ['id' => $moduleId]);
+        if (empty($module)) {
+            return $this->failNotFound(lang('Methods.deleteModuleFailed'));
+        }
+
+        // Korumalı modül kontrolü
+        if (in_array($module->name, self::PROTECTED_MODULES)) {
+            return $this->respond([
+                'status'    => 'protected',
+                'message'   => lang('Methods.deleteModuleProtected'),
+            ]);
+        }
+
+        $installer = new ModuleInstaller();
+        $tables = $installer->getModuleTables($module->name);
+        $stats = $installer->getModuleTableStats($module->name);
+
+        $totalRecords = 0;
+        $tableInfo = [];
+        foreach ($stats as $tableName => $count) {
+            $tableInfo[] = [
+                'name'  => $tableName,
+                'count' => $count,
+            ];
+            if ($count > 0) {
+                $totalRecords += $count;
+            }
+        }
+
+        return $this->respond([
+            'status'       => 'ok',
+            'module_id'    => $module->id,
+            'module_name'  => $module->name,
+            'tables'       => $tableInfo,
+            'totalRecords' => $totalRecords,
+        ]);
+    }
+
+    /**
+     * Modülü siler (tablolar + dosya sistemi + kayıtlar)
+     */
+    public function moduleDelete()
+    {
+        if (!$this->request->isAJAX() || !$this->request->is('post')) {
+            return $this->failForbidden();
+        }
+
+        $valData = [
+            'module_id'    => ['label' => 'Module ID', 'rules' => 'required|is_natural_no_zero'],
+            'confirm_name' => ['label' => lang('Methods.moduleName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+        ];
+        if ($this->validate($valData) === false) {
+            return $this->fail($this->validator->getErrors());
+        }
+
+        $moduleId = (int) $this->request->getPost('module_id');
+        $confirmName = trim((string) $this->request->getPost('confirm_name'));
+
+        $module = $this->commonModel->selectOne('modules', ['id' => $moduleId]);
+        if (empty($module)) {
+            return $this->failNotFound(lang('Methods.deleteModuleFailed'));
+        }
+
+        // Korumalı modül kontrolü
+        if (in_array($module->name, self::PROTECTED_MODULES)) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('Methods.deleteModuleProtected'),
+            ]);
+        }
+
+        // İsim eşleşme kontrolü
+        if ($confirmName !== $module->name) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('Methods.deleteModuleNameMismatch'),
+            ]);
+        }
+
+        $installer = new ModuleInstaller();
+
+        // 1) Migration rollback (tabloları sil)
+        $rollbackResult = $installer->rollbackModuleMigrations($module->name);
+        if (!$rollbackResult['success']) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('Methods.rollbackFailed', [$rollbackResult['error']]),
+            ]);
+        }
+
+        // 2) auth_permissions_pages kayıtlarını sil
+        $this->commonModel->remove('auth_permissions_pages', ['module_id' => $moduleId]);
+
+        // 3) modules tablosundan kaydı sil
+        $this->commonModel->remove('modules', ['id' => $moduleId]);
+
+        // 4) Dosya sisteminden modül klasörünü sil
+        $fileResult = $installer->removeModuleFiles($module->name);
+
+        // 5) Cache temizliği
+        cache()->delete('sidebar_menu');
+        foreach ($this->commonModel->lists('users', 'id') as $user) {
+            cache()->delete("{$user->id}_permissions");
+        }
+
+        $message = lang('Methods.deleteModuleSuccess', [$module->name]);
+        if (!$fileResult['success']) {
+            $message .= ' ' . $fileResult['error'];
+        }
+
+        return $this->respond([
+            'status'  => 'success',
+            'message' => $message,
+        ]);
     }
 }

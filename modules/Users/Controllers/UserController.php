@@ -8,14 +8,14 @@ use CodeIgniter\Shield\Entities\User;
 class UserController extends \Modules\Backend\Controllers\BaseController
 {
     /**
-     * @return string
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function users()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = $data['search']['value'];
-            $l = [];
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
+            $like = $parsed['searchString'];
+            $like = [];
             $users = auth()->getProvider();
             $users->select('users.*, auth_identities.secret as email, auth_identities.force_reset')
                 ->withGroups()
@@ -26,14 +26,14 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                     return $builder->select('user_id')->from('auth_groups_users')->join('auth_groups', 'auth_groups.group = auth_groups_users.group')->where('auth_groups.group', 'superadmin');
                 });
             if (!empty($like)) {
-                $l = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
+                $like = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
                 $users->groupStart();
-                foreach ($l as $field => $value) {
-                    $users->orLike($field, $value);
+                foreach ($like as $field => $value) {
+                    $users->orLike($field, $parsed['searchString']);
                 }
                 $users->groupEnd();
             }
-            $results = $users->findAll(($data['length'] == '-1') ? 0 : (int)$data['length'], ($data['length'] == '-1') ? 0 : (int)$data['start']);
+            $results = $users->findAll($parsed['length'], $parsed['start']);
 
             $users->select('users.*, auth_identities.secret as email')
                 ->join('auth_identities', 'auth_identities.user_id = users.id')
@@ -42,10 +42,10 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                     return $builder->select('user_id')->from('auth_groups_users')->join('auth_groups', 'auth_groups.group = auth_groups_users.group')->where('auth_groups.group', 'superadmin');
                 });
             if (!empty($like)) {
-                $l = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
+                $like = ['firstname' => $like, 'surname' => $like, 'secret' => $like];
                 $users->groupStart();
-                foreach ($l as $field => $value) {
-                    $users->orLike($field, $value);
+                foreach ($like as $field => $value) {
+                    $users->orLike($field, $parsed['searchString']);
                 }
                 $users->groupEnd();
             }
@@ -82,28 +82,37 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                                    class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>';
             }
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalRecords,
                 'aaData' => array_values($results)
             ];
             return $this->respond($data, 200);
         }
+        $subquerySuperAdmin = function ($builder) {
+            return $builder->select('user_id')->from('auth_groups_users')->join('auth_groups', 'auth_groups.group = auth_groups_users.group')->where('auth_groups.group', 'superadmin');
+        };
+
+        $this->defData['stats'] = [
+            'total' => auth()->getProvider()->whereNotIn('users.id', $subquerySuperAdmin)->countAllResults(),
+            'active' => auth()->getProvider()->where('status', null)->whereNotIn('users.id', $subquerySuperAdmin)->countAllResults(),
+            'banned' => auth()->getProvider()->where('status', 'banned')->whereNotIn('users.id', $subquerySuperAdmin)->countAllResults()
+        ];
         return view('Modules\Users\Views\usersCrud\list', $this->defData);
     }
 
     /**
-     * @return string
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function create_user()
     {
         if ($this->request->is('post')) {
             $valData = ([
                 'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]|is_unique[users.username]',
-                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
+                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^\x3c\x3e\x7b\x7d\x3d]+$/u]'],
+                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^\x3c\x3e\x7b\x7d\x3d]+$/u]'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email|is_unique[auth_identities.secret]'],
-                'group' => ['label' => 'Yetkisi', 'rules' => 'required'],
+                'group.*' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero'],
                 'password' => ['label' => 'Şifre', 'rules' => 'required|min_length[8]']
             ]);
 
@@ -125,8 +134,10 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 if (!$users->save($user)) return redirect()->route('create_user')->withInput()->with('errors', $users->errors());
                 $new_user = $users->findById($users->getInsertID());
 
-                $group = $this->commonModel->selectOne('auth_groups', ['id' => $this->request->getPost('group')]);
-                $new_user->syncGroups($group->group);
+                $groups = $this->commonModel->lists('auth_groups', 'group', [], 'id ASC', 0, 0, [], ['id' => $this->request->getPost('group')]);
+                $groupNames = array_column($groups, 'group');
+                $new_user->syncGroups(...$groupNames);
+
 
                 $activator = new EmailActivator();
 
@@ -165,18 +176,18 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * @param $id
-     * @return string
+     * @param int $id
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function update_user(int $id)
     {
         if ($this->request->is('post')) {
             $valData = ([
                 'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]',
-                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
+                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
-                'group' => ['label' => 'Yetkisi', 'rules' => 'required']
+                'group.*' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero']
             ]);
 
             if ($this->request->getPost('password')) $valData['password'] = ['label' => 'Şifre', 'rules' => 'required|min_length[8]'];
@@ -190,7 +201,6 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'email' => $this->request->getPost('email'),
                 'firstname' => esc($this->request->getPost('firstname')),
                 'surname' => esc($this->request->getPost('surname')),
-                'group_id' => $this->request->getPost('group'),
                 'update_at' => date('Y-m-d H:i:s'),
                 'username' => esc($this->request->getPost('username')),
                 'who_created' => user_id(),
@@ -202,8 +212,9 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             $u->fill($data);
             if ($user->save($u)) {
-                $group = $this->commonModel->selectOne('auth_groups', ['id' => $this->request->getPost('group')]);
-                $u->syncGroups($group->group);
+                $groups = $this->commonModel->lists('auth_groups', 'group', [], 'id ASC', 0, 0, [], ['id' => $this->request->getPost('group')]);
+                $groupNames = array_column($groups, 'group');
+                $u->syncGroups(...$groupNames);
                 return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
             } else return redirect()->route('update_user', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$data['username']]));
         }
@@ -233,7 +244,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * @return string
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
     public function profile()
     {

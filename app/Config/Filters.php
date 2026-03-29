@@ -4,7 +4,7 @@ namespace Config;
 
 use ci4seopro\Filters\AiHeaderFilter;
 use ci4seopro\Filters\SearchSeoFilter;
-use ci4commonmodel\Models\CommonModel;
+use ci4commonmodel\CommonModel;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -128,20 +128,26 @@ class Filters extends BaseFilters
     public function __construct()
     {
         parent::__construct();
-        if (file_exists(ROOTPATH . '.env')) {
-            $this->commonModel = new CommonModel();
-            if (empty(cache('settings')) && $this->commonModel->db->tableExists('settings')) {
-                $this->settings = $this->commonModel->lists('settings');
-                $set = [];
-                $formatRules = new \CodeIgniter\Validation\FormatRules();
-                foreach ($this->settings as $setting) {
-                    if ($formatRules->valid_json($setting->value) === true)
-                        $set[$setting->key] = (object)json_decode($setting->value, JSON_UNESCAPED_UNICODE);
-                    else $set[$setting->key] = $setting->value;
+        if (is_file(ROOTPATH . '.env')) {
+            try {
+                $this->commonModel = new CommonModel();
+                if (empty(cache('settings')) && $this->commonModel->db->tableExists('settings')) {
+                    $this->settings = $this->commonModel->lists('settings');
+                    $set = [];
+                    $formatRules = new \CodeIgniter\Validation\FormatRules();
+                    foreach ($this->settings as $setting) {
+                        if ($formatRules->valid_json($setting->value) === true)
+                            $set[$setting->key] = (object)json_decode($setting->value, JSON_UNESCAPED_UNICODE);
+                        else $set[$setting->key] = $setting->value;
+                    }
+                    cache()->save('settings', $set, 86400);
+                    $this->settings = (object)$set;
+                } else {
+                    $this->settings = (object)cache('settings');
                 }
-                cache()->save('settings', $set, 86400);
-                $this->settings = (object)$set;
-            } else $this->settings = (object)cache('settings');
+            } catch (\Throwable $e) {
+                $this->settings = (object)[];
+            }
         }
 
         $modules = array_filter(scandir($this->modulesPath), function ($module) {
@@ -149,9 +155,11 @@ class Filters extends BaseFilters
         });
         $mods = [APPPATH . 'Filters'];
         foreach ($modules as $module) {
-            if (is_dir($this->modulesPath) . '/' . $module) {
-                if (hasFilesInFolder(ROOTPATH . 'modules/' . $module . '/Filters'))
-                    $mods[] = ROOTPATH . 'modules/' . $module . '/Filters';
+            $path = $this->modulesPath . $module . '/Filters';
+            if (is_dir($path)) {
+                if (!empty(glob("$path/*.php"))) {
+                    $mods[] = $path;
+                }
             }
         }
 
@@ -175,6 +183,10 @@ class Filters extends BaseFilters
             \CodeIgniter\Shield\Filters\ForcePasswordResetFilter::class,
             \Modules\Auth\Filters\Ci4MsAuthFilter::class,
             \Modules\Backend\Filters\BackendLogFilter::class,
+        ];
+        $this->aliases['langfilter'] = [
+            \App\Filters\Ci4ms::class,
+            \Modules\LanguageManager\Filters\LocaleFilter::class,
         ];
         foreach ($directories as $directory) {
             if (is_dir($directory)) {
@@ -229,6 +241,7 @@ class Filters extends BaseFilters
 
         $allCsrfExcept = [];
         $allFilters = [];
+        $allGlobals = [];
 
         foreach ($modules as $module) {
             $configClass = "Modules\\{$module}\\Config\\{$module}Config";

@@ -8,7 +8,7 @@ This handbook captures the workflows, conventions, and tooling you need to exten
 
 | Layer      | Required                                | Notes                                                                                                |
 | ---------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| PHP        | 8.1+                                    | Enable intl, json, mbstring, gd, curl, openssl extensions. Match the `composer.json` platform (8.1). |
+| PHP        | 8.2+                                    | Enable intl, json, mbstring, gd, curl, openssl extensions. Match the `composer.json` platform (8.2). |
 | Composer   | 2.5+                                    | Used for all PHP dependencies.                                                                       |
 | Node.js    | 18 LTS                                  | Required only if you maintain `public/be-assets` (backend UI assets).                                |
 | npm        | 8+                                      | Node package manager for backend asset dependencies.                                                 |
@@ -19,7 +19,7 @@ This handbook captures the workflows, conventions, and tooling you need to exten
 
 ## 2. Repository Layout Highlights
 
-```
+```text
 app/                 Application code (controllers, config, libraries, filters)
 modules/             Feature modules (Auth, Backend, Blog, etc.)
 public/
@@ -68,9 +68,11 @@ Key config files:
    ```
 
 4. **Serve**
+
    ```bash
    php spark serve
    ```
+
    Visit `http://localhost:8080` (frontend) and `/backend` (admin panel).
 
 > Tip: If you rerun the seeder in an existing database, ensure duplicate records are handled or truncate the relevant tables first.
