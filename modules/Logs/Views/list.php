@@ -70,7 +70,7 @@ echo $this->section('content'); ?>
                 <div class="card-header d-flex align-items-center">
                     <h3 class="card-title font-weight-bold mb-0">İçerik: <small class="text-muted ml-2"><?php echo $currentFile ?></small></h3>
                     <div class="ml-auto">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()" title="Yenile"><i class="fas fa-sync-alt"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()" title="refresh"><i class="fas fa-sync-alt"></i></button>
                     </div>
                 </div>
                 <div class="card-body p-3" style="max-height: 600px; overflow-y: auto; background: #fff;">

@@ -59,7 +59,7 @@ echo $this->section('content'); ?>
                 <a href="<?php echo route_to('blogCreate') ?>" class="btn btn-sm btn-success px-3" style="border-radius:8px">
                     <?php echo lang('Backend.add') ?>
                 </a>
-                <button class="btn btn-sm btn-outline-secondary ml-1" id="btnRefresh" style="border-radius:8px" title="Yenile">
+                <button class="btn btn-sm btn-outline-secondary ml-1" id="btnRefresh" style="border-radius:8px" title="refresh">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
@@ -108,13 +108,9 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
 
     $(function() {
         var table = $("#example1").DataTable({
-            responsive: true,
-            lengthChange: false,
-            autoWidth: false,
             processing: true,
             serverSide: true,
             ordering: false,
-            pageLength: 10,
             ajax: {
                 url: '<?php echo route_to('blogs') ?>',
                 type: 'POST',

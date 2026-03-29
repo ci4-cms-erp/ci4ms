@@ -14,13 +14,19 @@ echo $this->section('content'); ?>
         <div class="col-md-6">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-total"><i class="fas fa-database"></i></div>
-                <div><div class="m-stat-value"><?php echo $stats['totalBackups'] ?></div><div class="m-stat-label">Toplam Yedek</div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['totalBackups'] ?></div>
+                    <div class="m-stat-label">Toplam Yedek</div>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-last"><i class="fas fa-history"></i></div>
-                <div><div class="m-stat-value small"><?php echo $stats['lastBackup'] ?></div><div class="m-stat-label"><?php echo lang('Backup.lastBackupTime') ?? 'Last Backup Time' ?></div></div>
+                <div>
+                    <div class="m-stat-value small"><?php echo $stats['lastBackup'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Backup.lastBackupTime') ?? 'Last Backup Time' ?></div>
+                </div>
             </div>
         </div>
     </div>
@@ -29,7 +35,9 @@ echo $this->section('content'); ?>
         <!-- New Backup Section -->
         <div class="col-md-4">
             <div class="card premium-card mb-4">
-                <div class="card-header"><h3 class="card-title font-weight-bold mb-0"><?php echo lang('Backup.quickActions') ?? 'Quick Actions' ?></h3></div>
+                <div class="card-header">
+                    <h3 class="card-title font-weight-bold mb-0"><?php echo lang('Backup.quickActions') ?? 'Quick Actions' ?></h3>
+                </div>
                 <div class="card-body">
                     <button class="btn btn-success btn-block mb-3" id="btnCreateBackup" style="border-radius:10px; padding: 12px;">
                         <i class="fas fa-plus-circle mr-2"></i> <?php echo lang('Backup.createNow') ?>
@@ -58,7 +66,7 @@ echo $this->section('content'); ?>
                 <div class="card-header d-flex align-items-center">
                     <h3 class="card-title font-weight-bold mb-0"><i class="fas fa-list mr-2 text-info"></i> Yedek Listesi</h3>
                     <div class="ml-auto">
-                        <button class="btn btn-sm btn-outline-secondary" id="btnRefresh" style="border-radius:10px" title="Yenile"><i class="fas fa-sync-alt"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnRefresh" style="border-radius:10px" title="refresh"><i class="fas fa-sync-alt"></i></button>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -95,13 +103,24 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             ajax: {
                 url: '<?php echo route_to('backup') ?>',
                 type: 'POST',
-                data: (d) => { d['<?php echo csrf_token() ?>'] = '<?php echo csrf_hash() ?>'; }
+                data: (d) => {
+                    d['<?php echo csrf_token() ?>'] = '<?php echo csrf_hash() ?>';
+                }
             },
-            columns: [
-                { data: 'filename', render: (d) => `<code>${d}</code>` },
-                { data: 'file_size' },
-                { data: 'created_at' },
-                { data: 'actions', className: 'text-right' }
+            columns: [{
+                    data: 'filename',
+                    render: (d) => `<code>${d}</code>`
+                },
+                {
+                    data: 'file_size'
+                },
+                {
+                    data: 'created_at'
+                },
+                {
+                    data: 'actions',
+                    className: 'text-right'
+                }
             ],
             language: ci4msDtLanguage('<?php echo lang('Backup.searchPlaceholder') ?>')
         });
@@ -114,7 +133,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             $.post('<?php echo route_to('backupCreate') ?>', {
                 "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
             }, function(r) {
-                if(r.success) {
+                if (r.success) {
                     showToast('<?php echo lang('Backup.backupCreated') ?>');
                     table.ajax.reload();
                 } else showToast(r.error, 'error');
@@ -129,7 +148,8 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
     function remove(id) {
         Swal.fire({
             title: '<?php echo lang('Backup.deleteConfirmTitle') ?>',
-            icon: 'warning', showCancelButton: true,
+            icon: 'warning',
+            showCancelButton: true,
             confirmButtonColor: '#e53e3e',
             confirmButtonText: '<?php echo lang('Backup.deleteConfirmBtn') ?>',
             cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
@@ -138,8 +158,10 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 $.post('/backend/backup/delete/' + id, {
                     "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
                 }, function(r) {
-                    if(r.success) { showToast(r.message); $('#backupTable').DataTable().ajax.reload(); }
-                    else showToast(r.error, 'error');
+                    if (r.success) {
+                        showToast(r.message);
+                        $('#backupTable').DataTable().ajax.reload();
+                    } else showToast(r.error, 'error');
                 }, 'json');
             }
         });

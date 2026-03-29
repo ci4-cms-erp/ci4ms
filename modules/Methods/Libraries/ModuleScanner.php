@@ -29,7 +29,7 @@ class ModuleScanner
             $filters   = $filterCollector->get($route['method'], $uriGenerator->get($route['route']));
             $beforeFilters = (array)($filters['before'] ?? []);
             if (count(array_intersect($findFilter, $beforeFilters)) < 1) continue;
-            
+
             preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $route['handler'], $m);
             $routeName = ($route['route'] === $route['name']) ? '' : $route['name'];
             $role = $collection->getRoutesOptions(ltrim($route['route'], '\\'), $route['method'])['role'] ?? '';
@@ -193,7 +193,7 @@ class ModuleScanner
 
         $uniqueKeys = array_diff_key($newKeys, $existingKeys);
         $removedPages = array_diff_key($existingKeys, $newKeys);
-        
+
         if (!empty($removedPages)) {
             foreach ($removedPages as $key => $removedPage) {
                 $remove = explode('\0', $key);
@@ -257,9 +257,10 @@ class ModuleScanner
 
                 $insertBach[] = [
                     'pagename'          => $pageName,
+                    'description'       => $pageName,
                     'className'         => $tbody[$uniqueKey]['className'],
                     'methodName'        => $tbody[$uniqueKey]['methodName'],
-                    'seflink'           => $tbody[$uniqueKey]['seflink'],
+                    'sefLink'           => $tbody[$uniqueKey]['seflink'],
                     'typeOfPermissions' => $tbody[$uniqueKey]['typeOfPermissions'],
                     'module_id'         => $module_id->id,
                     'isBackoffice'      => 1,
@@ -275,9 +276,9 @@ class ModuleScanner
                     $menusFromConfig[$pageName] = $parent_pk;
                 }
             }
-            
+
             $commonModel->createMany('auth_permissions_pages', $insertBach);
-            
+
             if (!empty($menusFromConfig)) {
                 foreach ($menusFromConfig as $childPageName => $parentPageName) {
                     $parentObj = $commonModel->selectOne('auth_permissions_pages', ['pagename' => $parentPageName], 'id');

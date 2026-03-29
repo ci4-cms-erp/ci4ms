@@ -11,9 +11,7 @@ class InstallService
         $commonModel = new \ci4commonmodel\CommonModel();
         $commonModel->create('auth_groups', [
             "group" => "superadmin",
-            "description" => "superadmin",
-            "seflink" => "backend",
-            "who_created" => null
+            "description" => "superadmin"
         ]);
 
         $users = auth()->getProvider();
@@ -39,13 +37,14 @@ class InstallService
         $scanner = new \Modules\Methods\Libraries\ModuleScanner();
         $scanner->runScan();
 
-        $commonModel->createMany('languages', [
+        $commonModel->createMany('languages',[
             [
                 'code'        => 'tr',
                 'name'        => 'Türkçe',
                 'native_name' => 'tr',
-                'flag'        => 'fi fi-tr', // ya da varsa uygun bir ikon
+                'flag'        => 'fi fi-tr',
                 'direction'   => 'ltr',
+                'is_default'  => 0,
                 'is_active'   => 1,
                 'is_frontend' => 1,
                 'sort_order'  => 1
@@ -54,7 +53,7 @@ class InstallService
                 'code'        => 'en',
                 'name'        => 'English',
                 'native_name' => 'gb',
-                'flag'        => 'fi fi-gb', // ya da varsa uygun bir ikon
+                'flag'        => 'fi fi-gb',
                 'direction'   => 'ltr',
                 'is_default'  => 1,
                 'is_active'   => 1,
@@ -64,18 +63,17 @@ class InstallService
         ]);
 
         $commonModel->createMany('pages', [
-            ['id' => 1, 'isActive' => '1', 'inMenu' => '1'],
-            ['id' => 2, 'isActive' => '1', 'inMenu' => '1'],
+            ['id' => 1, 'isActive' => 1, 'inMenu' => 1],
+            ['id' => 2, 'isActive' => 1, 'inMenu' => 1],
         ]);
 
         $commonModel->createMany('pages_langs', [
             [
-                [
-                    'pages_id' => 1,
-                    'lang' => 'en',
-                    'title' => 'The Future of Modular Management',
-                    'seflink' => 'homepage',
-                    'content' => '
+                'pages_id' => 1,
+                'lang' => 'en',
+                'title' => 'The Future of Modular Management',
+                'seflink' => 'homepage',
+                'content' => '
                 <section class="hero-section text-center">
                     <div class="container py-3">
                         <img src="/templates/default/assets/hero_banner.png" class="img-fluid rounded-4 shadow-lg mb-5" alt="CI4MS Hero">
@@ -101,14 +99,14 @@ class InstallService
                         </div></div>
                     </div>
                 </section>',
-                    'seo' => json_encode(['description' => 'CI4MS Homepage'])
-                ],
-                [
-                    'pages_id' => 1,
-                    'lang' => 'tr',
-                    'title' => 'Modüler Yönetimin Geleceği',
-                    'seflink' => 'anasayfa',
-                    'content' => '
+                'seo' => json_encode(['description' => 'CI4MS Homepage'])
+            ],
+            [
+                'pages_id' => 1,
+                'lang' => 'tr',
+                'title' => 'Modüler Yönetimin Geleceği',
+                'seflink' => 'anasayfa',
+                'content' => '
                 <section class="hero-section text-center">
                     <div class="container py-3">
                         <img src="/templates/default/assets/hero_banner.png" class="img-fluid rounded-4 shadow-lg mb-5" alt="CI4MS Hero">
@@ -134,14 +132,14 @@ class InstallService
                         </div></div>
                     </div>
                 </section>',
-                    'seo' => json_encode(['description' => 'CI4MS Anasayfa'])
-                ],
-                [
-                    'pages_id' => 2,
-                    'lang' => 'en',
-                    'title' => 'Contact Us',
-                    'seflink' => 'contact',
-                    'content' => '
+                'seo' => json_encode(['description' => 'CI4MS Anasayfa'])
+            ],
+            [
+                'pages_id' => 2,
+                'lang' => 'en',
+                'title' => 'Contact Us',
+                'seflink' => 'contact',
+                'content' => '
                 <section class="container py-5">
                     <div class="row align-items-center">
                         <div class="col-md-6"><h2 class="display-5 mb-4">Connect with CI4MS Experts</h2><p class="lead mb-5">Have questions about integrating CI4MS into your infrastructure? Our team is ready to assist.</p>
@@ -150,14 +148,14 @@ class InstallService
                         <div class="col-md-6"><div class="card p-5 border-0 shadow-lg"><h3>Inquiry Form</h3><p>Coming soon...</p></div></div>
                     </div>
                 </section>',
-                    'seo' => json_encode(['description' => 'Contact CI4MS'])
-                ],
-                [
-                    'pages_id' => 2,
-                    'lang' => 'tr',
-                    'title' => 'İletişim',
-                    'seflink' => 'iletisim',
-                    'content' => '
+                'seo' => json_encode(['description' => 'Contact CI4MS'])
+            ],
+            [
+                'pages_id' => 2,
+                'lang' => 'tr',
+                'title' => 'İletişim',
+                'seflink' => 'iletisim',
+                'content' => '
                 <section class="container py-5">
                     <div class="row align-items-center">
                         <div class="col-md-6"><h2 class="display-5 mb-4">CI4MS Uzmanlarıyla Bağlantı Kurun</h2><p class="lead mb-5">CI4MS\'i altyapınıza entegre etme konusunda sorularınız mı var? Ekibimiz yardıma hazır.</p>
@@ -166,8 +164,7 @@ class InstallService
                         <div class="col-md-6"><div class="card p-5 border-0 shadow-lg"><h3>Talep Formu</h3><p>Yakında...</p></div></div>
                     </div>
                 </section>',
-                    'seo' => json_encode(['description' => 'CI4MS İletişim'])
-                ]
+                'seo' => json_encode(['description' => 'CI4MS İletişim'])
             ]
         ]);
 
@@ -208,8 +205,8 @@ class InstallService
         }
 
         $commonModel->createMany('menu', [
-            ['title' => 'Frontend.home', 'seflink' => '/', 'queue' => 1, 'urlType' => 'pages', 'pages_id' => 1],
-            ['title' => 'Frontend.blog', 'seflink' => 'blog', 'queue' => 2, 'urlType' => 'custom'],
+            ['title' => 'Frontend.home', 'seflink' => '/',       'queue' => 1, 'urlType' => 'pages', 'pages_id' => 1],
+            ['title' => 'Frontend.blog', 'seflink' => 'blog',    'queue' => 2, 'urlType' => 'url',   'pages_id' => null],
             ['title' => 'Frontend.contact', 'seflink' => 'contact', 'queue' => 3, 'urlType' => 'pages', 'pages_id' => 2]
         ]);
 

@@ -109,8 +109,8 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]|is_unique[users.username]',
-                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
-                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^\x3c\x3e\x7b\x7d\x3d]+$/u]'],
+                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^\x3c\x3e\x7b\x7d\x3d]+$/u]'],
                 'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email|is_unique[auth_identities.secret]'],
                 'group.*' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero'],
                 'password' => ['label' => 'Şifre', 'rules' => 'required|min_length[8]']

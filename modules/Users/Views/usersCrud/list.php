@@ -14,19 +14,28 @@ echo $this->section('content'); ?>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-total"><i class="fas fa-users"></i></div>
-                <div><div class="m-stat-value"><?php echo $stats['total'] ?></div><div class="m-stat-label"><?php echo lang('Users.totalUsers') ?? 'Toplam Kullanıcı' ?></div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['total'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Users.totalUsers') ?? 'Toplam Kullanıcı' ?></div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-active"><i class="fas fa-user-check"></i></div>
-                <div><div class="m-stat-value"><?php echo $stats['active'] ?></div><div class="m-stat-label"><?php echo lang('Backend.active') ?? 'Aktif Kullanıcı' ?></div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['active'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Backend.active') ?? 'Aktif Kullanıcı' ?></div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-banned"><i class="fas fa-user-slash"></i></div>
-                <div><div class="m-stat-value"><?php echo $stats['banned'] ?></div><div class="m-stat-label"><?php echo lang('Users.bannedUsers') ?? 'Kara Liste' ?></div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['banned'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Users.bannedUsers') ?? 'Kara Liste' ?></div>
+                </div>
             </div>
         </div>
     </div>
@@ -41,7 +50,7 @@ echo $this->section('content'); ?>
                 <a href="<?php echo route_to('create_user') ?>" class="btn btn-sm btn-success px-4" style="border-radius:10px">
                     <i class="fas fa-user-plus mr-1"></i> <?php echo lang('Users.addUser') ?>
                 </a>
-                <button class="btn btn-sm btn-outline-secondary ml-1" id="btnRefresh" style="border-radius:10px" title="Yenile">
+                <button class="btn btn-sm btn-outline-secondary ml-1" id="btnRefresh" style="border-radius:10px" title="refresh">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
@@ -106,13 +115,31 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
         var table = $('#userTable').DataTable({
             processing: true,
             serverSide: true,
-            ajax: { url: "<?php echo route_to('users') ?>", type: "POST" },
-            columns: [
-                { data: "fullname", render: (d, t, r) => `<div class="d-flex align-items-center"><img src="${r.profileIMG || '/be-assets/img/avatar.png'}" class="user-avatar" onerror="this.src='/be-assets/img/avatar.png'"><span class="font-weight-600">${d}</span></div>` },
-                { data: "email" },
-                { data: "status", className: "text-center", render: (d) => d === 'banned' ? '<span class="m-status-pill pill-banned">Banned</span>' : '<span class="m-status-pill pill-active">Active</span>' },
-                { data: "groupName", render: (d) => `<span class="badge badge-light border" style="border-radius:6px;font-weight:500;color:#718096">${d}</span>` },
-                { data: "actions", orderable: false, className: "text-right" }
+            ajax: {
+                url: "<?php echo route_to('users') ?>",
+                type: "POST"
+            },
+            columns: [{
+                    data: "fullname",
+                    render: (d, t, r) => `<div class="d-flex align-items-center"><img src="${r.profileIMG || '/be-assets/img/avatar.png'}" class="user-avatar" onerror="this.src='/be-assets/img/avatar.png'"><span class="font-weight-600">${d}</span></div>`
+                },
+                {
+                    data: "email"
+                },
+                {
+                    data: "status",
+                    className: "text-center",
+                    render: (d) => d === 'banned' ? '<span class="m-status-pill pill-banned">Banned</span>' : '<span class="m-status-pill pill-active">Active</span>'
+                },
+                {
+                    data: "groupName",
+                    render: (d) => `<span class="badge badge-light border" style="border-radius:6px;font-weight:500;color:#718096">${d}</span>`
+                },
+                {
+                    data: "actions",
+                    orderable: false,
+                    className: "text-right"
+                }
             ],
             language: ci4msDtLanguage('<?php echo lang('Users.searchPlaceholder') ?>')
         });
@@ -121,16 +148,21 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
     });
 
     $(document).on('click', '.open-blacklist-modal', function() {
-        var uid = $(this).data('id'), status = $(this).data('status'), note = $(this).data('note');
+        var uid = $(this).data('id'),
+            status = $(this).data('status'),
+            note = $(this).data('note');
         $('#modal_uid').val(uid);
         if (status === 'banned') {
             $('#modalTitle').text('<?php echo lang('Users.removeFromBlacklistTitle') ?>');
-            $('#modalNoteArea').show(); $('#currentNote').text(note); $('#noteInput, #noteLabel').hide();
+            $('#modalNoteArea').show();
+            $('#currentNote').text(note);
+            $('#noteInput, #noteLabel').hide();
             $('#blackListForm').attr('action', "<?php echo route_to('removeFromBlacklist') ?>");
             $('#modalSubmitBtn').html('<i class="fas fa-user-check mr-1"></i> <?php echo lang('Users.removeFromBlacklistBtn') ?>');
         } else {
             $('#modalTitle').text('<?php echo lang('Users.addToBlacklistTitle') ?>');
-            $('#modalNoteArea').hide(); $('#noteInput, #noteLabel').show();
+            $('#modalNoteArea').hide();
+            $('#noteInput, #noteLabel').show();
             $('#blackListForm').attr('action', "<?php echo route_to('blackList') ?>");
             $('#modalSubmitBtn').html('<i class="fas fa-user-slash mr-1"></i> <?php echo lang('Users.addToBlacklistBtn') ?>');
         }
@@ -140,15 +172,24 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
     $('#blackListForm').on('submit', function(e) {
         e.preventDefault();
         $.post($(this).attr('action'), $(this).serialize(), function(data) {
-            if (data.result) { showToast(data.error.message); table.ajax.reload(); $('#blackListModal').modal('hide'); }
-            else { showToast('İşlem başarısız!', 'error'); }
+            if (data.result) {
+                showToast(data.error.message);
+                table.ajax.reload();
+                $('#blackListModal').modal('hide');
+            } else {
+                showToast('İşlem başarısız!', 'error');
+            }
         }, 'json');
     });
 
     function forceResetPassword(uid) {
-        $.post("<?php echo route_to('forceResetPassword') ?>", { uid: uid }, function(data) {
-            if (data.result == true) { showToast(data.error.message); table.ajax.reload(); }
-            else showToast('İşlem başarısız!', 'error');
+        $.post("<?php echo route_to('forceResetPassword') ?>", {
+            uid: uid
+        }, function(data) {
+            if (data.result == true) {
+                showToast(data.error.message);
+                table.ajax.reload();
+            } else showToast('İşlem başarısız!', 'error');
         }, 'json');
     }
 
@@ -164,9 +205,14 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.post('<?php echo route_to('user_del') ?>', { "id": id, "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>" }, 'json').done(function(response) {
-                    if (response.status == 'success') { showToast(response.message); table.ajax.reload(); }
-                    else showToast(response.message, 'error');
+                $.post('<?php echo route_to('user_del') ?>', {
+                    "id": id,
+                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                }, 'json').done(function(response) {
+                    if (response.status == 'success') {
+                        showToast(response.message);
+                        table.ajax.reload();
+                    } else showToast(response.message, 'error');
                 });
             }
         });

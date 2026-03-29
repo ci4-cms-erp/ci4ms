@@ -5,7 +5,6 @@ echo $this->endSection();
 echo $this->section('head');
 echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css');
 echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css');
-echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css');
 echo $this->endSection();
 echo $this->section('content'); ?>
 
@@ -18,10 +17,13 @@ echo $this->section('content'); ?>
                 <i class="fas fa-users-cog mr-2 text-primary"></i> <?php echo lang($title->pagename) ?>
             </h3>
 
-            <div class="ml-auto d-flex" id="dtButtons">
-                <a href="<?php echo route_to('group_create') ?>" class="btn btn-sm btn-success px-3 d-flex align-items-center" style="border-radius:8px">
-                    <i class="fas fa-plus-circle mr-1"></i> <?php echo lang('Backend.add') ?>
+            <div class="ml-auto">
+                <a href="<?php echo route_to('group_create') ?>" class="btn btn-sm btn-success px-3" style="border-radius:8px">
+                    <?php echo lang('Backend.add') ?>
                 </a>
+                <button class="btn btn-sm btn-outline-secondary ml-1" id="btnRefresh" style="border-radius:8px" title="refresh">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
             </div>
         </div>
 
@@ -50,50 +52,34 @@ echo $this->section('javascript');
 echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
-echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/dataTables.buttons.min.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.bootstrap4.min.js');
-echo script_tag('be-assets/plugins/jszip/jszip.min.js');
-echo script_tag('be-assets/plugins/pdfmake/pdfmake.min.js');
-echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js');
-echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js'); ?>
+echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
 <script {csp-script-nonce}>
     var table;
     $(function() {
         table = $("#example1").DataTable({
-            responsive: true,
-            lengthChange: false,
-            autoWidth: false,
-            buttons: ["pageLength", {
-                text: '<i class="fas fa-sync-alt"></i>',
-                className: "btn btn-outline-secondary btn-sm ml-2",
-                action: function(e, dt, node, config) { dt.ajax.reload(); },
-                attr: { style: 'border-radius:8px;' }
-            }],
             processing: true,
-            pageLength: 10,
             serverSide: true,
             ordering: false,
             ajax: {
                 url: '<?php echo route_to('groupList') ?>',
                 type: 'POST',
-                data: { 
+                data: {
                     isApproved: true,
                     "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
                 }
             },
-            columns: [ 
-                { data: 'group' }, 
-                { data: 'actions', className: 'text-right' } 
+            columns: [{
+                    data: 'group'
+                },
+                {
+                    data: 'actions',
+                    className: 'text-right'
+                }
             ],
-            initComplete: function() {
-                var btns = table.buttons().container().appendTo('#dtButtons');
-                btns.find('.btn-group').removeClass('btn-group');
-            },
             language: ci4msDtLanguage('Search groups...')
         });
+
+        $('#btnRefresh').click(() => table.ajax.reload());
     });
 
     function deleteItem(id) {
@@ -113,7 +99,7 @@ echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js')
                     "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
                 }, 'json').done(function(response) {
                     if (response.status == 'success') {
-                        if(typeof showToast !== 'undefined'){
+                        if (typeof showToast !== 'undefined') {
                             showToast(response.message);
                             table.ajax.reload();
                         } else {
@@ -129,7 +115,7 @@ echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js')
                             });
                         }
                     } else {
-                        if(typeof showToast !== 'undefined'){
+                        if (typeof showToast !== 'undefined') {
                             showToast(response.message, 'error');
                         } else {
                             Swal.fire({

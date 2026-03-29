@@ -33,10 +33,6 @@ class CreatePagesTable extends Migration
                 'constraint' => '1',
                 'null' => false,
             ],
-            'seo' => [
-                'type' => 'LONGTEXT',
-                'null' => false,
-            ],
             'inMenu' => [
                 'type' => 'TINYINT',
                 'constraint' => '1',

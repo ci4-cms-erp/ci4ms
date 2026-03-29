@@ -48,7 +48,8 @@ class CreateCategoriesLangsTable extends Migration
         // Add foreign key constraint
         try {
             $this->db->query('ALTER TABLE `categories_langs` ADD CONSTRAINT `fk_categories_langs_categories_id` FOREIGN KEY (`categories_id`) REFERENCES `categories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE');
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         // Migrate existing data assuming 'tr' as default language
         if ($this->db->tableExists('categories') && $this->db->fieldExists('title', 'categories')) {
@@ -76,24 +77,15 @@ class CreateCategoriesLangsTable extends Migration
     {
         // Re-add dropped columns
         if (!$this->db->fieldExists('title', 'categories')) {
-            $this->forge->addColumn('categories', [
-                'title' => [
-                    'type' => 'VARCHAR',
-                    'constraint' => '255',
-                    'null' => false,
-                    'default' => '',
-                ],
-                'seflink' => [
-                    'type' => 'VARCHAR',
-                    'constraint' => '255',
-                    'null' => false,
-                    'default' => '',
-                ],
-                'seo' => [
-                    'type' => 'LONGTEXT',
-                    'null' => false,
-                ],
-            ]);
+            try {
+                $this->forge->addColumn('categories', [
+                    'title' => ['type' => 'VARCHAR', 'constraint' => '255', 'null' => false, 'default' => ''],
+                    'seflink' => ['type' => 'VARCHAR', 'constraint' => '255', 'null' => false, 'default' => ''],
+                    'seo' => ['type' => 'LONGTEXT', 'null' => false],
+                ]);
+            } catch (\Exception $e) {
+                // Sütun zaten varsa hata verme
+            }
         }
 
         // Migrate data back for default 'tr' lang
@@ -111,7 +103,8 @@ class CreateCategoriesLangsTable extends Migration
         // Drop foreign key and table
         try {
             $this->db->query("ALTER TABLE `categories_langs` DROP FOREIGN KEY `fk_categories_langs_categories_id`");
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         $this->forge->dropTable('categories_langs', true);
     }

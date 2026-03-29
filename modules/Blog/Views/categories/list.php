@@ -19,7 +19,7 @@ echo $this->section('content'); ?>
                 <a href="<?php echo route_to('categoryCreate') ?>" class="btn btn-sm btn-success px-3 d-flex align-items-center" style="border-radius:8px">
                     <?php echo lang('Backend.add') ?>
                 </a>
-                <button class="btn btn-sm btn-outline-secondary ml-2 d-flex align-items-center" id="btnRefresh" style="border-radius:8px" title="Yenile">
+                <button class="btn btn-sm btn-outline-secondary ml-2 d-flex align-items-center" id="btnRefresh" style="border-radius:8px" title="refresh">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
@@ -65,9 +65,13 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                     "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
                 }
             },
-            columns: [
-                { data: 'title' },
-                { data: 'actions', className: 'text-right' }
+            columns: [{
+                    data: 'title'
+                },
+                {
+                    data: 'actions',
+                    className: 'text-right'
+                }
             ],
             language: ci4msDtLanguage('Search categories...')
         });
@@ -92,7 +96,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                     "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
                 }, 'json').done(function(response) {
                     if (response.status == 'success') {
-                        if(typeof showToast !== 'undefined'){
+                        if (typeof showToast !== 'undefined') {
                             showToast(response.message);
                             table.ajax.reload();
                         } else {
@@ -108,7 +112,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                             });
                         }
                     } else {
-                        if(typeof showToast !== 'undefined'){
+                        if (typeof showToast !== 'undefined') {
                             showToast(response.message, 'error');
                         } else {
                             Swal.fire({

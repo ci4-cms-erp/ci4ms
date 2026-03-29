@@ -63,9 +63,9 @@ echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js')
 <script {csp-script-nonce}>
     let isApprove = true;
     var table = $("#example1").DataTable({
-        responsive: true,
-        lengthChange: false,
-        autoWidth: false,
+        processing: true,
+        serverSide: true,
+        ordering: false,
         buttons: [{
                 text: '<i class="fas fa-filter mr-1"></i> <span id="toggleApprovalText">Görünürleri Göster</span>',
                 className: "btn btn-success btn-sm mx-1 toggle-approval",

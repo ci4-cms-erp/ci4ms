@@ -23,7 +23,7 @@ echo $this->section('content'); ?>
                 <button type="button" class="btn btn-sm btn-success px-3 d-flex align-items-center" data-toggle="modal" data-target="#exampleModalCenter" style="border-radius:8px">
                     <?php echo lang('Backend.add') ?>
                 </button>
-                <button class="btn btn-sm btn-outline-secondary ml-2 d-flex align-items-center" id="btnRefresh" style="border-radius:8px" title="Yenile">
+                <button class="btn btn-sm btn-outline-secondary ml-2 d-flex align-items-center" id="btnRefresh" style="border-radius:8px" title="refresh">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
@@ -117,9 +117,9 @@ echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js')
     var table;
     $(function() {
         table = $("#example1").DataTable({
-            responsive: true,
-            lengthChange: false,
-            autoWidth: false,
+            processing: true,
+            serverSide: true,
+            ordering: false,
             buttons: ["pageLength", {
                 text: '<i class="fas fa-sync-alt"></i>',
                 className: "btn btn-outline-secondary btn-sm ml-2",

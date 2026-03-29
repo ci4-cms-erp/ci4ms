@@ -79,29 +79,25 @@ class CreatePagesLangsTable extends Migration
 
     public function down()
     {
-        // Re-add dropped columns
+        // Re-add dropped columns individually to avoid duplicate column errors
         if (!$this->db->fieldExists('title', 'pages')) {
             $this->forge->addColumn('pages', [
-                'title' => [
-                    'type' => 'VARCHAR',
-                    'constraint' => '255',
-                    'null' => false,
-                    'default' => '',
-                ],
-                'seflink' => [
-                    'type' => 'VARCHAR',
-                    'constraint' => '255',
-                    'null' => false,
-                    'default' => '',
-                ],
-                'content' => [
-                    'type' => 'LONGTEXT',
-                    'null' => false,
-                ],
-                'seo' => [
-                    'type' => 'LONGTEXT',
-                    'null' => false,
-                ],
+                'title' => ['type' => 'VARCHAR', 'constraint' => '255', 'null' => false, 'default' => '']
+            ]);
+        }
+        if (!$this->db->fieldExists('seflink', 'pages')) {
+            $this->forge->addColumn('pages', [
+                'seflink' => ['type' => 'VARCHAR', 'constraint' => '255', 'null' => false, 'default' => '']
+            ]);
+        }
+        if (!$this->db->fieldExists('content', 'pages')) {
+            $this->forge->addColumn('pages', [
+                'content' => ['type' => 'LONGTEXT', 'null' => false]
+            ]);
+        }
+        if (!$this->db->fieldExists('seo', 'pages')) {
+            $this->forge->addColumn('pages', [
+                'seo' => ['type' => 'LONGTEXT', 'null' => true] // or false based on your logic
             ]);
         }
 
