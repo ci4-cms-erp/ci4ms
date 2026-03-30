@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<info>
-    <templateName>Default Template</templateName>
-    <codedBy>Bertuğ Fahri ÖZER for Ci4MS</codedBy>
+<theme>
+    <!-- Display Name in the backend -->
+    <name>Default Template</name>
+
+    <!-- Unique Slug (Must match folder name 'starter') -->
+    <slug>default</slug>
+
+    <!-- Theme Author Information -->
+    <author>Bertuğ Fahri ÖZER / Ci4MS</author>
+
     <screenshotPNG>default/screenshot.png</screenshotPNG>
-    <defPath>default</defPath>
-</info>
+
+    <!-- Version of the theme -->
+    <version>1.0.0</version>
+
+    <!-- Brief Description of the Theme -->
+    <description>A blank starter theme to quickly develop custom themes for CI4MS.</description>
+</theme>

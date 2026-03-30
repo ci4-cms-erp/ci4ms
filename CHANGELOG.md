@@ -4,7 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
-## [31.0.0.0] - 2026-03-29
+## [0.31.1.0] - 2026-03-30
+
+### Added
+
+- **Theme Manager:** Added `downloadStarter` feature offering automated, memory-based ZIP creation to provide a standardized starter boilerplate theme directly from the admin panel.
+- **Theme Manager:** Smart deletion confirmation GUI that parses theme migration files and allows users to drop associated database tables selectively.
+- **Theme Manager:** Added a standalone `remove_theme_files` helper specifically designed to clean up MVC templates and public asset files safely from the project root.
+- **Theme Manager:** Automated schema migration implementation inside the Settings module that runs database setups upon theme activation via configuration logic.
+- **Core UI:** Integrated multiple message list support into the SweetAlert `_message_block` component for enhanced feedback logs.
+
+### Changed
+
+- **Theme Manager:** Enhanced `install_theme_from_tmp` to support and copy the `Database/Migrations` directory automatically upon extracting a new `.zip` template.
+- **Settings UI:** Upgraded backend settings view to elegantly display an extra "Delete Theme" action under inactive template cards.
+
+### Fixed
+
+- **Theme Manager:** Fixed recursive directory deletion method (`deleteFldr`) in `themes_helper.php` to resolve missing directory exceptions (by correcting parameter count based on recent code deprecations) and during legacy theme updates.
+
+## [0.31.0.0] - 2026-03-29
 
 ### Security
 

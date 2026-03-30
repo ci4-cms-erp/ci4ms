@@ -244,6 +244,7 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 - [Composer](https://getcomposer.org/doc/)
 - [CI4MS Architecture Guide](./architecture.md)
 - [CI4MS User Guide (HTML)](./user-guide.html)
+- [CI4MS Theme Development Guide](./theme_development.md)
 - Internal module documentation (check each module’s README or docblocks).
 
 Maintain this handbook as you evolve the stack—update dependencies, asset workflows, or deployment scripts here so the next developer has a reliable source of truth.

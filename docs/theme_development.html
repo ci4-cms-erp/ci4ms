@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CI4MS Theme Development Guide</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5faf6;
+        --card-bg: #ffffff;
+        --text: #123a49;
+        --muted: #4f7a82;
+        --accent: #2da592;
+        --accent-soft: rgba(45, 165, 146, 0.16);
+        --border: rgba(18, 58, 73, 0.08);
+        --shadow: 0 20px 40px rgba(18, 58, 73, 0.08);
+        --code-bg: rgba(18, 58, 73, 0.08);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #123a49;
+          --card-bg: #184f59;
+          --text: #f5faf6;
+          --muted: rgba(139, 203, 183, 0.85);
+          --accent: #8bcbb7;
+          --accent-soft: rgba(139, 203, 183, 0.28);
+          --border: rgba(139, 203, 183, 0.3);
+          --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+          --code-bg: rgba(18, 58, 73, 0.45);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          "Inter",
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: linear-gradient(
+          180deg,
+          var(--bg) 0%,
+          rgba(18, 58, 73, 0.05) 45%
+        );
+        color: var(--text);
+        line-height: 1.65;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .container {
+        max-width: 1920px;
+        margin: 0 auto;
+        padding: 0 1.5rem 4rem;
+      }
+
+      header {
+        text-align: center;
+        padding: 4rem 0 3rem;
+      }
+
+      header h1 {
+        margin: 0 0 1.25rem;
+        font-size: clamp(2.5rem, 4vw, 3.5rem);
+        letter-spacing: -0.02em;
+      }
+
+      header p {
+        margin: 0 auto;
+        max-width: 720px;
+        color: var(--muted);
+        font-size: 1.1rem;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--accent-soft);
+        border-radius: 999px;
+        padding: 0.35rem 0.85rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+      }
+
+      section {
+        margin-bottom: 3rem;
+      }
+
+      .panel {
+        background: var(--card-bg);
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        padding: 2.25rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at top right,
+          rgba(45, 165, 146, 0.18),
+          transparent 55%
+        );
+        pointer-events: none;
+      }
+
+      .panel h2 {
+        margin-top: 0;
+        font-size: 1.75rem;
+        letter-spacing: -0.01em;
+      }
+
+      .panel p {
+        margin: 0 0 1rem;
+      }
+      .panel ul {
+        margin: 0 0 1rem 1.25rem;
+        padding: 0;
+      }
+      .panel ol {
+        margin: 0 0 1rem 1.25rem;
+        padding: 0;
+      }
+
+      pre {
+        background: var(--code-bg);
+        color: var(--text);
+        border-radius: 18px;
+        padding: 1rem 1.25rem;
+        overflow-x: auto;
+        font-size: 0.95rem;
+      }
+
+      code {
+        font-family:
+          "Fira Code", "SFMono-Regular", Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+      }
+
+      .grid {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      @media (min-width: 768px) {
+        .grid.two {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      .cta {
+        background: linear-gradient(135deg, #2da592 0%, #123a49 100%);
+        border-radius: 28px;
+        padding: 3rem;
+        color: #f5faf6;
+        text-align: center;
+        box-shadow: 0 40px 60px rgba(18, 58, 73, 0.28);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cta::before,
+      .cta::after {
+        content: "";
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        background: rgba(139, 203, 183, 0.3);
+        pointer-events: none;
+      }
+
+      .cta::before {
+        top: -120px;
+        right: -60px;
+      }
+      .cta::after {
+        bottom: -140px;
+        left: -120px;
+      }
+
+      .cta h2 {
+        font-size: clamp(2rem, 4vw, 2.75rem);
+        margin: 0 0 1rem;
+      }
+      .cta p {
+        margin: 0 auto 2rem;
+        max-width: 540px;
+        font-size: 1.05rem;
+        opacity: 0.92;
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.8rem 1.6rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: none;
+        cursor: pointer;
+        transition:
+          transform 0.2s ease,
+          opacity 0.2s ease;
+        text-decoration: none;
+      }
+
+      .btn.primary {
+        background: #f5faf6;
+        color: #123a49;
+        box-shadow: 0 12px 32px rgba(18, 58, 73, 0.18);
+      }
+      .btn.secondary {
+        background: rgba(245, 250, 246, 0.22);
+        color: #f5faf6;
+        border: 1px solid rgba(139, 203, 183, 0.45);
+        backdrop-filter: blur(24px);
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        opacity: 0.95;
+      }
+
+      footer {
+        text-align: center;
+        padding: 3rem 0 2rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <span class="badge">CI4MS Engineering</span>
+        <h1>Theme Development Guide</h1>
+        <p>
+          Welcome to the CI4MS Theme Development Guide. This documentation will walk you through the process of building a custom theme for the CMS/ERP hybrid system.
+        </p>
+      </header>
+
+      <section class="panel">
+        <h2>1. Folder Structure</h2>
+        <p>A standardized CI4MS theme (e.g., <code>starter</code>) spans across <code>app/</code> and <code>public/</code> directories:</p>
+        <ul>
+            <li>
+                <strong><code>app/Config/templates/starter/</code></strong><br>
+                Contains <code>ThemeConfig.php</code> and <code>Routes.php</code>. Used for defining custom frontend routes or CSRF exclusions for theme-specific API/POST requests.
+            </li>
+            <br>
+            <li>
+                <strong><code>app/Controllers/templates/starter/</code></strong><br>
+                Contains custom controllers (e.g., <code>Forms.php</code>). Use this to handle theme-specific POST logic such as Contact Forms, Surveys, or Auth customizations.
+            </li>
+            <br>
+            <li>
+                <strong><code>app/Helpers/templates/starter/</code></strong><br>
+                Specifically designed for <code>funcs_helper.php</code>. You can define custom helper methods (e.g., <code>get_custom_widget()</code>) available directly within your views.
+            </li>
+            <br>
+            <li>
+                <strong><code>app/Libraries/templates/starter/</code></strong><br>
+                Contains <code>Ci4mstemplateLib.php</code>. Extended from the core template manager, use this class to create View Cells or theme-specific data injection logic.
+            </li>
+            <br>
+            <li>
+                <strong><code>app/Views/templates/starter/</code></strong><br>
+                Holds the entire layout components: <code>base.php</code>, <code>pages.php</code>, <code>blog/list.php</code>, etc.
+            </li>
+            <br>
+            <li>
+                <strong><code>public/templates/starter/</code></strong><br>
+                The public-facing assets (CSS, JS, Images, Vendors) and the most important <code>info.xml</code> that registers your theme in the administrative panel.
+            </li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>2. The info.xml Ecosystem</h2>
+        <p>Before activating your theme, ensure <code>info.xml</code> is present in your <code>public/templates/{themeSlug}/</code> folder.</p>
+        <pre><code>&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;theme&gt;
+    &lt;name&gt;Starter Theme&lt;/name&gt;
+    &lt;slug&gt;starter&lt;/slug&gt; &lt;!-- Must match your folder names logically --&gt;
+    &lt;author&gt;Your Identity&lt;/author&gt;
+    &lt;screenshotPNG&gt;starter/screenshot.png&lt;/screenshotPNG&gt;
+    &lt;version&gt;1.0.0&lt;/version&gt;
+    &lt;description&gt;Your theme specification&lt;/description&gt;
+&lt;/theme&gt;</code></pre>
+      </section>
+
+      <section class="panel">
+        <h2>3. Getting Started: base.php</h2>
+        <p>The core structural file is <code>app/Views/templates/{themeSlug}/base.php</code>. It serves as the master HTML layout.</p>
+        <p>
+            <strong>CRITICAL:</strong> The module renderer will automatically parse and output the main response to a variable named <code>$content</code>. You must echo <code>$content</code> inside the body element.
+            <br>Example snippet:
+        </p>
+        <pre><code>&lt;main&gt;
+    &lt;?= $content ?? '' ?&gt;
+&lt;/main&gt;</code></pre>
+        <h3>Available Core Variables in base.php:</h3>
+        <ul>
+            <li><strong><code>$seo</code></strong>: Pre-constructed HTML string containing the title, description, keywords generated by ci4seopro.</li>
+            <li><strong><code>$meta</code></strong>: Additional system-level meta tags or language alternatives.</li>
+            <li><strong><code>$content</code></strong>: Executed HTML output derived from specific Module Controllers (Pages, Blog, etc).</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>4. How Routing Works</h2>
+        <p>
+            If you define custom routes in <code>app/Config/templates/starter/Routes.php</code>, they will take precedence matching before the catch-all dynamic URL handlers in CI4MS. Thus, any post logic (<code>/form-submit</code>) should be registered here instead of core routes.
+        </p>
+      </section>
+
+      <section class="cta">
+        <h2>Begin Building Instantly</h2>
+        <p>Download our fully structured Starter Theme Package or explore the architecture further.</p>
+        <div class="action-buttons">
+          <a
+            class="btn primary"
+            href="../writable/starter_theme.zip"
+            target="_blank"
+            rel="noopener"
+            >Download Starter Theme</a
+          >
+          <a
+            class="btn secondary"
+            href="./developer-handbook.html"
+            target="_blank"
+            rel="noopener"
+            >Developer Handbook</a
+          >
+        </div>
+      </section>
+    </div>
+    <footer>
+      Crafted for the CI4MS engineering team · Questions? Reach out to the maintainers.
+    </footer>
+  </body>
+</html>

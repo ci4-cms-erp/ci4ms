@@ -28,30 +28,44 @@ if (!function_exists('findDuplicateSubfolders')) {
             $baseApp    = rtrim(APPPATH, '/');
             $basePublic = rtrim(ROOTPATH . 'public', '/');
 
-            $appFolders = ['Config', 'Controllers', 'Helpers', 'Libraries', 'Views'];
+            $appFolders = ['Config', 'Controllers', 'Helpers', 'Libraries', 'Views', 'Database/Migrations'];
 
             // app altı klasörler
             foreach ($appFolders as $folder) {
                 $src = "$tmpPath/app/$folder";
+                // ZIP içerisinde boilerplate standardı varsa, doğru dizin kökünü bul
+                if (is_dir("$src/templates/$themeName")) {
+                    $src = "$src/templates/$themeName";
+                }
+                
                 $dst = "$baseApp/$folder/templates/$themeName";
                 $log = array_merge($log, smart_move($src, $dst));
             }
 
             // public/assets taşı
             $srcAssets = "$tmpPath/public/assets";
+            if (is_dir("$tmpPath/public/templates/$themeName/assets")) {
+                $srcAssets = "$tmpPath/public/templates/$themeName/assets";
+            }
+            
             $dstAssets = "$basePublic/templates/$themeName/assets";
             $log = array_merge($log, smart_move($srcAssets, $dstAssets));
 
-            // public kök dosyaları taşı (info.xml, screenshot.png vs)
-            foreach (glob("$tmpPath/public/*.*") as $file) {
+            // public root dosyaları (info.xml, screenshot.png vs)
+            $publicSearchDir = "$tmpPath/public";
+            if (is_dir("$tmpPath/public/templates/$themeName")) {
+                $publicSearchDir = "$tmpPath/public/templates/$themeName";
+            }
+            
+            foreach (glob("$publicSearchDir/*.*") as $file) {
                 if (is_dir($file) || basename($file) === 'assets') continue;
 
                 $targetDir = "$basePublic/templates/$themeName";
                 if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
 
                 $to = $targetDir . '/' . basename($file);
-                rename($file, $to); // veya copy($file, $to);
-                $log[] = "📄 Taşındı (public root): " . basename($file);
+                rename($file, $to);
+                $log[] = "📄 Taşındı: " . basename($file);
             }
 
             return $log;
@@ -99,25 +113,61 @@ if (!function_exists('findDuplicateSubfolders')) {
     function deleteFldr($folderPath)
     {
         if (!is_dir($folderPath)) {
-            return false;
+            return true;
         }
 
         $items = scandir($folderPath);
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
+        if ($items !== false) {
+            foreach ($items as $item) {
+                if ($item === '.' || $item === '..') {
+                    continue;
+                }
 
-            $fullPath = $folderPath . DIRECTORY_SEPARATOR . $item;
+                $fullPath = $folderPath . DIRECTORY_SEPARATOR . $item;
 
-            if (is_dir($fullPath)) {
-                deleteFldr($fullPath); // recursive
-                rmdir($fullPath);
-            } else {
-                unlink($fullPath);
+                if (is_dir($fullPath)) {
+                    deleteFldr($fullPath); // recursive
+                } else {
+                    if (file_exists($fullPath)) {
+                        unlink($fullPath);
+                    }
+                }
             }
         }
 
-        return rmdir($folderPath); // en sonunda kendisini sil
+        if (is_dir($folderPath)) {
+            @rmdir($folderPath); // en sonunda kendisini sil
+        }
+        
+        return true;
+    }
+
+    if (!function_exists('remove_theme_files')) {
+        function remove_theme_files(string $themeName): array
+        {
+            $log = [];
+            $baseApp    = rtrim(APPPATH, '/');
+            $basePublic = rtrim(ROOTPATH . 'public', '/');
+
+            $appFolders = ['Config', 'Controllers', 'Helpers', 'Libraries', 'Views', 'Database/Migrations'];
+
+            // app altı klasörleri sil
+            foreach ($appFolders as $folder) {
+                $target = "$baseApp/$folder/templates/$themeName";
+                if (is_dir($target)) {
+                    deleteFldr($target);
+                    $log[] = "🗑️ Silindi: app/$folder/templates/$themeName";
+                }
+            }
+
+            // public templates sil
+            $publicTarget = "$basePublic/templates/$themeName";
+            if (is_dir($publicTarget)) {
+                deleteFldr($publicTarget);
+                $log[] = "🗑️ Silindi: public/templates/$themeName";
+            }
+
+            return $log;
+        }
     }
 }
