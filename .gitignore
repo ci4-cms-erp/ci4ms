@@ -162,3 +162,5 @@ composer.lock.json
 .antigravityignore
 .claude
 modules/Notifications
+tests/*
+phpunit.xml.dist

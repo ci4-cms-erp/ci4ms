@@ -150,23 +150,33 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function templateSelectPost()
     {
-        if ($this->request->isAJAX()) {
-            $valData = ([
-                'path' => ['label' => 'path', 'rules' => 'required'],
-                'tName' => ['label' => 'tName', 'rules' => 'required']
-            ]);
-            if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+        $valData = ([
+            'path' => ['label' => 'path', 'rules' => 'required'],
+            'tName' => ['label' => 'tName', 'rules' => 'required']
+        ]);
+        if ($this->validate($valData) == false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+        try {
+            $themeName = esc($this->request->getPost('path'));
+
+            // Aktif Edildiğinde OTO MIGRATION ÇALIŞTIRMA
+            $migrate = \Config\Services::migrations();
+            $migrate->setNamespace('App');
             try {
-                setting()->set('App.templateInfos', json_encode([
-                    'path' => esc($this->request->getPost('path')),
-                    'name' => esc($this->request->getPost('name'))
-                ], JSON_UNESCAPED_UNICODE));
-                cache()->delete('settings');
-                return $this->respond(['result' => true]);
+                $migrate->latest('templates/' . $themeName);
             } catch (\Exception $e) {
-                return $this->respond(['result' => false], 500);
+                // Migration yoksa sorun yok, geç
             }
-        } else return $this->failForbidden();
+
+            setting()->set('App.templateInfos', json_encode([
+                'path' => $themeName,
+                'name' => esc($this->request->getPost('name'))
+            ], JSON_UNESCAPED_UNICODE));
+            cache()->delete('settings');
+            return $this->respond(['result' => true]);
+        } catch (\Exception $e) {
+            return $this->respond(['result' => false], 500);
+        }
     }
 
     /**
@@ -225,7 +235,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             $valData = ([
                 'isActive' => ['label' => 'isActive', 'rules' => 'required|in_list[0,1]']
             ]);
-            if ($this->validate($valData) == false) return redirect('403');
+            if ($this->validate($valData) == false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
             try {
                 setting()->set('Elfinder.convertWebp', (bool)$this->request->getPost('isActive'));
                 cache()->delete('settings');

@@ -16,19 +16,28 @@ echo $this->section('content'); ?>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-app"><i class="fas fa-desktop"></i></div>
-                <div><div class="m-stat-value"><?php echo esc($settings->siteName ?? 'CI4MS') ?></div><div class="m-stat-label">Site Adı</div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo esc($settings->siteName ?? 'CI4MS') ?></div>
+                    <div class="m-stat-label">Site Adı</div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-version"><i class="fas fa-code-branch"></i></div>
-                <div><div class="m-stat-value"><?php echo env('app.version') ?></div><div class="m-stat-label">Sürüm</div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo env('app.version') ?></div>
+                    <div class="m-stat-label">Sürüm</div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-template"><i class="fas fa-paint-brush"></i></div>
-                <div><div class="m-stat-value"><?php echo esc($settings->templateInfos->name ?? 'Default') ?></div><div class="m-stat-label">Aktif Tema</div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo esc($settings->templateInfos->name ?? 'Default') ?></div>
+                    <div class="m-stat-label">Aktif Tema</div>
+                </div>
             </div>
         </div>
     </div>
@@ -130,22 +139,26 @@ echo $this->section('content'); ?>
                                     $infoPath = ROOTPATH . 'public/templates/' . $key . 'info.xml';
                                     if (is_file($infoPath)):
                                         $data = simplexml_load_file($infoPath, 'SimpleXMLElement', LIBXML_NOCDATA);
-                                        $isActive = ($settings->templateInfos->path == $data->defPath); ?>
+                                        $isActive = ($settings->templateInfos->path == $data->slug); ?>
                                         <div class="col-md-4 mb-4">
                                             <div class="card h-100 <?php echo $isActive ? 'border-primary shadow' : 'border-0 bg-light' ?>" style="border-radius:12px; overflow:hidden">
                                                 <img class="card-img-top" src="<?php echo site_url('templates/' . $data->screenshotPNG) ?>" style="height: 150px; object-fit: cover;">
                                                 <div class="card-body p-3">
-                                                    <h6 class="font-weight-bold mb-1"><?php echo $data->templateName ?></h6>
-                                                    <p class="small text-muted mb-3">By <?php echo $data->codedBy ?></p>
+                                                    <h6 class="font-weight-bold mb-1"><?php echo $data->name ?></h6>
+                                                    <p class="small text-muted mb-3">By <?php echo $data->author ?></p>
+                                                    <p class="small text-muted mb-3"><?php echo $data->description ?></p>
+                                                    <p class="small text-muted mb-3">Version <?php echo $data->version ?></p>
                                                     <?php if (!$isActive): ?>
-                                                        <button class="btn btn-sm btn-primary btn-block" onclick="chooseTemplate('<?php echo $data->defPath ?>','<?php echo $data->templateName ?>')">Aktif Et</button>
+                                                        <button type="button" class="btn btn-sm btn-primary btn-block mb-2" onclick="chooseTemplate('<?php echo $data->slug ?>','<?php echo $data->name ?>')">Aktif Et</button>
+                                                        <a href="<?php echo route_to('deleteThemeConfirm', $data->slug) ?>" class="btn btn-sm btn-outline-danger btn-block"><i class="fas fa-trash mr-1"></i> Sil</a>
                                                     <?php else: ?>
-                                                        <a href="<?php echo route_to('templateSettings') ?>" class="btn btn-sm btn-outline-primary btn-block"><i class="fas fa-sliders-h mr-1"></i> Ayarlar</a>
+                                                        <a href="<?php echo route_to('templateSettings') ?>" class="btn btn-sm btn-outline-primary btn-block"><i class="fas fa-sliders-h mr-1"></i> <?php echo lang('Settings.settings') ?></a>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
-                                <?php endif; endforeach; ?>
+                                <?php endif;
+                                endforeach; ?>
                             </div>
                         </div>
 
@@ -155,20 +168,21 @@ echo $this->section('content'); ?>
                                 <?php echo csrf_field() ?>
                                 <div data-repeater-list="socialNetwork">
                                     <?php if (!empty($settings->socialNetwork)): foreach ($settings->socialNetwork as $sn) : ?>
-                                        <div class="row align-items-end mb-3 pb-3 border-bottom" data-repeater-item>
-                                            <div class="col-md-5">
-                                                <label>Ağ Adı (örn: instagram)</label>
-                                                <input type="text" class="form-control" name="smName" value="<?php echo esc($sn['smName']) ?>" required>
+                                            <div class="row align-items-end mb-3 pb-3 border-bottom" data-repeater-item>
+                                                <div class="col-md-5">
+                                                    <label>Ağ Adı (örn: instagram)</label>
+                                                    <input type="text" class="form-control" name="smName" value="<?php echo esc($sn['smName']) ?>" required>
+                                                </div>
+                                                <div class="col-md-5">
+                                                    <label>Profil Linki</label>
+                                                    <input type="url" class="form-control" name="link" value="<?php echo esc($sn['link']) ?>" required>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button data-repeater-delete type="button" class="btn btn-outline-danger btn-block"><i class="fas fa-trash"></i></button>
+                                                </div>
                                             </div>
-                                            <div class="col-md-5">
-                                                <label>Profil Linki</label>
-                                                <input type="url" class="form-control" name="link" value="<?php echo esc($sn['link']) ?>" required>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <button data-repeater-delete type="button" class="btn btn-outline-danger btn-block"><i class="fas fa-trash"></i></button>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; else: ?>
+                                        <?php endforeach;
+                                    else: ?>
                                         <div class="row align-items-end mb-3" data-repeater-item>
                                             <div class="col-md-5">
                                                 <label>Ağ Adı</label>
@@ -283,10 +297,11 @@ echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaul
 echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
 echo script_tag("be-assets/js/ci4ms.js") ?>
 <script {csp-script-nonce}>
-
     $('.repeater').repeater({
         isFirstItemUndeletable: true,
-        show: function() { $(this).slideDown(); },
+        show: function() {
+            $(this).slideDown();
+        },
         hide: function(deleteElement) {
             Swal.fire({
                 title: 'Emin misiniz?',
@@ -303,19 +318,25 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
     $('.bswitch').bootstrapSwitch();
 
     $('#maintenance-mode').on('switchChange.bootstrapSwitch', function(e, state) {
-        $.post('<?php echo route_to('maintenance') ?>', { isActive: state ? 1 : 0 }, 'json').done(data => {
+        $.post('<?php echo route_to('maintenance') ?>', {
+            isActive: state ? 1 : 0
+        }, 'json').done(data => {
             showToast(state ? 'Bakım modu aktif.' : 'Bakım modu kapatıldı.');
         });
     });
 
     $('#language-mode').on('switchChange.bootstrapSwitch', function(e, state) {
-        $.post('<?php echo route_to('saveLanguageMode') ?>', { mode: state ? 'multi' : 'single' }, 'json').done(data => {
+        $.post('<?php echo route_to('saveLanguageMode') ?>', {
+            mode: state ? 'multi' : 'single'
+        }, 'json').done(data => {
             showToast('Dil modu ' + (state ? 'Multi' : 'Single') + ' olarak güncellendi.');
         });
     });
 
     $('#webp-convert').on('switchChange.bootstrapSwitch', function(e, state) {
-        $.post('<?php echo route_to('elfinderConvertWebp') ?>', { isActive: state ? 1 : 0 }, 'json').done(data => {
+        $.post('<?php echo route_to('elfinderConvertWebp') ?>', {
+            isActive: state ? 1 : 0
+        }, 'json').done(data => {
             showToast('WebP dönüşümü ' + (state ? 'aktif.' : 'kapalı.'));
         });
     });
@@ -328,9 +349,12 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             confirmButtonText: 'Evet',
             cancelButtonText: 'Hayır'
         }).then(res => {
-            if(res.isConfirmed) {
-                $.post('<?php echo route_to('setTemplate') ?>', { path: path, tName: templateName }).done(data => {
-                    if(data.result) location.reload();
+            if (res.isConfirmed) {
+                $.post('<?php echo route_to('setTemplate') ?>', {
+                    path: path,
+                    tName: templateName
+                }).done(data => {
+                    if (data.result) location.reload();
                 });
             }
         });
@@ -338,20 +362,28 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
 
     $('#sendtest').click(function() {
         let email = $('#testemail').val();
-        if(!email) { showToast('Email giriniz', 'error'); return; }
+        if (!email) {
+            showToast('Email giriniz', 'error');
+            return;
+        }
         let btn = $(this);
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-        $.post('<?php echo route_to('testMail') ?>', { testemail: email }).done(r => {
+        $.post('<?php echo route_to('testMail') ?>', {
+            testemail: email
+        }).done(r => {
             showToast(r.message, r.result ? 'success' : 'error');
             btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Gönder');
         });
     });
 
     $('#updateVersion').click(function() {
-        Swal.fire({ title: 'Sürüm kontrol ediliyor...', didOpen: () => Swal.showLoading() });
+        Swal.fire({
+            title: 'Sürüm kontrol ediliyor...',
+            didOpen: () => Swal.showLoading()
+        });
         $.post('<?php echo route_to('updateVersion') ?>').done(r => {
             Swal.close();
-            if(r.result) Swal.fire('Başarılı', r.message, 'success');
+            if (r.result) Swal.fire('Başarılı', r.message, 'success');
             else Swal.fire('Hata', r.error || r.message, 'error');
         });
     });
