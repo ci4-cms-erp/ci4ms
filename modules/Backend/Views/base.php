@@ -163,6 +163,9 @@
                 <b>Version</b> <?php echo getenv('app.version') ?>
             </div>
             <strong>Copyright &copy; <?php echo date('Y') ?>.</strong> All rights reserved.
+            <a href="https://patreon.com/cw/bertugfahriozer" target="_blank" class="text-danger">
+                <i class="fas fa-heart"></i> Support me on Patreon
+            </a>
         </footer>
 
         <!-- Control Sidebar -->
@@ -180,7 +183,9 @@
 
     echo script_tag("be-assets/js/demo.js");
     echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js"); ?>
-    <script {csp-script-nonce}>window.CI4MS_LOCALE = '<?php echo env('app.defaultLocale', 'tr') ?>';</script>
+    <script {csp-script-nonce}>
+        window.CI4MS_LOCALE = '<?php echo env('app.defaultLocale', 'tr') ?>';
+    </script>
     <?php echo script_tag("be-assets/js/ci4ms.js");
     echo view('Modules\Backend\Views\sweetalert_message_block', [], ['debug' => false]);
     echo $this->renderSection('javascript'); ?>

@@ -4,6 +4,12 @@
     "license": "MIT",
     "type": "project",
     "homepage": "https://github.com/ci4-cms-erp/ci4ms",
+    "funding": [
+        {
+            "type": "patreon",
+            "url": "https://patreon.com/bertugfahriozer"
+        }
+    ],
     "require": {
         "php": "^8.2",
         "bertugfahriozer/ci4commonmodel": "^1.2",

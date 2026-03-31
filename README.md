@@ -2,6 +2,9 @@
 
 CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, modular architecture with RBAC authorization and theme support. It combines CMS workflows, developer-focused CLI commands, an extensible module system, and customizable front-end themes in a single package.
 
+[![Patreon](https://img.shields.io/badge/Patreon-Support%20Us-F96854?style=for-the-badge&logo=patreon&logoColor=white)](https://patreon.com/cw/bertugfahriozer)
+
+
 ## Key Features
 
 - Authentication & RBAC: `Modules\Auth` handles user login, lockouts, and password resets, while permissions map to `auth_permissions_pages` records.
@@ -145,7 +148,7 @@ A huge thank you to the security researchers who have helped make **ci4ms** more
 | Contributor                                         | Contribution                                                                         | Date     |
 | :-------------------------------------------------- | :----------------------------------------------------------------------------------- | :------- |
 | **[Lars van Mil](https://github.com/Far-Horizons)** | Identified Critical RCE and Information Disclosure vulnerabilities.                  | Jan 2026 |
-| **[0xAlchemist](https://github.com/bugmithlegend)** | Identified Stored DOM XSS vulnerabilities leading to Account Takeover.               | Feb 2026 |
+| **[0xAlchemist \| Bugmith [BUGX]](https://github.com/bugmithlegend)** | Identified Critical Stored DOM XSS vulnerabilities across Company Info, Social Media, and Mail Settings modules, and a Session Invalidation flaw, leading to Account Takeover, Privilege Escalation, and potential Platform Compromise. | Feb 2026 |
 | **[peeefour](https://github.com/peeefour)**         | Identified Stored DOM XSS vulnerabilities leading to Account Takeover.               | Feb 2026 |
 | **[Hunter.](https://github.com/LAW6ZX7)**           | Identified Critical Stored XSS in Backend & Blog modules allowing Session Hijacking. | Feb 2026 |
 | **[m1scher](https://github.com/m1scher)**           | Assisted with vulnerability triaging and security testing.                           | Feb 2026 |
