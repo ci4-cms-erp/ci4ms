@@ -51,16 +51,16 @@
         },
         {
             "name": "bertugfahriozer/ci4seopro",
-            "version": "v1.0.0",
+            "version": "v1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bertugfahriozer/ci4seopro.git",
-                "reference": "706336429c8a36523bb09c579a172b2ef981dbba"
+                "reference": "18e3ec4a38db8e4ef4bd4e07a47a3700bafc3010"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bertugfahriozer/ci4seopro/zipball/706336429c8a36523bb09c579a172b2ef981dbba",
-                "reference": "706336429c8a36523bb09c579a172b2ef981dbba",
+                "url": "https://api.github.com/repos/bertugfahriozer/ci4seopro/zipball/18e3ec4a38db8e4ef4bd4e07a47a3700bafc3010",
+                "reference": "18e3ec4a38db8e4ef4bd4e07a47a3700bafc3010",
                 "shasum": ""
             },
             "require": {
@@ -119,9 +119,9 @@
             ],
             "support": {
                 "issues": "https://github.com/bertugfahriozer/ci4seopro/issues",
-                "source": "https://github.com/bertugfahriozer/ci4seopro/tree/v1.0.0"
+                "source": "https://github.com/bertugfahriozer/ci4seopro/tree/v1.0.1"
             },
-            "time": "2026-01-22T01:54:49+00:00"
+            "time": "2026-04-01T03:14:14+00:00"
         },
         {
             "name": "bertugfahriozer/sql2migration",
@@ -183,16 +183,16 @@
         },
         {
             "name": "ci4-cms-erp/ext_module_generator",
-            "version": "v1.2.3",
+            "version": "v1.2.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ci4-cms-erp/ext_module_generator.git",
-                "reference": "ce30affd09c2504ac472fa4b52e73acfbc58d3a1"
+                "reference": "fc51fbfff781955480b2db36b21821a9b853c892"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ci4-cms-erp/ext_module_generator/zipball/ce30affd09c2504ac472fa4b52e73acfbc58d3a1",
-                "reference": "ce30affd09c2504ac472fa4b52e73acfbc58d3a1",
+                "url": "https://api.github.com/repos/ci4-cms-erp/ext_module_generator/zipball/fc51fbfff781955480b2db36b21821a9b853c892",
+                "reference": "fc51fbfff781955480b2db36b21821a9b853c892",
                 "shasum": ""
             },
             "require": {
@@ -236,9 +236,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ci4-cms-erp/ext_module_generator/issues",
-                "source": "https://github.com/ci4-cms-erp/ext_module_generator/tree/v1.2.3"
+                "source": "https://github.com/ci4-cms-erp/ext_module_generator/tree/v1.2.4"
             },
-            "time": "2026-02-23T03:46:23+00:00"
+            "time": "2026-04-01T03:07:13+00:00"
         },
         {
             "name": "claviska/simpleimage",
@@ -908,23 +908,23 @@
         },
         {
             "name": "symfony/finder",
-            "version": "v6.4.33",
+            "version": "v7.4.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/finder.git",
-                "reference": "24965ca011dac87431729640feef8bcf7b5523e0"
+                "reference": "e0be088d22278583a82da281886e8c3592fbf149"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/finder/zipball/24965ca011dac87431729640feef8bcf7b5523e0",
-                "reference": "24965ca011dac87431729640feef8bcf7b5523e0",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/e0be088d22278583a82da281886e8c3592fbf149",
+                "reference": "e0be088d22278583a82da281886e8c3592fbf149",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.1"
+                "php": ">=8.2"
             },
             "require-dev": {
-                "symfony/filesystem": "^6.0|^7.0"
+                "symfony/filesystem": "^6.4|^7.0|^8.0"
             },
             "type": "library",
             "autoload": {
@@ -952,7 +952,7 @@
             "description": "Finds files and directories via an intuitive fluent interface",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/finder/tree/v6.4.33"
+                "source": "https://github.com/symfony/finder/tree/v7.4.8"
             },
             "funding": [
                 {
@@ -972,7 +972,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-26T13:03:48+00:00"
+            "time": "2026-03-24T13:12:05+00:00"
         }
     ],
     "packages-dev": [

@@ -93,10 +93,11 @@ class Autoload extends AutoloadConfig
      */
     public $helpers = ['text', 'filesystem', 'html', 'auth', 'setting', 'form'];
 
-    private string $modulesPath = ROOTPATH . 'modules/';
+    private string $modulesPath;
     public function __construct()
     {
         parent::__construct();
+        $this->modulesPath = ROOTPATH . 'modules/';
         $modules = array_filter(scandir($this->modulesPath), function ($module) {
             return !in_array($module, ['.', '..', '.DS_Store']) && is_dir($this->modulesPath . DIRECTORY_SEPARATOR . $module);
         });

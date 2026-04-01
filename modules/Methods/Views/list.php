@@ -251,7 +251,7 @@ echo link_tag('be-assets/plugins/dropzone/min/dropzone.min.css'); ?>
 echo $this->section('content'); ?>
 
 <?php
-    $protectedModules = ['Auth','Backend','Install','Methods','Settings','LanguageManager'];
+    $protectedModules = $protectedModules ?? ['Auth', 'Backend', 'Install', 'Methods', 'Settings', 'LanguageManager', 'Pages', 'Blog', 'Theme', 'Users', 'DashboardWidgets', 'Media', 'Menu'];
     $totalPages = array_sum(array_map(fn($m) => count($m->pages), $modules));
     $activeCount = count(array_filter($modules, fn($m) => $m->active));
     $navCount = 0;

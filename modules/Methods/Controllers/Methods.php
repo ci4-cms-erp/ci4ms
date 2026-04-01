@@ -17,6 +17,13 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         'Methods',
         'Settings',
         'LanguageManager',
+        'Pages',
+        'Blog',
+        'Theme',
+        'Users',
+        'DashboardWidgets',
+        'Media',
+        'Menu'
     ];
     public function index()
     {
@@ -41,6 +48,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
         $methodsModel = new \Modules\Methods\Models\MethodsModel();
         $this->defData['modules'] = $methodsModel->getModules();
+        $this->defData['protectedModules'] = self::PROTECTED_MODULES;
         return view('Modules\Methods\Views\list', $this->defData);
     }
 
@@ -326,14 +334,20 @@ class Methods extends \Modules\Backend\Controllers\BaseController
 
         $installer = new ModuleInstaller();
 
-        // 1) Migration rollback (tabloları sil)
-        $rollbackResult = $installer->rollbackModuleMigrations($module->name);
-        if (!$rollbackResult['success']) {
-            return $this->respond([
-                'status'  => 'error',
-                'message' => lang('Methods.rollbackFailed', [$rollbackResult['error']]),
-            ]);
+        $migrationPath = ROOTPATH . 'modules/' . $module->name . '/Database/Migrations';
+        if (is_dir($migrationPath)) {
+            $files = glob($migrationPath . '/*.php');
+            if (!empty($files)) {
+                $rollbackResult = $installer->rollbackModuleMigrations($module->name);
+                if (!$rollbackResult['success']) {
+                    return $this->respond([
+                        'status'  => 'error',
+                        'message' => lang('Methods.rollbackFailed', [$rollbackResult['error']]),
+                    ]);
+                }
+            }
         }
+
 
         // 2) auth_permissions_pages kayıtlarını sil
         $this->commonModel->remove('auth_permissions_pages', ['module_id' => $moduleId]);

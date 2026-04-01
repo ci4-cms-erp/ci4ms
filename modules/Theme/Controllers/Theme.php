@@ -50,9 +50,9 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         } else {
             $log = install_theme_from_tmp($themeName);
             deleteFldr(rtrim($tempPath, '/'));
+            cache()->delete('templates_list');
             return redirect()->route('backendThemes')->with('log', $log);
         }
-
     }
 
     public function deleteConfirm(string $slug)
@@ -67,7 +67,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         $migrationPath = APPPATH . 'Database/Migrations/templates/' . $themeName;
         if (is_dir($migrationPath)) {
             $files = glob($migrationPath . '/*.php');
-            if ($files !== false) {
+            if (!empty($files)) {
                 foreach ($files as $file) {
                     $content = file_get_contents($file);
                     preg_match_all("/\\\$this->forge->createTable\s*\(\s*['\"]([^'\"]+)['\"]/i", $content, $matches);
@@ -80,7 +80,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
                 }
             }
         }
-
+        cache()->delete('templates_list');
         $this->defData['themeName'] = $themeName;
         $this->defData['tables'] = array_unique($tables);
 
@@ -115,6 +115,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
             $removeLogs = remove_theme_files($themeName);
             $log = array_merge($log, $removeLogs);
         }
+        cache()->delete('templates_list');
 
         return redirect()->route('settings')->with('messages', $log);
     }
