@@ -61,6 +61,10 @@ jobs:
       - name: 📦 Install Composer dependencies
         run: docker exec ci4ms_app composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      - name: 🩹 Patch Paths.php for SUPPORTPATH
+        run: |
+          docker exec ci4ms_app sed -i "s|public string \$viewDirectory.*|&\n    public string \$supportDirectory = __DIR__ . '/../../vendor/codeigniter4/framework/system/ThirdParty';|" app/Config/Paths.php
+
       - name: 📂 Set file permissions
         run: |
           docker exec ci4ms_app chmod -R 775 writable
