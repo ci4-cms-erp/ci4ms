@@ -13,7 +13,7 @@ echo $this->section('content'); ?>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <a href="<?php echo route_to('comments') ?>" class="btn btn-sm btn-outline-info"><i
-                            class="fas fa-arrow-circle-left"></i> Listeye Dön</a>
+                            class="fas fa-arrow-circle-left"></i> <?= lang('Backend.backToList') ?></a>
                 </ol>
             </div>
         </div>
@@ -44,7 +44,7 @@ echo $this->section('content'); ?>
                 <div class="col-md-6 form-group">
                     <div class="btn-group float-right">
                         <a href="<?php echo site_url('blog/' . $blogInfo->seflink) ?>" target="_blank" class="btn btn-outline-success float-right font-weight-bold">
-                            Related Post
+                            <?= lang('Blog.relatedPost') ?>
                         </a>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons">
                             <label class="btn btn-outline-primary <?php echo ((bool)$commentInfo->isApproved === true) ? 'checked' : '' ?>">
@@ -58,15 +58,15 @@ echo $this->section('content'); ?>
                 </div>
                 <div class="col-md-6 form-group">
                     <label for=""><?php echo lang('Backend.fullName') ?></label>
-                    <input type="text" readonly value="<?php echo $commentInfo->comFullName ?>" class="form-control">
+                    <input type="text" readonly value="<?php echo esc($commentInfo->comFullName) ?>" class="form-control">
                 </div>
                 <div class="col-md-6 form-group">
                     <label for=""><?php echo lang('Backend.email') ?></label>
-                    <input type="text" readonly value="<?php echo $commentInfo->comEmail ?>" class="form-control">
+                    <input type="text" readonly value="<?php echo esc($commentInfo->comEmail) ?>" class="form-control">
                 </div>
                 <div class="col-md-12 form-group">
                     <label for=""><?php echo lang('Blog.comment') ?></label>
-                    <textarea name="" id="" cols="30" rows="10" class="form-control" readonly><?php echo $commentInfo->comMessage ?></textarea>
+                    <textarea name="" id="" cols="30" rows="10" class="form-control" readonly><?php echo esc($commentInfo->comMessage) ?></textarea>
                 </div>
                 <div class="col-md-12 form-group">
                     <button class="btn btn-success float-right"><?php echo lang('Backend.save') ?></button>

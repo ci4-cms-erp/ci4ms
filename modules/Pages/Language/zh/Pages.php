@@ -6,4 +6,6 @@ return [
     'homePage' => '首页',
     'isHomePage' => '当前首页',
     'setAsHomePage' => '设为首页',
+    'searchPlaceholder' => '搜索页面...',
+    'totalPages' => '页面总数',
 ];

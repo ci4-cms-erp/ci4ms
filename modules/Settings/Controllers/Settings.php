@@ -28,10 +28,10 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             'cMail' => ['label' => lang('Settings.companyEmail'), 'rules' => 'required|valid_email'],
         ]);
 
-        if (!empty($this->request->getPost('cSlogan'))) $valData['cSlogan'] = ['label' => lang('Settings.companySlogan'), 'rules' => 'required'];
-        if (!empty($this->request->getPost('cGSM'))) $valData['cGSM'] = ['label' => lang('Settings.companyGsm'), 'rules' => 'required'];
-        if (!empty($this->request->getPost('cMap'))) $valData['cMap'] = ['label' => lang('Settings.gmapIframe'), 'rules' => 'required'];
-        if (!empty($this->request->getPost('cLogo'))) $valData['cLogo'] = ['label' => lang('Settings.companyLogo'), 'rules' => 'required'];
+        if (!empty($this->request->getPost('cSlogan'))) $valData['cSlogan'] = ['label' => lang('Settings.companySlogan'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
+        if (!empty($this->request->getPost('cGSM'))) $valData['cGSM'] = ['label' => lang('Settings.companyGsm'), 'rules' => 'required|regex_match[/^[\d\s\+\-\(\)]{7,25}$/]'];
+        if (!empty($this->request->getPost('cMap'))) $valData['cMap'] = ['label' => lang('Settings.gmapIframe'), 'rules' => 'required|max_length[2000]'];
+        if (!empty($this->request->getPost('cLogo'))) $valData['cLogo'] = ['label' => lang('Settings.companyLogo'), 'rules' => 'required|regex_match[/^[^<>{}=]*$/u]'];
 
         if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
 
@@ -45,7 +45,13 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             ];
             if (!empty($this->request->getPost('cSlogan'))) setting()->set('App.slogan', esc(trim(strip_tags($this->request->getPost('cSlogan')))));
             if (!empty($this->request->getPost('cGSM'))) $data['gsm'] = esc(trim(strip_tags($this->request->getPost('cGSM'))));
-            if (!empty($this->request->getPost('cMap'))) setting()->set('Gmap.map_iframe', trim(strip_tags($this->request->getPost('cMap'), '<iframe>')));
+            if (!empty($this->request->getPost('cMap'))) {
+                $mapValue = trim(strip_tags($this->request->getPost('cMap'), '<iframe>'));
+                $mapValue = preg_replace('/\bon\w+\s*=\s*"[^"]*"/i', '', $mapValue);
+                $mapValue = preg_replace('/\bon\w+\s*=\s*\'[^\']*\'/i', '', $mapValue);
+                $mapValue = preg_replace('/\bon\w+\s*=\s*[^\s>]+/i', '', $mapValue);
+                setting()->set('Gmap.map_iframe', $mapValue);
+            }
             if (!empty($this->request->getPost('cLogo'))) setting()->set('App.logo', esc(trim(strip_tags($this->request->getPost('cLogo')))));
 
             setting()->set('App.contact', json_encode($data, JSON_UNESCAPED_UNICODE));
@@ -76,6 +82,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 $error['snName'] = lang('Settings.socialMediaNameMustBeText');
                 unset($socialNetwork[$key]);
             }
+            $item['smName']=strip_tags(trim($item['smName']));
             if (empty($item['link']) || empty($item['smName'])) {
                 $error = [lang('Settings.socialMediaNameRequired')];
                 unset($socialNetwork[$key]);
@@ -99,8 +106,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     public function mailSettingsPost()
     {
         $valData = [
-            'mServer' => ['label' => 'Mail Server', 'rules' => 'required|alpha_dash'],
-            'mPort' => ['label' => 'Mail Port', 'rules' => 'required|is_natural_no_zero'],
+            'mServer' => ['label' => lang('Settings.mailServer'), 'rules' => 'required|alpha_dash'],
+            'mPort' => ['label' => lang('Settings.mailPort'), 'rules' => 'required|is_natural_no_zero'],
             'mAddress' => ['label' => lang('Settings.mailAddress'), 'rules' => 'required|valid_email'],
             'mPwd' => ['label' => lang('Settings.mailPassword'), 'rules' => 'required']
         ];
@@ -133,8 +140,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 $email->setFrom('noreply@' . $_SERVER['HTTP_HOST'], 'noreply@' . $_SERVER['HTTP_HOST']);
                 $email->setTo($this->request->getPost('testemail'));
 
-                $email->setSubject('Test Mail');
-                $email->setMessage('Mail working correctly.');
+                $email->setSubject(lang('Settings.testMailSubject'));
+                $email->setMessage(lang('Settings.testMailMessage'));
 
                 $email->send();
                 return $this->respond(['result' => true, 'message' => lang('Settings.testEmailSent')]);
@@ -152,20 +159,20 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([
-            'path' => ['label' => 'path', 'rules' => 'required'],
-            'tName' => ['label' => 'tName', 'rules' => 'required']
+            'path' => ['label' => lang('Backend.path'), 'rules' => 'required'],
+            'tName' => ['label' => lang('Backend.name'), 'rules' => 'required']
         ]);
         if ($this->validate($valData) == false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
         try {
             $themeName = esc($this->request->getPost('path'));
 
-            // Aktif Edildiğinde OTO MIGRATION ÇALIŞTIRMA
+            // RUN AUTO MIGRATION WHEN ACTIVATED
             $migrate = \Config\Services::migrations();
             $migrate->setNamespace('App');
             try {
                 $migrate->latest('templates/' . $themeName);
             } catch (\Exception $e) {
-                // Migration yoksa sorun yok, geç
+                // If no migration exists, it's fine, skip
             }
 
             setting()->set('App.templateInfos', json_encode([
@@ -233,7 +240,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->isAJAX()) {
             $valData = ([
-                'isActive' => ['label' => 'isActive', 'rules' => 'required|in_list[0,1]']
+                'isActive' => ['label' => lang('Backend.status'), 'rules' => 'required|in_list[0,1]']
             ]);
             if ($this->validate($valData) == false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
             try {
@@ -298,7 +305,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         }
 
         $valRules = [
-            'mode' => ['label' => 'Language Mode', 'rules' => 'required|in_list[single,multi]'],
+            'mode' => ['label' => lang('Settings.languageMode'), 'rules' => 'required|in_list[single,multi]'],
         ];
         if ($this->validate($valRules) === false) {
             return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);

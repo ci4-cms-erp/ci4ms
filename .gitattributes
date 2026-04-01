@@ -6,3 +6,6 @@ CONTRIBUTING.md export-ignore
 LICENSE export-ignore
 SECURITY.md export-ignore
 docs/ export-ignore
+.docker export-ignore
+DOCKER_SETUP.md export-ignore
+docker-compose.yml export-ignore

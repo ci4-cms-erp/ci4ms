@@ -1,14 +1,18 @@
-<?php namespace Modules\Methods\Config;
+<?php
 
-class MethodsConfig extends \CodeIgniter\Config\BaseConfig{
+namespace Modules\Methods\Config;
+
+class MethodsConfig extends \CodeIgniter\Config\BaseConfig
+{
     public $csrfExcept = [
         'backend/methods',
         'backend/methods/*'
     ];
 
-    public $filters=[
+    public $filters = [
         'backendGuard' => ['before' => [
-            'backend/methods','backend/methods/*'
+            'backend/methods',
+            'backend/methods/*'
         ]]
     ];
 
@@ -25,5 +29,5 @@ class MethodsConfig extends \CodeIgniter\Config\BaseConfig{
             'pageSort'     => 8,
             'parent_pk'    => null
         ]
-        ];
+    ];
 }

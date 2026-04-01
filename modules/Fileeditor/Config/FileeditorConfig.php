@@ -26,8 +26,8 @@ class FileeditorConfig extends \CodeIgniter\Config\BaseConfig
             'icon'         => 'far fa-folder',
             'inNavigation' => true,
             'hasChild'     => false,
-            'pageSort'     => 9,
+            'pageSort'     => 10,
             'parent_pk'    => null
         ]
-        ];
+    ];
 }

@@ -5,5 +5,7 @@ return [
     'pageUpdate' => 'Обновить страницу',
     'homePage' => 'Главная страница',
     'isHomePage' => 'Текущая главная страница',
-    'setAsHomePage' => 'Сделать главной страницей',
+    'setAsHomePage' => 'Сделать главной',
+    'searchPlaceholder' => 'Поиск страниц...',
+    'totalPages' => 'Всего страниц',
 ];

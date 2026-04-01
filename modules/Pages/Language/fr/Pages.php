@@ -5,5 +5,7 @@ return [
     'pageUpdate' => 'Mettre à jour la page',
     'homePage' => 'Page d\'accueil',
     'isHomePage' => 'Page d\'accueil actuelle',
-    'setAsHomePage' => 'Définir comme page d\'accueil',
+    'setAsHomePage' => 'Utiliser comme page d\'accueil',
+    'searchPlaceholder' => 'Rechercher des pages...',
+    'totalPages' => 'Total des pages',
 ];

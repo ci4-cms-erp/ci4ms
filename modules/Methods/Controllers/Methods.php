@@ -8,7 +8,7 @@ use Modules\Methods\Libraries\ModuleInstaller;
 class Methods extends \Modules\Backend\Controllers\BaseController
 {
     /**
-     * Silinmesi yasak çekirdek modüller
+     * Core modules that are forbidden to be deleted
      */
     private const PROTECTED_MODULES = [
         'Auth',
@@ -22,12 +22,12 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
             $valData = [
-                'status' => ['label' => 'Status', 'rules' => 'required|in_list[active,inactive]'],
+                'status' => ['label' => lang('Backend.status'), 'rules' => 'required|in_list[active,inactive]'],
             ];
             if (!empty($this->request->getPost('module_id')))
-                $valData['module_id'] = ['label' => 'Module ID', 'rules' => 'required|is_natural_no_zero'];
+                $valData['module_id'] = ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero'];
             if (!empty($this->request->getPost('page_id')))
-                $valData['page_id'] = ['label' => 'Page ID', 'rules' => 'required|is_natural_no_zero'];
+                $valData['page_id'] = ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero'];
             if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
             $flag = false;
             if (!empty($this->request->getPost('module_id')) && $this->commonModel->edit('modules', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['id' => $this->request->getPost('module_id')]) && $this->commonModel->edit('auth_permissions_pages', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['module_id' => $this->request->getPost('module_id')]))
@@ -75,7 +75,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
                 'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
             ])) {
-                return redirect()->route('list')->with('success', lang('Backend.created', [$this->request->getPost('pagename')]));
+                return redirect()->route('methodList')->with('success', lang('Backend.created', [$this->request->getPost('pagename')]));
             } else
                 return redirect()->route('methodCreate')->withInput()->with('error', lang('Backend.notCreated', [$this->request->getPost('pagename')]));
         }
@@ -116,7 +116,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'typeOfPermissions' => $roles
             ], ['id' => $pk])) {
                 cache()->delete('sidebar_menu');
-                return redirect()->route('list')->with('success', lang('Backend.updated', [$this->request->getPost('pagename')]));
+                return redirect()->route('methodList')->with('success', lang('Backend.updated', [$this->request->getPost('pagename')]));
             } else
                 return redirect()->route('methodUpdate', [$pk])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('pagename')]));
         }
@@ -130,7 +130,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     public function moduleScan()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        
+
         $scanner = new \Modules\Methods\Libraries\ModuleScanner();
         $isChanged = $scanner->runScan();
 
@@ -159,11 +159,11 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 $realEntry = realpath($tempPath . $entryName);
                 if ($realEntry !== false && strpos($realEntry, realpath($tempPath)) !== 0) {
                     $zip->close();
-                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains invalid paths']);
+                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipPath')]);
                 }
                 if (preg_match('/\.\./', $entryName)) {
                     $zip->close();
-                    return $this->response->setJSON(['status' => 'error', 'message' => 'ZIP contains path traversal']);
+                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipPathTraversal')]);
                 }
             }
             $zip->extractTo($tempPath);
@@ -237,7 +237,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Modül bilgilerini döndürür (silme öncesi bilgilendirme)
+     * Returns module information (information before deletion)
      */
     public function moduleInfo(int $moduleId)
     {
@@ -250,7 +250,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             return $this->failNotFound(lang('Methods.deleteModuleFailed'));
         }
 
-        // Korumalı modül kontrolü
+        // Protected module check
         if (in_array($module->name, self::PROTECTED_MODULES)) {
             return $this->respond([
                 'status'    => 'protected',
@@ -284,7 +284,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Modülü siler (tablolar + dosya sistemi + kayıtlar)
+     * Deletes the module (tables + file system + records)
      */
     public function moduleDelete()
     {
@@ -293,7 +293,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
 
         $valData = [
-            'module_id'    => ['label' => 'Module ID', 'rules' => 'required|is_natural_no_zero'],
+            'module_id'    => ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero'],
             'confirm_name' => ['label' => lang('Methods.moduleName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
         ];
         if ($this->validate($valData) === false) {

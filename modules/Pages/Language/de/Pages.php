@@ -6,4 +6,6 @@ return [
     'homePage' => 'Startseite',
     'isHomePage' => 'Aktuelle Startseite',
     'setAsHomePage' => 'Als Startseite festlegen',
+    'searchPlaceholder' => 'Seiten suchen...',
+    'totalPages' => 'Gesamtseiten',
 ];

@@ -67,11 +67,11 @@ echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js')
         serverSide: true,
         ordering: false,
         buttons: [{
-                text: '<i class="fas fa-filter mr-1"></i> <span id="toggleApprovalText">Görünürleri Göster</span>',
+                text: '<i class="fas fa-filter mr-1"></i> <span id="toggleApprovalText"><?= lang('Backend.showHidden') ?></span>',
                 className: "btn btn-success btn-sm mx-1 toggle-approval",
                 action: function(e, dt, node, config) {
                     isApprove = !isApprove;
-                    var buttonText = isApprove ? '<i class="fas fa-filter mr-1"></i> Görünürleri Göster' : '<i class="fas fa-eye-slash mr-1"></i> Gizlileri Göster';
+                    var buttonText = isApprove ? '<i class="fas fa-filter mr-1"></i> <?= lang('Backend.showHidden') ?>' : '<i class="fas fa-eye-slash mr-1"></i> <?= lang('Backend.showVisible') ?>';
                     node.html(buttonText);
 
                     if (isApprove) {
@@ -95,7 +95,7 @@ echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js')
                 },
                 attr: {
                     style: 'border-radius:8px;',
-                    title: 'Yenile'
+                    title: '<?= lang('Backend.refresh') ?>'
                 }
             }
         ],
@@ -135,7 +135,7 @@ echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js')
             var btns = table.buttons().container().appendTo('#dtButtons');
             btns.find('.btn-group').removeClass('btn-group');
         },
-        language: ci4msDtLanguage('Search comments...')
+        language: ci4msDtLanguage('<?= lang('Blog.searchComments') ?>')
     });
 
     function deleteItem(id) {

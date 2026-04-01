@@ -30,33 +30,33 @@ if (!function_exists('findDuplicateSubfolders')) {
 
             $appFolders = ['Config', 'Controllers', 'Helpers', 'Libraries', 'Views', 'Database/Migrations'];
 
-            // app altı klasörler
+            // folders under app
             foreach ($appFolders as $folder) {
                 $src = "$tmpPath/app/$folder";
-                // ZIP içerisinde boilerplate standardı varsa, doğru dizin kökünü bul
+                // Find the correct directory root if the boilerplate standard exists in the ZIP
                 if (is_dir("$src/templates/$themeName")) {
                     $src = "$src/templates/$themeName";
                 }
-                
+
                 $dst = "$baseApp/$folder/templates/$themeName";
                 $log = array_merge($log, smart_move($src, $dst));
             }
 
-            // public/assets taşı
+            // Move public/assets
             $srcAssets = "$tmpPath/public/assets";
             if (is_dir("$tmpPath/public/templates/$themeName/assets")) {
                 $srcAssets = "$tmpPath/public/templates/$themeName/assets";
             }
-            
+
             $dstAssets = "$basePublic/templates/$themeName/assets";
             $log = array_merge($log, smart_move($srcAssets, $dstAssets));
 
-            // public root dosyaları (info.xml, screenshot.png vs)
+            // public root files (info.xml, screenshot.png etc.)
             $publicSearchDir = "$tmpPath/public";
             if (is_dir("$tmpPath/public/templates/$themeName")) {
                 $publicSearchDir = "$tmpPath/public/templates/$themeName";
             }
-            
+
             foreach (glob("$publicSearchDir/*.*") as $file) {
                 if (is_dir($file) || basename($file) === 'assets') continue;
 
@@ -65,7 +65,7 @@ if (!function_exists('findDuplicateSubfolders')) {
 
                 $to = $targetDir . '/' . basename($file);
                 rename($file, $to);
-                $log[] = "📄 Taşındı: " . basename($file);
+                $log[] = "📄 Moved: " . basename($file);
             }
 
             return $log;
@@ -78,7 +78,7 @@ if (!function_exists('findDuplicateSubfolders')) {
             $log = [];
 
             if (!is_dir($source)) {
-                return ["⛔ Atlandı, klasör yok: $source"];
+                return ["⛔ Skipped, folder does not exist: $source"];
             }
 
             $rii = new RecursiveIteratorIterator(
@@ -93,7 +93,7 @@ if (!function_exists('findDuplicateSubfolders')) {
                 if ($fileInfo->isDir()) {
                     if (!is_dir($toPath)) {
                         mkdir($toPath, 0777, true);
-                        $log[] = "📁 Klasör oluşturuldu: $toPath"; // İsteğe bağlı log
+                        $log[] = "📁 Folder created: $toPath"; // Optional log
                     }
                 } else {
                     $toDir = dirname($toPath);
@@ -102,7 +102,7 @@ if (!function_exists('findDuplicateSubfolders')) {
                     }
 
                     rename($fileInfo->getPathname(), $toPath); // veya copy()
-                    $log[] = "📄 Taşındı: " . $fileInfo->getFilename(); // İsteğe bağlı log
+                    $log[] = "📄 Moved: " . $fileInfo->getFilename(); // Optional log
                 }
             }
 
@@ -136,9 +136,9 @@ if (!function_exists('findDuplicateSubfolders')) {
         }
 
         if (is_dir($folderPath)) {
-            @rmdir($folderPath); // en sonunda kendisini sil
+            @rmdir($folderPath); // finally delete itself
         }
-        
+
         return true;
     }
 
@@ -151,12 +151,12 @@ if (!function_exists('findDuplicateSubfolders')) {
 
             $appFolders = ['Config', 'Controllers', 'Helpers', 'Libraries', 'Views', 'Database/Migrations'];
 
-            // app altı klasörleri sil
+            // delete folders under app
             foreach ($appFolders as $folder) {
                 $target = "$baseApp/$folder/templates/$themeName";
                 if (is_dir($target)) {
                     deleteFldr($target);
-                    $log[] = "🗑️ Silindi: app/$folder/templates/$themeName";
+                    $log[] = lang('Theme.deleted', "app/$folder/templates/$themeName");
                 }
             }
 
@@ -164,7 +164,7 @@ if (!function_exists('findDuplicateSubfolders')) {
             $publicTarget = "$basePublic/templates/$themeName";
             if (is_dir($publicTarget)) {
                 deleteFldr($publicTarget);
-                $log[] = "🗑️ Silindi: public/templates/$themeName";
+                $log[] = "🗑️ Deleted: public/templates/$themeName";
             }
 
             return $log;

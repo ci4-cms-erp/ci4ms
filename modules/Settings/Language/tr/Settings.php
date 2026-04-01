@@ -33,4 +33,8 @@ return [
     'updateVersion' => 'Versiyon Güncelleme',
     'alreadyLastVersion' => 'Zaten en son versiyonu kullanıyorsunuz.',
     'languageMode' => 'Site Dil Modu',
+    'mailServer' => 'Mail Sunucusu',
+    'mailPort' => 'Mail Portu',
+    'testMailSubject' => 'Test Maili',
+    'testMailMessage' => 'Mail sistemi düzgün çalışmaktadır.',
 ];

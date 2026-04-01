@@ -1,14 +1,19 @@
 <?php
+
 namespace Modules\Logs\Config;
 
-class LogsConfig {
+class LogsConfig
+{
     public $csrfExcept = [
-        'backend/logs','backend/logs/*'
+        'backend/logs',
+        'backend/logs/*'
     ];
 
-    public $filters=[
-        'backendGuard' => ['before' => [
-            'backend/logs','backend/logs/*'
+    public $filters = [
+        'backendGuard' => [
+            'before' => [
+                'backend/logs',
+                'backend/logs/*'
             ]
         ]
     ];
@@ -18,13 +23,12 @@ class LogsConfig {
     ];
 
     public $menus = [
-
         'Logs.logs' => [
             'icon'         => 'fas fa-file-alt',
             'inNavigation' => true,
             'hasChild'     => false,
-            'pageSort'     => 12,
-            'parent_pk'    => null
+            'pageSort'     => 1,
+            'parent_pk'    => 'Backend.logs'
         ]
-        ];
+    ];
 }

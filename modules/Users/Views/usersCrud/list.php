@@ -76,7 +76,7 @@ echo $this->section('content'); ?>
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content" style="border-radius:15px;overflow:hidden">
                         <div class="modal-header" style="background:#f7f9fc;border-bottom:1px solid #edf2f7">
-                            <h5 class="modal-title font-weight-bold" id="modalTitle">Kara Liste İşlemi</h5>
+                            <h5 class="modal-title font-weight-bold" id="modalTitle"><?= lang('Users.blacklistProcess') ?></h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         </div>
                         <form id="blackListForm" method="post">
@@ -84,17 +84,17 @@ echo $this->section('content'); ?>
                             <input type="hidden" name="uid" id="modal_uid">
                             <div class="modal-body p-4">
                                 <div id="modalNoteArea" class="mb-4">
-                                    <label class="text-muted small font-weight-bold uppercase">Mevcut Not:</label>
+                                    <label class="text-muted small font-weight-bold uppercase"><?= lang('Users.currentNote') ?></label>
                                     <div id="currentNote" class="alert alert-secondary border-0" style="border-radius:10px"></div>
                                 </div>
                                 <div class="form-group">
-                                    <label id="noteLabel" class="font-weight-bold">İşlem Notu</label>
+                                    <label id="noteLabel" class="font-weight-bold"><?= lang('Backend.processNote') ?></label>
                                     <textarea name="note" id="noteInput" class="form-control" rows="4" style="border-radius:10px;border:1px solid #e2e8f0"></textarea>
                                 </div>
                             </div>
                             <div class="modal-footer" style="background:#f7f9fc;border-top:1px solid #edf2f7">
-                                <button type="button" class="btn btn-light px-4" data-dismiss="modal" style="border-radius:10px">Vazgeç</button>
-                                <button type="submit" id="modalSubmitBtn" class="btn btn-dark px-4" style="border-radius:10px">Kaydet</button>
+                                <button type="button" class="btn btn-light px-4" data-dismiss="modal" style="border-radius:10px"><?= lang('Backend.cancel') ?></button>
+                                <button type="submit" id="modalSubmitBtn" class="btn btn-dark px-4" style="border-radius:10px"><?= lang('Backend.save') ?></button>
                             </div>
                         </form>
                     </div>
@@ -129,7 +129,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 {
                     data: "status",
                     className: "text-center",
-                    render: (d) => d === 'banned' ? '<span class="m-status-pill pill-banned">Banned</span>' : '<span class="m-status-pill pill-active">Active</span>'
+                    render: (d) => d === 'banned' ? '<span class="m-status-pill pill-banned"><?= lang('Backend.passive') ?></span>' : '<span class="m-status-pill pill-active"><?= lang('Backend.active') ?></span>'
                 },
                 {
                     data: "groupName",
@@ -177,7 +177,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 table.ajax.reload();
                 $('#blackListModal').modal('hide');
             } else {
-                showToast('İşlem başarısız!', 'error');
+                showToast('<?= lang('Backend.operationFailed') ?>', 'error');
             }
         }, 'json');
     });
@@ -189,7 +189,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             if (data.result == true) {
                 showToast(data.error.message);
                 table.ajax.reload();
-            } else showToast('İşlem başarısız!', 'error');
+            } else showToast('<?= lang('Backend.operationFailed') ?>', 'error');
         }, 'json');
     }
 

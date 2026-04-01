@@ -45,10 +45,10 @@ class Backup extends \Modules\Backend\Controllers\BaseController
         $fileName = 'backup_' . date('Y-m-d_H-i-s');
         $format   = 'zip';
 
-        // Yedek içeriğini oluştur
+        // Create backup content
         $content = $dbBackup->backup(['format' => $format, 'filename' => $fileName]);
 
-        // Dosyayı writable/backups klasörüne kaydet
+        // Save the file to writable/backups folder
         $path = WRITEPATH . 'backups/';
         if (! is_dir($path)) {
             mkdir($path, 0755, true);

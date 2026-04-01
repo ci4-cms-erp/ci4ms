@@ -219,23 +219,16 @@ class InstallService
                 array('class' => 'Config\\App', 'key' => 'logo', 'value' => '/media/logo.png', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'socialNetwork', 'value' => '[{"smName":"facebook","link":"https:\\/\\/facebook.com\\/bertugfahriozer"},{"smName":"twitter","link":"https:\\/\\/twitter.com\\/bertugfahriozer"},{"smName":"github","link":"https:\\/\\/github.com\\/bertugfahriozer"}]', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'contact', 'value' => '{"address":"Bal\\u0131kesir \\/ Turkey","phone":"+905000000000","email":"info@ci4ms.com"}', 'type' => 'string', 'context' => NULL),
-                array('class' => 'Config\\App', 'key' => 'mail', 'value' => '{
-    "server": "mail.ci4ms.com",
-    "port": "26",
-    "address": "simple@ci4ms.com",
-    "password": "' . base64_encode($encrypter->encrypt('123456789')) . '",
-    "protocol": "smtp",
-    "tls": false
-}', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'mail', 'value' => '{"server": "mail.ci4ms.com","port": "26","address": "simple@ci4ms.com","password": "' . base64_encode($encrypter->encrypt('123456789')) . '","protocol": "smtp","tls": false}', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Gmap', 'key' => 'map_iframe', 'value' => NULL, 'type' => 'NULL', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'slogan', 'value' => 'My First Ci4MS Project', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'maintenanceMode', 'value' => '0', 'type' => 'boolean', 'context' => NULL),
-                array('class' => 'Config\\App', 'key' => 'homePage', 'value' => '3', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'homePage', 'value' => '1', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'siteLanguageMode', 'value' => 'single', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\Security', 'key' => 'allowedFiles', 'value' => '["image\\/x-ms-bmp","image\\/gif","image\\/jpeg","image\\/png","image\\/x-icon","text\\/plain","image\\/webp"]', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\Security', 'key' => 'badwords', 'value' => '{"status": 1, "autoReject": 0, "autoAccept": 1, "list": []}', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Elfinder', 'key' => 'convertWebp', 'value' => '1', 'type' => 'boolean', 'context' => NULL),
-                array('class' => 'Config\\App', 'key' => 'defaultLocale', 'value' => 'en')
+                array('class' => 'Config\\App', 'key' => 'defaultLocale', 'value' => 'en', 'type' => 'string', 'context' => NULL)
             )
         );
     }

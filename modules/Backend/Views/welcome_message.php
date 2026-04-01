@@ -370,7 +370,7 @@ echo script_tag('be-assets/plugins/sortable/sortable.min.js'); ?>
                         }, 300, function() {
                             $(this).remove();
                         });
-                        toastr && toastr.info(res.message || 'Widget gizlendi');
+                        toastr && toastr.info(res.message || '<?= lang('Backend.widgetHidden') ?>');
                     }
                 },
                 error: function(xhr) {
@@ -391,19 +391,19 @@ echo script_tag('be-assets/plugins/sortable/sortable.min.js'); ?>
                 dataType: 'json',
                 success: function(res) {
                     if (!res.widgets || !res.widgets.length) {
-                        $body.html('<p class="text-center text-muted py-3">Eklenebilecek widget bulunamadı.</p>');
+                        $body.html('<p class="text-center text-muted py-3"><?= lang('Backend.noWidgetsFound') ?></p>');
                         return;
                     }
 
                     var html = '<div class="list-group list-group-flush">';
                     $.each(res.widgets, function(i, w) {
-                        // DB'den gelen gerçek görünürlük durumunu kullan (DOM'a bakma!)
+                        // Use actual visibility state from DB (don't rely on DOM!)
                         var isVisible = parseInt(w.visible) === 1;
                         var badgeClass = isVisible ? 'badge-success' : 'badge-secondary';
-                        var badgeText = isVisible ? 'Görünür' : 'Gizli';
+                        var badgeText = isVisible ? 'Visible' : 'Hidden';
                         var btnClass = isVisible ? 'btn-outline-danger' : 'btn-outline-success';
                         var btnIcon = isVisible ? 'fa-eye-slash' : 'fa-eye';
-                        var btnLabel = isVisible ? 'Gizle' : 'Göster';
+                        var btnLabel = isVisible ? 'Hide' : 'Show';
 
                         html += '<div class="widget-toggle-item" data-widget-id="' + w.id + '">' +
                             '<div class="widget-info">' +

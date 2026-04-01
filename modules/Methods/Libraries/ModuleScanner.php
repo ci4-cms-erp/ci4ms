@@ -7,11 +7,12 @@ use ci4commonmodel\CommonModel;
 class ModuleScanner
 {
     /**
-     * Tüm modülleri tarar, rotaları bulur, veritabanı (modules ve auth_permissions_pages) ile eşitler.
-     * Yeni keşfedilen modüllerin "Migration" ve "Seeder" dosyalarını otomatik çalıştırır.
+     * Scans all modules, identifies routes, and synchronizes them with the database (modules and auth_permissions_pages).
+     * Automatically executes "Migration" and "Seeder" files for newly discovered modules.
      *
-     * @return bool Değişiklik olup olmadığını döndürür
+     * @return bool Returns true if any changes were made, false otherwise.
      */
+
     public function runScan(): bool
     {
         $commonModel = new CommonModel();
@@ -31,7 +32,7 @@ class ModuleScanner
             if (count(array_intersect($findFilter, $beforeFilters)) < 1) continue;
 
             preg_match('/\\\\Modules\\\\([^\\\\]+)\\\\Controllers\\\\[^:]+::([^\/]+)/', $route['handler'], $m);
-            $routeName = ($route['route'] === $route['name']) ? '' : $route['name'];
+            $routeName = $route['name'] ?? '';
             $role = $collection->getRoutesOptions(ltrim($route['route'], '\\'), $route['method'])['role'] ?? '';
             $roles = explode(',', $role);
             $r = [
@@ -177,9 +178,9 @@ class ModuleScanner
 
         $isChanged = false;
 
-        // --- Modül Temizleme (Fiziksel klasörü silinen modüller) ---
+        // --- Module Cleaning (Modules whose physical folders were deleted) ---
         $existingModules = $commonModel->lists('modules');
-        $moduleFolders = array_map(function($path) {
+        $moduleFolders = array_map(function ($path) {
             return strtolower(basename($path));
         }, glob(ROOTPATH . 'modules/*', GLOB_ONLYDIR));
 
@@ -204,7 +205,7 @@ class ModuleScanner
             }
         }
 
-        $newModulesDiscovered = []; // Migration ve Seeder tetiklenecek modüller
+        $newModulesDiscovered = []; // Modules for which Migration and Seeder will be triggered
 
         $insertBach = [];
         $menusFromConfig = [];
@@ -229,7 +230,7 @@ class ModuleScanner
                         'isActive' => true
                     ]);
                     $module_id = (object) ['id' => $newId];
-                    // YENİ ÖZELLİK: Sisteme ilk defa giren modülleri tespit edip kaydediyoruz.
+                    // NEW FEATURE: We detect and record modules entering the system for the first time.
                     if (!in_array($modName, $newModulesDiscovered)) {
                         $newModulesDiscovered[] = $modName;
                     }
@@ -277,8 +278,14 @@ class ModuleScanner
                 }
             }
 
+            // STEP 1: First create virtual parent menus (parents without a route)
+            // This ensures that when child records are inserted, parent records already exist in the DB.
+            $this->createVirtualParents($commonModel);
+
+            // STEP 2: Batch add newly discovered route pages
             $commonModel->createMany('auth_permissions_pages', $insertBach);
 
+            // STEP 3: Update parent_pk relationships (parents are now in DB)
             if (!empty($menusFromConfig)) {
                 foreach ($menusFromConfig as $childPageName => $parentPageName) {
                     $parentObj = $commonModel->selectOne('auth_permissions_pages', ['pagename' => $parentPageName], 'id');
@@ -291,11 +298,11 @@ class ModuleScanner
             $isChanged = true;
         }
 
-        // Yeni modüller bulunduysa Seed ve Migration çalıştır
+        // Run Seed and Migration if new modules are found
         if (!empty($newModulesDiscovered)) {
             $installer = new ModuleInstaller();
             foreach ($newModulesDiscovered as $modName) {
-                // Modüle ait varsa Migration ve Seeder'ı tetikle
+                // Trigger Migration and Seeder if they exist for the module
                 $installer->runModuleMigrations($modName);
                 $installer->runModuleSeeder($modName);
             }
@@ -306,5 +313,68 @@ class ModuleScanner
         }
 
         return $isChanged;
+    }
+
+    /**
+     * Config dosyalarındaki $menus içinde parent_pk olarak referans edilen
+     * ancak kendisi bir route'a sahip olmayan "sanal parent" menü girişlerini
+     * veritabanına ekler. (Örn: Users.usersCrud gibi sadece gruplama amaçlı menüler)
+     */
+    private function createVirtualParents(CommonModel $commonModel): void
+    {
+        $allModDirs = glob(ROOTPATH . 'modules/*', GLOB_ONLYDIR);
+        $allMenus = [];
+        $allParentRefs = [];
+
+        // Collect menus from all modules' configs
+        foreach ($allModDirs as $modDir) {
+            $modName = basename($modDir);
+            $configClass = "Modules\\{$modName}\\Config\\{$modName}Config";
+            if (!class_exists($configClass)) continue;
+            $modConfig = new $configClass();
+            if (!isset($modConfig->menus)) continue;
+
+            foreach ($modConfig->menus as $menuKey => $menuDef) {
+                $allMenus[$menuKey] = $menuDef;
+                $parentRef = $menuDef['parent_pk'] ?? null;
+                if (!empty($parentRef)) {
+                    $allParentRefs[$parentRef] = $modName;
+                }
+            }
+        }
+
+        // Find records referenced as parent_pk but not present in $menus or DB on their own
+        foreach ($allParentRefs as $parentPageName => $referencingModName) {
+            // DB'de zaten var mı?
+            $existsInDb = $commonModel->selectOne('auth_permissions_pages', ['pagename' => $parentPageName], 'id');
+            if (!empty($existsInDb)) continue;
+
+            // Extract parent module name (e.g., "Users" from "Users.usersCrud")
+            $parentModName = explode('.', $parentPageName)[0];
+
+            // Find module record
+            $moduleObj = $commonModel->selectOne('modules', ['name' => $parentModName], 'id');
+            if (empty($moduleObj)) continue;
+
+            // If this parent is defined in Config, get its info; otherwise use defaults
+            $menuDef = $allMenus[$parentPageName] ?? [];
+
+            $commonModel->create('auth_permissions_pages', [
+                'pagename'          => $parentPageName,
+                'description'       => $parentPageName,
+                'className'         => '',
+                'methodName'        => '',
+                'sefLink'           => '#',
+                'typeOfPermissions' => '{"read_r":true}',
+                'module_id'         => $moduleObj->id,
+                'isBackoffice'      => 1,
+                'isActive'          => 1,
+                'symbol'            => $menuDef['icon'] ?? 'fas fa-folder',
+                'inNavigation'      => isset($menuDef['inNavigation']) ? ($menuDef['inNavigation'] ? 1 : 0) : 1,
+                'hasChild'          => 1,
+                'pageSort'          => $menuDef['pageSort'] ?? 99,
+                'parent_pk'         => null
+            ]);
+        }
     }
 }

@@ -15,4 +15,5 @@ return [
     'themeDeletedSuccessfully' => 'Tema başarıyla kaldırıldı.',
     'themeActiveCannotDelete' => 'DİKKAT: Bu tema an itibariyle aktif! Lütfen önce başka bir temaya geçiş yapın.',
     'noTablesFound' => 'Bu temaya ait hiçbir migration/veritabanı tablosu tespit edilemedi. Sadece tema dosyaları kaldırılacaktır.',
+    'deleted'=>'Silindi : {0}'
 ];

@@ -5,7 +5,7 @@ namespace Modules\Menu\Controllers;
 class Menu extends \Modules\Backend\Controllers\BaseController
 {
     /**
-     * Varsayılan dil kodunu döndürür.
+     * Returns the default language code.
      */
     private function getDefaultLang(): string
     {
@@ -23,7 +23,7 @@ class Menu extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * where parametresinden ana tablo adını ve urlType değerini belirler.
+     * Determines the main table name and urlType value from the 'where' parameter.
      * pages_langs → pages, blog_langs → blog
      */
     private function resolveTableInfo(string $where): array
@@ -38,7 +38,7 @@ class Menu extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Tüm aktif diller için menü cache'lerini temizler.
+     * Clears menu caches for all active languages.
      */
     private function clearMenuCache(): void
     {

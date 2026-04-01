@@ -1,6 +1,6 @@
 <?php
 return [
     'menu' => 'Menus',
-    'notFindinMenuPages' => 'Aucune page disponible pour ajouter au menu !',
-    'notFindinMenuBlogs' => 'Aucun article disponible pour ajouter au menu !',
+    'notFindinMenuPages' => 'Aucune page disponible à ajouter au menu !',
+    'notFindinMenuBlogs' => 'Aucun article disponible à ajouter au menu !',
 ];

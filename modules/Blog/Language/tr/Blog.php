@@ -28,4 +28,6 @@ return [
     'commentPublished' => 'ID numarası #{0,number} olan yorum yayınlandı.',
     'commentPublishError' => 'Yorum yayınlanamadı. Lütfen tekrar deneyin veya günlükleri kontrol edin.',
     'searchPlaceholder' => 'Blog ara...',
+    'searchComments' => 'Yorumlarda ara...',
+    'relatedPost' => 'İlgili Yazı',
 ];

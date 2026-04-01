@@ -70,4 +70,6 @@ return [
     'typeModuleName' => 'Type module name',
     'clickToCopy' => 'Click to copy',
     'copiedToClipboard' => 'Copied to clipboard',
+    'invalidZipPath' => 'ZIP contains invalid paths.',
+    'zipPathTraversal' => 'ZIP contains path traversal.',
 ];

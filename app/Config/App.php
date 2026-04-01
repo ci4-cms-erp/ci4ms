@@ -146,6 +146,14 @@ class App extends BaseConfig
                 // Ignore DB errors during early boot
             }
         }
+
+        // Ensure supportedLocales is never empty to prevent infinite recursion
+        if (empty($this->supportedLocales)) {
+            $this->supportedLocales = ['en'];
+        }
+        if (empty($this->defaultLocale)) {
+            $this->defaultLocale = 'en';
+        }
     }
 
     /**

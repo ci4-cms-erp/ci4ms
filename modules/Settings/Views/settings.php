@@ -71,15 +71,15 @@ echo $this->section('content'); ?>
                                 <div class="row">
                                     <div class="col-md-6 form-group">
                                         <label><?php echo lang('Settings.companyName') ?></label>
-                                        <input type="text" name="cName" class="form-control" value="<?php echo old('cName', $settings->siteName ?? '') ?>">
+                                        <input type="text" name="cName" class="form-control" value="<?php echo old('cName', esc($settings->siteName ?? '')) ?>">
                                     </div>
                                     <div class="col-md-6 form-group">
                                         <label><?php echo lang('Settings.companySlogan') ?></label>
-                                        <input type="text" name="cSlogan" class="form-control" value="<?php echo old('cSlogan', $settings->slogan ?? '') ?>">
+                                        <input type="text" name="cSlogan" class="form-control" value="<?php echo old('cSlogan', esc($settings->slogan ?? '')) ?>">
                                     </div>
                                     <div class="col-md-6 form-group">
                                         <label><?php echo lang('Settings.companyAddress') ?></label>
-                                        <input type="text" name="cAddress" class="form-control" value="<?php echo old('cAddress', $settings->contact->address ?? '') ?>">
+                                        <input type="text" name="cAddress" class="form-control" value="<?php echo old('cAddress', esc($settings->contact->address ?? '')) ?>">
                                     </div>
                                     <div class="col-md-3 form-group">
                                         <label><?php echo lang('Settings.companyPhone') ?></label>
@@ -87,15 +87,15 @@ echo $this->section('content'); ?>
                                     </div>
                                     <div class="col-md-3 form-group">
                                         <label><?php echo lang('Settings.companyGsm') ?></label>
-                                        <input type="text" name="cGSM" class="form-control" value="<?php echo old('cGSM', $settings->contact->gsm ?? '') ?>">
+                                        <input type="text" name="cGSM" class="form-control" value="<?php echo old('cGSM', esc($settings->contact->gsm ?? '')) ?>">
                                     </div>
                                     <div class="col-md-6 form-group">
                                         <label><?php echo lang('Settings.companyEmail') ?></label>
-                                        <input type="email" name="cMail" class="form-control" value="<?php echo old('cMail', $settings->contact->email ?? '') ?>">
+                                        <input type="email" name="cMail" class="form-control" value="<?php echo old('cMail', esc($settings->contact->email ?? '')) ?>">
                                     </div>
                                     <div class="col-md-6 form-group">
                                         <label><?php echo lang('Settings.gmapIframe') ?></label>
-                                        <input type="text" name="cMap" class="form-control" value='<?php echo $settings->map_iframe ?? '' ?>'>
+                                        <input type="text" name="cMap" class="form-control" value='<?php echo esc($settings->map_iframe ?? '') ?>'>
                                     </div>
                                 </div>
                                 <hr>
@@ -116,11 +116,11 @@ echo $this->section('content'); ?>
                                     </div>
                                     <div class="col-md-6 text-center">
                                         <div class="bg-dark p-3 rounded mb-2 d-inline-block" style="min-width: 200px">
-                                            <img src="<?php echo $settings->logo ?? '' ?>" class="img-fluid pageimg" style="max-height: 80px">
+                                            <img src="<?php echo esc($settings->logo ?? '') ?>" class="img-fluid pageimg" style="max-height: 80px">
                                         </div>
                                         <br>
                                         <button type="button" class="btn btn-sm btn-outline-primary pageIMG"><i class="fas fa-image mr-1"></i> Logo Değiştir</button>
-                                        <input hidden class="pageimg-input" name="cLogo" value="<?php echo $settings->logo ?? '' ?>">
+                                        <input hidden class="pageimg-input" name="cLogo" value="<?php echo esc($settings->logo ?? '') ?>">
                                     </div>
                                 </div>
                                 <div class="mt-4 text-right">

@@ -8,17 +8,17 @@ class CustomActivationController extends BaseController
 {
     public function verify()
     {
-        // 1. Token'ı URL'den al
+        // 1. Get token from URL
         $token = $this->request->getGet('token');
 
         if (! $token) {
             return show_404();
         }
 
-        // 2. Bu token veritabanında var mı? (auth_identities tablosu)
+        // 2. Does this token exist in the database? (auth_identities table)
         $identities = new UserIdentityModel();
 
-        // Shield tokenları 'email_activate' tipiyle saklar
+        // Shield stores tokens with 'email_activate' type
         $identity = $identities->where('type', 'email_activate')
                                ->where('secret', $token)
                                ->first();
@@ -27,19 +27,19 @@ class CustomActivationController extends BaseController
             return show_404();
         }
 
-        // 3. Token geçerli, kullanıcıyı bul ve aktifleştir
+        // 3. Token is valid, find and activate the user
         $users = auth()->getProvider();
         $user  = $users->findById($identity->user_id);
 
         if ($user) {
-            // Kullanıcıyı aktif yap
+            // Activate the user
             $user->active = 1;
             $users->save($user);
 
-            // 4. Token'ı sil (Tek kullanımlık olması için)
+            // 4. Delete the token (to make it single-use)
             $identities->delete($identity->id);
 
-            // 5. Başarılı, login sayfasına gönder
+            // 5. Success, redirect to login page
             return redirect()->to(config('Auth')->loginRedirect())->with('message', lang('Auth.emailActivationuccess'));
         }
 

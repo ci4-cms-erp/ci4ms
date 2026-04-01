@@ -83,7 +83,7 @@ class DbBackup
             $query = $this->db->query('SHOW CREATE TABLE ' . $this->db->escapeIdentifiers($table));
             $row = $query->getRowArray();
 
-            // Create Table sütunu bazen farklı isimde olabilir (örn: Create View), 2. sütunu alıyoruz
+            // Create Table column name can sometimes vary (e.g., Create View), taking the 2nd column
             $createSql = array_values($row)[1] ?? '';
 
             $out .= $createSql . ';' . $prefs['newline'] . $prefs['newline'];

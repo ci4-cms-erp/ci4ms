@@ -1,14 +1,19 @@
 <?php
+
 namespace Modules\Backup\Config;
 
-class BackupConfig {
+class BackupConfig
+{
     public $csrfExcept = [
-        'backend/backup','backend/backup/*'
+        'backend/backup',
+        'backend/backup/*'
     ];
 
-    public $filters=[
-        'backendGuard' => ['before' => [
-            'backend/backup','backend/backup/*'
+    public $filters = [
+        'backendGuard' => [
+            'before' => [
+                'backend/backup',
+                'backend/backup/*'
             ]
         ]
     ];
@@ -18,13 +23,12 @@ class BackupConfig {
     ];
 
     public $menus = [
-
-        'Backup.backups' => [
+        'Backup.backup' => [
             'icon'         => 'fas fa-hdd',
             'inNavigation' => true,
             'hasChild'     => false,
-            'pageSort'     => 15,
+            'pageSort'     => 13,
             'parent_pk'    => null
         ]
-        ];
+    ];
 }

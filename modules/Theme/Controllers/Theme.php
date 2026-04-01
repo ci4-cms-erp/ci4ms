@@ -58,7 +58,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
     public function deleteConfirm(string $slug)
     {
         $themeName = $slug;
-        $activeTheme = setting('App.siteTheme'); // aktif temayı engelle
+        $activeTheme = setting('App.siteTheme'); // prevent active theme
         if ($activeTheme === $themeName) {
             return redirect()->route('templateSettings')->with('errors', [lang('Theme.themeActiveCannotDelete')]);
         }
@@ -72,7 +72,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
                     $content = file_get_contents($file);
                     preg_match_all("/\\\$this->forge->createTable\s*\(\s*['\"]([^'\"]+)['\"]/i", $content, $matches);
                     if (!empty($matches[1])) {
-                        // Eğer array gelirse her birini tablolara at
+                        // If it's an array, add each one to the tables
                         foreach ($matches[1] as $tableName) {
                             $tables[] = $tableName;
                         }
@@ -96,7 +96,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         }
 
         $log = [];
-        // Tabloları sil (seçilenler)
+        // Delete tables (selected ones)
         $tablesToDrop = $this->request->getPost('tables');
         if (!empty($tablesToDrop) && is_array($tablesToDrop)) {
             $forge = \Config\Database::forge();
@@ -104,13 +104,13 @@ class Theme extends \Modules\Backend\Controllers\BaseController
             foreach ($tablesToDrop as $table) {
                 if ($db->tableExists($table)) {
                     $forge->dropTable($table, true);
-                    $log[] = "🗑️ Tablo silindi: $table";
+                    $log[] = "🗑️ Table deleted: $table";
                 }
             }
         }
 
         helper('Modules\Theme\Helpers\themes');
-        // remove_theme_files (eğer helper yüklenmemişse hata vermemesi için function_exists kontrolü)
+        // remove_theme_files (check with function_exists to prevent errors if helper is not loaded)
         if (function_exists('remove_theme_files')) {
             $removeLogs = remove_theme_files($themeName);
             $log = array_merge($log, $removeLogs);

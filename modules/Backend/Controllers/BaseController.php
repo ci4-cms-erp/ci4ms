@@ -92,7 +92,7 @@ class BaseController extends Controller
                 ['inNavigation' => 1],
                 'pageSort ASC'
             );
-            cache()->save('sidebar_menu', $menuItems, 86400); // 1 gün cache
+            cache()->save('sidebar_menu', $menuItems, 86400); // 1 day cache
         }
 
         $html = [];

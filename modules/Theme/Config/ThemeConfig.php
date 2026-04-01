@@ -1,4 +1,6 @@
-<?php namespace Modules\Theme\Config;
+<?php
+
+namespace Modules\Theme\Config;
 
 class ThemeConfig extends \CodeIgniter\Config\BaseConfig
 {
@@ -14,13 +16,12 @@ class ThemeConfig extends \CodeIgniter\Config\BaseConfig
     ];
 
     public $menus = [
-
         'Theme.backendThemes' => [
             'icon'         => 'fas fa-palette',
-            'inNavigation' => true,
+            'inNavigation' => false,
             'hasChild'     => false,
-            'pageSort'     => 11,
+            'pageSort'     => null,
             'parent_pk'    => null
         ]
-        ];
+    ];
 }

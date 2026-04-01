@@ -272,19 +272,25 @@ class Filters extends BaseFilters
         }
         $this->filters = array_merge($this->filters, $allFilters);
         $this->mergeCsrfExcept($allCsrfExcept);
-        if (file_exists(ROOTPATH . '.env') && $this->commonModel->db->tableExists('settings')) {
-            $themeConfigPath = APPPATH . 'Config/templates/' . $this->settings->templateInfos->path;
-            if (file_exists($themeConfigPath) && is_file($themeConfigPath . '/' . ucfirst($this->settings->templateInfos->path) . 'Config.php')) {
-                $className = '\\Config\\templates\\' . $this->settings->templateInfos->path . '\\' . ucfirst($this->settings->templateInfos->path) . 'Config';
-                $themeConfig = new $className();
+        if (file_exists(ROOTPATH . '.env') && !empty($this->commonModel)) {
+            try {
+                if ($this->commonModel->db->tableExists('settings') && isset($this->settings->templateInfos->path)) {
+                    $themeConfigPath = APPPATH . 'Config/templates/' . $this->settings->templateInfos->path;
+                    if (file_exists($themeConfigPath) && is_file($themeConfigPath . '/' . ucfirst($this->settings->templateInfos->path) . 'Config.php')) {
+                        $className = '\\Config\\templates\\' . $this->settings->templateInfos->path . '\\' . ucfirst($this->settings->templateInfos->path) . 'Config';
+                        $themeConfig = new $className();
 
-                if (!empty($themeConfig->csrfExcept)) {
-                    $this->mergeCsrfExcept($themeConfig->csrfExcept);
-                }
+                        if (!empty($themeConfig->csrfExcept)) {
+                            $this->mergeCsrfExcept($themeConfig->csrfExcept);
+                        }
 
-                if (!empty($themeConfig->filters)) {
-                    $this->filters = array_merge($this->filters, $themeConfig->filters);
+                        if (!empty($themeConfig->filters)) {
+                            $this->filters = array_merge($this->filters, $themeConfig->filters);
+                        }
+                    }
                 }
+            } catch (\Throwable $e) {
+                // Ignore DB errors during install
             }
         }
     }

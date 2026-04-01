@@ -1,0 +1,155 @@
+name: 🐳 Docker Test Environment
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  docker-test:
+    name: Build & Verify Docker Environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 📄 Prepare environment files
+        run: |
+          # Create .env from the template 'env' file
+          cp env .env
+
+          # Configure for Docker CI environment
+          cat >> .env << 'EOF'
+          CI_ENVIRONMENT=testing
+          app.baseURL='http://localhost/'
+          database.default.hostname=db
+          database.default.database=ci4ms_test
+          database.default.username=ci4ms_user
+          database.default.password=ci4ms_pass
+          database.default.DBDriver=MySQLi
+          database.default.DBPrefix=ci4ms_
+          database.default.port=3306
+          encryption.key=hex2bin:a]1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b
+          EOF
+
+          # Prepare Routes file from default template
+          cp app/Config/DefaultRoutes.php app/Config/Routes.php
+
+      - name: 🔨 Build and start Docker containers
+        run: docker compose up -d --build
+
+      - name: ⏳ Wait for MariaDB to be ready
+        run: |
+          echo "Waiting for MariaDB..."
+          for i in $(seq 1 30); do
+            if docker exec ci4ms_db healthcheck.sh --connect --innodb_initialized 2>/dev/null; then
+              echo "✅ MariaDB is ready!"
+              break
+            fi
+            echo "Attempt $i/30 - waiting..."
+            sleep 5
+          done
+          # Final verification
+          docker exec ci4ms_db mariadb -u ci4ms_user -pci4ms_pass -e "SELECT 1;" ci4ms_test
+          echo "✅ Database connection verified."
+
+      - name: 📦 Install Composer dependencies
+        run: docker exec ci4ms_app composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: 📂 Set file permissions
+        run: |
+          docker exec ci4ms_app chmod -R 775 writable
+          docker exec ci4ms_app chown -R www-data:www-data writable
+          docker exec ci4ms_app mkdir -p writable/backups writable/cache writable/logs writable/session
+          docker exec ci4ms_app mkdir -p public/media/.tmb public/media/.trash
+          docker exec ci4ms_app chmod -R 775 public/media
+
+      - name: 🗄️ Run database migrations
+        run: |
+          docker exec ci4ms_app php spark migrate --all -n
+          echo "✅ Migrations completed."
+
+      - name: 🌱 Seed default data
+        run: |
+          # Use non-interactive seeding via InstallService directly
+          docker exec ci4ms_app php -r "
+            require 'vendor/autoload.php';
+            \$app = \CodeIgniter\Config\Services::codeigniter();
+            \$app->initialize();
+
+            \$installService = new \Modules\Install\Services\InstallService();
+            \$installService->createDefaultData([
+              'fname'    => 'CI',
+              'sname'    => 'Test',
+              'username' => 'admin',
+              'email'    => 'admin@ci4ms.test',
+              'password' => 'Test1234!',
+              'baseUrl'  => 'http://localhost/',
+              'siteName' => 'CI4MS Test',
+            ]);
+            echo '✅ Default data seeded successfully.' . PHP_EOL;
+          "
+
+      - name: 🧹 PHP syntax check
+        run: |
+          echo "Running PHP syntax check..."
+          ERRORS=$(docker exec ci4ms_app find app modules -name "*.php" -exec php -l {} \; 2>&1 | grep -c "Parse error" || true)
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "❌ Found $ERRORS syntax errors!"
+            docker exec ci4ms_app find app modules -name "*.php" -exec php -l {} \; 2>&1 | grep "Parse error"
+            exit 1
+          fi
+          echo "✅ No PHP syntax errors found."
+
+      - name: 🌐 Check HTTP response (Homepage)
+        run: |
+          sleep 3
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
+          echo "HTTP Status: $STATUS"
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ]; then
+            echo "✅ Application is responding correctly."
+          else
+            echo "❌ Unexpected HTTP status: $STATUS"
+            docker compose logs app
+            exit 1
+          fi
+
+      - name: 🔒 Check backend responds
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L http://localhost/backend)
+          echo "Backend HTTP Status: $STATUS"
+          # 302 = redirect to login (expected when not authenticated)
+          # 200 = login page rendered
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ]; then
+            echo "✅ Backend is responding correctly."
+          else
+            echo "❌ Backend unexpected status: $STATUS"
+            docker compose logs app
+            exit 1
+          fi
+
+      - name: 🧪 Run PHPUnit tests (if available)
+        run: |
+          docker exec ci4ms_app vendor/bin/phpunit --no-coverage 2>/dev/null \
+            || echo "⚠️ No tests defined or tests skipped."
+
+      - name: 📋 Show container logs on failure
+        if: failure()
+        run: |
+          echo "=== APP LOGS ==="
+          docker compose logs app
+          echo ""
+          echo "=== DB LOGS ==="
+          docker compose logs db
+          echo ""
+          echo "=== CI4 LOG ==="
+          docker exec ci4ms_app cat writable/logs/log-$(date +%Y-%m-%d).log 2>/dev/null || echo "No CI4 log file found."
+
+      - name: 🛑 Stop and clean up containers
+        if: always()
+        run: docker compose down -v

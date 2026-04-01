@@ -144,29 +144,43 @@ class WidgetService
      */
     protected function getAllStatCounts(int $userId): array
     {
-        $row = $this->commonModel->lists('users', '(SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'users) AS total_users,
+        $select = '(SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'users) AS total_users,
                     (SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'pages) AS total_pages,
                     (SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'blog)  AS total_blogs,
-                    (SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'comments) AS total_comments,
-                    (SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'cronjobs WHERE is_active = 1) AS active_cronjobs,
-                    (SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'cronjobs WHERE last_status = \'failed\') AS failed_cronjobs,
-                    (SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'activity_logs WHERE DATE(created_at) = CURDATE()) AS today_logs,
-                    (SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'notifications WHERE user_id = ' . $userId . ' AND is_read = 0) AS unread_notifs', [], 'id ASC', 0, 0, [], [], [], ['isReset' => true]);
+                    (SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'comments) AS total_comments';
+        if ($this->commonModel->db->tableExists('cronjobs')) {
+            $select .= ',(SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'cronjobs WHERE is_active = 1) AS active_cronjobs,
+        (SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'cronjobs WHERE last_status = \'failed\') AS failed_cronjobs';
+        }
+        if ($this->commonModel->db->tableExists('activity_logs')) {
+            $select .= ',(SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'activity_logs WHERE DATE(created_at) = CURDATE()) AS today_logs';
+        }
+        if ($this->commonModel->db->tableExists('notifications')) {
+            $select .= ',(SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'notifications WHERE user_id = ' . $userId . ' AND is_read = 0) AS unread_notifs';
+        }
+        $row = $this->commonModel->lists('users', $select, [], 'id ASC', 0, 0, [], [], [], ['isReset' => true]);
 
         if (!$row) {
             return [];
         }
-
-        return [
+        $return = [
             'total-users'     => (int) $row->total_users,
             'total-pages'     => (int) $row->total_pages,
             'total-blogs'     => (int) $row->total_blogs,
-            'total-comments'  => (int) $row->total_comments,
-            'active-cronjobs' => (int) $row->active_cronjobs,
-            'failed-cronjobs' => (int) $row->failed_cronjobs,
-            'today-logs'      => (int) $row->today_logs,
-            'unread-notifs'   => (int) $row->unread_notifs,
+            'total-comments'  => (int) $row->total_comments
         ];
+        if ($this->commonModel->db->tableExists('cronjobs')) {
+            $return['active-cronjobs'] = (int) $row->active_cronjobs;
+            $return['failed-cronjobs'] = (int) $row->failed_cronjobs;
+        }
+        if ($this->commonModel->db->tableExists('activity_logs')) {
+            $return['today-logs'] = (int) $row->today_logs;
+        }
+        if ($this->commonModel->db->tableExists('notifications')) {
+            $return['unread-notifs'] = (int) $row->unread_notifs;
+        }
+
+        return $return;
     }
 
     // ══════════════════════════════════════════════════
@@ -332,8 +346,14 @@ class WidgetService
     {
         return [
             'rows' => $this->commonModel->lists(
-                'auth_login','auth_identities.secret, auth_login.ip_address, auth_login.date',
-                ['auth_login.success' => 1],'auth_login.date DESC',8,0,[],[],
+                'auth_login',
+                'auth_identities.secret, auth_login.ip_address, auth_login.date',
+                ['auth_login.success' => 1],
+                'auth_login.date DESC',
+                8,
+                0,
+                [],
+                [],
                 [['table' => 'auth_identities', 'cond' => 'auth_identities.user_id = auth_login.user_id', 'type' => 'left']]
             ),
             'label' => 'Recent Logins'
@@ -344,43 +364,43 @@ class WidgetService
 
     protected function data_total_users(): array
     {
-        return ['value' => $this->commonModel->count('users',['deleted_at'=>null]), 'label' => 'Users'];
+        return ['value' => $this->commonModel->count('users', ['deleted_at' => null]), 'label' => 'Users'];
     }
 
     protected function data_total_pages(): array
     {
-        return ['value' => $this->commonModel->count('pages',['isActive'=>1]), 'label' => 'Pages'];
+        return ['value' => $this->commonModel->count('pages', ['isActive' => 1]), 'label' => 'Pages'];
     }
 
     protected function data_total_blogs(): array
     {
-        return ['value' => $this->commonModel->count('blog',['isActive'=>1]), 'label' => 'Blogs'];
+        return ['value' => $this->commonModel->count('blog', ['isActive' => 1]), 'label' => 'Blogs'];
     }
 
     protected function data_total_comments(): array
     {
-        return ['value' => $this->commonModel->count('comments',['isApproved'=>1]), 'label' => 'Comments'];
+        return ['value' => $this->commonModel->count('comments', ['isApproved' => 1]), 'label' => 'Comments'];
     }
 
     protected function data_active_cronjobs(): array
     {
-        return ['value' => $this->commonModel->count('cronjobs',['is_active'=>1]), 'label' => 'Active'];
+        return ['value' => $this->commonModel->count('cronjobs', ['is_active' => 1]), 'label' => 'Active'];
     }
 
     protected function data_failed_cronjobs(): array
     {
-        return ['value' => $this->commonModel->count('cronjobs',['last_status'=>'failed']), 'label' => 'Failed'];
+        return ['value' => $this->commonModel->count('cronjobs', ['last_status' => 'failed']), 'label' => 'Failed'];
     }
 
     protected function data_today_logs(): array
     {
-        return ['value' => $this->commonModel->count('activity_logs',['DATE(created_at)'=>date('Y-m-d')]), 'label' => 'Today'];
+        return ['value' => $this->commonModel->count('activity_logs', ['DATE(created_at)' => date('Y-m-d')]), 'label' => 'Today'];
     }
 
     protected function data_unread_notifs(): array
     {
         $userId = auth()->user()->id ?? 0;
-        return ['value' => $this->commonModel->count('notifications',['user_id'=>$userId,'is_read'=>0]), 'label' => 'Unread'];
+        return ['value' => $this->commonModel->count('notifications', ['user_id' => $userId, 'is_read' => 0]), 'label' => 'Unread'];
     }
 
     /**

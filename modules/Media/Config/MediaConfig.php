@@ -1,4 +1,6 @@
-<?php namespace Modules\Media\Config;
+<?php
+
+namespace Modules\Media\Config;
 
 class MediaConfig extends \CodeIgniter\Config\BaseConfig
 {
@@ -8,7 +10,8 @@ class MediaConfig extends \CodeIgniter\Config\BaseConfig
 
     public $filters = [
         'backendGuard' => ['before' => [
-            'backend/media','backend/media/*'
+            'backend/media',
+            'backend/media/*'
         ]]
     ];
 
@@ -22,8 +25,8 @@ class MediaConfig extends \CodeIgniter\Config\BaseConfig
             'icon'         => 'fas fa-photo-video',
             'inNavigation' => true,
             'hasChild'     => false,
-            'pageSort'     => 6,
+            'pageSort'     => 5,
             'parent_pk'    => null
         ]
-        ];
+    ];
 }

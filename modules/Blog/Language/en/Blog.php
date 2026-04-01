@@ -28,4 +28,6 @@ return [
     'commentPublished' => 'The comment with an id of #{0,number} has been published.',
     'commentPublishError' => 'Comment cannot be published. Please try again or check logs.',
     'searchPlaceholder' => 'Search blogs...',
+    'searchComments' => 'Search comments...',
+    'relatedPost' => 'Related Post',
 ];

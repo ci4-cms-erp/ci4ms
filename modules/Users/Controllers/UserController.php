@@ -109,11 +109,11 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]|is_unique[users.username]',
-                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^\x3c\x3e\x7b\x7d\x3d]+$/u]'],
-                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^\x3c\x3e\x7b\x7d\x3d]+$/u]'],
-                'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email|is_unique[auth_identities.secret]'],
-                'group.*' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero'],
-                'password' => ['label' => 'Şifre', 'rules' => 'required|min_length[8]']
+                'firstname' => ['label' => lang('Backend.firstName'), 'rules' => 'required|regex_match[/^[^\x3c\x3e\x7b\x7d\x3d]+$/u]'],
+                'surname' => ['label' => lang('Backend.lastName'), 'rules' => 'required|regex_match[/^[^\x3c\x3e\x7b\x7d\x3d]+$/u]'],
+                'email' => ['label' => lang('Auth.email'), 'rules' => 'required|valid_email|is_unique[auth_identities.secret]'],
+                'group.*' => ['label' => lang('Users.authority'), 'rules' => 'required|is_natural_no_zero'],
+                'password' => ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]']
             ]);
 
             if ($this->validate($valData) == false) return redirect()->route('create_user')->withInput()->with('errors', $this->validator->getErrors());
@@ -184,13 +184,13 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post')) {
             $valData = ([
                 'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]',
-                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
-                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
-                'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
-                'group.*' => ['label' => 'Yetkisi', 'rules' => 'required|is_natural_no_zero']
+                'firstname' => ['label' => lang('Backend.firstName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'surname' => ['label' => lang('Backend.lastName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'email' => ['label' => lang('Auth.email'), 'rules' => 'required|valid_email'],
+                'group.*' => ['label' => lang('Users.authority'), 'rules' => 'required|is_natural_no_zero']
             ]);
 
-            if ($this->request->getPost('password')) $valData['password'] = ['label' => 'Şifre', 'rules' => 'required|min_length[8]'];
+            if ($this->request->getPost('password')) $valData['password'] = ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]'];
 
             if ($this->validate($valData) == false) return redirect()->route('update_user', [$id])->withInput()->with('errors', $this->validator->getErrors());
 
@@ -227,6 +227,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
     /**
      * @param string $id
+     * @return \CodeIgniter\HTTP\ResponseInterface
      */
     public function user_del(string $id)
     {
@@ -250,17 +251,17 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     {
         if ($this->request->is('post')) {
             $valData = ([
-                'firstname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'surname' => ['label' => 'Ad Soyadı', 'rules' => 'required'],
-                'email' => ['label' => 'E-posta adresi', 'rules' => 'required|valid_email'],
+                'firstname' => ['label' => lang('Backend.firstName'), 'rules' => 'required'],
+                'surname' => ['label' => lang('Backend.lastName'), 'rules' => 'required'],
+                'email' => ['label' => lang('Auth.email'), 'rules' => 'required|valid_email'],
                 'profileIMG' => [
-                    'label' => 'Profil Resmi',
+                    'label' => lang('Users.profileIMG'),
                     'rules' => 'is_image[profileIMG]|mime_in[profileIMG,image/jpg,image/jpeg,image/png,image/webp]|max_size[profileIMG,2048]|max_dims[profileIMG,150,150]'
                 ]
             ]);
 
             if ($this->request->getPost('password')) {
-                $valData['password'] = ['label' => 'Şifre', 'rules' => 'required|min_length[8]'];
+                $valData['password'] = ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]'];
             }
 
             if ($this->validate($valData) == false) {
@@ -297,7 +298,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             if ($user->email != $data['email']) {
                 $existingUser = $users->findByCredentials(['email' => $data['email']]);
                 if ($existingUser && $existingUser->id != $user->id) {
-                    return redirect()->route('profile')->withInput()->with('error', 'Daha önce bu mail adresi başka bir kullanıcı tarafından alınmıştır lütfen bilgilerinizi kontrol ediniz.');
+                    return redirect()->route('profile')->withInput()->with('error', lang('Users.alreadyTakenEmail'));
                 }
 
 
@@ -338,13 +339,13 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * @return false|string|string[]
+     * @return \CodeIgniter\HTTP\ResponseInterface
      */
-    public function ajax_blackList_post()
+    public function ajax_blackList_post(): \CodeIgniter\HTTP\ResponseInterface
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        $valData = (['note' => ['label' => 'Note', 'rules' => 'required'], 'uid' => ['label' => 'uid', 'rules' => 'required|is_natural_no_zero']]);
-        if ($this->validate($valData) == false) return $this->validator->getErrors();
+        $valData = (['note' => ['label' => lang('Backend.notes'), 'rules' => 'required'], 'uid' => ['label' => 'uid', 'rules' => 'required|is_natural_no_zero']]);
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
 
         $user = auth()->getProvider()->findById($this->request->getPost('uid'));
         if ($user->inGroup('superadmin')) return $this->failForbidden();
@@ -353,19 +354,19 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         $result = [];
 
         if ($user->isBanned()) {
-            $result = ['result' => true, 'error' => ['type' => 'success', 'message' => 'üyelik karalisteye eklendi.']];
+            $result = ['result' => true, 'error' => ['type' => 'success', 'message' => lang('Users.addedToBlacklist')]];
             $user->forcePasswordReset();
-        } else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteye eklenemedi.']];
+        } else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => lang('Users.couldNotAddToBlacklist')]];
 
         return $this->respond($result, 200);
     }
 
-    public function ajax_remove_from_blackList_post()
+    public function ajax_remove_from_blackList_post(): \CodeIgniter\HTTP\ResponseInterface
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        $valData = (['uid' => ['label' => 'Kullanıcı id', 'rules' => 'required|is_natural_no_zero']]);
+        $valData = (['uid' => ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero']]);
 
-        if ($this->validate($valData) == false) return $this->validator->getErrors();
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $user = auth()->getProvider()->findById($this->request->getPost('uid'));
         if ($user->inGroup('superadmin')) return $this->failForbidden();
 
@@ -373,31 +374,31 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         $this->commonModel->edit('auth_identities', ['who_banned' => null], ['user_id' => $this->request->getPost('uid')],);
         $result = [];
         if (!$user->isBanned()) {
-            $result = ['result' => true, 'error' => ['type' => 'success', 'message' => $user->email . ' e-mail adresli üyelik karalisteden çıkarıldı.']];
+            $result = ['result' => true, 'error' => ['type' => 'success', 'message' => lang('Users.removedFromBlacklist', [$user->email])]];
             $user->undoForcePasswordReset();
-        } else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => 'üyelik karalisteden çıkarılamadı.']];
+        } else $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => lang('Users.couldNotRemoveFromBlacklist')]];
 
         return $this->response->setJSON($result);
     }
 
-    public function ajax_force_reset_password()
+    public function ajax_force_reset_password(): \CodeIgniter\HTTP\ResponseInterface
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        $valData = (['uid' => ['label' => 'Kullanıcı id', 'rules' => 'required|is_natural_no_zero']]);
+        $valData = (['uid' => ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero']]);
 
-        if ($this->validate($valData) == false) return $this->validator->getErrors();
+        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
 
         $user = auth()->getProvider()->findById($this->request->getPost('uid'));
         if ($user->inGroup('superadmin')) return $this->failForbidden();
         $result = [];
         if ($user->requiresPasswordReset()) {
-            $result = ['result' => true, 'error' => ['type' => 'warning', 'message' => $user->email . ' e-mail adresli üyelik şifre sıfırlama adımında.']];
+            $result = ['result' => true, 'error' => ['type' => 'warning', 'message' => lang('Users.passwordResetStep', [$user->email])]];
         } else {
             $user->forcePasswordReset();
             if ($user->requiresPasswordReset())
-                $result = ['result' => true, 'error' => ['type' => 'success', 'message' => $user->email . ' e-mail adresli üyelik şifre sıfırlandı.']];
+                $result = ['result' => true, 'error' => ['type' => 'success', 'message' => lang('Users.passwordResetSuccess', [$user->email])]];
             else
-                $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => $user->email . ' e-mail adresli üyelik şifre sıfırlanamadı.']];
+                $result = ['result' => false, 'error' => ['type' => 'danger', 'message' => lang('Users.passwordResetError', [$user->email])]];
         }
 
         return $this->response->setJSON($result);

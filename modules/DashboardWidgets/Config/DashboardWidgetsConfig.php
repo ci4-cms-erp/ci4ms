@@ -21,13 +21,12 @@ class DashboardWidgetsConfig
     ];
 
     public $menus = [
-
         'DashboardWidgets.dashboardWidgets' => [
             'icon'         => 'fas fa-th-large',
             'inNavigation' => true,
             'hasChild'     => false,
-            'pageSort'     => 14,
+            'pageSort'     => 9,
             'parent_pk'    => null
         ]
-        ];
+    ];
 }

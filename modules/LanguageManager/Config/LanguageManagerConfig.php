@@ -21,13 +21,12 @@ class LanguageManagerConfig
     ];
 
     public $menus = [
-
-        'LanguageManager.languageManagerList' => [
+        'LanguageManager.languages' => [
             'icon'         => 'fas fa-language',
             'inNavigation' => true,
             'hasChild'     => false,
-            'pageSort'     => 13,
+            'pageSort'     => 11,
             'parent_pk'    => null
         ]
-        ];
+    ];
 }

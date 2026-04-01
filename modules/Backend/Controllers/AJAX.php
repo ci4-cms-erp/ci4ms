@@ -68,7 +68,7 @@ class AJAX extends BaseController
         $whereTable = $this->request->getPost('where');
         $locale = $this->request->getPost('locale') ?: ($this->request->getLocale() ?: 'tr');
 
-        // Tabloya göre ID kolonunu belirle
+        // Determine the ID column based on the table
         $idField = 'id';
         if ($whereTable === 'pages_langs') $idField = 'pages_id';
         elseif ($whereTable === 'blog_langs') $idField = 'blog_id';
@@ -76,7 +76,7 @@ class AJAX extends BaseController
 
         if ($this->request->getPost('update') == 1) {
             $whereArr = [$idField => $this->request->getPost('id')];
-            // Lang tabloları için dili de ekle
+            // Also add the language for lang tables
             if (strpos($whereTable, '_langs') !== false || $whereTable === 'categories_langs') {
                 $whereArr['lang'] = $locale;
             }
@@ -88,7 +88,7 @@ class AJAX extends BaseController
             }
         }
 
-        // Mevcut seflinkleri alırken dile göre filtrele (varsa)
+        // Filter by language (if exists) when fetching current seflinks
         $listWhere = [];
         if (strpos($whereTable, '_langs') !== false || $whereTable === 'categories_langs') {
             $listWhere = ['lang' => $locale];
@@ -109,9 +109,9 @@ class AJAX extends BaseController
     }
 
     /**
-     * @return \CodeIgniter\HTTP\RedirectResponse|void
+     * @return \CodeIgniter\HTTP\ResponseInterface
      */
-    public function isActive()
+    public function isActive(): \CodeIgniter\HTTP\ResponseInterface
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([
@@ -128,7 +128,10 @@ class AJAX extends BaseController
             return $this->failForbidden();
     }
 
-    public function maintenance()
+    /**
+     * @return \CodeIgniter\HTTP\ResponseInterface
+     */
+    public function maintenance(): \CodeIgniter\HTTP\ResponseInterface
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([

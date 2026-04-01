@@ -28,7 +28,6 @@ class Install extends Controller
 
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
-            $this->copyEnvFile();
             $updates = [
                 'CI_ENVIRONMENT' => 'development',
                 'app.baseURL' => '\'' . $this->request->getPost('baseUrl') . '\'',
@@ -62,12 +61,12 @@ class Install extends Controller
                 'security.redirect' => 'false',
                 'security.samesite' => '\'Lax\'',
                 'app.defaultLocale' => '\'en\'',
-                'app.supportedLocales' => '[\'ar\',\'de\',\'en\',\'es\',\'fr\',\'hi\',\'ja\',\'pt\',\'ru\',\'tr\',\'zh\']',
+                'app.supportedLocales' => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
                 'app.negotiateLocale' => 'true',
                 'app.appTimezone' => '\'Europe/Istanbul\'',
                 'app.version' => '0.31.1.0'
             ];
-            if ($this->updateEnvSettings($updates)) $this->generateEncryptionKey();
+            if ($this->copyEnvFile() && $this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
             session()->setFlashdata('install_data', [
@@ -77,6 +76,7 @@ class Install extends Controller
                 'email' => $this->request->getPost('email'),
                 'password' => $this->request->getPost('password'),
                 'siteName' => $this->request->getPost('siteName'),
+                'baseUrl' => $this->request->getPost('baseUrl'),
             ]);
             return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install/dbsetup', 308);
         }
@@ -134,10 +134,10 @@ class Install extends Controller
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
         $baseURL = $protocol . $_SERVER['SERVER_NAME'];
         try {
-            $migrate->latest();
+            $migrate->setNamespace(null)->latest();
         } catch (\Throwable $e) {
             log_message('error', $e->getMessage());
-            return redirect()->to($baseURL)->withInput()->with('errors', ['migration' => $e->getMessage()]);
+            return redirect()->route('install')->withInput()->with('errors', ['migration' => $e->getMessage()]);
         }
         $createDBs = new InstallService();
         $installData = session()->getFlashdata('install_data');
@@ -159,8 +159,8 @@ class Install extends Controller
         if (! is_dir(WRITEPATH . 'backups/') && !is_dir(PUBLICPATH . 'media/.tmb') && !is_dir(PUBLICPATH . 'media/.trash')) {
 
             mkdir(WRITEPATH . 'backups/', 0755, true);
-            mkdir(PUBLICPATH . 'uploads/.tmb', 0755, true);
-            mkdir(PUBLICPATH . 'uploads/.trash', 0755, true);
+            mkdir(PUBLICPATH . 'media/.tmb', 0755, true);
+            mkdir(PUBLICPATH . 'media/.trash', 0755, true);
         }
         if (!write_file(APPPATH . 'Config/Routes.php', $content)) {
             return redirect()->to($baseURL)->withInput()->with('errors', ['route' => lang('Install.routeFileError')]);

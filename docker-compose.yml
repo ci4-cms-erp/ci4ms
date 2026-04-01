@@ -1,0 +1,69 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    container_name: ci4ms_app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/html
+      - ./.docker/apache/000-default.conf:/etc/apache2/sites-available/000-default.conf
+      - ./.docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    environment:
+      - APP_ENV=development
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ci4ms_network
+
+  db:
+    image: mariadb:12.0.2
+    container_name: ci4ms_db
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    command: >
+      --default-storage-engine=InnoDB
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M
+    environment:
+      MYSQL_DATABASE: ci4ms_test
+      MYSQL_ROOT_PASSWORD: ci4ms_secret
+      MYSQL_USER: ci4ms_user
+      MYSQL_PASSWORD: ci4ms_pass
+    volumes:
+      - ci4ms_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ci4ms_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    platform: linux/amd64
+    container_name: ci4ms_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ci4ms_secret
+    depends_on:
+      - db
+    networks:
+      - ci4ms_network
+
+volumes:
+  ci4ms_db_data:
+
+networks:
+  ci4ms_network:
+    driver: bridge

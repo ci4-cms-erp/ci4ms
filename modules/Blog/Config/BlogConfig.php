@@ -19,7 +19,6 @@ class BlogConfig extends \CodeIgniter\Config\BaseConfig
     ];
 
     public $menus = [
-
         'Blog.blog' => [
             'icon'         => 'fas fa-align-center',
             'inNavigation' => true,
@@ -62,5 +61,5 @@ class BlogConfig extends \CodeIgniter\Config\BaseConfig
             'pageSort'     => 5,
             'parent_pk'    => 'Blog.blog'
         ]
-        ];
+    ];
 }

@@ -24,7 +24,7 @@ echo $this->section('content'); ?>
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
-                <a href="<?php echo route_to('blogs', 1) ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
+                <a href="<?php echo route_to('blogs') ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
             </div>
         </div>
         <div class="card-body">

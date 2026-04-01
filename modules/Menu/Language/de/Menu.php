@@ -1,6 +1,6 @@
 <?php
 return [
     'menu' => 'Menüs',
-    'notFindinMenuPages' => 'Keine Seiten verfügbar, um sie zum Menü hinzuzufügen!',
-    'notFindinMenuBlogs' => 'Keine Beiträge verfügbar, um sie zum Menü hinzuzufügen!',
+    'notFindinMenuPages' => 'Keine Seiten vorhanden, die dem Menü hinzugefügt werden können!',
+    'notFindinMenuBlogs' => 'Keine Blogposts vorhanden, die dem Menü hinzugefügt werden können!',
 ];

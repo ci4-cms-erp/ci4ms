@@ -10,7 +10,8 @@ class UsersConfig extends \CodeIgniter\Config\BaseConfig
     ];
     public $filters = [
         'backendGuard' => ['before' => [
-            'backend/users','backend/users/*',
+            'backend/users',
+            'backend/users/*',
         ]]
     ];
 
@@ -19,18 +20,25 @@ class UsersConfig extends \CodeIgniter\Config\BaseConfig
     ];
 
     public $menus = [
-        'Users.userList' => [
+        'Users.usersCrud' => [
+            'icon'         => 'fas fa-users',
+            'inNavigation' => true,
+            'hasChild'     => true,
+            'pageSort'     => 6,
+            'parent_pk'    => null
+        ],
+        'Users.users' => [
             'icon'         => 'fas fa-user-friends',
             'inNavigation' => true,
             'hasChild'     => false,
             'pageSort'     => 1,
-            'parent_pk'    => 'Users.usersCrud' // Sadece gruplandırma amacıyla elle girilen/varolan parent kaydına bağla
+            'parent_pk'    => 'Users.usersCrud'
         ],
-        'Users.permGroupList' => [
+        'Users.groupList' => [
             'icon'         => 'fas fa-sitemap',
             'inNavigation' => true,
             'hasChild'     => false,
-            'pageSort'     => 3,
+            'pageSort'     => 2,
             'parent_pk'    => 'Users.usersCrud'
         ]
     ];

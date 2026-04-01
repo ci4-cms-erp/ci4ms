@@ -70,4 +70,6 @@ return [
     'typeModuleName' => 'Modül adını yazın',
     'clickToCopy' => 'Kopyalamak için tıkla',
     'copiedToClipboard' => 'Panoya kopyalandı',
+    'invalidZipPath' => 'ZIP geçersiz yollar içeriyor.',
+    'zipPathTraversal' => 'ZIP dosyasında dizin gezdirme (path traversal) hatası var.',
 ];

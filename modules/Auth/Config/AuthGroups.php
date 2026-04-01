@@ -90,15 +90,15 @@ class AuthGroups extends ShieldAuthGroups
         $cacheKey = 'shield_auth_dynamic_config';
         $cachedData = cache($cacheKey);
         if ($cachedData !== null) {
-            // Eğer cache varsa, verileri oradan al
+            // If cache exists, retrieve data from it
             $this->groups      = $cachedData['groups'];
             $this->permissions = $cachedData['permissions'];
             $this->matrix      = $cachedData['matrix'];
         } else {
-            // Cache yoksa veritabanından çek
+            // If cache does not exist, fetch from database
             $this->loadFromDatabase();
 
-            // Verileri 24 saatliğine (86400 sn) cache'le
+            // Cache data for 24 hours (86400 seconds)
             cache()->save($cacheKey, [
                 'groups'      => $this->groups,
                 'permissions' => $this->permissions,
@@ -111,7 +111,7 @@ class AuthGroups extends ShieldAuthGroups
     {
         $commonModel = new \ci4commonmodel\CommonModel();
 
-        // 1. Grupları Yükle
+        // 1. Load Groups
         $groups = $commonModel->lists('auth_groups');
         foreach ($groups as $group) {
             $this->groups[$group->group] = [
@@ -120,27 +120,27 @@ class AuthGroups extends ShieldAuthGroups
             ];
         }
 
-        // 2. İzin Tanımlarını Yükle (Sayfa isimleri izin anahtarı olacak)
-        // Örn: 'users.read', 'users.create' gibi dinamik oluşturacağız
+        // 2. Load Permission Definitions (Page names will be permission keys)
+        // e.g., We will dynamically create keys like 'users.read', 'users.create'
         $pages = $commonModel->lists('auth_permissions_pages');
-        $pageMap = []; // ID => Pagename eşlemesi için
+        $pageMap = []; // For ID => Pagename mapping
 
         foreach ($pages as $page) {
             $pagename = strtolower($page->pagename);
             $pageMap[$page->id] = $pagename;
 
-            // Olası tüm aksiyonları tanımla
+            // Define all possible actions
             $this->permissions[$pagename . '.create'] = $page->description . ' - Create';
             $this->permissions[$pagename . '.read']   = $page->description . ' - Read';
             $this->permissions[$pagename . '.update'] = $page->description . ' - Update';
             $this->permissions[$pagename . '.delete'] = $page->description . ' - Delete';
         }
 
-        // 3. Matrix'i (Grup - İzin Eşleşmesini) Yükle
-        // auth_groups tablosundaki 'permissions' JSON kolonunu okuyacağız
+        // 3. Load Matrix (Group - Permission mapping)
+        // We will read the 'permissions' JSON column from the auth_groups table
         foreach ($groups as $group) {
             $groupName = $group->group;
-            $this->matrix[$groupName] = []; // Başlangıçta boş izin listesi
+            $this->matrix[$groupName] = []; // Initially an empty permission list
 
             if (!empty($group->permissions)) {
                 $permsArray = json_decode($group->permissions, true);

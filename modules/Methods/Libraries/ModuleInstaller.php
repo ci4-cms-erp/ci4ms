@@ -82,7 +82,7 @@ class ModuleInstaller
     }
 
     /**
-     * Varsayılan veritabanı tohumlamasını (Seed) çalıştırır.
+     * Runs the default database seeding.
      *
      * @param string $moduleName
      * @return array{success: bool, error: string|null}
@@ -91,7 +91,7 @@ class ModuleInstaller
     {
         $seederName = "Modules\\{$moduleName}\\Database\\Seeds\\{$moduleName}Seeder";
         
-        // Eğer böyle bir Seeder sınıfı mevcutsa çalıştır
+        // If such a Seeder class exists, run it
         if (class_exists($seederName)) {
             try {
                 $seeder = \Config\Database::seeder();
@@ -103,12 +103,12 @@ class ModuleInstaller
             }
         }
 
-        // Seeder dosyası yoksa başarılı sayılır
+        // If no seeder file exists, consider it a success
         return ['success' => true, 'error' => null];
     }
 
     /**
-     * Modülün migration dosyalarını parse ederek oluşturulan tablo isimlerini döndürür.
+     * Parses the module's migration files and returns the created table names.
      *
      * @param string $moduleName
      * @return string[]
@@ -131,7 +131,7 @@ class ModuleInstaller
 
         foreach ($files as $file) {
             $content = file_get_contents($file);
-            // createTable('table_name' kalıplarını yakala
+            // Catch createTable('table_name' patterns
             if (preg_match_all("/createTable\s*\(\s*['\"]([^'\"]+)['\"]/", $content, $matches)) {
                 foreach ($matches[1] as $tableName) {
                     $tables[] = $prefix . $tableName;
@@ -143,7 +143,7 @@ class ModuleInstaller
     }
 
     /**
-     * Her tablo için kayıt sayısını döndürür.
+     * Returns the record count for each table.
      *
      * @param string $moduleName
      * @return array<string, int>
@@ -169,7 +169,7 @@ class ModuleInstaller
     }
 
     /**
-     * Modülün migration'larını geri alarak tabloları siler.
+     * Rolls back module migrations and deletes tables.
      *
      * @param string $moduleName
      * @return array{success: bool, rolledBack: int, error: string|null}
@@ -187,7 +187,7 @@ class ModuleInstaller
             $migrate = Services::migrations();
             $namespace = 'Modules\\' . $moduleName . '\\Database\\Migrations';
 
-            // Tüm migration'ları geri al (batch 0 = hepsini geri al)
+            // Roll back all migrations (batch 0 = roll back all)
             $migrate->setNamespace($namespace)->regress(0);
 
             $files = glob($migrationPath . '/*.php');
@@ -201,7 +201,7 @@ class ModuleInstaller
     }
 
     /**
-     * Modül klasörünü dosya sisteminden siler.
+     * Deletes the module folder from the file system.
      *
      * @param string $moduleName
      * @return array{success: bool, error: string|null}
@@ -217,7 +217,7 @@ class ModuleInstaller
         try {
             helper('filesystem');
             delete_files($modulePath, true);
-            // delete_files dizini silmez, sadece içindekileri siler
+            // delete_files doesn't delete the directory, only its contents
             if (is_dir($modulePath)) {
                 $this->recursiveRemoveDir($modulePath);
             }
@@ -230,7 +230,7 @@ class ModuleInstaller
     }
 
     /**
-     * Bir dizini recursive olarak siler.
+     * Deletes a directory recursively.
      *
      * @param string $dir
      * @return void

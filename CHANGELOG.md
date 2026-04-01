@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.2.0] - 2026-04-01
+
+### Added
+
+- **Docker Support:** Introduced full Docker environment with `Dockerfile`, `docker-compose.yml`, Apache virtual host configuration, and custom `php.ini` for containerized development and deployment.
+- **CI/CD:** Added GitHub Actions workflow (`docker-test.yaml`) to automatically build and test the Docker image on push.
+- **Documentation:** Added `DOCKER_SETUP.md` with detailed instructions for running the project via Docker.
+- **Localization:** Added complete translation packs for `DashboardWidgets` module in 9 languages: Arabic, German, Spanish, French, Hindi, Japanese, Portuguese, Russian, and Chinese.
+- **Localization:** Added complete translation packs for `LanguageManager` module in 9 languages: Arabic, German, Spanish, French, Hindi, Japanese, Portuguese, Russian, and Chinese.
+- **Routing:** Introduced `DefaultRoutes.php` config for centralized default route management.
+
+### Changed
+
+- **Auth:** Updated `Auth/Config/Auth.php` and `AuthGroups.php` to refine group and permission configurations.
+- **Auth:** Improved `CustomActivationController.php` for Shield-compatible activation flow.
+- **Backend:** Updated `AJAX.php` and `BaseController.php` for improved request handling and response consistency.
+- **Backend Language:** Refreshed Backend translation files across all 11 supported languages.
+- **Blog:** Updated Blog language files across all 11 supported languages; refined comment list and display views; updated post creation view.
+- **Backup:** Refined `BackupConfig.php`, `Backup.php` controller, and `DbBackup.php` library for improved reliability.
+- **DashboardWidgets:** Updated `WidgetService.php` and `DashboardWidgetsConfig.php`.
+- **Fileeditor:** Updated `FileeditorConfig.php` for consistency with new config patterns.
+- **Install:** Updated `Install.php` controller and `InstallService.php` for improved setup flow.
+- **Media / Menu / Pages / Settings / Theme / Users:** Updated language files across all supported languages and refined module configs, controllers, and views for consistency.
+- **Methods:** Updated `ModuleInstaller.php` and `ModuleScanner.php`; refined `Routes.php` and language files across all supported languages.
+- **Frontend Language:** Updated `app/Language/en/Frontend.php` with new translation keys.
+- **Filters:** Updated `app/Config/Filters.php` for improved filter handling.
+- **App Config:** Refined `app/Config/App.php` settings.
+- **Git:** Updated `.gitattributes` and `.gitignore` rules.
+
 ## [0.31.1.0] - 2026-03-30
 
 ### Added
@@ -172,6 +201,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.31.2.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.2.0
+[0.31.1.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.1.0
+[0.31.0.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.0.0
 [0.26.3.4]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.26.3.4
 [0.26.3.3]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.26.3.3
 [0.26.3.2]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.26.3.2

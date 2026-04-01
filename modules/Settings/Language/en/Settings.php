@@ -33,4 +33,8 @@ return [
     'updateVersion' => 'Update Version',
     'alreadyLastVersion' => 'You are already using the latest version.',
     'languageMode' => 'Site Language Mode',
+    'mailServer' => 'Mail Server',
+    'mailPort' => 'Mail Port',
+    'testMailSubject' => 'Test Email',
+    'testMailMessage' => 'Mail system is working correctly.',
 ];

@@ -1,4 +1,1 @@
-<?php
-return [
-    'media' => 'Médias'
-];
+<?php return ['media' => 'Médias'];
