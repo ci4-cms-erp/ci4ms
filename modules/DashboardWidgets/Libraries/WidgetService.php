@@ -286,14 +286,19 @@ class WidgetService
             ['slug' => 'total-pages',     'title' => 'Toplam Sayfa',        'type' => 'stat',  'icon' => 'fas fa-file-alt',        'color' => 'success',   'default_size' => 'col-lg-3', 'is_system' => 1],
             ['slug' => 'total-blogs',     'title' => 'Toplam Blog',         'type' => 'stat',  'icon' => 'fas fa-newspaper',       'color' => 'primary',   'default_size' => 'col-lg-3', 'is_system' => 1],
             ['slug' => 'total-comments',  'title' => 'Toplam Yorum',        'type' => 'stat',  'icon' => 'fas fa-comments',        'color' => 'warning',   'default_size' => 'col-lg-3', 'is_system' => 1],
-            ['slug' => 'active-cronjobs', 'title' => 'Aktif CronJob',       'type' => 'stat',  'icon' => 'fas fa-clock',           'color' => 'success',   'default_size' => 'col-lg-3', 'is_system' => 1],
-            ['slug' => 'failed-cronjobs', 'title' => 'Başarısız CronJob',   'type' => 'stat',  'icon' => 'fas fa-exclamation',     'color' => 'danger',    'default_size' => 'col-lg-3', 'is_system' => 1],
-            ['slug' => 'today-logs',      'title' => 'Bugünkü Loglar',      'type' => 'stat',  'icon' => 'fas fa-history',         'color' => 'secondary', 'default_size' => 'col-lg-3', 'is_system' => 1],
-            ['slug' => 'unread-notifs',   'title' => 'Okunmamış Bildirim',  'type' => 'stat',  'icon' => 'fas fa-bell',            'color' => 'danger',    'default_size' => 'col-lg-3', 'is_system' => 1],
             ['slug' => 'recent-activity', 'title' => 'Son Aktiviteler',     'type' => 'table', 'icon' => 'fas fa-stream',          'color' => 'primary',   'default_size' => 'col-lg-6', 'is_system' => 1],
             ['slug' => 'recent-logins',   'title' => 'Son Girişler',        'type' => 'table', 'icon' => 'fas fa-sign-in-alt',     'color' => 'info',      'default_size' => 'col-lg-6', 'is_system' => 1],
         ];
-
+        if ($this->commonModel->db->tableExists('cronjobs')) {
+            $defaults[] = ['slug' => 'active-cronjobs', 'title' => 'Aktif CronJob',       'type' => 'stat',  'icon' => 'fas fa-clock',           'color' => 'success',   'default_size' => 'col-lg-3', 'is_system' => 1];
+            $defaults[] = ['slug' => 'failed-cronjobs', 'title' => 'Başarısız CronJob',   'type' => 'stat',  'icon' => 'fas fa-exclamation',     'color' => 'danger',    'default_size' => 'col-lg-3', 'is_system' => 1];
+        }
+        if ($this->commonModel->db->tableExists('activity_logs')) {
+            $defaults[] = ['slug' => 'today-logs',      'title' => 'Bugünkü Loglar',      'type' => 'stat',  'icon' => 'fas fa-history',         'color' => 'secondary', 'default_size' => 'col-lg-3', 'is_system' => 1];
+        }
+        if ($this->commonModel->db->tableExists('notifications')) {
+            $defaults[] = ['slug' => 'unread-notifs',   'title' => 'Okunmamış Bildirim',  'type' => 'stat',  'icon' => 'fas fa-bell',            'color' => 'danger',    'default_size' => 'col-lg-3', 'is_system' => 1];
+        }
         $count = 0;
         foreach ($defaults as $w) {
             $existing = $this->commonModel->selectOne('dashboard_widgets', ['slug' => $w['slug']]);

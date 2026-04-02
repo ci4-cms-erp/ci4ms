@@ -25,6 +25,7 @@ class Install extends Controller
                 'email' => ['label' => lang('Install.email'), 'rules' => 'required|valid_email|max_length[255]'],
                 'siteName' => ['label' => lang('Install.siteName'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]']
             ];
+            if($this->request->getPost('slogan')) $valData['slogan'] = ['label' => lang('Install.slogan'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]'];
 
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
@@ -69,7 +70,7 @@ class Install extends Controller
             if ($this->copyEnvFile() && $this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-            session()->setFlashdata('install_data', [
+            $sessionData=[
                 'name' => $this->request->getPost('name'),
                 'surname' => $this->request->getPost('surname'),
                 'username' => $this->request->getPost('username'),
@@ -77,7 +78,9 @@ class Install extends Controller
                 'password' => $this->request->getPost('password'),
                 'siteName' => $this->request->getPost('siteName'),
                 'baseUrl' => $this->request->getPost('baseUrl'),
-            ]);
+            ];
+            if($this->request->getPost('slogan')) $sessionData['slogan'] = $this->request->getPost('slogan')?:null;
+            session()->setFlashdata('install_data', $sessionData);
             return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install/dbsetup', 308);
         }
         return view('Modules\Install\Views\install');
@@ -156,11 +159,11 @@ class Install extends Controller
         $file = ROOTPATH . 'modules/Backend/Commands/Views/routes.tpl.php';
         $content = file_get_contents($file);
         $content = str_replace('<@', '<?', $content);
-        if (! is_dir(WRITEPATH . 'backups/') && !is_dir(PUBLICPATH . 'media/.tmb') && !is_dir(PUBLICPATH . 'media/.trash')) {
+        if (! is_dir(WRITEPATH . 'backups/') && !is_dir(FCPATH . 'media/.tmb') && !is_dir(FCPATH . 'media/.trash')) {
 
             mkdir(WRITEPATH . 'backups/', 0755, true);
-            mkdir(PUBLICPATH . 'media/.tmb', 0755, true);
-            mkdir(PUBLICPATH . 'media/.trash', 0755, true);
+            mkdir(FCPATH . 'media/.tmb', 0755, true);
+            mkdir(FCPATH . 'media/.trash', 0755, true);
         }
         if (!write_file(APPPATH . 'Config/Routes.php', $content)) {
             return redirect()->to($baseURL)->withInput()->with('errors', ['route' => lang('Install.routeFileError')]);

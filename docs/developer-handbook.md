@@ -6,14 +6,13 @@ This handbook captures the workflows, conventions, and tooling you need to exten
 
 ## 1. System Requirements
 
-| Layer      | Required                                | Notes                                                                                                |
-| ---------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| PHP        | 8.2+                                    | Enable intl, json, mbstring, gd, curl, openssl extensions. Match the `composer.json` platform (8.2). |
-| Composer   | 2.5+                                    | Used for all PHP dependencies.                                                                       |
-| Node.js    | 18 LTS                                  | Required only if you maintain `public/be-assets` (backend UI assets).                                |
-| npm        | 8+                                      | Node package manager for backend asset dependencies.                                                 |
-| Database   | MySQL/MariaDB (or supported CI4 driver) | Configure via `.env`.                                                                                |
-| Web server | Apache/Nginx/CI4 spark serve            | Production deploys typically proxy to `public/index.php`.                                            |
+| Layer      | Required                                | Notes                                                                                                 |
+| ---------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| PHP        | **8.2+**                                | Enable `intl`, `json`, `mbstring`, `gd`, `curl`, `openssl` extensions. Matches `composer.json` (8.2). |
+| Composer   | 2.5+                                    | Used for all PHP dependencies.                                                                        |
+| Database   | MySQL / MariaDB (or supported CI4 driver) | Configure via `.env`.                                                                                 |
+| Web server | Apache / Nginx / `php spark serve`      | Production deploys should point to the `public/` directory.                                           |
+| Docker     | Docker Engine 24+ / Docker Desktop      | Optional but recommended for local development and CI environments.                                   |
 
 ---
 
@@ -29,17 +28,24 @@ public/
   media/             Media storage (ensure writable)
 writable/            Cache, logs, temporary files (must be writable)
 vendor/              Composer packages
+.docker/             Dockerfile, Apache vhost, and php.ini
+.github/workflows/   GitHub Actions CI pipeline
+docs/                Developer documentation (this file and companions)
 ```
 
 Key config files:
 
-- `composer.json` – PHP dependencies and scripts.
-- `app/Config/*.php` – Framework configuration; many classes consume cached settings populated at runtime.
-- `.env` – Environment overrides; generated from `env` template.
+- `composer.json` — PHP dependencies and scripts.
+- `app/Config/DefaultRoutes.php` — Routes template; copy to `Routes.php` on setup.
+- `app/Config/Paths.php` — Path constants including `$supportDirectory` (required by CI4 4.4+).
+- `app/Config/*.php` — Framework configuration; many classes consume cached settings populated at runtime.
+- `.env` — Environment overrides; generated from the `env` template.
 
 ---
 
 ## 3. Getting Started
+
+### 3.1 Standard (local PHP)
 
 1. **Clone & install**
 
@@ -53,21 +59,25 @@ Key config files:
 
    ```bash
    cp env .env
-   php spark env development
    ```
 
    Update: `app.baseURL`, `database.default.*`, mail credentials, cookie/security settings as needed.
 
-3. **Database**
+3. **Prepare routes**
 
    ```bash
-   php spark migrate
-   php spark db:seed Ci4msDefaultsSeeder  # prompts for admin account details
-   php spark key:generate
-   php spark create:route
+   cp app/Config/DefaultRoutes.php app/Config/Routes.php
    ```
 
-4. **Serve**
+4. **One-command setup**
+
+   ```bash
+   php spark ci4ms:setup
+   ```
+
+   This single command runs all migrations across every module, seeds default data (modules, permissions, admin user, sample pages/blog entries, and settings), and prepares the application for first use. No separate migrate, seed, or key:generate commands are needed.
+
+5. **Serve**
 
    ```bash
    php spark serve
@@ -75,7 +85,18 @@ Key config files:
 
    Visit `http://localhost:8080` (frontend) and `/backend` (admin panel).
 
-> Tip: If you rerun the seeder in an existing database, ensure duplicate records are handled or truncate the relevant tables first.
+### 3.2 Docker
+
+```bash
+cp env .env
+cp app/Config/DefaultRoutes.php app/Config/Routes.php
+# Edit .env: set database.default.hostname=db and other values
+docker compose up -d --build
+docker exec ci4ms_app composer install
+docker exec ci4ms_app php spark ci4ms:setup
+```
+
+Refer to `DOCKER_SETUP.md` for full configuration details, including environment variables for the containerized database.
 
 ---
 
@@ -85,38 +106,41 @@ Key config files:
 
 The project depends on CodeIgniter 4 and several packages that power key features:
 
-- `bertugfahriozer/ci4commonmodel` – Database abstraction helpers used across modules.
-- `bertugfahriozer/sql2migration` – CLI tooling for migrations.
-- `bertugfahriozer/ci4seopro` – CI4 SEO + AI Library (Drop-in) + FEEDS
-- `ci4-cms-erp/ext_module_generator` – Module scaffolding support exposed as `php spark make:module`.
-- `claviska/simpleimage` – Image manipulation utilities for media uploads and WebP conversion.
-- `gregwar/captcha`, `studio-42/elfinder` – Authentication görselleri, pagination, mail gönderimi, medya yöneticisi. SEO meta yönetimi proje içindeki yerleşik servisler ile sağlanır.
+- `codeigniter4/framework` — Core framework (4.7.1+).
+- `codeigniter4/shield` — Authentication and authorization (Shield-based RBAC).
+- `bertugfahriozer/ci4commonmodel` — Database abstraction helpers used across modules.
+- `bertugfahriozer/sql2migration` — CLI tooling for migrations.
+- `bertugfahriozer/ci4seopro` — SEO, JSON-LD, and feed generation.
+- `ci4-cms-erp/ext_module_generator` — Module scaffolding exposed as `php spark make:module`.
+- `claviska/simpleimage` — Image manipulation and WebP conversion for media uploads.
+- `gregwar/captcha` — CAPTCHA generation for login forms.
+- `studio-42/elfinder` — File manager integration for the Media module.
 
 Install/update:
 
 ```bash
-composer install        # first-time setup
-composer update vendor/package   # update specific dependencies
-composer outdated        # check for new versions
+composer install              # first-time setup
+composer update vendor/package  # update a specific dependency
+composer outdated             # check for newer versions
 ```
 
 ### 4.2 Frontend Assets
 
 The admin interface and default templates use static JS/CSS packages (Tagify, Monaco Editor, Bootstrap, etc.).
-To keep the repository small and performant, we do not use npm or `node_modules` by default. Instead, all required third-party libraries are hosted statically within `public/be-assets/plugins/` (for the backend) and `public/templates/default/assets/vendor/` (for the frontend).
+To keep the repository lean, third-party libraries are hosted statically within `public/be-assets/plugins/` (backend) and `public/templates/default/assets/vendor/` (frontend) instead of using `node_modules`.
 
-If you wish to update these plugins or introduce a bundler (like Webpack or Vite) in the future, you can add your own `package.json` to the corresponding asset directory, but be sure to compile the assets and exclude `node_modules` from version control.
+If you wish to introduce a bundler (Webpack or Vite), add a `package.json` to the appropriate asset directory, compile assets, and exclude `node_modules` from version control.
 
 ---
 
 ## 5. Coding Guidelines
 
-- **Namespaces**: Follow PSR-4 (already enforced via Composer). Modules live under `Modules\<Name>\...` and app-level code under `App\`.
+- **Namespaces**: PSR-4, enforced via Composer. Modules live under `Modules\<Name>\...`, app-level code under `App\`.
 - **Controllers**: Backend controllers must extend `Modules\Backend\Controllers\BaseController` to inherit auth, config, and view data. Frontend controllers extend `App\Controllers\BaseController`.
-- **Views**: Stored in module-specific `Views/` paths; reference using full namespace (`view('Modules\Blog\Views\list')`).
+- **Views**: Stored in module-specific `Views/` paths; reference using the full namespace (`view('Modules\Blog\Views\list')`).
 - **Helpers/Filters**: Place module-specific helpers in `modules/<Module>/Helpers`, filters in `modules/<Module>/Filters`. Register filters dynamically via `app/Config/Filters.php`.
-- **Configuration**: Module configs belong in `modules/<Module>/Config`. Avoid editing core `app/Config` unless behaviour is global.
-- **Language strings**: Use `modules/<Module>/Language/<locale>` for translations.
+- **Configuration**: Module configs belong in `modules/<Module>/Config`. Avoid editing core `app/Config` unless the behaviour is global.
+- **Language strings**: Use `modules/<Module>/Language/<locale>` for translations. 11 languages are currently supported.
 - **Docblocks**: Keep concise PHPDoc on public methods; avoid redundant descriptions.
 
 Formatting/testing:
@@ -125,26 +149,22 @@ Formatting/testing:
 composer test     # runs PHPUnit (configure test suite under tests/)
 ```
 
-Add a linter (PHP-CS-Fixer, Pint) if you need formatting automation.
-
 ---
 
 ## 6. Modules & Permissions
 
 - Permissions live in `auth_permissions_pages` (CRUD flags stored as JSON) and `auth_users_permissions` (user overrides).
 - `Modules\Methods\Controllers\Methods::moduleScan()` inspects defined routes and maps them to permission records.
-- After adding a backend route, either:
-  - Run the module scan to sync permissions, or
-  - Insert a record manually into `auth_permissions_pages` with matching controller/method names.
-- Clear cached permission keys (`{userId}_permissions`) after changes: `php spark cache:clear` or `cache()->delete("{$id}_permissions")`.
+- After adding a backend route, either run the module scan to sync permissions, or insert a record manually into `auth_permissions_pages` with matching controller/method names.
+- Clear cached permission keys after changes: `php spark cache:clear` or `cache()->delete("{$id}_permissions")`.
 
 Recommended workflow when adding a module:
 
-1. Scaffold with `php spark make:module <Name>` (provided by `ci4-cms-erp/ext_module_generator`).
+1. Scaffold with `php spark make:module <Name>`.
 2. Add routes in `modules/<Name>/Config/Routes.php` (include `role` metadata).
-3. Implement controllers/models/views.
-4. Register permissions (module scan or manual).
-5. Write seeds/migrations if the module introduces new tables.
+3. Implement controllers, models, and views.
+4. Register permissions via module scan or manually.
+5. Write migrations if the module introduces new tables.
 
 ---
 
@@ -153,8 +173,8 @@ Recommended workflow when adding a module:
 Application settings are persisted in the `settings` table and cached for 24 hours.
 
 - Use `cache()->delete('settings')` after updating settings programmatically.
-- Menu structures are cached as `menus`; cleared automatically when updating through the Menu module, or manually if needed.
-- Maintenance mode flag lives under `settings.maintenanceMode`. When set, `App\Filters\Ci4ms` redirects all traffic to `maintenance-mode` except install/login.
+- Menu structures are cached as `menus`; cleared automatically via the Menu module, or manually with `cache()->delete('menus')`.
+- Maintenance mode flag lives under `settings.maintenanceMode`. When set, `App\Filters\Ci4ms` redirects all traffic to `maintenance-mode`.
 
 ---
 
@@ -163,55 +183,63 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 ### Media (`Modules\Media`)
 
 - elFinder configuration resides in `Modules\Media\Controllers\Media::elfinderConnection()`.
-- Allowed MIME types come from settings (`settings.allowedFiles`).
-- Optional WebP conversion uses `claviska/simpleimage` when enabled.
-- Media root: `public/media/`. Ensure the directory (and `.trash`) are writable by the web server.
+- Allowed MIME types come from `settings.allowedFiles`.
+- Optional WebP conversion uses `claviska/simpleimage` when enabled in settings.
+- Media root: `public/media/`. Ensure the directory (and `.trash`) are writable.
 
-### File editor (`Modules\Fileeditor`)
+### File Editor (`Modules\Fileeditor`)
 
-- Provides tree/file editing within the project root. `realpath` checks prevent escaping `ROOTPATH`.
-- Restrict access to trusted roles; any structural change is immediate.
+- Provides tree/file editing within the project root. `realpath` checks prevent path traversal outside `ROOTPATH`.
+- Restrict access to trusted roles only; changes are immediate and irreversible via the UI.
 
 ### Themes (`Modules\Theme`)
 
-- Themes live in `public/templates/<theme>/` plus optional app-level overrides (`app/Config/templates/<theme>`, etc.).
-- Upload flow: ZIP → `writable/tmp` → install helper → final directories.
+- Themes live in `public/templates/<theme>/` plus optional app-level overrides.
+- Upload flow: ZIP → `writable/tmp/` → install helper → final directories.
 - Required files per theme: `info.xml`, `screenshot.png`. Missing assets trigger warnings via `BackendAfterLoginFilter`.
+- Themes can ship database migrations inside `Database/Migrations/`; these are automatically copied and run on activation.
+- The Theme Manager supports generating a starter boilerplate ZIP directly from the admin panel.
 
 ### Backup (`Modules\Backup`)
 
-- **Functionality:** Database backup (ZIP download) and restore.
-- **Storage:** Backups are generated in `writable/uploads/backups/`.
-- **Driver:** Uses `mysqldump` if available, falls back to PHP loop.
+- Generates full database ZIP archives in `writable/uploads/backups/`.
+- Uses `mysqldump` if available, falls back to a PHP-based export.
+- Restore from server-stored archives directly within the backend.
 
 ---
 
 ## 9. Front Controller & Public Assets
 
-- `public/index.php` bootstraps CodeIgniter. Production setups should point the web server to the `public/` directory only.
-- `public/maintenance/` contains the maintenance splash view served when maintenance mode is active.
-- `public/be-assets/` holds backend CSS/JS, images, third-party plugins, and dependency manifests (`package.json`, `package-lock.json`).
-- `public/uploads/` is user-generated content; backup and secure it accordingly.
+- `public/index.php` bootstraps CodeIgniter. Point the web server document root to `public/` only.
+- `public/maintenance/` contains the splash view served during maintenance mode.
+- `public/be-assets/` holds backend CSS/JS, images, third-party plugins.
+- `public/uploads/` is user-generated content; back it up regularly.
 - `public/templates/default/` is the bundled frontend theme; use it as a reference when building new themes.
 
 ---
 
 ## 10. Testing & QA
 
-- **Unit tests** live under `tests/`. Add module-specific tests in `tests/Modules/<Module>`.
-- Configure database or service mocks via `tests/_support` (autoloaded per `composer.json`).
-- For manual QA, rely on the maintenance mode toggle to hide changes until ready.
-- Consider adding integration tests for critical flows (authentication, page CRUD, menu updates).
+- Unit tests live under `tests/`. Add module-specific tests in `tests/Modules/<Module>`.
+- The GitHub Actions workflow (`.github/workflows/docker-test.yaml`) runs on every push to `master`:
+  - Builds the Docker image.
+  - Waits for MariaDB to be healthy.
+  - Runs `composer install`.
+  - Executes `php spark ci4ms:setup` for migrations and seeding.
+  - Performs a PHP syntax check across `app/` and `modules/`.
+  - Verifies HTTP responses for the homepage and backend.
+- For manual QA, use the maintenance mode toggle to hide changes until they are ready.
 
 ---
 
 ## 11. Debugging Tips
 
-- Enable the toolbar in development via `.env`: `CI_ENVIRONMENT = development`.
-- Logs reside in `writable/logs/`. Always confirm the directory is writable; check the daily log file for stack traces or use the backend log viewer at `/backend/logs`.
-- Cache issues? Clear with `php spark cache:clear` or delete cache files in `writable/cache/`.
-- Database migrations failing? Inspect `writable/logs/` and confirm the migration batch table `ci_migrations` is in sync.
-- Mail issues? Use the `Modules\Settings\Controllers\Settings::testMail()` endpoint (AJAX) after configuring SMTP.
+- Enable the toolbar in development: set `CI_ENVIRONMENT = development` in `.env`.
+- Logs reside in `writable/logs/`. Review the daily log file for stack traces, or use the backend log viewer at `/backend/logs`.
+- Cache issues? Run `php spark cache:clear` or delete files in `writable/cache/`.
+- Migration failures? Check `writable/logs/` and confirm the migration batch table is in sync.
+- Mail issues? Use `Modules\Settings\Controllers\Settings::testMail()` (AJAX) after configuring SMTP.
+- Docker issues? Run `docker compose logs app` to inspect the container output.
 
 ---
 
@@ -219,32 +247,34 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 
 1. Set `CI_ENVIRONMENT = production` in `.env`.
 2. Ensure `app.baseURL` reflects the public domain (include protocol).
-3. Configure web server document root to `public/` and deny direct access to other directories.
-4. Run migrations/seeds (`php spark migrate --all` / relevant seeders).
-5. Cache warm-up (optional): trigger first page load or run custom warmers.
-6. Clear debug toolbar: disable in production via `app/Config/Toolbar.php` or environment settings.
-7. Secure writable directories with proper permissions (typically 775/664 or similar, depending on server user).
-8. Back up `uploads/`, database, and `.env` before major upgrades.
+3. Configure the web server document root to `public/` and deny direct access to all other directories.
+4. Run migrations: `php spark migrate --all`.
+5. Cache warm-up (optional): trigger the first page load or run custom warmers.
+6. Disable the debug toolbar: set via `app/Config/Toolbar.php` or the environment flag.
+7. Set proper permissions on writable directories (typically `775`/`664` depending on server user).
+8. Back up `public/uploads/`, the database, and `.env` before major upgrades.
 
 ---
 
 ## 13. Contribution Workflow
 
 - **Branching**: feature branches prefixed with module or scope (e.g., `feature/blog-scheduling`).
-- **Commits**: reference modules or issues (`[Blog] Add scheduling support`).
-- **Pull requests**: include setup notes (migrations, new env vars, npm installs).
+- **Commits**: reference modules or issues (e.g., `[Blog] Add scheduling support`).
+- **Pull requests**: include setup notes (migrations, new env vars, asset changes).
 - **Code review**: highlight permission updates, cache implications, and front-end asset changes.
-- **Changelog**: maintain a project changelog if versioning releases.
+- **Changelog**: update `CHANGELOG.md` following the Keep a Changelog format before merging.
 
 ---
 
 ## 14. Further Reading & Resources
 
 - [CodeIgniter 4 Documentation](https://codeigniter4.github.io/userguide/)
-- [Composer](https://getcomposer.org/doc/)
+- [CodeIgniter Shield Documentation](https://shield.codeigniter.com/)
+- [Composer Documentation](https://getcomposer.org/doc/)
 - [CI4MS Architecture Guide](./architecture.md)
 - [CI4MS User Guide (HTML)](./user-guide.html)
 - [CI4MS Theme Development Guide](./theme_development.md)
-- Internal module documentation (check each module’s README or docblocks).
+- [DOCKER_SETUP.md](../DOCKER_SETUP.md) — Docker environment reference.
+- Internal module documentation: check each module's docblocks for implementation details.
 
-Maintain this handbook as you evolve the stack—update dependencies, asset workflows, or deployment scripts here so the next developer has a reliable source of truth.
+Maintain this handbook as you evolve the stack — update dependencies, asset workflows, or deployment scripts here so the next developer has a reliable source of truth.

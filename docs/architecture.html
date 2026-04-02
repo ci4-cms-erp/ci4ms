@@ -243,6 +243,32 @@
         color: var(--muted);
         font-size: 0.9rem;
       }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+        background: rgba(245, 250, 246, 0.35);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      table thead {
+        background: rgba(45, 165, 146, 0.16);
+        color: var(--text);
+      }
+
+      th,
+      td {
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        font-size: 0.95rem;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
     </style>
   </head>
   <body>
@@ -259,26 +285,41 @@
 
       <section class="panel">
         <h2>Application Bootstrap &amp; Request Lifecycle</h2>
+        <p>Every request passes through <code>app/Filters/Ci4ms.php</code>:</p>
         <ul>
           <li>
-            <strong>Filters:</strong>
-            <code>app/Filters/Ci4ms.php</code> enforces install checks,
-            maintenance redirects, and menu cache hydration in
-            <code>after()</code>.
+            Redirects to <code>/install</code> if <code>.env</code> is missing
+            (fresh setup).
           </li>
           <li>
-            <strong>Dynamic filter discovery:</strong>
-            <code>app/Config/Filters.php</code> scans module and theme filter
-            directories, then merges CSRF exceptions from
-            <code>Modules\Backend\Config\BackendConfig</code>.
+            Redirects to <code>maintenance-mode</code> if the cached settings
+            flag is enabled.
           </li>
           <li>
-            <strong>Routing:</strong>
-            <code>app/Config/Routes.php</code> preloads settings, attaches
-            template routes, then imports every module’s
-            <code>Config/Routes.php</code> before declaring front-end routes.
+            On <code>after()</code>, caches the menu tree if it is absent (24h
+            TTL).
           </li>
         </ul>
+        <p>
+          <code>app/Config/Filters.php</code> performs dynamic filter discovery:
+        </p>
+        <ul>
+          <li>
+            Scans <code>modules/*/Filters</code> and the active theme filters to
+            register aliases.
+          </li>
+          <li>
+            Merges backend CSRF exceptions from
+            <code>Modules\Backend\Config\BackendConfig::$csrfExcept</code>.
+          </li>
+        </ul>
+        <p>
+          <code>app/Config/Routes.php</code> preloads settings, loads template
+          routes, then includes each module's routes before defining front-end
+          routes. A default template is shipped as
+          <code>app/Config/DefaultRoutes.php</code> — copy it to
+          <code>Routes.php</code> during setup.
+        </p>
       </section>
 
       <section class="panel">
@@ -298,64 +339,99 @@
 
       <section class="panel">
         <h2>Authentication &amp; Authorization</h2>
+        <p>
+          Authentication is powered by
+          <strong>CodeIgniter Shield</strong> (<code>codeigniter4/shield</code>):
+        </p>
         <ul>
           <li>
-            <strong>AuthLibrary:</strong> Manages login/logout, remember-me
-            cookies, lockouts, password resets, and notification emails. Stores
-            session keys (<code>logged_in</code>, <code>redirect_url</code>) and
-            caches user permissions.
+            <strong>AuthLibrary:</strong>
+            <code>Modules\Auth\Libraries\AuthLibrary</code> handles
+            login/logout, remember-me cookies, lockouts, password reset tokens,
+            and email notifications. It sets session keys
+            (<code>logged_in</code>, <code>redirect_url</code>) and caches user
+            permissions per user ID.
           </li>
           <li>
-            <strong>Backend filters:</strong>
-            <code>Modules\Backend\Filters\BackendAfterLoginFilter</code>
-            enforces authentication, verifies permissions, checks theme assets,
-            and warms cached settings.
+            <strong>Shield database tables:</strong> <code>auth_groups</code>,
+            <code>auth_identities</code>, <code>auth_groups_users</code>, with
+            proper foreign keys.
           </li>
           <li>
-            <strong>BaseController duties:</strong> Resolves the logged-in user
-            (<code>Modules\Users\Models\UserscrudModel::loggedUser()</code>),
-            navigation (<code>AuthLibrary::sidebarNavigation()</code>), mail
-            config, and <code>$this->defData</code>.
+            <strong>Backend requests:</strong> pass through
+            <code>Modules\Backend\Filters\BackendAfterLoginFilter</code>:
+            <ul>
+              <li>Redirects to logout if the user is not authenticated.</li>
+              <li>
+                Validates permissions with
+                <code>AuthLibrary::has_perm()</code>; otherwise redirects to
+                <code>/backend/403</code>.
+              </li>
+              <li>
+                Validates theme metadata (<code>info.xml</code>,
+                <code>screenshot.png</code>) and warms the settings cache.
+              </li>
+            </ul>
           </li>
           <li>
-            <strong>Permission tables:</strong>
+            <strong>BaseController duties:</strong>
+            <code>Modules\Backend\Controllers\BaseController</code>
+            centralizes:
+            <ul>
+              <li>
+                Logged-in user lookup via
+                <code>Modules\Users\Models\UserscrudModel::loggedUser()</code>.
+              </li>
+              <li>
+                Navigation data (from
+                <code>AuthLibrary::sidebarNavigation()</code>), settings,
+                encrypter, mail config, and default view data
+                (<code>$this->defData</code>).
+              </li>
+            </ul>
+          </li>
+          <li>
+            <strong>Authorization tables:</strong>
             <code>auth_permissions_pages</code> (module/page CRUD flags) and
             <code>auth_users_permissions</code> (user overrides).
-            <code>Modules\Methods</code> provides scanning utilities to sync
-            routes.
+            <code>Modules\Methods</code> manages these tables and can auto-scan
+            routes to populate permissions.
+          </li>
+          <li>
+            <strong>Audit Trail:</strong> Backend activity is logged via
+            <code>Modules\Backend\Filters\BackendLogFilter</code> (IP, user
+            agent, action, module).
           </li>
         </ul>
       </section>
 
       <section class="panel">
         <h2>Module Pattern</h2>
-        <p>
-          Each module under <code>modules/&lt;Name&gt;</code> typically
-          includes:
-        </p>
+        <p>Each module (under <code>modules/&lt;Name&gt;/</code>) includes:</p>
         <ul>
           <li>
-            <code>Config/Routes.php</code> – routes plus metadata (<code
-              >role</code
-            >
-            options).
+            <code>Config/Routes.php</code> — backend routes and metadata
+            (<code>role</code>, etc.).
           </li>
-          <li><code>Config/*.php</code> – module-specific settings.</li>
           <li>
-            <code>Controllers/</code> – usually extend the backend base
+            <code>Config/*.php</code> — module-specific configuration.
+          </li>
+          <li>
+            <code>Controllers/</code> — usually extend the backend base
             controller.
           </li>
+          <li><code>Models/</code> — data access layer.</li>
+          <li><code>Views/</code> — backend UI templates.</li>
           <li>
-            <code>Models/</code>, <code>Views/</code>, optional
-            <code>Libraries/</code>, <code>Helpers/</code>,
+            Optional: <code>Libraries/</code>, <code>Helpers/</code>,
             <code>Language/</code>, <code>Filters/</code>,
-            <code>Database/</code>.
+            <code>Database/Migrations/</code>.
           </li>
         </ul>
         <p>
-          Scaffold new modules with <code>php spark make:module Foo</code> (from
-          <code>ci4-cms-erp/ext_module_generator</code>) and follow up with
-          routes, implementation, and permissions.
+          Use <code>php spark make:module Foo</code> (provided by
+          <code>ci4-cms-erp/ext_module_generator</code>) to scaffold a new
+          module skeleton.
         </p>
       </section>
 
@@ -363,30 +439,39 @@
         <h2>Installation Flow</h2>
         <div class="grid two">
           <div>
-            <h3>Web Installer</h3>
+            <h3>Web Installer (<code>Modules\Install</code>)</h3>
             <ul>
-              <li>Module: <code>Modules\Install</code>.</li>
               <li>
-                Copies <code>env</code> to <code>.env</code>, sets base
-                configuration, runs migrations, and seeds defaults via
+                Copies <code>env</code> to <code>.env</code>, updates base
+                settings, triggers migrations, and seeds defaults via
                 <code>InstallService</code>.
               </li>
               <li>
-                Regenerates <code>app/Config/Routes.php</code> from the command
-                template.
+                Regenerates <code>app/Config/Routes.php</code> from the
+                <code>DefaultRoutes.php</code> template.
               </li>
             </ul>
           </div>
           <div>
-            <h3>CLI Seeder</h3>
+            <h3>CLI (<code>php spark ci4ms:setup</code>)</h3>
+            <p>
+              The <code>Ci4msSetup</code> command provides a fully automated
+              installation path:
+            </p>
             <ul>
+              <li>Accepts admin account details as command-line arguments.</li>
               <li>
-                <code>Ci4msDefaultsSeeder</code> prompts for admin credentials.
+                Runs all database migrations across every module
+                (<code>--all</code>).
               </li>
               <li>
                 Calls <code>InstallService::createDefaultData()</code> to seed
-                modules, permissions, admin account, sample content, and
+                modules, permissions, admin user, sample pages/blog entries, and
                 settings.
+              </li>
+              <li>
+                Designed for use in CI/CD pipelines (Docker, GitHub Actions)
+                where a browser-based installer is not practical.
               </li>
             </ul>
           </div>
@@ -394,39 +479,99 @@
       </section>
 
       <section class="panel">
-        <h2>Caching &amp; Configuration</h2>
+        <h2>Docker &amp; CI/CD</h2>
+        <p>CI4MS ships with a complete Docker environment:</p>
         <ul>
           <li>
-            <strong>Settings:</strong> Stored as JSON/string in
-            <code>settings</code>; cached for 24h.
+            <code>.docker/Dockerfile</code> — PHP 8.2 + Apache, with all
+            required extensions pre-installed.
           </li>
           <li>
-            <strong>Menus:</strong> Cached for 24h; invalidated when menu
-            structure updates.
+            <code>.docker/apache/000-default.conf</code> — Apache virtual host
+            pointing to <code>public/</code>.
           </li>
           <li>
-            <strong>User permissions:</strong> Cached per user
-            (<code>{userId}_permissions</code>); clear when updating roles.
+            <code>.docker/php/php.ini</code> — PHP configuration tuned for
+            CI4MS.
+          </li>
+          <li>
+            <code>docker-compose.yml</code> — Orchestrates <code>app</code>,
+            <code>db</code> (MariaDB), and <code>phpmyadmin</code> services.
+          </li>
+          <li>
+            <code>.github/workflows/docker-test.yaml</code> — GitHub Actions
+            pipeline that builds the image, waits for the database, runs
+            <code>php spark ci4ms:setup</code>, performs a PHP syntax check, and
+            validates HTTP responses.
           </li>
         </ul>
+        <p>
+          <strong>Key <code>Paths.php</code> note:</strong> CI4 4.4+ requires a
+          <code>$supportDirectory</code> property in
+          <code>app/Config/Paths.php</code> pointing to the framework's
+          ThirdParty directory. This is pre-configured in the repository:
+        </p>
+        <pre><code>public string $supportDirectory = __DIR__ . '/../../vendor/codeigniter4/framework/system/ThirdParty';</code></pre>
+      </section>
+
+      <section class="panel">
+        <h2>Caching &amp; Configuration</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Cache key</th>
+              <th>Contents</th>
+              <th>TTL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>settings</code></td>
+              <td>Decoded JSON settings values</td>
+              <td>24h</td>
+            </tr>
+            <tr>
+              <td><code>menus</code></td>
+              <td>Sidebar menu tree</td>
+              <td>24h</td>
+            </tr>
+            <tr>
+              <td><code>{userId}_permissions</code></td>
+              <td>Per-user permission flags</td>
+              <td>Until invalidated</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Clear all caches with <code>php spark cache:clear</code> or
+          selectively via <code>cache()->delete($key)</code>.
+        </p>
       </section>
 
       <section class="panel">
         <h2>Theme System</h2>
         <ul>
           <li>
-            Themes live in <code>public/templates/&lt;theme&gt;</code> with
-            optional overrides in <code>app/Config</code>,
-            <code>app/Controllers</code>, etc.
+            Themes live under <code>public/templates/&lt;theme&gt;/</code> (plus
+            optional app-level template directories).
           </li>
           <li>
-            <code>Modules\Theme</code> handles ZIP uploads, temporary extraction
-            (<code>writable/tmp</code>), duplicate detection, and final
-            installation.
+            <code>Modules\Theme</code> handles ZIP uploads to
+            <code>writable/tmp/</code>, detects duplicates, installs
+            assets/views/helpers, and copies
+            <code>Database/Migrations/</code> if present.
           </li>
           <li>
-            <code>BackendAfterLoginFilter</code> warns administrators if
-            <code>info.xml</code> or <code>screenshot.png</code> is missing.
+            On theme activation, any bundled database migrations are executed
+            automatically via the Settings module.
+          </li>
+          <li>
+            The Theme Manager can generate a downloadable starter boilerplate
+            ZIP directly from the admin panel.
+          </li>
+          <li>
+            Backend filter warns administrators if <code>info.xml</code> or
+            <code>screenshot.png</code> are missing.
           </li>
         </ul>
       </section>
@@ -472,59 +617,88 @@
       </section>
 
       <section class="panel">
-        <h2>Backup & Restore</h2>
+        <h2>Backup &amp; Restore</h2>
         <ul>
           <li>
-            Modules\Backup provides database backup and restore functionality,
-            allowing administrators to download .zip archives of the database or
-            restore from server-stored backups.
+            <code>Modules\Backup</code> provides database backup and restore
+            functionality, generating <code>.zip</code> archives in
+            <code>writable/uploads/backups/</code>.
+          </li>
+          <li>
+            Uses <code>mysqldump</code> if available, falls back to a PHP-based
+            export.
+          </li>
+          <li>
+            Restore from server-stored archives directly within the backend.
           </li>
         </ul>
       </section>
 
       <section class="panel">
         <h2>CLI &amp; Automation</h2>
-        <ul>
-          <li>
-            <code>app/Commands/*</code> contains admin generators
-            (<code>make:acontroller</code>, <code>make:amodel</code>,
-            <code>make:abview</code>) and route regeneration
-            (<code>create:route</code>).
-          </li>
-          <li>
-            Module scaffolding is provided by the Composer package
-            <code>ci4-cms-erp/ext_module_generator</code> via
-            <code>php spark make:module</code>.
-          </li>
-          <li>
-            <code>Modules\Methods::moduleScan()</code> inspects the router and
-            aligns permissions with available routes.
-          </li>
-        </ul>
+        <table>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>php spark ci4ms:setup</code></td>
+              <td>Full automated installation (migrations + seeding)</td>
+            </tr>
+            <tr>
+              <td><code>php spark make:module &lt;n&gt;</code></td>
+              <td>Scaffold a new module skeleton</td>
+            </tr>
+            <tr>
+              <td><code>php spark make:abview &lt;n&gt;</code></td>
+              <td>Generate a backend view from the AdminLTE template</td>
+            </tr>
+            <tr>
+              <td><code>php spark create:route</code></td>
+              <td>Rebuild <code>app/Config/Routes.php</code> from the template</td>
+            </tr>
+            <tr>
+              <td><code>php spark migrate --all</code></td>
+              <td>Run all pending migrations</td>
+            </tr>
+            <tr>
+              <td><code>php spark cache:clear</code></td>
+              <td>Clear all application caches</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <code>Modules\Methods::moduleScan()</code> inspects the router to
+          align routes with permission records.
+        </p>
       </section>
 
       <section class="panel">
         <h2>Development Tips</h2>
         <ul>
           <li>
-            Extend the backend base controller for consistent
-            session/config/view setup.
+            Extend the backend base controller for consistent session and view
+            data.
           </li>
+          <li>Update <code>Modules\Methods</code> when adding new secured routes.</li>
           <li>
-            Update <code>Modules\Methods</code> whenever new secured routes are
-            introduced.
-          </li>
-          <li>
-            Clear caches (<code>php spark cache:clear</code>) after modifying
+            Clear caches (<code>php spark cache:clear</code>) after updating
             settings, menus, or permissions.
           </li>
           <li>
-            Keep theme directories synced with required assets
+            Keep theme directories synchronized with required assets
             (<code>info.xml</code>, <code>screenshot.png</code>).
           </li>
           <li>
-            Captcha auto-disables in development due to environment checks in
+            Captcha auto-disables in development via the environment check in
             the login controller.
+          </li>
+          <li>
+            Use <code>php spark ci4ms:setup</code> in CI pipelines instead of
+            chaining multiple spark commands.
           </li>
         </ul>
       </section>
@@ -532,13 +706,14 @@
       <section class="panel">
         <h2>Common Data Tables</h2>
         <p>
-          Frequent tables include <code>users</code>, <code>auth_groups</code>,
+          <code>users</code>, <code>auth_groups</code>,
+          <code>auth_identities</code>, <code>auth_groups_users</code>,
           <code>auth_permissions_pages</code>,
           <code>auth_users_permissions</code>, <code>modules</code>,
           <code>pages</code>, <code>blog</code>,
           <code>blog_categories_pivot</code>, <code>tags</code>,
           <code>tags_pivot</code>, <code>menu</code>, <code>settings</code>,
-          <code>login_rules</code>, and others introduced by modules.
+          <code>login_rules</code>, etc.
         </p>
         <p>Consult module migrations for schema details.</p>
       </section>

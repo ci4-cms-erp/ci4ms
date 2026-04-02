@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.3.0] - 2026-04-02
+
+### Added
+
+- **CLI:** Introduced `php spark ci4ms:setup` command (`Ci4msSetup.php`) to automate
+  the full application installation — migrations, seeding, and default data creation —
+  from a single command-line call.
+- **Install:** Added "Site Slogan" support to both CLI and Web installation flows.
+
+### Changed
+
+- **Install:** Refactored `InstallService.php` and `Install.php` controller to support
+  the new `ci4ms:setup` CLI flow alongside the existing web-based installer.
+- **DashboardWidgets:** Updated `WidgetService.php` for improved widget handling.
+- **CI/CD:** Updated `docker-test.yml` workflow to use `php spark ci4ms:setup` instead
+  of separate migrate and seed steps; removed the fragile `Paths.php` patch workaround.
+- **Docs:** Synchronized `architecture.html` and `developer-handbook.html` with recent structural changes (Shield, Docker, CLI setup) and improved layout/table styling.
+
+### Fixed
+
+- **Boot:** Added missing `$supportDirectory` property to `app/Config/Paths.php`,
+  resolving the `Undefined constant "CodeIgniter\Config\SUPPORTPATH"` fatal error
+  that occurred during `php spark` execution in Docker/CI environments on CI4 4.4+.
+- **CLI:** Fixed directory creation in `Ci4msSetup.php` by switching from `PUBLICPATH` to `FCPATH` and ensured `filesystem` helper is loaded for route generation.
+
 ## [0.31.2.0] - 2026-04-01
 
 ### Added

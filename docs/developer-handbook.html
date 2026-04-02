@@ -311,30 +311,22 @@
           <tbody>
             <tr>
               <td>PHP</td>
-              <td>8.2+</td>
+              <td><strong>8.2+</strong></td>
               <td>
-                Enable intl, json, mbstring, gd, curl, openssl. Matches
-                <code>composer.json</code> platform.
+                Enable <code>intl</code>, <code>json</code>,
+                <code>mbstring</code>, <code>gd</code>, <code>curl</code>,
+                <code>openssl</code> extensions. Matches
+                <code>composer.json</code> (8.2).
               </td>
             </tr>
             <tr>
               <td>Composer</td>
               <td>2.5+</td>
-              <td>Manage PHP dependencies.</td>
-            </tr>
-            <tr>
-              <td>Node.js</td>
-              <td>18 LTS</td>
-              <td>Needed if you maintain <code>public/be-assets</code>.</td>
-            </tr>
-            <tr>
-              <td>npm</td>
-              <td>8+</td>
-              <td>Package manager for backend assets.</td>
+              <td>Used for all PHP dependencies.</td>
             </tr>
             <tr>
               <td>Database</td>
-              <td>MySQL/MariaDB</td>
+              <td>MySQL / MariaDB</td>
               <td>
                 Any CodeIgniter-supported driver works. Configure via
                 <code>.env</code>.
@@ -342,8 +334,13 @@
             </tr>
             <tr>
               <td>Web server</td>
-              <td>Apache/Nginx/CI4 spark</td>
-              <td>Point document root to <code>public/</code>.</td>
+              <td>Apache / Nginx / <code>php spark serve</code></td>
+              <td>Production deploys should point to the <code>public/</code> directory.</td>
+            </tr>
+            <tr>
+              <td>Docker</td>
+              <td>Docker Engine 24+ / Desktop</td>
+              <td>Optional but recommended for local development and CI.</td>
             </tr>
           </tbody>
         </table>
@@ -359,16 +356,35 @@ public/
   templates/         Front-end themes (default shipped)
   media/             Media storage (ensure writable)
 writable/            Cache, logs, temporary files (must be writable)
-vendor/              Composer packages</code></pre>
-        <p>
-          Essential configuration files include <code>composer.json</code>, the
-          contents of <code>app/Config</code>, and the environment overrides
-          stored in <code>.env</code>.
-        </p>
+vendor/              Composer packages
+.docker/             Dockerfile, Apache vhost, and php.ini
+.github/workflows/   GitHub Actions CI pipeline
+docs/                Developer documentation (this file and companions)</code></pre>
+        <p>Key config files:</p>
+        <ul>
+          <li><code>composer.json</code> — PHP dependencies and scripts.</li>
+          <li>
+            <code>app/Config/DefaultRoutes.php</code> — Routes template; copy to
+            <code>Routes.php</code> on setup.
+          </li>
+          <li>
+            <code>app/Config/Paths.php</code> — Path constants including
+            <code>$supportDirectory</code> (required by CI4 4.4+).
+          </li>
+          <li>
+            <code>app/Config/*.php</code> — Framework configuration; many
+            classes consume cached settings populated at runtime.
+          </li>
+          <li>
+            <code>.env</code> — Environment overrides; generated from the
+            <code>env</code> template.
+          </li>
+        </ul>
       </section>
 
       <section class="panel">
         <h2>3. Getting Started</h2>
+        <h3>3.1 Standard (local PHP)</h3>
         <ol>
           <li>
             <strong>Clone &amp; install</strong>
@@ -377,33 +393,41 @@ cd ci4ms
 composer install</code></pre>
           </li>
           <li>
-            <strong>Prepare the environment</strong>
-            <pre><code>cp env .env
-php spark env development</code></pre>
+            <strong>Environment</strong>
+            <pre><code>cp env .env</code></pre>
             <p>
-              Set <code>app.baseURL</code>, <code>database.default.*</code>,
-              mail credentials, and security options.
+              Update: <code>app.baseURL</code>, <code>database.default.*</code>,
+              mail credentials, etc.
             </p>
           </li>
           <li>
-            <strong>Migrate &amp; seed</strong>
-            <pre><code>php spark migrate
-php spark db:seed Ci4msDefaultsSeeder  # prompts for admin account details
-php spark key:generate
-php spark create:route</code></pre>
+            <strong>Prepare routes</strong>
+            <pre><code>cp app/Config/DefaultRoutes.php app/Config/Routes.php</code></pre>
           </li>
           <li>
-            <strong>Serve locally</strong>
+            <strong>One-command setup</strong>
+            <pre><code>php spark ci4ms:setup</code></pre>
+            <p>
+              This single command runs all migrations, seeds default data
+              (admin user, sample pages, settings), and prepares the
+              application.
+            </p>
+          </li>
+          <li>
+            <strong>Serve</strong>
             <pre><code>php spark serve</code></pre>
-            <p>
-              Visit <code>http://localhost:8080</code> for the front-end and
-              <code>/backend</code> for the admin.
-            </p>
           </li>
         </ol>
+
+        <h3>3.2 Docker</h3>
+        <pre><code>cp env .env
+cp app/Config/DefaultRoutes.php app/Config/Routes.php
+# Edit .env: set database.default.hostname=db
+docker compose up -d --build
+docker exec ci4ms_app composer install
+docker exec ci4ms_app php spark ci4ms:setup</code></pre>
         <p>
-          <em>Tip:</em> Re-running the seeder on a populated database can
-          duplicate data. Truncate first if needed.
+          Refer to <code>DOCKER_SETUP.md</code> for full configuration details.
         </p>
       </section>
 
@@ -411,15 +435,18 @@ php spark create:route</code></pre>
         <h2>4. Dependency Management</h2>
         <div class="grid two">
           <div>
-            <h3>Composer</h3>
+            <h3>Composer packages</h3>
             <p>
-              Core packages include <code>ci4commonmodel</code>,
-              <code>ci4seopro</code>, <code>sql2migration</code>,
-              <code>ext_module_generator</code> (exposes
-              <code>php spark make:module</code>),
-              <code>claviska/simpleimage</code>, <code>gregwar/captcha</code>,
-              and <code>studio-42/elfinder</code>.
+              The project depends on CodeIgniter 4 and several packages:
             </p>
+            <ul>
+              <li><code>codeigniter4/framework</code> — Core framework.</li>
+              <li><code>codeigniter4/shield</code> — Auth and RBAC.</li>
+              <li><code>ci4commonmodel</code> — Database abstraction.</li>
+              <li><code>ci4seopro</code> — SEO, JSON-LD, feeds.</li>
+              <li><code>sql2migration</code> — CLI migration tooling.</li>
+              <li><code>ext_module_generator</code> — Module scaffolding.</li>
+            </ul>
             <pre><code>composer install
 composer update vendor/package
 composer outdated</code></pre>
@@ -469,7 +496,8 @@ composer outdated</code></pre>
           </li>
           <li>
             <strong>Translations:</strong> Use
-            <code>modules/&lt;Module&gt;/Language/&lt;locale&gt;</code>.
+            <code>modules/&lt;Module&gt;/Language/&lt;locale&gt;</code>. 11
+            languages are currently supported.
           </li>
           <li>
             <strong>Testing:</strong> Run <code>composer test</code>; add
@@ -562,9 +590,17 @@ composer outdated</code></pre>
                 limit use to trusted roles.
               </li>
               <li>
-                <strong>Themes:</strong> Located in
-                <code>public/templates/&lt;theme&gt;</code>; uploads unzip to
-                <code>writable/tmp</code> before install.
+                <strong>Themes:</strong> Located under
+                <code>public/templates/&lt;theme&gt;</code>; ZIP uploads extract
+                to <code>writable/tmp</code>.
+              </li>
+              <li>
+                <strong>Migrations:</strong> Themes can ship migrations inside
+                <code>Database/Migrations/</code>; run on activation.
+              </li>
+              <li>
+                <strong>Boilerplate:</strong> Generate a starter boilerplate ZIP
+                directly from the Theme Manager panel.
               </li>
               <li>
                 Required theme files: <code>info.xml</code>,
@@ -585,7 +621,8 @@ composer outdated</code></pre>
               </li>
               <li>
                 <strong>Storage:</strong> Backups saved in
-                <code>writable/uploads/backups</code>.
+                <code>writable/uploads/backups</code>. Restore directly from the
+                backend or download archives.
               </li>
             </ul>
           </div>
@@ -622,12 +659,20 @@ composer outdated</code></pre>
         <h2>10. Testing &amp; QA</h2>
         <ul>
           <li>
-            Tests live under <code>tests/</code>; namespace under
-            <code>Tests\Support</code> is autoloaded.
+            Unit tests live under <code>tests/</code>. Add module-specific tests
+            in <code>tests/Modules/&lt;Module&gt;</code>.
           </li>
           <li>
-            Add integration tests for auth, CRUD operations, and menu updates as
-            coverage grows.
+            The GitHub Actions workflow
+            (<code>.github/workflows/docker-test.yaml</code>) runs on every
+            push:
+            <ul>
+              <li>Builds the Docker image.</li>
+              <li>Runs <code>composer install</code>.</li>
+              <li>Executes <code>php spark ci4ms:setup</code>.</li>
+              <li>Syntax checks across <code>app/</code> and <code>modules/</code>.</li>
+              <li>Validates HTTP responses for homepage and backend.</li>
+            </ul>
           </li>
           <li>
             Use maintenance mode to hide upcoming changes during manual QA.
@@ -658,6 +703,10 @@ composer outdated</code></pre>
           <li>
             Mail issues? Trigger the AJAX <em>Test Mail</em> button in Settings
             after configuring SMTP.
+          </li>
+          <li>
+            Docker issues? Run <code>docker compose logs app</code> to inspect
+            container output.
           </li>
         </ul>
       </section>
@@ -703,9 +752,9 @@ composer outdated</code></pre>
           </li>
           <li>
             <strong>Reviews:</strong> Highlight permission changes, cache
-            impacts, asset updates.
+            impacts, and <code>CHANGELOG.md</code> updates.
           </li>
-          <li><strong>Changelog:</strong> Maintain if releasing versions.</li>
+          <li><strong>Changelog:</strong> Update <code>CHANGELOG.md</code> (Keep a Changelog format) before merging.</li>
         </ul>
       </section>
 

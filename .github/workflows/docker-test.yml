@@ -34,7 +34,7 @@ jobs:
           database.default.DBDriver=MySQLi
           database.default.DBPrefix=ci4ms_
           database.default.port=3306
-          encryption.key=hex2bin:a]1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b
+          encryption.key=hex2bin:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2
           EOF
 
           # Prepare Routes file from default template
@@ -61,10 +61,6 @@ jobs:
       - name: 📦 Install Composer dependencies
         run: docker exec ci4ms_app composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: 🩹 Patch Paths.php for SUPPORTPATH
-        run: |
-          docker exec ci4ms_app sed -i "s|public string \$viewDirectory.*|&\n    public string \$supportDirectory = __DIR__ . '/../../vendor/codeigniter4/framework/system/ThirdParty';|" app/Config/Paths.php
-
       - name: 📂 Set file permissions
         run: |
           docker exec ci4ms_app chmod -R 775 writable
@@ -73,31 +69,17 @@ jobs:
           docker exec ci4ms_app mkdir -p public/media/.tmb public/media/.trash
           docker exec ci4ms_app chmod -R 775 public/media
 
-      - name: 🗄️ Run database migrations
+      - name: 🗄️ Run migrations & seed default data
         run: |
-          docker exec ci4ms_app php spark migrate --all -n
-          echo "✅ Migrations completed."
-
-      - name: 🌱 Seed default data
-        run: |
-          # Use non-interactive seeding via InstallService directly
-          docker exec ci4ms_app php -r "
-            require 'vendor/autoload.php';
-            \$app = \CodeIgniter\Config\Services::codeigniter();
-            \$app->initialize();
-
-            \$installService = new \Modules\Install\Services\InstallService();
-            \$installService->createDefaultData([
-              'fname'    => 'CI',
-              'sname'    => 'Test',
-              'username' => 'admin',
-              'email'    => 'admin@ci4ms.test',
-              'password' => 'Test1234!',
-              'baseUrl'  => 'http://localhost/',
-              'siteName' => 'CI4MS Test',
-            ]);
-            echo '✅ Default data seeded successfully.' . PHP_EOL;
-          "
+          docker exec ci4ms_app php spark ci4ms:setup \
+            --fname=CI \
+            --sname=Test \
+            --username=admin \
+            --email=admin@ci4ms.test \
+            --password=Test1234! \
+            --baseUrl=http://localhost/ \
+            --siteName="CI4MS Test"
+          echo "✅ Setup completed."
 
       - name: 🧹 PHP syntax check
         run: |
@@ -155,5 +137,5 @@ jobs:
           docker exec ci4ms_app cat writable/logs/log-$(date +%Y-%m-%d).log 2>/dev/null || echo "No CI4 log file found."
 
       - name: 🛑 Stop and clean up containers
-        if: always()
+        if: always(done)
         run: docker compose down -v
