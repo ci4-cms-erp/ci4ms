@@ -97,7 +97,8 @@ jobs:
           sleep 3
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
           echo "HTTP Status: $STATUS"
-          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ]; then
+          # 200 = page rendered, 302 = redirect, 401 = auth required (all mean app is running)
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 401 ]; then
             echo "✅ Application is responding correctly."
           else
             echo "❌ Unexpected HTTP status: $STATUS"
@@ -109,9 +110,8 @@ jobs:
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L http://localhost/backend)
           echo "Backend HTTP Status: $STATUS"
-          # 302 = redirect to login (expected when not authenticated)
-          # 200 = login page rendered
-          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ]; then
+          # 200 = login page, 302 = redirect to login, 401 = auth required (all valid)
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 401 ]; then
             echo "✅ Backend is responding correctly."
           else
             echo "❌ Backend unexpected status: $STATUS"

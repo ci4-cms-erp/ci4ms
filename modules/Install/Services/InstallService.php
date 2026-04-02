@@ -223,7 +223,7 @@ class InstallService
                 array('class' => 'Gmap', 'key' => 'map_iframe', 'value' => NULL, 'type' => 'NULL', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'slogan', 'value' => $args['slogan']??'My First Ci4MS Project', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'maintenanceMode', 'value' => '0', 'type' => 'boolean', 'context' => NULL),
-                array('class' => 'Config\\App', 'key' => 'homePage', 'value' => '1', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'homePage', 'value' => 1, 'type' => 'integer', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'siteLanguageMode', 'value' => 'single', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\Security', 'key' => 'allowedFiles', 'value' => '["image\\/x-ms-bmp","image\\/gif","image\\/jpeg","image\\/png","image\\/x-icon","text\\/plain","image\\/webp"]', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\Security', 'key' => 'badwords', 'value' => '{"status": 1, "autoReject": 0, "autoAccept": 1, "list": []}', 'type' => 'string', 'context' => NULL),
