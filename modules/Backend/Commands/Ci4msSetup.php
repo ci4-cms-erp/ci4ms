@@ -11,7 +11,31 @@ class Ci4msSetup extends BaseCommand
     protected $group       = 'Ci4MS';
     protected $name        = 'ci4ms:setup';
     protected $description = 'Runs the full CI4MS installation process via CLI.';
-    protected $usage       = 'php spark ci4ms:setup';
+    protected $usage       = 'php spark ci4ms:setup [options]';
+
+    protected $options = [
+        '--fname'    => 'Admin first name',
+        '--sname'    => 'Admin last name',
+        '--email'    => 'Admin email address',
+        '--username' => 'Admin username',
+        '--password' => 'Admin password',
+        '--dbHost'   => 'Database hostname (default: localhost)',
+        '--dbName'   => 'Database name',
+        '--dbUser'   => 'Database username',
+        '--dbPass'   => 'Database password',
+        '--dbDriver' => 'Database driver (default: MySQLi)',
+        '--dbPrefix' => 'Database table prefix (default: ci4ms_)',
+        '--dbPort'   => 'Database port (default: 3306)',
+        '--siteName' => 'Site name',
+        '--baseUrl'  => 'Base URL (e.g. https://example.com)',
+        '--slogan'   => 'Site slogan (optional)',
+    ];
+
+    /**
+     * Non-interactive modda mı çalışıyoruz?
+     * Tüm zorunlu argümanlar CLI'dan verilmişse interaktif prompt atlanır.
+     */
+    private bool $nonInteractive = false;
 
     public function run(array $params)
     {
@@ -30,21 +54,32 @@ class Ci4msSetup extends BaseCommand
         }
 
         // ─────────────────────────────────────────────────────────────
+        // CLI argümanlarını oku — non-interactive mod kontrolü
+        // ─────────────────────────────────────────────────────────────
+        $cliArgs = $this->parseCliOptions();
+        $this->nonInteractive = $this->hasAllRequired($cliArgs);
+
+        if ($this->nonInteractive) {
+            CLI::write('  Running in non-interactive mode...', 'light_gray');
+            CLI::write('');
+        }
+
+        // ─────────────────────────────────────────────────────────────
         // 1. KULLANICI BİLGİLERİ
         // ─────────────────────────────────────────────────────────────
         CLI::write('[ Step 1/6 ] Admin User Information', 'yellow');
         CLI::write('─────────────────────────────────────', 'dark_gray');
 
-        $name = $this->promptRequired('First Name');
-        $surname = $this->promptRequired('Last Name');
-        $email = $this->promptValidated('Email', function ($val) {
+        $name     = $cliArgs['fname']    ?? $this->promptRequired('First Name');
+        $surname  = $cliArgs['sname']    ?? $this->promptRequired('Last Name');
+        $email    = $cliArgs['email']    ?? $this->promptValidated('Email', function ($val) {
             return filter_var($val, FILTER_VALIDATE_EMAIL) ? null : 'Please enter a valid email address.';
         });
-        $username = $this->promptValidated('Username (alphanumeric, 3-50 chars)', function ($val) {
+        $username = $cliArgs['username'] ?? $this->promptValidated('Username (alphanumeric, 3-50 chars)', function ($val) {
             if (!preg_match('/^[a-zA-Z0-9]{3,50}$/', $val)) return 'Username must be alphanumeric, 3-50 characters.';
             return null;
         });
-        $password = $this->promptSecret('Password (min 8 chars)', function ($val) {
+        $password = $cliArgs['password'] ?? $this->promptSecret('Password (min 8 chars)', function ($val) {
             if (strlen($val) < 8) return 'Password must be at least 8 characters.';
             return null;
         });
@@ -56,22 +91,34 @@ class Ci4msSetup extends BaseCommand
         CLI::write('[ Step 2/6 ] Database Configuration', 'yellow');
         CLI::write('─────────────────────────────────────', 'dark_gray');
 
-        $dbHost     = CLI::prompt('DB Host', 'localhost');
-        $dbName     = $this->promptValidated('DB Name (alphanumeric/dash)', function ($val) {
-            if (!preg_match('/^[a-zA-Z0-9_-]{1,100}$/', $val)) return 'DB name must be alphanumeric (max 100 chars).';
-            return null;
-        });
-        $dbUsername = $this->promptValidated('DB Username', function ($val) {
-            if (!preg_match('/^[a-zA-Z0-9_-]{1,100}$/', $val)) return 'DB username must be alphanumeric (max 100 chars).';
-            return null;
-        });
-        $dbPassword = CLI::prompt('DB Password (leave blank if none)', '');
-        $dbDriver   = CLI::prompt('DB Driver', 'MySQLi');
-        $dbPrefix   = CLI::prompt('DB Prefix', 'ci4ms_');
-        $dbPort     = $this->promptValidated('DB Port', function ($val) {
-            if (!ctype_digit($val) || (int)$val < 1 || (int)$val > 65535) return 'Port must be a number between 1-65535.';
-            return null;
-        }, '3306');
+        if ($this->nonInteractive) {
+            // Non-interactive: .env'deki mevcut DB ayarlarını kullan veya CLI argümanlarını al
+            $dbHost     = $cliArgs['dbHost']   ?? $this->getEnvValue('database.default.hostname', 'localhost');
+            $dbName     = $cliArgs['dbName']   ?? $this->getEnvValue('database.default.database', 'ci4ms');
+            $dbUsername = $cliArgs['dbUser']    ?? $this->getEnvValue('database.default.username', 'root');
+            $dbPassword = $cliArgs['dbPass']   ?? $this->getEnvValue('database.default.password', '');
+            $dbDriver   = $cliArgs['dbDriver'] ?? $this->getEnvValue('database.default.DBDriver', 'MySQLi');
+            $dbPrefix   = $cliArgs['dbPrefix'] ?? $this->getEnvValue('database.default.DBPrefix', 'ci4ms_');
+            $dbPort     = $cliArgs['dbPort']   ?? $this->getEnvValue('database.default.port', '3306');
+            CLI::write("  Using DB: {$dbHost}:{$dbPort} / {$dbName}", 'light_gray');
+        } else {
+            $dbHost     = CLI::prompt('DB Host', 'localhost');
+            $dbName     = $this->promptValidated('DB Name (alphanumeric/dash)', function ($val) {
+                if (!preg_match('/^[a-zA-Z0-9_-]{1,100}$/', $val)) return 'DB name must be alphanumeric (max 100 chars).';
+                return null;
+            });
+            $dbUsername = $this->promptValidated('DB Username', function ($val) {
+                if (!preg_match('/^[a-zA-Z0-9_-]{1,100}$/', $val)) return 'DB username must be alphanumeric (max 100 chars).';
+                return null;
+            });
+            $dbPassword = CLI::prompt('DB Password (leave blank if none)', '');
+            $dbDriver   = CLI::prompt('DB Driver', 'MySQLi');
+            $dbPrefix   = CLI::prompt('DB Prefix', 'ci4ms_');
+            $dbPort     = $this->promptValidated('DB Port', function ($val) {
+                if (!ctype_digit($val) || (int)$val < 1 || (int)$val > 65535) return 'Port must be a number between 1-65535.';
+                return null;
+            }, '3306');
+        }
 
         // ─────────────────────────────────────────────────────────────
         // 3. SİTE BİLGİLERİ
@@ -80,20 +127,23 @@ class Ci4msSetup extends BaseCommand
         CLI::write('[ Step 3/6 ] Site Information', 'yellow');
         CLI::write('─────────────────────────────────────', 'dark_gray');
 
-        $siteName = $this->promptValidated('Site Name', function ($val) {
+        $siteName = $cliArgs['siteName'] ?? $this->promptValidated('Site Name', function ($val) {
             if (empty(trim($val)) || strlen($val) > 255) return 'Site name is required (max 255 chars).';
             if (preg_match('/[<>{}=]/', $val)) return 'Site name contains invalid characters.';
             return null;
         });
-        $baseUrl = $this->promptValidated('Base URL (e.g. https://example.com)', function ($val) {
+        $baseUrl = $cliArgs['baseUrl'] ?? $this->promptValidated('Base URL (e.g. https://example.com)', function ($val) {
             if (!filter_var($val, FILTER_VALIDATE_URL)) return 'Please enter a valid URL.';
             return null;
         });
-        $slogan = CLI::prompt('Site Slogan (optional, leave blank to skip)', '');
-        if ($slogan !== '') {
-            while (strlen($slogan) > 255 || preg_match('/[<>{}=]/', $slogan)) {
-                CLI::error('Slogan must be max 255 chars and cannot contain < > { } = characters.');
-                $slogan = CLI::prompt('Site Slogan (optional)', '');
+        $slogan = $cliArgs['slogan'] ?? '';
+        if (!$this->nonInteractive && $slogan === '') {
+            $slogan = CLI::prompt('Site Slogan (optional, leave blank to skip)', '');
+            if ($slogan !== '') {
+                while (strlen($slogan) > 255 || preg_match('/[<>{}=]/', $slogan)) {
+                    CLI::error('Slogan must be max 255 chars and cannot contain < > { } = characters.');
+                    $slogan = CLI::prompt('Site Slogan (optional)', '');
+                }
             }
         }
 
@@ -110,10 +160,12 @@ class Ci4msSetup extends BaseCommand
         CLI::write("  Slogan    : " . ($slogan !== '' ? $slogan : '(not set)'));
         CLI::write('');
 
-        $confirm = CLI::prompt('Everything looks correct? Proceed with installation?', ['y', 'n']);
-        if (strtolower($confirm) !== 'y') {
-            CLI::write('Setup cancelled by user.', 'red');
-            return;
+        if (!$this->nonInteractive) {
+            $confirm = CLI::prompt('Everything looks correct? Proceed with installation?', ['y', 'n']);
+            if (strtolower($confirm) !== 'y') {
+                CLI::write('Setup cancelled by user.', 'red');
+                return;
+            }
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -122,9 +174,12 @@ class Ci4msSetup extends BaseCommand
         CLI::write('');
         CLI::write('[ Step 4/6 ] Writing .env file...', 'yellow');
 
-        if (!$this->copyEnvFile()) {
-            CLI::error('Could not copy env → .env. Aborting.');
-            return;
+        // Non-interactive modda .env zaten mevcutsa kopyalama atla
+        if (!file_exists(ROOTPATH . '.env')) {
+            if (!$this->copyEnvFile()) {
+                CLI::error('Could not copy env → .env. Aborting.');
+                return;
+            }
         }
 
         $updates = [
@@ -142,7 +197,7 @@ class Ci4msSetup extends BaseCommand
             'cookie.path'                        => '\'/\'',
             'cookie.domain'                      => '\'\'',
             'cookie.secure'                      => 'false #Don\'t forget to set it to true when buying production mode.',
-            'cookie.httponly'                    => 'true',
+            'cookie.httponly'                     => 'true',
             'cookie.samesite'                    => '\'Lax\'',
             'cookie.raw'                         => 'false',
             'honeypot.hidden'                    => '\'true\'',
@@ -163,7 +218,7 @@ class Ci4msSetup extends BaseCommand
             'app.supportedLocales'               => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
             'app.negotiateLocale'                => 'true',
             'app.appTimezone'                    => '\'Europe/Istanbul\'',
-            'app.version'                        => '0.31.2.0',
+            'app.version'                        => '0.31.3.0',
         ];
 
         if (!$this->updateEnvSettings($updates)) {
@@ -241,6 +296,70 @@ class Ci4msSetup extends BaseCommand
         CLI::write("  → Visit your site: {$baseUrl}", 'cyan');
         CLI::write("  → Admin panel  : {$baseUrl}/backend", 'cyan');
         CLI::write('');
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    // CLI OPTION PARSER
+    // ═════════════════════════════════════════════════════════════════
+
+    /**
+     * $_SERVER['argv'] üzerinden --key=value formatındaki argümanları parse et.
+     * CI4'ün BaseCommand::$params dizisi bu formatta çalışmadığı için
+     * doğrudan argv'den okuyoruz.
+     */
+    private function parseCliOptions(): array
+    {
+        $options = [];
+        $argv = $_SERVER['argv'] ?? [];
+
+        foreach ($argv as $arg) {
+            if (str_starts_with($arg, '--') && str_contains($arg, '=')) {
+                [$key, $value] = explode('=', substr($arg, 2), 2);
+                $options[$key] = $value;
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * Non-interactive mod için gerekli tüm zorunlu argümanlar var mı?
+     */
+    private function hasAllRequired(array $args): bool
+    {
+        $required = ['fname', 'sname', 'email', 'username', 'password', 'siteName', 'baseUrl'];
+
+        foreach ($required as $key) {
+            if (empty($args[$key] ?? '')) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Mevcut .env dosyasından bir değer oku
+     */
+    private function getEnvValue(string $key, string $default = ''): string
+    {
+        // Önce $_ENV / $_SERVER dene (CI4 .env loader tarafından yüklenmiş olabilir)
+        $envKey = str_replace('.', '_', $key);
+        if (!empty($_ENV[$key])) return $_ENV[$key];
+        if (!empty($_SERVER[$key])) return $_SERVER[$key];
+
+        // .env dosyasından doğrudan oku
+        $envPath = ROOTPATH . '.env';
+        if (!file_exists($envPath)) return $default;
+
+        $contents = file_get_contents($envPath);
+        $pattern = '/^' . preg_quote($key, '/') . '\s*=\s*(.+)$/m';
+
+        if (preg_match($pattern, $contents, $matches)) {
+            return trim($matches[1], " \t\n\r\0\x0B'\"");
+        }
+
+        return $default;
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -363,7 +482,7 @@ class Ci4msSetup extends BaseCommand
     }
 
     // ═════════════════════════════════════════════════════════════════
-    // CLI PROMPT HELPERS
+    // CLI PROMPT HELPERS (sadece interaktif modda kullanılır)
     // ═════════════════════════════════════════════════════════════════
 
     /**
