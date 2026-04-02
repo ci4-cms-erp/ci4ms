@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🐳 Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: 📄 Prepare environment files
         run: |
@@ -25,7 +25,7 @@ jobs:
 
           # Configure for Docker CI environment
           cat >> .env << 'EOF'
-          CI_ENVIRONMENT=testing
+          CI_ENVIRONMENT=development
           app.baseURL='http://localhost/'
           database.default.hostname=db
           database.default.database=ci4ms_test
@@ -137,5 +137,5 @@ jobs:
           docker exec ci4ms_app cat writable/logs/log-$(date +%Y-%m-%d).log 2>/dev/null || echo "No CI4 log file found."
 
       - name: 🛑 Stop and clean up containers
-        if: always(done)
+        if: always()
         run: docker compose down -v
