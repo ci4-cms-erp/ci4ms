@@ -48,7 +48,7 @@ class Ci4msSetup extends BaseCommand
         // ─────────────────────────────────────────────────────────────
         // GUARD: Zaten kurulmuşsa devam etme
         // ─────────────────────────────────────────────────────────────
-        if (file_exists(ROOTPATH . '.env') && !empty(cache('settings'))) {
+        if (file_exists(WRITEPATH . 'install.lock')) {
             CLI::error('CI4MS is already installed. Setup aborted.');
             return;
         }
@@ -218,7 +218,7 @@ class Ci4msSetup extends BaseCommand
             'app.supportedLocales'               => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
             'app.negotiateLocale'                => 'true',
             'app.appTimezone'                    => '\'Europe/Istanbul\'',
-            'app.version'                        => '0.31.3.0',
+            'app.version'                        => '0.31.4.0',
         ];
 
         if (!$this->updateEnvSettings($updates)) {
@@ -284,6 +284,9 @@ class Ci4msSetup extends BaseCommand
             return;
         }
         CLI::write('  ✓ Routes.php updated.', 'green');
+
+        file_put_contents(WRITEPATH . 'install.lock', 'Installed at: ' . date('Y-m-d H:i:s'));
+        chmod(WRITEPATH . 'install.lock', 0444);
 
         // ─────────────────────────────────────────────────────────────
         // TAMAMLANDI

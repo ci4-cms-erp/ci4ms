@@ -14,9 +14,9 @@ class AJAX extends BaseController
     }
 
     /**
-     * @return \CodeIgniter\HTTP\RedirectResponse|\CodeIgniter\HTTP\ResponseInterface
+     * @return \CodeIgniter\HTTP\ResponseInterface
      */
-    public function limitTags_ajax()
+    public function limitTags_ajax(): \CodeIgniter\HTTP\ResponseInterface
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([
@@ -55,7 +55,7 @@ class AJAX extends BaseController
     /**
      * @return \CodeIgniter\HTTP\RedirectResponse|\CodeIgniter\HTTP\ResponseInterface|void
      */
-    public function autoLookSeflinks()
+    public function autoLookSeflinks(): \CodeIgniter\HTTP\ResponseInterface
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([

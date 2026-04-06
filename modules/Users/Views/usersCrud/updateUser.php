@@ -22,7 +22,6 @@ echo $this->section('content'); ?>
         </div>
     </div><!-- /.container-fluid -->
 </section>
-<?php d($userInfo->inGroup('Karım'), $groups); ?>
 <!-- Main content -->
 <section class="content">
     <div class="card card-outline shadow-sm">

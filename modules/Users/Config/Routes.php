@@ -13,5 +13,8 @@ $routes->group('backend/users', ['namespace' => 'Modules\Users\Controllers'], fu
     $routes->match(['GET', 'POST'],'groupList', 'PermgroupController::groupList', ['as' => 'groupList', 'role' => 'read,create,update,delete']);
     $routes->match(['GET', 'POST'], 'group_create', 'PermgroupController::group_create', ['as' => 'group_create', 'role' => 'create']);
     $routes->match(['GET', 'POST'], 'group_update/(:num)', 'PermgroupController::group_update/$1', ['as' => 'group_update', 'role' => 'update']);
+
     $routes->match(['GET', 'POST'], 'profile', 'UserController::profile', ['as' => 'profile', 'role' => 'read,create']);
+    $routes->post('sessions/terminate-others', 'UserController::terminateOtherSessions', ['as' => 'terminateOtherSessions', 'role' => 'update']);
+    $routes->post('sessions/terminate/(:segment)', 'UserController::terminateSession/$1', ['as' => 'terminateSession', 'role' => 'update']);
 });

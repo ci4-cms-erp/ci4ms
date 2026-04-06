@@ -32,7 +32,6 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     public function listFiles()
     {
-        //\_printrDie($this->request->getVar());
         $vData = [
             '_' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
         ];
@@ -80,8 +79,13 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+        if ($this->isHiddenPath($path)) {
+            return $this->failForbidden();
+        }
         $fullPath = realpath(ROOTPATH . $path);
-
+if (!$this->allowedFileTypes($fullPath)) {
+    return $this->failForbidden();
+}
         if (!$fullPath || !is_file($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
         }
@@ -97,6 +101,9 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+        if ($this->isHiddenPath($path)) {
+            return $this->failForbidden();
+        }
         $content = $this->request->getVar('content');
         $fullPath = realpath(ROOTPATH . $path);
 
@@ -121,6 +128,9 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+        if ($this->isHiddenPath($path)) {
+            return $this->failForbidden();
+        }
         $newName = $this->request->getVar('newName');
         $fullPath = realpath(ROOTPATH . $path);
 
@@ -148,6 +158,9 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+        if ($this->isHiddenPath($path)) {
+            return $this->failForbidden();
+        }
         $name = $this->request->getVar('name');
         $fullPath = realpath(ROOTPATH . $path);
 
@@ -175,6 +188,9 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+        if ($this->isHiddenPath($path)) {
+            return $this->failForbidden();
+        }
         $name = $this->request->getVar('name');
         $fullPath = realpath(ROOTPATH . $path);
 
@@ -198,6 +214,9 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         ]);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+        if ($this->isHiddenPath($path)) {
+            return $this->failForbidden();
+        }
         $fullPath = realpath(ROOTPATH . $path);
 
         if (!$fullPath || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
@@ -224,5 +243,14 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
             return false;
         }
         return true;
+    }
+
+    private function isHiddenPath(string $path): bool
+    {
+        $pathParts = explode('/', trim($path, '/'));
+        foreach ($pathParts as $part) {
+            if (in_array($part, $this->hiddenItems)) return true;
+        }
+        return false;
     }
 }

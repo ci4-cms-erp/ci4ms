@@ -175,9 +175,10 @@ abstract class BaseController extends Controller
             'menus'          => $menus,
             'languages'      => cache('frontend_languages') ?? [],
             'alternateLinks' => [], // Default empty, filled by child controllers
-            'agent'          => $this->request->getUserAgent(),
             'seoConfig'      => new Seo()
         ];
+        if(is_cli()) $defData['agent']='CLI';
+        else $defData['agent'] = $this->request->getUserAgent();
 
         // If languages are empty in cache, load them (fallback)
         if (empty($defData['languages'])) {

@@ -183,6 +183,7 @@ class Filters extends BaseFilters
             \CodeIgniter\Shield\Filters\ForcePasswordResetFilter::class,
             \Modules\Auth\Filters\Ci4MsAuthFilter::class,
             \Modules\Backend\Filters\BackendLogFilter::class,
+            \Modules\Auth\Filters\SessionTracker::class,
         ];
         $this->aliases['langfilter'] = [
             \App\Filters\Ci4ms::class,

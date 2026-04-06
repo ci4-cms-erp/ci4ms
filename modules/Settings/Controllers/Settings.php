@@ -47,9 +47,28 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             if (!empty($this->request->getPost('cGSM'))) $data['gsm'] = esc(trim(strip_tags($this->request->getPost('cGSM'))));
             if (!empty($this->request->getPost('cMap'))) {
                 $mapValue = trim(strip_tags($this->request->getPost('cMap'), '<iframe>'));
-                $mapValue = preg_replace('/\bon\w+\s*=\s*"[^"]*"/i', '', $mapValue);
-                $mapValue = preg_replace('/\bon\w+\s*=\s*\'[^\']*\'/i', '', $mapValue);
-                $mapValue = preg_replace('/\bon\w+\s*=\s*[^\s>]+/i', '', $mapValue);
+                // Strip all attributes except safe ones for iframes
+                $mapValue = preg_replace_callback(
+                    '/<iframe\s+([^>]*)>/i',
+                    function ($matches) {
+                        $allowedAttrs = ['src', 'width', 'height', 'frameborder', 'style', 'allowfullscreen', 'loading', 'title'];
+                        preg_match_all('/(\w+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|(\S+))/i', $matches[1], $attrs, PREG_SET_ORDER);
+                        $safe = '';
+                        foreach ($attrs as $attr) {
+                            $name = strtolower($attr[1]);
+                            $value = $attr[2] ?: $attr[3] ?: $attr[4];
+                            if (in_array($name, $allowedAttrs, true)) {
+                                // For src, only allow https URLs (block javascript: etc.)
+                                if ($name === 'src' && !preg_match('#^https://#i', $value)) {
+                                    continue;
+                                }
+                                $safe .= ' ' . $name . '="' . esc($value) . '"';
+                            }
+                        }
+                        return '<iframe' . $safe . '>';
+                    },
+                    $mapValue
+                );
                 setting()->set('Gmap.map_iframe', $mapValue);
             }
             if (!empty($this->request->getPost('cLogo'))) setting()->set('App.logo', esc(trim(strip_tags($this->request->getPost('cLogo')))));
@@ -82,7 +101,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 $error['snName'] = lang('Settings.socialMediaNameMustBeText');
                 unset($socialNetwork[$key]);
             }
-            $item['smName']=strip_tags(trim($item['smName']));
+            $item['smName'] = strip_tags(trim($item['smName']));
             if (empty($item['link']) || empty($item['smName'])) {
                 $error = [lang('Settings.socialMediaNameRequired')];
                 unset($socialNetwork[$key]);

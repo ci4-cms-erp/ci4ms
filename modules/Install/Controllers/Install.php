@@ -12,9 +12,10 @@ class Install extends Controller
         if ($this->request->is('post')) {
             $valData = [
                 'baseUrl' => ['label' => lang('Install.baseUrl'), 'rules' => 'required|valid_url'],
+                'host' => ['label' => lang('Install.databaseHost'), 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9._-]+$/]'],
                 'dbname' => ['label' => lang('Install.databaseName'), 'rules' => 'required|alpha_dash|max_length[100]'],
                 'dbusername' => ['label' => lang('Install.databaseUsername'), 'rules' => 'required|alpha_dash|max_length[100]'],
-                'dbpassword' => ['label' => lang('Install.databasePassword'), 'rules' => 'permit_empty|max_length[255]'],
+                'dbpassword' => ['label' => lang('Install.databasePassword'), 'rules' => 'permit_empty|max_length[255]|regex_match[/^[^\r\n]*$/]'],
                 'dbdriver' => ['label' => lang('Install.databaseDriver'), 'rules' => 'required|in_list[MySQLi]'],
                 'dbpre' => ['label' => lang('Install.databasePrefix'), 'rules' => 'permit_empty|alpha_dash|max_length[20]'],
                 'dbport' => ['label' => lang('Install.databasePort'), 'rules' => 'required|is_natural_no_zero|less_than[65536]'],
@@ -25,7 +26,7 @@ class Install extends Controller
                 'email' => ['label' => lang('Install.email'), 'rules' => 'required|valid_email|max_length[255]'],
                 'siteName' => ['label' => lang('Install.siteName'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]']
             ];
-            if($this->request->getPost('slogan')) $valData['slogan'] = ['label' => lang('Install.slogan'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]'];
+            if ($this->request->getPost('slogan')) $valData['slogan'] = ['label' => lang('Install.slogan'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]'];
 
             if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
@@ -65,12 +66,12 @@ class Install extends Controller
                 'app.supportedLocales' => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
                 'app.negotiateLocale' => 'true',
                 'app.appTimezone' => '\'Europe/Istanbul\'',
-                'app.version' => '0.31.2.0'
+                'app.version' => '0.31.4.0'
             ];
             if ($this->copyEnvFile() && $this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-            $sessionData=[
+            $sessionData = [
                 'name' => $this->request->getPost('name'),
                 'surname' => $this->request->getPost('surname'),
                 'username' => $this->request->getPost('username'),
@@ -79,7 +80,7 @@ class Install extends Controller
                 'siteName' => $this->request->getPost('siteName'),
                 'baseUrl' => $this->request->getPost('baseUrl'),
             ];
-            if($this->request->getPost('slogan')) $sessionData['slogan'] = $this->request->getPost('slogan')?:null;
+            if ($this->request->getPost('slogan')) $sessionData['slogan'] = $this->request->getPost('slogan') ?: null;
             session()->setFlashdata('install_data', $sessionData);
             return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install/dbsetup', 308);
         }
@@ -92,6 +93,7 @@ class Install extends Controller
         if (!file_exists($envPath)) return ['error' => "'.env' file not found."];
         $contents = file_get_contents($envPath);
         foreach ($updates as $key => $value) {
+            $value = str_replace(["\r", "\n"], '', (string) $value);
             $pattern = '/^' . preg_quote($key, '/') . '=.*/m';
             $replacement = "{$key}={$value}";
             if (preg_match($pattern, $contents)) $contents = preg_replace($pattern, $replacement, $contents);
@@ -169,6 +171,8 @@ class Install extends Controller
             return redirect()->to($baseURL)->withInput()->with('errors', ['route' => lang('Install.routeFileError')]);
         }
 
+        file_put_contents(WRITEPATH . 'install.lock', 'Installed at: ' . date('Y-m-d H:i:s'));
+        chmod(WRITEPATH . 'install.lock', 0444);
         return redirect()->to($baseURL, 301);
     }
 }

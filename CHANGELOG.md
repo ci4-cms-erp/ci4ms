@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.4.0] - 2026-04-06
+
+### Security
+
+- **XSS Protection:** Mitigated Stored XSS vulnerability in `UserController` by wrapping blacklist status notes in `esc()`.
+- **Authorization Bypass:** Fortified `Fileeditor` module by implementing `isHiddenPath` validation across all file operations (`readFile`, `saveFile`, `createFile`, `createFolder`, `renameFile`, `deleteFileOrFolder`), preventing unauthorized disclosure and modification of protected system files like `.env` and `composer.json`.
+- **Settings Security:** Reformed Google Maps iframe validation (`cMap`) in `Settings` controller to utilize a strict `preg_replace_callback` allowlist, mitigating a sophisticated srcdoc-based Cross-Site Scripting (XSS) exploit.
+- **Pages Security:** Appended the stringent `html_purify` validation rule to page creation and update flows to intercept and neutralize injected JavaScript securely.
+- **Installation Integrity:** Eliminated a volatile cache-dependent installation guard in favor of a persistent filesystem lock (`install.lock`) verification within both Web (`InstallFilter`) and CLI (`Ci4msSetup.php`) boot lifecycles. This successfully remediates a critical post-installation re-entry bypass.
+- **Input Validation:** Patched a CRLF Injection flaw within the initial environment setup by meticulously stripping `\r\n` carriage returns from arbitrary injected payload components inside `Install.php`.
+
 ## [0.31.3.0] - 2026-04-02
 
 ### Added
@@ -226,6 +237,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.31.4.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.4.0
+[0.31.3.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.3.0
 [0.31.2.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.2.0
 [0.31.1.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.1.0
 [0.31.0.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.0.0

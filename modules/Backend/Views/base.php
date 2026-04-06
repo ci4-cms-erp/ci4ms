@@ -51,12 +51,11 @@
                         <img src="<?php echo $logged_in_user->profileIMG ?>" class="img-circle elevation-2"
                             style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #dee2e6;" alt="User Image">
                     </div>
-                    <div class="info w-100">
-                        <button class="btn btn-light w-100" type="button" data-toggle="collapse"
-                            data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                            <?php echo $logged_in_user->firstname . ' ' . $logged_in_user->surname ?> <br>
-                            <small class="text-success font-weight-bold">{ <?php echo implode(', ', $logged_in_user->getGroups()); ?>
-                                }</small>
+                    <div class="info d-block" style="overflow: hidden; white-space: normal;">
+                        <button class="btn btn-light btn-sm btn-block text-left" type="button" data-toggle="collapse"
+                            data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample" style="white-space: normal; line-height: 1.2;">
+                            <span class="d-block font-weight-bold"><?php echo $logged_in_user->firstname . ' ' . $logged_in_user->surname ?></span>
+                            <small class="text-success font-weight-bold">{ <?php echo implode(', ', $logged_in_user->getGroups()); ?> }</small>
                         </button>
                     </div>
                 </div>

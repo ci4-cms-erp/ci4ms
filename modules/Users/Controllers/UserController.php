@@ -4,9 +4,16 @@ namespace Modules\Users\Controllers;
 
 use CodeIgniter\Shield\Authentication\Actions\EmailActivator;
 use CodeIgniter\Shield\Entities\User;
+use Modules\Auth\Models\UserSessionModel;
 
 class UserController extends \Modules\Backend\Controllers\BaseController
 {
+    protected UserSessionModel $sessionModel;
+    public function __construct()
+    {
+        helper(['device', 'url', 'form']);
+        $this->sessionModel = new UserSessionModel();
+    }
     /**
      * @return \CodeIgniter\HTTP\ResponseInterface|string
      */
@@ -56,7 +63,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 $result->actions = '<a href="' . route_to('update_user', $result->id) . '" class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>';
                 if ($result->status == 'banned'):
                     $result->actions .= '<button type="button" class="btn btn-outline-dark btn-sm open-blacklist-modal"
-                                            data-id="' . $result->id . '" data-status="' . $result->status . '" data-note="' . $result->status_message . '"><i
+                                            data-id="' . $result->id . '" data-status="' . $result->status . '" data-note="' . esc($result->status_message) . '"><i
                                                 class="fas fa-user-slash"></i> ' . lang('Users.inBlackList') . '
                                         </button>';
                 else:
@@ -335,7 +342,65 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             else return redirect()->route('profile')->with('message', lang('Backend.updated', [esc($user->firstname . ' ' . $user->surname)]));
         }
         $this->defData['user'] = auth()->getProvider()->findById(user_id());
+        $currentSessId = session()->get('ci4ms_session_tracker_id') ?? '';
+        $this->defData['activeSessions']  = $this->sessionModel->getActiveSessions(auth()->id(), $currentSessId);
+        $this->defData['allSessions']     = $this->sessionModel->getUserSessions(auth()->id(), $currentSessId);
+        $this->defData['activeCount']     = $this->sessionModel->getActiveCount(auth()->id());
         return view('Modules\Users\Views\usersCrud\profile', $this->defData);
+    }
+
+
+    /**
+     * AJAX Request: Returns the user's device (session) history in JSON format.
+     * Can be used to dynamically update the session list without reloading the page.
+     *
+     * @return \CodeIgniter\HTTP\Response
+     */
+    public function sessionsJson(): \CodeIgniter\HTTP\Response
+    {
+        $userId = (int) auth()->id();
+        $sessions = $this->sessionModel->getUserSessions($userId, session()->get('ci4ms_session_tracker_id') ?? '');
+
+        return $this->respond([
+            'status'   => 'ok',
+            'sessions' => $sessions,
+        ]);
+    }
+
+    /**
+     * Terminates a specifically identified single device session.
+     * If the terminated session is the user's current session, they will be logged out of the system.
+     *
+     * @param string $sessionId Device identifier (Tracker ID) to be terminated
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     */
+    public function terminateSession(string $sessionId)
+    {
+        $userId    = (int) auth()->id();
+        $isCurrent = ($sessionId === session()->get('ci4ms_session_tracker_id'));
+        $success = $this->sessionModel->terminateSession($userId, $sessionId, $isCurrent);
+        if (! $success) {
+            return redirect()->back()->with('error', lang('Users.sessionTerminateError'));
+        }
+        if ($isCurrent) {
+            session()->destroy();
+            return redirect()->route('login')->with('message', lang('Users.currentSessionTerminated'));
+        }
+        return redirect()->back()->with('success', lang('Users.sessionTerminated'));
+    }
+
+    /**
+     * Simultaneously terminates all active remote sessions (phone, other computers, etc.)
+     * except for the device the user is currently connected from.
+     *
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     */
+    public function terminateOtherSessions()
+    {
+        $userId        = (int) auth()->id();
+        $currentSessId = session()->get('ci4ms_session_tracker_id') ?? '';
+        $count = $this->sessionModel->terminateAllExcept($userId, $currentSessId);
+        return redirect()->back()->with('success', lang('Users.sessionTerminatedCount', [$count]));
     }
 
     /**

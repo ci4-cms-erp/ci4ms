@@ -196,5 +196,6 @@ A huge thank you to the security researchers who have helped make **ci4ms** more
 | **[Hunter.](https://github.com/LAW6ZX7)** | Identified Critical Stored XSS in Backend & Blog modules allowing Session Hijacking. | Feb 2026 |
 | **[m1scher](https://github.com/m1scher)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
 | **[alpernae](https://github.com/alpernae)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
+| **[offset](https://github.com/offset)** | Identified Critical vulnerabilities including multiple Stored XSS, Authorization Bypass in Fileeditor, Install Guard Bypass, and CRLF Injection. | Apr 2026 |
 
 > If you find a security vulnerability, please report it via [Security Policy](SECURITY.md).

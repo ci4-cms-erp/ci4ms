@@ -315,37 +315,6 @@ input:checked + .toggle-slider:before {
   color: var(--primary-color);
 }
 
-/* Responsive Tasarım */
-@media (max-width: 992px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-
-  .topbar {
-    left: 0;
-  }
-
-  .main-content {
-    margin-left: 0;
-  }
-
-  .sidebar.active {
-    transform: translateX(0);
-  }
-
-  .topbar.active {
-    left: var(--sidebar-width);
-  }
-
-  .main-content.active {
-    margin-left: var(--sidebar-width);
-  }
-
-  .menu-toggle {
-    display: block;
-  }
-}
-
 .menu-toggle {
   display: none;
   background: none;
