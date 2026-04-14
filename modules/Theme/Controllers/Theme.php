@@ -20,6 +20,13 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         $tempPath = WRITEPATH . 'tmp/' . str_replace('_theme.zip', '', $file->getName()) . '/';
         $zip = new \ZipArchive();
         if ($zip->open($file->getTempName()) === true) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = $zip->getNameIndex($i);
+                if (preg_match('/\.\./', $entryName)) {
+                    $zip->close();
+                    return redirect()->route('backendThemes')->withInput()->with('errors', [lang('Theme.zipOpenFailed')]);
+                }
+            }
             $zip->extractTo($tempPath);
             $zip->close();
         } else {
