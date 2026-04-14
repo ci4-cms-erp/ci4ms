@@ -216,7 +216,7 @@ class InstallService
             array(
                 array('class' => 'Config\\App', 'key' => 'templateInfos', 'value' => '{"path":"default","name":null,"widgets":{"sidebar":{"searchWidget":"true","categoriesWidget":"true"}}}', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'siteName', 'value' => $args['siteName'], 'type' => 'string', 'context' => NULL),
-                array('class' => 'Config\\App', 'key' => 'logo', 'value' => '/media/logo.png', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'logo', 'value' => '/media/logo.webp', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'socialNetwork', 'value' => '[{"smName":"facebook","link":"https:\\/\\/facebook.com\\/bertugfahriozer"},{"smName":"twitter","link":"https:\\/\\/twitter.com\\/bertugfahriozer"},{"smName":"github","link":"https:\\/\\/github.com\\/bertugfahriozer"}]', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'contact', 'value' => '{"address":"Bal\\u0131kesir \\/ Turkey","phone":"+905000000000","email":"info@ci4ms.com"}', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'mail', 'value' => '{"server": "mail.ci4ms.com","port": "26","address": "simple@ci4ms.com","password": "' . base64_encode($encrypter->encrypt('123456789')) . '","protocol": "smtp","tls": false}', 'type' => 'string', 'context' => NULL),
