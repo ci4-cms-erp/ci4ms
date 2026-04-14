@@ -96,14 +96,34 @@ class Backup extends \Modules\Backend\Controllers\BaseController
             $file->move($uploadPath, $newName);
             $filePath = WRITEPATH . 'uploads/' . $newName;
             $sqlPath  = $filePath;
-            if ($ext === 'zip') {
+                        if ($ext === 'zip') {
                 $zip = new \ZipArchive();
                 if ($zip->open($filePath) === true) {
-                    $zip->extractTo($uploadPath);
-                    $sqlPath = $uploadPath . $zip->getNameIndex(0);
+                    $extractedSql = '';
+                    for ($i = 0; $i < $zip->numFiles; $i++) {
+                        $entryName = $zip->getNameIndex($i);
+                        $safeEntryName = basename($entryName);
+
+                        if (preg_match('/\.sql$/i', $safeEntryName)) {
+                            $fileContent = $zip->getFromIndex($i);
+                            $extractedSql = $uploadPath . $safeEntryName;
+                            file_put_contents($extractedSql, $fileContent);
+                            break;
+                        }
+                    }
                     $zip->close();
                     @unlink($filePath);
+
+                    if (empty($extractedSql)) {
+                        return redirect()->route('backup')->with('error', lang('Backup.dbNotRestore'));
+                    }
+                    $sqlPath = $extractedSql;
+                } else {
+                    @unlink($filePath);
+                    return redirect()->route('backup')->with('error', lang('Backup.dbNotRestore'));
                 }
+            }
+  }
             }
 
             $dbBackup = new \Modules\Backup\Libraries\DbBackup();
