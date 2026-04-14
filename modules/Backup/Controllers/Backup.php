@@ -123,8 +123,6 @@ class Backup extends \Modules\Backend\Controllers\BaseController
                     return redirect()->route('backup')->with('error', lang('Backup.dbNotRestore'));
                 }
             }
-  }
-            }
 
             $dbBackup = new \Modules\Backup\Libraries\DbBackup();
             if ($dbBackup->restore($sqlPath)) {
