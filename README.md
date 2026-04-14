@@ -180,7 +180,6 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 - `docs/developer-handbook.md` — Environment setup, coding standards, deployment checklist.
 - `docs/theme_development.md` — Theme folder structure, routing, and `base.php` variables.
 - `DOCKER_SETUP.md` — Docker environment configuration and usage.
-- `security_audit_report.md` — Comprehensive security audit report and vulnerability mitigations.
 - `CHANGELOG.md` — Full release history.
 
 Questions or contributions? Open an issue or pull request.
@@ -197,6 +196,7 @@ A huge thank you to the security researchers who have helped make **ci4ms** more
 | **[Hunter.](https://github.com/LAW6ZX7)** | Identified Critical Stored XSS in Backend & Blog modules allowing Session Hijacking. | Feb 2026 |
 | **[m1scher](https://github.com/m1scher)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
 | **[alpernae](https://github.com/alpernae)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
-| **[offset](https://github.com/offset)** | Identified Critical vulnerabilities including multiple Stored XSS, Authorization Bypass in Fileeditor, Install Guard Bypass, CRLF Injection, Zip Slip RCE in Theme/Backup, and Privilege Escalation in UserController. | Apr 2026 |
+| **[offset](https://github.com/offset)** | Identified Critical vulnerabilities including multiple Stored XSS, Authorization Bypass in Fileeditor, Install Guard Bypass, and CRLF Injection. | Apr 2026 |
+| **[fg0x0](https://github.com/fg0x0)** | Identified Critical Arbitrary File Write (Zip Slip RCE) vulnerabilities in Theme::upload and Backup::restore modules. | Apr 2026 |
 
 > If you find a security vulnerability, please report it via [Security Policy](SECURITY.md).
