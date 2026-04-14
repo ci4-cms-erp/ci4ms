@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.5.0] - 2026-04-14
+
+### Security
+
+- **XSS Protection:** Patched Stored XSS vulnerability in Backup module by mitigating unescaped filename rendering in DataTables.
+- **File System Security:** Fixed Arbitrary File Write (Zip Slip RCE) via directory traversal inside ZIP processing during `Theme::upload` and `Backup::restore` handling.
+- **Privilege Escalation:** Prevented unauthorized assignment of the `superadmin` role during user creation and update flows within the `UserController`.
+
+### Changed
+
+- **Funding:** Added funding configuration (`.github/FUNDING.yml`) to support project contributions.
+- **Logo:** Updated the application's default logo format to optimized WebP.
+
+### Fixed
+
+- **Backup Manager:** Resolved an underlying syntax error in the Backup controller's restore method.
+
 ## [0.31.4.0] - 2026-04-06
 
 ### Security
@@ -237,6 +254,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.31.5.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.5.0
 [0.31.4.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.4.0
 [0.31.3.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.3.0
 [0.31.2.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.2.0
