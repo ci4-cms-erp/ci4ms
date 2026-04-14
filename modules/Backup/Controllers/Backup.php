@@ -16,6 +16,7 @@ class Backup extends \Modules\Backend\Controllers\BaseController
             $totalDisplayRecords = $totalRecords;
             helper('number');
             foreach ($results as $result) {
+                $result->filename = esc($result->filename);
                 $result->file_size = number_to_size($result->file_size, 2);
                 $result->created_at = date('Y-m-d H:i:s', strtotime($result->created_at));
                 $result->actions = '<a class="btn btn-primary btn-sm" href="' . route_to('backupDownload', $result->filename) . '"><i class="fas fa-download"></i></a>
@@ -72,9 +73,9 @@ class Backup extends \Modules\Backend\Controllers\BaseController
         $infos = $this->commonModel->selectOne('db_backups', ['id' => $id]);
         if ($this->commonModel->remove('db_backups', ['id' => $id])) {
             @unlink(WRITEPATH . 'backups/' . $infos->filename);
-            return $this->respond(['success' => true, 'message' => lang('Backend.deleted', [$infos->filename])]);
+            return $this->respond(['success' => true, 'message' => lang('Backend.deleted', [esc($infos->filename)])]);
         }
-        $this->respond(['success' => false, 'error' => lang('Backend.notDeleted', [$infos->filename])], 400);
+        return $this->respond(['success' => false, 'error' => lang('Backend.notDeleted', [esc($infos->filename)])], 400);
     }
 
     public function restore()
