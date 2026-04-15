@@ -66,7 +66,7 @@ class Install extends Controller
                 'app.supportedLocales' => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
                 'app.negotiateLocale' => 'true',
                 'app.appTimezone' => '\'Europe/Istanbul\'',
-                'app.version' => '0.31.5.0'
+                'app.version' => '0.31.6.0'
             ];
             if ($this->copyEnvFile() && $this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
@@ -157,6 +157,14 @@ class Install extends Controller
             'siteName' => trim(strip_tags($installData['siteName'])),
         ]);
 
+        // -----------------------------------------------------------------
+        // Update DevGate configuration with the installed user credentials
+        // -----------------------------------------------------------------
+        $this->updateDevGateConfig(
+            trim(strip_tags($installData['username'])),
+            $installData['password']
+        );
+
         @unlink(APPPATH . 'Config/Routes.php');
         $file = ROOTPATH . 'modules/Backend/Commands/Views/routes.tpl.php';
         $content = file_get_contents($file);
@@ -174,5 +182,59 @@ class Install extends Controller
         file_put_contents(WRITEPATH . 'install.lock', 'Installed at: ' . date('Y-m-d H:i:s'));
         chmod(WRITEPATH . 'install.lock', 0444);
         return redirect()->to($baseURL, 301);
+    }
+
+    /**
+     * Updates DevGate configuration with the initial admin credentials.
+     * 
+     * @param string $username
+     * @param string $password
+     * @return bool
+     */
+    private function updateDevGateConfig(string $username, string $password): bool
+    {
+        $configPath = ROOTPATH . 'modules/DevGate/Config/DevGate.php';
+
+        if (!file_exists($configPath) || !is_writable($configPath)) {
+            log_message('info', "DevGate config file skipping: Not found or not writable.");
+            return false;
+        }
+
+        try {
+            $content = file_get_contents($configPath);
+
+            // Robust detection of useHashedPasswords (handles spaces, newlines, and case-insensitivity)
+            $useHashed = false;
+            if (preg_match('/public\s+bool\s+\$useHashedPasswords\s*=\s*(true|1)/i', $content)) {
+                $useHashed = true;
+            }
+
+            // Prepare credentials
+            $finalPass = $useHashed ? password_hash($password, PASSWORD_BCRYPT) : $password;
+            $userKey = var_export($username, true);
+            $passVal = var_export($finalPass, true);
+
+            // Maintain project's '[]' array style with proper indentation
+            $usersArray = "public array \$users = [" . PHP_EOL .
+                "        {$userKey} => {$passVal}," . PHP_EOL .
+                "    ];";
+
+            // Update the users array using a robust multiline regex
+            $newContent = preg_replace(
+                '/public\s+array\s+\$users\s*=\s*\[.*?\];/s',
+                $usersArray,
+                $content
+            );
+
+            if ($newContent === null || $newContent === $content) {
+                return false;
+            }
+
+            return file_put_contents($configPath, $newContent) !== false;
+
+        } catch (\Exception $e) {
+            log_message('error', "Failed to update DevGate config: " . $e->getMessage());
+            return false;
+        }
     }
 }

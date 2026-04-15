@@ -11,6 +11,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - **Modular backend:** Each feature ships as an independent module (Blog, Pages, Menu, Media, Users, Settings, Theme, etc.) under `modules/*`.
 - **Flexible content management:** Page and blog entries include SEO metadata, categories, tags, and full comment workflows.
 - **Media & files:** Includes elFinder-powered media management, a built-in file editor, and an in-panel log viewer.
+- **Automatic Updates:** New "One-Click Update" system allows seamless system upgrades with automatic backups and migration support.
 - **Theme system:** The `public/templates/*` structure and the `Modules\Theme` module enable installing or upgrading themes from ZIP packages.
 - **Setup & automation:** Offers a web-based installer (`/install`) plus a single CLI command (`php spark ci4ms:setup`) for automated installation, default data seeding, and route generation. Module scaffolding is available via `php spark make:module`.
 - **Docker support:** Ships with a production-ready `Dockerfile`, `docker-compose.yml`, and a GitHub Actions CI workflow out of the box.
@@ -131,7 +132,7 @@ Key files:
 | Menu             | Menu builder               | Drag-and-drop ordering, slug helpers                  |
 | Media            | Media manager              | elFinder integration, optional WebP conversion        |
 | Fileeditor       | Project file editor        | Safe read/write/rename/move/delete                    |
-| Settings         | System configuration       | Company/social/mail settings, encrypted SMTP password |
+| Settings         | System configuration       | One-click updates, company/social/mail settings, i18n support |
 | Users            | User & role management     | Shield groups, reset tracking                         |
 | Methods          | Route → permission mapping | Module toggling, router scan                          |
 | Logs             | Log viewer                 | Browses CodeIgniter log files inside the backend      |

@@ -18,7 +18,7 @@ echo $this->section('content'); ?>
                 <div class="m-stat-icon st-app"><i class="fas fa-desktop"></i></div>
                 <div>
                     <div class="m-stat-value"><?php echo esc($settings->siteName ?? 'CI4MS') ?></div>
-                    <div class="m-stat-label">Site Adı</div>
+                    <div class="m-stat-label"><?php echo lang('Settings.siteName') ?></div>
                 </div>
             </div>
         </div>
@@ -27,7 +27,7 @@ echo $this->section('content'); ?>
                 <div class="m-stat-icon st-version"><i class="fas fa-code-branch"></i></div>
                 <div>
                     <div class="m-stat-value"><?php echo env('app.version') ?></div>
-                    <div class="m-stat-label">Sürüm</div>
+                    <div class="m-stat-label"><?php echo lang('Settings.version') ?></div>
                 </div>
             </div>
         </div>
@@ -36,7 +36,7 @@ echo $this->section('content'); ?>
                 <div class="m-stat-icon st-template"><i class="fas fa-paint-brush"></i></div>
                 <div>
                     <div class="m-stat-value"><?php echo esc($settings->templateInfos->name ?? 'Default') ?></div>
-                    <div class="m-stat-label">Aktif Tema</div>
+                    <div class="m-stat-label"><?php echo lang('Settings.activeTheme') ?></div>
                 </div>
             </div>
         </div>
@@ -108,7 +108,7 @@ echo $this->section('content'); ?>
                                                     <input type="checkbox" id="maintenance-mode" class="bswitch" <?php echo setting('App.maintenanceMode') ? 'checked' : '' ?> data-size="mini">
                                                 </div>
                                                 <div class="d-flex justify-content-between align-items-center">
-                                                    <label class="mb-0"><i class="fas fa-globe mr-2 text-muted"></i> Dil Modu (Multi)</label>
+                                                    <label class="mb-0"><i class="fas fa-globe mr-2 text-muted"></i> <?php echo lang('Settings.languageModeMulti') ?></label>
                                                     <input type="checkbox" id="language-mode" class="bswitch" <?php echo setting('App.siteLanguageMode') === 'multi' ? 'checked' : '' ?> data-size="mini">
                                                 </div>
                                             </div>
@@ -119,7 +119,7 @@ echo $this->section('content'); ?>
                                             <img src="<?php echo esc($settings->logo ?? '') ?>" class="img-fluid pageimg" style="max-height: 80px">
                                         </div>
                                         <br>
-                                        <button type="button" class="btn btn-sm btn-outline-primary pageIMG"><i class="fas fa-image mr-1"></i> Logo Değiştir</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary pageIMG"><i class="fas fa-image mr-1"></i> <?php echo lang('Settings.changeLogo') ?></button>
                                         <input hidden class="pageimg-input" name="cLogo" value="<?php echo esc($settings->logo ?? '') ?>">
                                     </div>
                                 </div>
@@ -133,7 +133,7 @@ echo $this->section('content'); ?>
                         <div class="tab-pane fade" id="tab-template">
                             <div class="row">
                                 <div class="col-12 text-right mb-4">
-                                    <a href="<?php echo route_to('backendThemes') ?>" class="btn btn-sm btn-outline-success"><i class="fas fa-plus mr-1"></i> Yeni Tema Ekle</a>
+                                    <a href="<?php echo route_to('backendThemes') ?>" class="btn btn-sm btn-outline-success"><i class="fas fa-plus mr-1"></i> <?php echo lang('Settings.addNewTheme') ?></a>
                                 </div>
                                 <?php foreach ($templates as $key => $template):
                                     $infoPath = ROOTPATH . 'public/templates/' . $key . 'info.xml';
@@ -149,8 +149,8 @@ echo $this->section('content'); ?>
                                                     <p class="small text-muted mb-3"><?php echo $data->description ?></p>
                                                     <p class="small text-muted mb-3">Version <?php echo $data->version ?></p>
                                                     <?php if (!$isActive): ?>
-                                                        <button type="button" class="btn btn-sm btn-primary btn-block mb-2" onclick="chooseTemplate('<?php echo $data->slug ?>','<?php echo $data->name ?>')">Aktif Et</button>
-                                                        <a href="<?php echo route_to('deleteThemeConfirm', $data->slug) ?>" class="btn btn-sm btn-outline-danger btn-block"><i class="fas fa-trash mr-1"></i> Sil</a>
+                                                        <button type="button" class="btn btn-sm btn-primary btn-block mb-2" onclick="chooseTemplate('<?php echo $data->slug ?>','<?php echo $data->name ?>')"><?php echo lang('Settings.activate') ?></button>
+                                                        <a href="<?php echo route_to('deleteThemeConfirm', $data->slug) ?>" class="btn btn-sm btn-outline-danger btn-block"><i class="fas fa-trash mr-1"></i> <?php echo lang('Backend.delete') ?></a>
                                                     <?php else: ?>
                                                         <a href="<?php echo route_to('templateSettings') ?>" class="btn btn-sm btn-outline-primary btn-block"><i class="fas fa-sliders-h mr-1"></i> <?php echo lang('Settings.settings') ?></a>
                                                     <?php endif; ?>
@@ -170,11 +170,11 @@ echo $this->section('content'); ?>
                                     <?php if (!empty($settings->socialNetwork)): foreach ($settings->socialNetwork as $sn) : ?>
                                             <div class="row align-items-end mb-3 pb-3 border-bottom" data-repeater-item>
                                                 <div class="col-md-5">
-                                                    <label>Ağ Adı (örn: instagram)</label>
+                                                    <label><?php echo lang('Settings.socialNetworkName') ?></label>
                                                     <input type="text" class="form-control" name="smName" value="<?php echo esc($sn['smName']) ?>" required>
                                                 </div>
                                                 <div class="col-md-5">
-                                                    <label>Profil Linki</label>
+                                                    <label><?php echo lang('Settings.socialNetworkLink') ?></label>
                                                     <input type="url" class="form-control" name="link" value="<?php echo esc($sn['link']) ?>" required>
                                                 </div>
                                                 <div class="col-md-2">
@@ -185,11 +185,11 @@ echo $this->section('content'); ?>
                                     else: ?>
                                         <div class="row align-items-end mb-3" data-repeater-item>
                                             <div class="col-md-5">
-                                                <label>Ağ Adı</label>
+                                                <label><?php echo lang('Settings.socialNetworkName') ?></label>
                                                 <input type="text" class="form-control" name="smName" required>
                                             </div>
                                             <div class="col-md-5">
-                                                <label>Profil Linki</label>
+                                                <label><?php echo lang('Settings.socialNetworkLink') ?></label>
                                                 <input type="url" class="form-control" name="link" required>
                                             </div>
                                             <div class="col-md-2">
@@ -199,7 +199,7 @@ echo $this->section('content'); ?>
                                     <?php endif; ?>
                                 </div>
                                 <div class="d-flex justify-content-between mt-4">
-                                    <button data-repeater-create type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-plus mr-1"></i> Yeni Ekle</button>
+                                    <button data-repeater-create type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-plus mr-1"></i> <?php echo lang('Settings.addNew') ?></button>
                                     <button class="btn btn-success px-5" style="border-radius:10px"><?php echo lang('Backend.update') ?></button>
                                 </div>
                             </form>
@@ -211,23 +211,23 @@ echo $this->section('content'); ?>
                                 <?php echo csrf_field() ?>
                                 <div class="row">
                                     <div class="col-md-8 form-group">
-                                        <label>SMTP Server</label>
+                                        <label><?php echo lang('Settings.smtpServer') ?></label>
                                         <input type="text" name="mServer" class="form-control" value="<?php echo old('mServer', $settings->mail->server ?? '') ?>" required>
                                     </div>
                                     <div class="col-md-4 form-group">
-                                        <label>Port</label>
+                                        <label><?php echo lang('Settings.port') ?></label>
                                         <input type="text" name="mPort" class="form-control" value="<?php echo old('mPort', $settings->mail->port ?? '') ?>" required>
                                     </div>
                                     <div class="col-md-6 form-group">
-                                        <label>Mail Adresi</label>
+                                        <label><?php echo lang('Settings.mailAddress') ?></label>
                                         <input type="email" name="mAddress" class="form-control" value="<?php echo old('mAddress', $settings->mail->address ?? '') ?>" required>
                                     </div>
                                     <div class="col-md-6 form-group">
-                                        <label>Şifre</label>
+                                        <label><?php echo lang('Settings.password') ?></label>
                                         <input type="password" name="mPwd" class="form-control" placeholder="••••••••">
                                     </div>
                                     <div class="col-md-6 form-group">
-                                        <label>Protokol</label>
+                                        <label><?php echo lang('Settings.protocol') ?></label>
                                         <select name="mProtocol" class="form-control">
                                             <option value="smtp" <?php echo ($settings->mail->protocol ?? '') === 'smtp' ? 'selected' : '' ?>>SMTP</option>
                                             <option value="pop3" <?php echo ($settings->mail->protocol ?? '') === 'pop3' ? 'selected' : '' ?>>POP3</option>
@@ -236,18 +236,18 @@ echo $this->section('content'); ?>
                                     <div class="col-md-6 form-group d-flex align-items-center pt-4">
                                         <div class="custom-control custom-switch">
                                             <input type="checkbox" name="mTls" class="custom-control-input" id="tlsSwitch" <?php echo ($settings->mail->tls ?? false) ? 'checked' : '' ?>>
-                                            <label class="custom-control-label" for="tlsSwitch">TLS Aktif</label>
+                                            <label class="custom-control-label" for="tlsSwitch"><?php echo lang('Settings.tlsActive') ?></label>
                                         </div>
                                     </div>
                                 </div>
                                 <hr>
                                 <div class="row align-items-end">
                                     <div class="col-md-8">
-                                        <label>Test Maili Gönder</label>
+                                        <label><?php echo lang('Settings.testMailSend') ?></label>
                                         <div class="input-group">
-                                            <input type="email" id="testemail" class="form-control" placeholder="test@adresi.com">
+                                            <input type="email" id="testemail" class="form-control" placeholder="test@ci4ms.pro">
                                             <div class="input-group-append">
-                                                <button class="btn btn-info" id="sendtest" type="button"><i class="fas fa-paper-plane mr-1"></i> Gönder</button>
+                                                <button class="btn btn-info" id="sendtest" type="button"><i class="fas fa-paper-plane mr-1"></i> <?php echo lang('Settings.send') ?></button>
                                             </div>
                                         </div>
                                     </div>
@@ -263,13 +263,13 @@ echo $this->section('content'); ?>
                             <form action="<?php echo route_to('saveAllowedFiles') ?>" method="post">
                                 <?php echo csrf_field() ?>
                                 <div class="form-group">
-                                    <label>İzin Verilen Dosya Uzantıları (Virgül ile ayırın)</label>
+                                    <label><?php echo lang('Settings.allowedFilesNote') ?></label>
                                     <textarea name="allowedFiles" rows="6" class="form-control"><?php echo implode(',', (array)($settings->allowedFiles ?? [])) ?></textarea>
                                 </div>
                                 <div class="row align-items-center">
                                     <div class="col-md-8">
                                         <div class="d-flex align-items-center">
-                                            <label class="mb-0 mr-3">Elfinder WebP Dönüştürme</label>
+                                            <label class="mb-0 mr-3"><?php echo lang('Settings.webpConvert') ?></label>
                                             <input type="checkbox" id="webp-convert" class="bswitch" <?php echo ($settings->convertWebp ?? false) ? 'checked' : '' ?> data-size="mini">
                                         </div>
                                     </div>
@@ -304,11 +304,11 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         },
         hide: function(deleteElement) {
             Swal.fire({
-                title: 'Emin misiniz?',
+                title: '<?php echo lang('Settings.areYouSure') ?>',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Sil',
-                cancelButtonText: 'Vazgeç'
+                confirmButtonText: '<?php echo lang('Settings.delete') ?>',
+                cancelButtonText: '<?php echo lang('Settings.cancel') ?>'
             }).then((result) => {
                 if (result.isConfirmed) $(this).slideUp(deleteElement);
             });
@@ -321,7 +321,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         $.post('<?php echo route_to('maintenance') ?>', {
             isActive: state ? 1 : 0
         }, 'json').done(data => {
-            showToast(state ? 'Bakım modu aktif.' : 'Bakım modu kapatıldı.');
+            showToast(state ? '<?php echo lang('Settings.maintenanceActive') ?>' : '<?php echo lang('Settings.maintenanceDisabled') ?>');
         });
     });
 
@@ -329,7 +329,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         $.post('<?php echo route_to('saveLanguageMode') ?>', {
             mode: state ? 'multi' : 'single'
         }, 'json').done(data => {
-            showToast('Dil modu ' + (state ? 'Multi' : 'Single') + ' olarak güncellendi.');
+            showToast('<?php echo lang('Settings.languageModeUpdated') ?>'.replace('{0}', state ? 'Multi' : 'Single'));
         });
     });
 
@@ -337,17 +337,17 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         $.post('<?php echo route_to('elfinderConvertWebp') ?>', {
             isActive: state ? 1 : 0
         }, 'json').done(data => {
-            showToast('WebP dönüşümü ' + (state ? 'aktif.' : 'kapalı.'));
+            showToast(state ? '<?php echo lang('Settings.webpActive') ?>' : '<?php echo lang('Settings.webpDisabled') ?>');
         });
     });
 
     function chooseTemplate(path, templateName) {
         Swal.fire({
-            title: templateName + ' temasına geçilsin mi?',
+            title: '<?php echo lang('Settings.changeToTheme') ?>'.replace('{0}', templateName),
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Evet',
-            cancelButtonText: 'Hayır'
+            confirmButtonText: '<?php echo lang('Settings.yes') ?>',
+            cancelButtonText: '<?php echo lang('Settings.no') ?>'
         }).then(res => {
             if (res.isConfirmed) {
                 $.post('<?php echo route_to('setTemplate') ?>', {
@@ -363,7 +363,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
     $('#sendtest').click(function() {
         let email = $('#testemail').val();
         if (!email) {
-            showToast('Email giriniz', 'error');
+            showToast('<?php echo lang('Settings.enterEmail') ?>', 'error');
             return;
         }
         let btn = $(this);
@@ -372,20 +372,114 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             testemail: email
         }).done(r => {
             showToast(r.message, r.result ? 'success' : 'error');
-            btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Gönder');
+            btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> <?php echo lang('Settings.send') ?>');
         });
     });
 
     $('#updateVersion').click(function() {
         Swal.fire({
-            title: 'Sürüm kontrol ediliyor...',
+            title: '<?php echo lang('Settings.checkVersionProgress') ?>',
             didOpen: () => Swal.showLoading()
         });
         $.post('<?php echo route_to('updateVersion') ?>').done(r => {
             Swal.close();
-            if (r.result) Swal.fire('Başarılı', r.message, 'success');
-            else Swal.fire('Hata', r.error || r.message, 'error');
+            if (r.result) {
+                if (r.update_available) {
+                    let filesList = '';
+                    if (r.changed_count > 0) {
+                        filesList = `<div class="mt-2 text-left small" style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9;">
+                            <strong><?php echo lang('Settings.changedFiles') ?> (${r.changed_count}):</strong><br>
+                            ${r.changed_files.slice(0, 10).map(f => `• ${f.filename}`).join('<br>')}
+                            ${r.changed_count > 10 ? '<br>... <?php echo lang('Settings.andMore') ?>' : ''}
+                        </div>`;
+                    }
+                    
+                    Swal.fire({
+                        title: '<?php echo lang('Settings.updateAvailableTitle') ?>',
+                        html: `<?php echo lang('Settings.currentVersion') ?>: <b>${r.current_version}</b><br>
+                               <?php echo lang('Settings.newVersion') ?>: <span class="badge badge-success" style="font-size: 1.1em">${r.new_version}</span><br>
+                               ${filesList}
+                                <div class="mt-4 d-flex flex-column gap-2">
+                                   <button type="button" class="btn btn-primary mb-2" onclick="autoUpdate('${r.new_version}')">
+                                       <i class="fas fa-magic mr-1"></i> <?php echo lang('Settings.autoUpdate') ?>
+                                   </button>
+                                   <button type="button" class="btn btn-success mb-2" onclick="downloadPatch('${r.new_version}')">
+                                       <i class="fas fa-file-archive mr-1"></i> <?php echo lang('Settings.downloadOnlyChanges') ?>
+                                   </button>
+                                   <button type="button" class="btn btn-outline-success mb-2" onclick="window.location.href='${r.download_url}'">
+                                       <i class="fas fa-download mr-1"></i> <?php echo lang('Settings.downloadAll') ?>
+                                   </button>
+                                   <button type="button" class="btn btn-info mb-2" onclick="window.open('${r.compare_url}', '_blank')">
+                                       <i class="fas fa-external-link-alt mr-1"></i> <?php echo lang('Settings.viewChanges') ?>
+                                   </button>
+                               </div>`,
+                        icon: 'info',
+                        showConfirmButton: false,
+                        showCancelButton: true,
+                        cancelButtonText: '<?php echo lang('Backend.close') ?>',
+                    });
+                } else {
+                    Swal.fire('<?php echo lang('Backend.success') ?>', r.message, 'success');
+                }
+            } else {
+                Swal.fire('<?php echo lang('Backend.error') ?>', r.error || r.message, 'error');
+            }
         });
     });
+
+    function downloadPatch(latestVersion) {
+        let form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '<?php echo route_to('downloadPatch') ?>';
+        
+        let csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '<?php echo csrf_token() ?>';
+        csrf.value = '<?php echo csrf_hash() ?>';
+        form.appendChild(csrf);
+
+        let latest = document.createElement('input');
+        latest.type = 'hidden';
+        latest.name = 'latest';
+        latest.value = latestVersion;
+        form.appendChild(latest);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+
+    function autoUpdate(latestVersion) {
+        Swal.fire({
+            title: '<?php echo lang('Settings.areYouSure') ?>',
+            text: '<?php echo lang('Settings.autoUpdateConfirm') ?>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<?php echo lang('Settings.yes') ?>',
+            cancelButtonText: '<?php echo lang('Settings.cancel') ?>'
+        }).then(res => {
+            if (res.isConfirmed) {
+                Swal.fire({
+                    title: '<?php echo lang('Settings.updatingWait') ?>',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                $.post('<?php echo route_to('autoUpdate') ?>', {
+                    latest: latestVersion
+                }).done(r => {
+                    if (r.result) {
+                        Swal.fire('<?php echo lang('Backend.success') ?>', r.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('<?php echo lang('Backend.error') ?>', r.message, 'error');
+                    }
+                }).fail(e => {
+                    Swal.fire('<?php echo lang('Backend.error') ?>', e.responseJSON?.message || 'Update failed', 'error');
+                });
+            }
+        });
+    }
 </script>
 <?php echo $this->endSection() ?>

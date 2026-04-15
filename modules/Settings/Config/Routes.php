@@ -13,4 +13,6 @@ $routes->group('backend/settings', ['namespace' => 'Modules\Settings\Controllers
     $routes->post('testMail', 'Settings::testMail', ['as' => 'testMail','role'=>'read']);
     $routes->post('updateVersion', 'Settings::checkVersion', ['as' => 'updateVersion','role'=>'update']);
     $routes->post('saveLanguageMode', 'Settings::saveLanguageMode', ['as' => 'saveLanguageMode','role'=>'update']);
+    $routes->post('downloadPatch', 'Settings::downloadPatch', ['as' => 'downloadPatch','role'=>'update']);
+    $routes->post('autoUpdate', 'Settings::autoUpdate', ['as' => 'autoUpdate','role'=>'update']);
 });

@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.6.0] - 2026-04-15
+
+### Added
+
+- **Automatic Update:** Introduced a new "One-Click Update" (Auto-Update) system in the Settings module. Features include automated GitHub version discovery, secure file-by-file patching, and automatic database migration.
+- **Backup Support:** Updates now automatically trigger a full backup of modified files before applying patches.
+- **Refactored DevGate:** Improved the integration of developer access credentials during the setup process with a more robust and modular logic.
+
+### Changed
+
+- **Internationalization (i18n):** Completed full translation support for the Settings module across all 11 supported languages (Arabic, German, English, Spanish, French, Hindi, Japanese, Portuguese, Russian, Turkish, Chinese).
+- **Update UI:** Modernized the version check and update workflow with an interactive SweetAlert2-based interface.
+- **Setup Flow:** Enhanced the security and reliability of credential propagation from the web installer to the DevGate configuration.
+
 ## [0.31.5.0] - 2026-04-14
 
 ### Security
@@ -254,6 +268,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.31.6.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.6.0
 [0.31.5.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.5.0
 [0.31.4.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.4.0
 [0.31.3.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.3.0
