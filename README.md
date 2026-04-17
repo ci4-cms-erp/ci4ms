@@ -11,7 +11,8 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - **Modular backend:** Each feature ships as an independent module (Blog, Pages, Menu, Media, Users, Settings, Theme, etc.) under `modules/*`.
 - **Flexible content management:** Page and blog entries include SEO metadata, categories, tags, and full comment workflows.
 - **Media & files:** Includes elFinder-powered media management, a built-in file editor, and an in-panel log viewer.
-- **Automatic Updates:** New "One-Click Update" system allows seamless system upgrades with automatic backups and migration support.
+- **Automatic Updates:** Modernized `UpdateService` provides a "One-Click Update" system with atomic file operations, automated GitHub version discovery (bypassing 300-file limits), and secure rollback management.
+- **Backup Support:** Updates automatically trigger a full backup of modified files before applying patches, with a dedicated management interface for restores.
 - **Theme system:** The `public/templates/*` structure and the `Modules\Theme` module enable installing or upgrading themes from ZIP packages.
 - **Setup & automation:** Offers a web-based installer (`/install`) plus a single CLI command (`php spark ci4ms:setup`) for automated installation, default data seeding, and route generation. Module scaffolding is available via `php spark make:module`.
 - **Docker support:** Ships with a production-ready `Dockerfile`, `docker-compose.yml`, and a GitHub Actions CI workflow out of the box.
@@ -200,5 +201,6 @@ A huge thank you to the security researchers who have helped make **ci4ms** more
 | **[offset](https://github.com/offset)** | Identified Critical vulnerabilities including multiple Stored XSS, Authorization Bypass in Fileeditor, Install Guard Bypass, and CRLF Injection. | Apr 2026 |
 | **[fg0x0](https://github.com/fg0x0)** | Identified Critical Arbitrary File Write (Zip Slip RCE) vulnerabilities in Theme::upload and Backup::restore modules. | Apr 2026 |
 | **[0xAlchemist](https://github.com/bugmithlegend)** , **[peeefour](https://github.com/peeefour)** and **[DexterHK](https://github.com/DexterHK)** | Identified Critical Full Account Takeover and Privilege Escalation via Stored DOM Blind XSS in Backup Management (v2). | Apr 2026 |
+| **[dapickle](https://github.com/dapickle)** | Identified Critical Authenticated Remote Code Execution (RCE) via unrestricted PHP file upload in Theme installation | Apr 2026 |
 
 > If you find a security vulnerability, please report it via [Security Policy](SECURITY.md).

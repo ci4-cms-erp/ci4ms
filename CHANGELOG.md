@@ -4,13 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.7.0] - 2026-04-17
+
+### Added
+
+- **UpdateService Library:** Introduced a comprehensive `UpdateService` library (`modules/Settings/Libraries/UpdateService.php`) to centralize all update logic. Features include GitHub Releases API integration (via `releases/latest`), atomic file writing with `rename()`, automatic backup of modified files, concurrency control via `ci4ms_update.lock`, and pagination-aware file comparison (bypassing GitHub's 300-file API limit).
+- **Rollback Management:** Added `listBackups()` and `rollbackUpdate()` endpoints with a SweetAlert2-based interactive UI for browsing and restoring system backups from the Settings dashboard.
+- **Security Advisory:** Added `security-advisory.md` documenting the authenticated RCE vulnerability via theme upload (GHSA-fw49-9xq4-gmx6).
+
+### Changed
+
+- **Settings Controller:** Refactored `checkVersion()`, `downloadPatch()`, and `autoUpdate()` methods to delegate all logic to the new `UpdateService` library, reducing controller complexity and improving testability.
+- **Setup Command:** Updated version reference in `Ci4msSetup.php` to `0.31.7.0`.
+- **Settings Routes:** Added new `listBackups` and `rollbackUpdate` POST routes under the `backend/settings` group.
+- **Settings UI:** Added "Backups" button to the settings header and integrated rollback confirmation workflow with progress feedback.
+- **Localization:** Added 12 new translation keys for backup and rollback features across English and Turkish language files.
+
 ## [0.31.6.0] - 2026-04-15
 
 ### Added
 
-- **Automatic Update:** Introduced a new "One-Click Update" (Auto-Update) system in the Settings module. Features include automated GitHub version discovery, secure file-by-file patching, and automatic database migration.
-- **Backup Support:** Updates now automatically trigger a full backup of modified files before applying patches.
-- **Refactored DevGate:** Improved the integration of developer access credentials during the setup process with a more robust and modular logic.
+- **Automatic Update:** Introduced a comprehensive `UpdateService` library in the Settings module. Features include automated GitHub version discovery via `releases/latest` endpoint, secure file-by-file patching (bypassing 300-file API limits), and automatic database migration support.
+- **Atomic Operations:** Implemented atomic file writing using temporary storage and `rename()` to prevent partial updates.
+- **Backup & Rollback:** Integrated an automatic backup mechanism that captures modified files before patching, with a new manual rollback management interface in the Settings dashboard.
+- **Concurrency Control:** Added `ci4ms_update.lock` to prevent concurrent update attempts.
+- **Update UI:** Modernized the version check and update workflow with an interactive SweetAlert2-based interface and detailed progress feedback.
 
 ### Changed
 
@@ -268,6 +286,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.31.7.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.7.0
 [0.31.6.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.6.0
 [0.31.5.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.5.0
 [0.31.4.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.4.0

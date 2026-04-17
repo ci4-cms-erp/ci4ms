@@ -46,6 +46,9 @@ echo $this->section('content'); ?>
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title font-weight-bold mb-0"><i class="fas fa-cog mr-2 text-primary"></i> <?php echo lang('Settings.siteSettings') ?></h3>
             <div class="ml-auto">
+                <button class="btn btn-sm btn-outline-secondary mr-2" id="listBackups" style="border-radius:10px">
+                    <i class="fas fa-history mr-1"></i> <?php echo lang('Settings.backups') ?>
+                </button>
                 <button class="btn btn-sm btn-outline-info" id="updateVersion" style="border-radius:10px">
                     <i class="fas fa-sync-alt mr-1"></i> <?php echo lang('Settings.updateVersion') ?>
                 </button>
@@ -477,6 +480,87 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                     }
                 }).fail(e => {
                     Swal.fire('<?php echo lang('Backend.error') ?>', e.responseJSON?.message || 'Update failed', 'error');
+                });
+            }
+        });
+    }
+
+    $('#listBackups').click(function() {
+        Swal.fire({
+            title: '<?php echo lang('Settings.loadingBackups') ?>',
+            didOpen: () => Swal.showLoading()
+        });
+
+        $.post('<?php echo route_to('listBackups') ?>').done(r => {
+            Swal.close();
+            if (r.result && r.backups.length > 0) {
+                let listHtml = `<div class="table-responsive">
+                    <table class="table table-sm table-hover text-left">
+                        <thead>
+                            <tr>
+                                <th><?php echo lang('Settings.backupName') ?></th>
+                                <th><?php echo lang('Settings.date') ?></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${r.backups.map(b => `
+                                <tr>
+                                    <td><small>${b.name}</small></td>
+                                    <td><small>${b.date}</small></td>
+                                    <td class="text-right">
+                                        <button class="btn btn-xs btn-danger" onclick="rollbackUpdate('${b.name}')">
+                                            <i class="fas fa-undo mr-1"></i> <?php echo lang('Settings.rollback') ?>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+
+                Swal.fire({
+                    title: '<?php echo lang('Settings.systemBackups') ?>',
+                    html: listHtml,
+                    width: '600px',
+                    showConfirmButton: false,
+                    showCancelButton: true,
+                    cancelButtonText: '<?php echo lang('Backend.close') ?>'
+                });
+            } else {
+                Swal.fire('<?php echo lang('Settings.noBackupsFound') ?>', '', 'info');
+            }
+        });
+    });
+
+    function rollbackUpdate(backupName) {
+        Swal.fire({
+            title: '<?php echo lang('Settings.areYouSure') ?>',
+            text: '<?php echo lang('Settings.rollbackConfirm') ?>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<?php echo lang('Settings.yes') ?>',
+            cancelButtonText: '<?php echo lang('Settings.cancel') ?>'
+        }).then(res => {
+            if (res.isConfirmed) {
+                Swal.fire({
+                    title: '<?php echo lang('Settings.rollbackWait') ?>',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                $.post('<?php echo route_to('rollbackUpdate') ?>', {
+                    backup_name: backupName
+                }).done(r => {
+                    if (r.result) {
+                        Swal.fire('<?php echo lang('Backend.success') ?>', r.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('<?php echo lang('Backend.error') ?>', r.message, 'error');
+                    }
+                }).fail(e => {
+                    Swal.fire('<?php echo lang('Backend.error') ?>', e.responseJSON?.message || 'Rollback failed', 'error');
                 });
             }
         });

@@ -15,4 +15,6 @@ $routes->group('backend/settings', ['namespace' => 'Modules\Settings\Controllers
     $routes->post('saveLanguageMode', 'Settings::saveLanguageMode', ['as' => 'saveLanguageMode','role'=>'update']);
     $routes->post('downloadPatch', 'Settings::downloadPatch', ['as' => 'downloadPatch','role'=>'update']);
     $routes->post('autoUpdate', 'Settings::autoUpdate', ['as' => 'autoUpdate','role'=>'update']);
+    $routes->post('listBackups', 'Settings::listBackups', ['as' => 'listBackups','role'=>'update']);
+    $routes->post('rollbackUpdate', 'Settings::rollbackUpdate', ['as' => 'rollbackUpdate','role'=>'update']);
 });

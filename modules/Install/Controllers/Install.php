@@ -66,7 +66,7 @@ class Install extends Controller
                 'app.supportedLocales' => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
                 'app.negotiateLocale' => 'true',
                 'app.appTimezone' => '\'Europe/Istanbul\'',
-                'app.version' => '0.31.6.0'
+                'app.version' => '0.31.7.0'
             ];
             if ($this->copyEnvFile() && $this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
@@ -186,7 +186,7 @@ class Install extends Controller
 
     /**
      * Updates DevGate configuration with the initial admin credentials.
-     * 
+     *
      * @param string $username
      * @param string $password
      * @return bool

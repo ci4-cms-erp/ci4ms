@@ -3,9 +3,16 @@
 namespace Modules\Settings\Controllers;
 
 use Config\Mimes;
+use Modules\Settings\Libraries\UpdateService;
 
 class Settings extends \Modules\Backend\Controllers\BaseController
 {
+    protected UpdateService $updateService;
+
+    public function __construct()
+    {
+        $this->updateService = new UpdateService();
+    }
     /**
      * @return string
      */
@@ -275,66 +282,14 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     public function checkVersion()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
-        $client = service('curlrequest');
 
-        try {
-            $response = $client->request('GET', 'https://api.github.com/repos/ci4-cms-erp/ci4ms/tags', [
-                'headers' => [
-                    'User-Agent' => 'CI4ms-Auto-Updater',
-                    'Accept'     => 'application/vnd.github.v3+json',
-                ],
-                'http_errors' => false
-            ]);
+        $result = $this->updateService->checkVersion();
 
-            $data = json_decode($response->getBody());
-
-            if (!empty($data) && is_array($data) && isset($data[0]->name)) {
-                $latestTag = $data[0];
-                $latestVersion = ltrim($latestTag->name, 'v');
-                $currentVersion = env('app.version');
-
-                if (version_compare($latestVersion, $currentVersion, '>')) {
-                    // Get changed files list using Compare API
-                    $compareResponse = $client->request('GET', "https://api.github.com/repos/ci4-cms-erp/ci4ms/compare/v{$currentVersion}...v{$latestVersion}", [
-                        'headers' => [
-                            'User-Agent' => 'CI4ms-Auto-Updater',
-                            'Accept'     => 'application/vnd.github.v3+json',
-                        ],
-                        'http_errors' => false
-                    ]);
-
-                    $compareData = json_decode($compareResponse->getBody());
-                    $changedFiles = [];
-                    if (isset($compareData->files)) {
-                        foreach ($compareData->files as $file) {
-                            $changedFiles[] = [
-                                'filename' => $file->filename,
-                                'status'   => $file->status,
-                                'raw_url'  => $file->raw_url
-                            ];
-                        }
-                    }
-
-                    return $this->respond([
-                        'result'            => true,
-                        'update_available'  => true,
-                        'message'           => lang('Backend.updateAvailable', [$latestVersion]),
-                        'new_version'       => $latestVersion,
-                        'current_version'   => $currentVersion,
-                        'download_url'      => $latestTag->zipball_url ?? '',
-                        'changed_count'     => count($changedFiles),
-                        'changed_files'     => $changedFiles,
-                        'compare_url'       => "https://github.com/ci4-cms-erp/ci4ms/compare/v{$currentVersion}...v{$latestVersion}"
-                    ]);
-                }
-
-                return $this->respond(['result' => true, 'message' => lang('Settings.alreadyLastVersion')]);
-            }
-
-            return $this->respond(['result' => false, 'message' => lang('Settings.noTagsFound')], 404);
-        } catch (\Exception $e) {
-            return $this->respond(['result' => false, 'error' => $e->getMessage()], 500);
+        if ($result['result'] === false) {
+            return $this->respond($result, 404);
         }
+
+        return $this->respond($result);
     }
 
     /**
@@ -382,57 +337,44 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function downloadPatch()
     {
-        $currentVersion = env('app.version');
+        $currentVersion = (string) env('app.version');
         $latestVersion = $this->request->getPost('latest');
-        
-        if (empty($latestVersion)) return $this->fail(lang('Settings.newVersionRequired'));
 
-        $client = service('curlrequest');
-        $zip = new \ZipArchive();
-        $zipName = "patch-v{$currentVersion}-to-v{$latestVersion}.zip";
-        $zipPath = WRITEPATH . 'uploads/' . $zipName;
+        if (empty($latestVersion)) {
+            return $this->response->setStatusCode(400)->setBody(lang('Settings.newVersionRequired'));
+        }
 
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== TRUE) {
+        $result = $this->updateService->downloadPatchRaw($currentVersion, $latestVersion);
+
+        if ($result['result'] === false) {
+            return $this->response->setStatusCode(500)->setBody($result['message'] ?? 'Download failed');
+        }
+
+        $patchZip = new \ZipArchive();
+        $patchZipName = "patch-v{$currentVersion}-to-v{$latestVersion}.zip";
+        $patchZipPath = WRITEPATH . 'uploads/' . $patchZipName;
+
+        if ($patchZip->open($patchZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== TRUE) {
             return $this->response->setStatusCode(500)->setBody(lang('Settings.errorCreatingZip'));
         }
 
-        try {
-            $response = $client->request('GET', "https://api.github.com/repos/ci4-cms-erp/ci4ms/compare/v{$currentVersion}...v{$latestVersion}", [
-                'headers' => [
-                    'User-Agent' => 'CI4ms-Auto-Updater',
-                    'Accept'     => 'application/vnd.github.v3+json',
-                ],
-            ]);
-
-            $data = json_decode($response->getBody());
-            
-            if (!isset($data->files) || empty($data->files)) {
-                return $this->response->setStatusCode(404)->setBody(lang('Settings.noChangesFound'));
-            }
-
-            foreach ($data->files as $file) {
-                if ($file->status === 'removed') continue;
-                
-                // Fetch the raw content of the file
-                $fileResponse = $client->request('GET', $file->raw_url, [
-                    'headers' => ['User-Agent' => 'CI4ms-Auto-Updater']
-                ]);
-                
-                // Add to zip preserving directory structure
-                $zip->addFromString($file->filename, $fileResponse->getBody());
-            }
-
-            $zip->close();
-
-            if (file_exists($zipPath)) {
-                return $this->response->download($zipPath, null)->setFileName($zipName);
-            }
-
-            return $this->response->setStatusCode(404)->setBody(lang('Settings.zipNotFound'));
-
-        } catch (\Exception $e) {
-            return $this->response->setStatusCode(500)->setBody($e->getMessage());
+        foreach ($result['files'] as $path => $content) {
+            $patchZip->addFromString($path, $content);
         }
+
+        // Removed files listesi ekle
+        $files = $this->updateService->checkVersion()['changed_files'] ?? [];
+        $removed = [];
+        foreach ($files as $f) {
+            if ($f['status'] === 'removed') $removed[] = $f['filename'];
+        }
+        if (!empty($removed)) {
+            $patchZip->addFromString('REMOVED_FILES.txt', implode(PHP_EOL, $removed));
+        }
+
+        $patchZip->close();
+
+        return $this->response->download($patchZipPath, null)->setFileName($patchZipName);
     }
 
     /**
@@ -442,86 +384,97 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
 
-        $currentVersion = env('app.version');
-        $latestVersion = $this->request->getPost('latest');
-        
-        if (empty($latestVersion)) return $this->fail(lang('Settings.newVersionRequired'));
+        $latestVersion = trim($this->request->getPost('latest') ?? '');
+        $currentVersion = (string) env('app.version');
 
-        // Check if ROOTPATH is writable
-        if (!is_writable(ROOTPATH)) {
-            return $this->respond(['result' => false, 'message' => lang('Settings.permissionsError')], 500);
+        if (empty($latestVersion)) {
+            return $this->fail(lang('Settings.newVersionRequired'));
         }
 
-        $client = service('curlrequest');
-        $backupDir = WRITEPATH . 'backups/' . "v{$currentVersion}_" . date('Ymd_His') . '/';
-        if (!is_dir($backupDir)) mkdir($backupDir, 0777, true);
+        if (!$this->validateVersionString($latestVersion)) {
+            return $this->respond(['result' => false, 'message' => lang('Settings.invalidVersionFormat')], 422);
+        }
 
-        try {
-            // Get files list
-            $response = $client->request('GET', "https://api.github.com/repos/ci4-cms-erp/ci4ms/compare/v{$currentVersion}...v{$latestVersion}", [
-                'headers' => [
-                    'User-Agent' => 'CI4ms-Auto-Updater',
-                    'Accept'     => 'application/vnd.github.v3+json',
-                ],
-            ]);
+        // 1. Dosyaları çek
+        $downloadResult = $this->updateService->downloadPatchRaw($currentVersion, $latestVersion);
+        if ($downloadResult['result'] === false) {
+            return $this->respond($downloadResult, 500);
+        }
 
-            $data = json_decode($response->getBody());
-            if (!isset($data->files) || empty($data->files)) {
-                return $this->respond(['result' => false, 'message' => lang('Settings.noChangesFound')], 404);
-            }
+        // 2. Uygula
+        $allFiles = $this->updateService->checkVersion()['changed_files'] ?? [];
+        $applyResult = $this->updateService->applyUpdate($latestVersion, $downloadResult['files'], $allFiles);
 
-            $updatedFiles = [];
-            foreach ($data->files as $file) {
-                $targetFile = ROOTPATH . $file->filename;
-                $targetDir = dirname($targetFile);
-
-                // Skip removals for safety (requires manual check usually)
-                if ($file->status === 'removed') continue;
-
-                // Backup existing file
-                if (file_exists($targetFile)) {
-                    $relDir = dirname($file->filename);
-                    if ($relDir !== '.' && !is_dir($backupDir . $relDir)) mkdir($backupDir . $relDir, 0777, true);
-                    copy($targetFile, $backupDir . $file->filename);
-                }
-
-                // Create target directory if not exists
-                if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
-
-                // Fetch raw content
-                $fileResponse = $client->request('GET', $file->raw_url, [
-                    'headers' => ['User-Agent' => 'CI4ms-Auto-Updater']
-                ]);
-
-                // Write to target
-                file_put_contents($targetFile, $fileResponse->getBody());
-                $updatedFiles[] = $file->filename;
-            }
-
-            // Update .env version
-            $envPath = ROOTPATH . '.env';
-            if (is_writable($envPath)) {
-                $envContent = file_get_contents($envPath);
-                $envContent = preg_replace('/^app.version\s*=\s*.*/m', "app.version='{$latestVersion}'", $envContent);
-                file_put_contents($envPath, $envContent);
-            }
-
-            // Run Migrations
-            $migrate = \Config\Services::migrations();
-            $migrate->setNamespace('App');
-            $migrate->latest();
-
-            // Clear Cache
-            cache()->clean();
-
+        if ($applyResult['result'] === true) {
             return $this->respond([
-                'result'  => true,
+                'result' => true,
                 'message' => lang('Settings.updateSuccess', [$latestVersion]),
-                'files'   => $updatedFiles
+                'removed_files' => $applyResult['removed_files']
             ]);
-
-        } catch (\Exception $e) {
-            return $this->respond(['result' => false, 'message' => lang('Settings.updateFail', [$e->getMessage()])], 500);
         }
+
+        return $this->respond($applyResult, 500);
+    }
+
+    /**
+     * Yedekleri listeler (AJAX).
+     */
+    public function listBackups()
+    {
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+
+        $backups = $this->updateService->listBackups();
+        return $this->respond(['result' => true, 'backups' => $backups]);
+    }
+
+    /**
+     * Manuel rollback işlemi (AJAX).
+     */
+    public function rollbackUpdate()
+    {
+        if (!$this->request->isAJAX()) return $this->failForbidden();
+
+        $backupName = $this->request->getPost('backup_name');
+        if (empty($backupName)) {
+            return $this->respond(['result' => false, 'message' => lang('Settings.backupNameRequired')], 400);
+        }
+
+        $backupDir = WRITEPATH . 'backups/' . $backupName . '/';
+        if (!is_dir($backupDir)) {
+            return $this->respond(['result' => false, 'message' => lang('Settings.noBackupsFound')], 404);
+        }
+
+        // Tüm dosyaları listeleyelim (basitleştirilmiş: backup içindeki her şeyi geri atıyor)
+        $files = $this->getRecursiveFiles($backupDir);
+        $result = $this->updateService->rollback($backupDir, $files);
+
+        if ($result) {
+            cache()->clean();
+            return $this->respond(['result' => true, 'message' => lang('Settings.rollbackSuccess')]);
+        }
+
+        return $this->respond(['result' => false, 'message' => lang('Settings.rollbackFail', ['Error'])], 500);
+    }
+
+    private function getRecursiveFiles(string $dir, string $baseDir = ''): array
+    {
+        if ($baseDir === '') $baseDir = $dir;
+        $files = [];
+        $items = scandir($dir);
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') continue;
+            $path = $dir . $item;
+            if (is_dir($path)) {
+                $files = array_merge($files, $this->getRecursiveFiles($path . '/', $baseDir));
+            } else {
+                $files[] = str_replace($baseDir, '', $path);
+            }
+        }
+        return $files;
+    }
+
+    private function validateVersionString(string $version): bool
+    {
+        return (bool) preg_match('/^\d+\.\d+\.\d+\.\d+$/', $version);
     }
 }
