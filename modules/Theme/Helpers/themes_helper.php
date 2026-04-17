@@ -28,6 +28,17 @@ if (!function_exists('findDuplicateSubfolders')) {
             $baseApp    = rtrim(APPPATH, '/');
             $basePublic = rtrim(ROOTPATH . 'public', '/');
 
+            // ── Security: Allowed extensions for public/ directory ──
+            $allowedPublicExtensions = [
+                'css', 'js', 'map',
+                'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'bmp', 'avif',
+                'woff', 'woff2', 'ttf', 'eot', 'otf',
+                'xml', 'json', 'txt', 'md',
+                'mp4', 'webm', 'ogg', 'mp3', 'wav',
+                'pdf',
+            ];
+            // ── End Security ────────────────────────────────────────
+
             $appFolders = ['Config', 'Controllers', 'Helpers', 'Libraries', 'Views', 'Database/Migrations'];
 
             // folders under app
@@ -42,14 +53,14 @@ if (!function_exists('findDuplicateSubfolders')) {
                 $log = array_merge($log, smart_move($src, $dst));
             }
 
-            // Move public/assets
+            // Move public/assets (with extension filter)
             $srcAssets = "$tmpPath/public/assets";
             if (is_dir("$tmpPath/public/templates/$themeName/assets")) {
                 $srcAssets = "$tmpPath/public/templates/$themeName/assets";
             }
 
             $dstAssets = "$basePublic/templates/$themeName/assets";
-            $log = array_merge($log, smart_move($srcAssets, $dstAssets));
+            $log = array_merge($log, smart_move($srcAssets, $dstAssets, $allowedPublicExtensions));
 
             // public root files (info.xml, screenshot.png etc.)
             $publicSearchDir = "$tmpPath/public";
@@ -59,6 +70,14 @@ if (!function_exists('findDuplicateSubfolders')) {
 
             foreach (glob("$publicSearchDir/*.*") as $file) {
                 if (is_dir($file) || basename($file) === 'assets') continue;
+
+                // ── Security: Filter public root files by extension ──
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                if (!empty($ext) && !in_array($ext, $allowedPublicExtensions, true)) {
+                    $log[] = "⛔ Blocked (forbidden extension): " . basename($file);
+                    continue;
+                }
+                // ── End Security ─────────────────────────────────────
 
                 $targetDir = "$basePublic/templates/$themeName";
                 if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
@@ -73,7 +92,16 @@ if (!function_exists('findDuplicateSubfolders')) {
     }
 
     if (!function_exists('smart_move')) {
-        function smart_move(string $source, string $target): array
+        /**
+         * Recursively move files from source to target directory.
+         *
+         * @param string     $source              Source directory path
+         * @param string     $target              Target directory path
+         * @param array|null $allowedExtensions    If provided, only files with these extensions will be moved.
+         *                                        This is used as a defense-in-depth measure for public/ directory writes.
+         * @return array     Log messages
+         */
+        function smart_move(string $source, string $target, ?array $allowedExtensions = null): array
         {
             $log = [];
 
@@ -93,16 +121,26 @@ if (!function_exists('findDuplicateSubfolders')) {
                 if ($fileInfo->isDir()) {
                     if (!is_dir($toPath)) {
                         mkdir($toPath, 0777, true);
-                        $log[] = "📁 Folder created: $toPath"; // Optional log
+                        $log[] = "📁 Folder created: $toPath";
                     }
                 } else {
+                    // ── Security: Extension filter (defense-in-depth) ──
+                    if ($allowedExtensions !== null) {
+                        $ext = strtolower(pathinfo($fileInfo->getFilename(), PATHINFO_EXTENSION));
+                        if (!empty($ext) && !in_array($ext, $allowedExtensions, true)) {
+                            $log[] = "⛔ Blocked (forbidden extension): " . $fileInfo->getFilename();
+                            continue;
+                        }
+                    }
+                    // ── End Security ───────────────────────────────────
+
                     $toDir = dirname($toPath);
                     if (!is_dir($toDir)) {
                         mkdir($toDir, 0777, true);
                     }
 
-                    rename($fileInfo->getPathname(), $toPath); // veya copy()
-                    $log[] = "📄 Moved: " . $fileInfo->getFilename(); // Optional log
+                    rename($fileInfo->getPathname(), $toPath);
+                    $log[] = "📄 Moved: " . $fileInfo->getFilename();
                 }
             }
 
@@ -156,7 +194,7 @@ if (!function_exists('findDuplicateSubfolders')) {
                 $target = "$baseApp/$folder/templates/$themeName";
                 if (is_dir($target)) {
                     deleteFldr($target);
-                    $log[] = lang('Theme.deleted', "app/$folder/templates/$themeName");
+                    $log[] = lang('Theme.deleted', ["app/$folder/templates/$themeName"]);
                 }
             }
 

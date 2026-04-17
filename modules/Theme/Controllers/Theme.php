@@ -20,13 +20,53 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         $tempPath = WRITEPATH . 'tmp/' . str_replace('_theme.zip', '', $file->getName()) . '/';
         $zip = new \ZipArchive();
         if ($zip->open($file->getTempName()) === true) {
+            // ── Security: Pre-extraction validation ──────────────────────
+            // Allowed static file extensions for the public/ directory.
+            // PHP files MUST NOT be written under public/ (RCE prevention).
+            $allowedPublicExtensions = [
+                'css', 'js', 'map',
+                'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'bmp', 'avif',
+                'woff', 'woff2', 'ttf', 'eot', 'otf',
+                'xml', 'json', 'txt', 'md',
+                'mp4', 'webm', 'ogg', 'mp3', 'wav',
+                'pdf',
+            ];
+
+            $forbiddenEntries = [];
+
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $entryName = $zip->getNameIndex($i);
-                if (preg_match('/\.\./', $entryName)) {
+
+                // 1. Path traversal check (strengthened)
+                if (preg_match('/\.\.[\\/\\\\]/', $entryName) || preg_match('/^[\\/\\\\]/', $entryName)) {
                     $zip->close();
-                    return redirect()->route('backendThemes')->withInput()->with('errors', [lang('Theme.zipOpenFailed')]);
+                    return redirect()->route('backendThemes')->withInput()
+                        ->with('errors', [lang('Theme.pathTraversalDetected', [$entryName])]);
+                }
+
+                // 2. Forbidden file extension check for public/ directory
+                //    Skip directory entries (they end with /)
+                if (substr($entryName, -1) === '/') {
+                    continue;
+                }
+
+                // Normalize: check files destined for public/
+                $normalizedEntry = strtolower($entryName);
+                if (strpos($normalizedEntry, 'public/') === 0) {
+                    $ext = strtolower(pathinfo($entryName, PATHINFO_EXTENSION));
+                    if (!empty($ext) && !in_array($ext, $allowedPublicExtensions, true)) {
+                        $forbiddenEntries[] = $entryName;
+                    }
                 }
             }
+
+            if (!empty($forbiddenEntries)) {
+                $zip->close();
+                return redirect()->route('backendThemes')->withInput()
+                    ->with('errors', [lang('Theme.forbiddenFileInZip', [implode(', ', $forbiddenEntries)])]);
+            }
+            // ── End Security ─────────────────────────────────────────────
+
             $zip->extractTo($tempPath);
             $zip->close();
         } else {
