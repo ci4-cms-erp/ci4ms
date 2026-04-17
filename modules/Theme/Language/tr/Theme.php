@@ -15,5 +15,7 @@ return [
     'themeDeletedSuccessfully' => 'Tema başarıyla kaldırıldı.',
     'themeActiveCannotDelete' => 'DİKKAT: Bu tema an itibariyle aktif! Lütfen önce başka bir temaya geçiş yapın.',
     'noTablesFound' => 'Bu temaya ait hiçbir migration/veritabanı tablosu tespit edilemedi. Sadece tema dosyaları kaldırılacaktır.',
-    'deleted'=>'Silindi : {0}'
+    'deleted'=>'Silindi : {0}',
+    'forbiddenFileInZip'          => 'ZIP arşivinde yasaklı dosya türü tespit edildi: {0}. public/ dizini altında yalnızca statik dosyalara (css, js, resimler, fontlar, xml, json) izin verilir. PHP dosyalarına izin verilmez.',
+    'pathTraversalDetected'       => 'ZIP arşiv girişinde olası dizin geçişi (path traversal) saldırısı tespit edildi: {0}',
 ];

@@ -1,0 +1,32 @@
+# ──────────────────────────────────────────────────────────────
+# Security: Prevent PHP execution in theme templates directory
+# ──────────────────────────────────────────────────────────────
+# This is a defense-in-depth measure to prevent Remote Code
+# Execution (RCE) via malicious PHP files uploaded through
+# theme ZIP archives. Even if a PHP file somehow bypasses
+# the application-level validation, the web server will
+# deny direct access to it.
+# ──────────────────────────────────────────────────────────────
+
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phps|pht|phar|shtml|cgi)$">
+    <IfModule mod_authz_core.c>
+        # Apache 2.4+
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        # Apache 2.2
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Also prevent execution via handler override
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
