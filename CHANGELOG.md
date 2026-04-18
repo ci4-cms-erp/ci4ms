@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.8.0] - 2026-04-19
+
+### Fixed
+
+- **Security (Session Management):** Re-activated user account status verification in `Ci4MsAuthFilter`. Deactivated or banned users now have their sessions immediately terminated upon their next request, remediating a session bypass flaw.
+- **Security (Arbitrary Table Drop):** Implemented migration-based whitelist validation in `Theme::deleteProcess`. This ensures that selectively dropping database tables during theme deletion is restricted exclusively to tables declared within the specific theme's migration files, preventing arbitrary database table deletion.
+
 ## [0.31.7.0] - 2026-04-17
 
 ### Added
@@ -286,6 +293,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.31.8.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.8.0
 [0.31.7.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.7.0
 [0.31.6.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.6.0
 [0.31.5.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.5.0

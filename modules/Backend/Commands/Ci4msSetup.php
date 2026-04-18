@@ -218,7 +218,7 @@ class Ci4msSetup extends BaseCommand
             'app.supportedLocales'               => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
             'app.negotiateLocale'                => 'true',
             'app.appTimezone'                    => '\'Europe/Istanbul\'',
-            'app.version'                        => '0.31.7.0',
+            'app.version'                        => '0.31.8.0',
         ];
 
         if (!$this->updateEnvSettings($updates)) {

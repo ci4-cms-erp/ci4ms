@@ -23,7 +23,7 @@
         "codeigniter4/translations": "4.7.0",
         "ezyang/htmlpurifier": "4.19",
         "gregwar/captcha": "1.3.0",
-        "studio-42/elfinder": "2.1.66"
+        "studio-42/elfinder": "2.1.67"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",

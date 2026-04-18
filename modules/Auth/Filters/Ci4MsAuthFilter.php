@@ -13,12 +13,12 @@ class Ci4MsAuthFilter implements FilterInterface
         if (! auth()->loggedIn()) {
             return redirect()->route('login');
         }
-        /* $user = auth()->user();
-        if ($user && ($user->isBanned() || !$user->active)) {
-            auth('session')->logout();
+        $user = auth()->user();
 
+        if ($user && ($user->isBanned() || (isset($user->active) && (int)$user->active === 0))) {
+            auth('session')->logout();
             return redirect()->route('login')->with('error', lang('Auth.bannedUser'));
-        } */
+        }
 
         $router = service('router');
         $controllerName = $router->controllerName();

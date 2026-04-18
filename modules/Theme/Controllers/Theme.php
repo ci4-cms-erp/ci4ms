@@ -24,11 +24,32 @@ class Theme extends \Modules\Backend\Controllers\BaseController
             // Allowed static file extensions for the public/ directory.
             // PHP files MUST NOT be written under public/ (RCE prevention).
             $allowedPublicExtensions = [
-                'css', 'js', 'map',
-                'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'bmp', 'avif',
-                'woff', 'woff2', 'ttf', 'eot', 'otf',
-                'xml', 'json', 'txt', 'md',
-                'mp4', 'webm', 'ogg', 'mp3', 'wav',
+                'css',
+                'js',
+                'map',
+                'png',
+                'jpg',
+                'jpeg',
+                'gif',
+                'svg',
+                'webp',
+                'ico',
+                'bmp',
+                'avif',
+                'woff',
+                'woff2',
+                'ttf',
+                'eot',
+                'otf',
+                'xml',
+                'json',
+                'txt',
+                'md',
+                'mp4',
+                'webm',
+                'ogg',
+                'mp3',
+                'wav',
                 'pdf',
             ];
 
@@ -142,16 +163,31 @@ class Theme extends \Modules\Backend\Controllers\BaseController
             return redirect()->route('templateSettings')->with('errors', [lang('Theme.themeActiveCannotDelete')]);
         }
 
+        $allowedTables = [];
+        $migrationPath = APPPATH . 'Database/Migrations/templates/' . $themeName;
+        if (is_dir($migrationPath)) {
+            $files = glob($migrationPath . '/*.php');
+            foreach ($files as $file) {
+                $content = file_get_contents($file);
+                preg_match_all("/\\\$this->forge->createTable\s*\(\s*['\"]([^'\"]+)['\"]/i", $content, $matches);
+                if (!empty($matches[1])) {
+                    foreach ($matches[1] as $tName) {
+                        $allowedTables[] = $tName;
+                    }
+                }
+            }
+        }
+        $allowedTables = array_unique($allowedTables);
         $log = [];
-        // Delete tables (selected ones)
         $tablesToDrop = $this->request->getPost('tables');
         if (!empty($tablesToDrop) && is_array($tablesToDrop)) {
             $forge = \Config\Database::forge();
             $db = \Config\Database::connect();
             foreach ($tablesToDrop as $table) {
-                if ($db->tableExists($table)) {
+                // Sadece izin verilen (temaya ait) tabloları sil
+                if (in_array($table, $allowedTables) && $db->tableExists($table)) {
                     $forge->dropTable($table, true);
-                    $log[] = "🗑️ Table deleted: $table";
+                    $log[] = "🗑️ " . lang('Theme.tableDeleted', [$table]);
                 }
             }
         }

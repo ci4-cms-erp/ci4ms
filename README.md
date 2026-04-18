@@ -201,6 +201,6 @@ A huge thank you to the security researchers who have helped make **ci4ms** more
 | **[offset](https://github.com/offset)** | Identified Critical vulnerabilities including multiple Stored XSS, Authorization Bypass in Fileeditor, Install Guard Bypass, and CRLF Injection. | Apr 2026 |
 | **[fg0x0](https://github.com/fg0x0)** | Identified Critical Arbitrary File Write (Zip Slip RCE) vulnerabilities in Theme::upload and Backup::restore modules. | Apr 2026 |
 | **[0xAlchemist](https://github.com/bugmithlegend)** , **[peeefour](https://github.com/peeefour)** and **[DexterHK](https://github.com/DexterHK)** | Identified Critical Full Account Takeover and Privilege Escalation via Stored DOM Blind XSS in Backup Management (v2). | Apr 2026 |
-| **[dapickle](https://github.com/dapickle)** | Identified Critical Authenticated Remote Code Execution (RCE) via unrestricted PHP file upload in Theme installation | Apr 2026 |
+| **[dapickle](https://github.com/dapickle)** | Identified Critical Authenticated RCE in Theme installation, Arbitrary Database Table Drop in Theme module, and a Session Management Bypass. | Apr 2026 |
 
 > If you find a security vulnerability, please report it via [Security Policy](SECURITY.md).
