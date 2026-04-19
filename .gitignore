@@ -148,3 +148,4 @@ composer.lock.json
 .claude
 tests/*
 phpunit.xml.dist
+node_modules
