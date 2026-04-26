@@ -41,7 +41,7 @@ class UserSessionModel extends Model
      * Creates a new session record after a login request.
      * To prevent duplicate records, if an existing session matching the provided
      * tracking ID is found, it will update the existing data instead.
-     * 
+     *
      * @param int    $userId     System ID of the user
      * @param string $sessionId  Permanent device identifier (Tracker ID)
      * @param array  $deviceInfo Device details returned from the device helper
@@ -66,7 +66,7 @@ class UserSessionModel extends Model
             'is_active'       => 1,
         ];
 
-        $geo = @json_decode(file_get_contents("http://ip-api.com/json/{$ip}?fields=city,country,regionName"), true);
+        $geo = @json_decode(file_get_contents("http://ip-api.com/json/{$ip}?fields=city,country,regionName,status"), true);
         if ($geo && $geo['status'] ?? '' === 'success') {
             $data['city']    = $geo['city'] ?? null;
             $data['country'] = $geo['country'] ?? null;
@@ -82,7 +82,7 @@ class UserSessionModel extends Model
 
     /**
      * Updates the last activity date for the active session upon every page request.
-     * To optimize database performance, it utilizes a caching mechanism (cooldown) to ensure 
+     * To optimize database performance, it utilizes a caching mechanism (cooldown) to ensure
      * a maximum of one UPDATE query is executed per 60 seconds for the same session.
      *
      * @param string $sessionId Permanent device identifier
@@ -107,7 +107,7 @@ class UserSessionModel extends Model
 
     /**
      * Terminates a defined device/session record for a specific user.
-     * Instead of physically deleting the session file, it safely disables the session 
+     * Instead of physically deleting the session file, it safely disables the session
      * at the Filter level by utilizing the database's "is_active" flag logic.
      *
      * @param int    $userId           System ID of the user

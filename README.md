@@ -2,8 +2,18 @@
 
 CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, modular architecture with RBAC authorization and theme support. It combines CMS workflows, developer-focused CLI commands, an extensible module system, and customizable front-end themes in a single package.
 
-[![Patreon](https://img.shields.io/badge/Patreon-Support%20Us-F96854?style=for-the-badge&logo=patreon&logoColor=white)](https://patreon.com/cw/bertugfahriozer)
+[![Release](https://img.shields.io/github/v/release/ci4-cms-erp/ci4ms?style=for-the-badge&label=release)](https://github.com/ci4-cms-erp/ci4ms/releases)
+[![License](https://img.shields.io/github/license/ci4-cms-erp/ci4ms?style=for-the-badge)](https://github.com/ci4-cms-erp/ci4ms/blob/main/LICENSE)
+[![Build](https://img.shields.io/github/actions/workflow/status/ci4-cms-erp/ci4ms/docker-test.yml?style=for-the-badge&label=build)](https://github.com/ci4-cms-erp/ci4ms/actions)
+![PHP](https://img.shields.io/badge/PHP-%3E%3D8.1-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![CodeIgniter](https://img.shields.io/badge/CodeIgniter-4.x-EF4223?style=for-the-badge&logo=codeigniter&logoColor=white)
+![Packagist Downloads](https://img.shields.io/packagist/dt/ci4-cms-erp/ci4ms?style=for-the-badge)
+[![Stars](https://img.shields.io/github/stars/ci4-cms-erp/ci4ms?style=for-the-badge)](https://github.com/ci4-cms-erp/ci4ms/stargazers)
+[![Forks](https://img.shields.io/github/forks/ci4-cms-erp/ci4ms?style=for-the-badge)](https://github.com/ci4-cms-erp/ci4ms/network/members)
 
+[![Patreon](https://img.shields.io/badge/Patreon-Support%20Me-F96854?style=for-the-badge&logo=patreon&logoColor=white)](https://patreon.com/cw/bertugfahriozer)
+
+![ci4ms-screenshot](https://bertugfahriozer.com/uploads/media/ci4ms-screenshot.webp)
 
 ## Key Features
 
