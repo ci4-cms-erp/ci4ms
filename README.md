@@ -5,7 +5,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 [![Release](https://img.shields.io/github/v/release/ci4-cms-erp/ci4ms?style=for-the-badge&label=release)](https://github.com/ci4-cms-erp/ci4ms/releases)
 [![License](https://img.shields.io/github/license/ci4-cms-erp/ci4ms?style=for-the-badge)](https://github.com/ci4-cms-erp/ci4ms/blob/main/LICENSE)
 [![Build](https://img.shields.io/github/actions/workflow/status/ci4-cms-erp/ci4ms/docker-test.yml?style=for-the-badge&label=build)](https://github.com/ci4-cms-erp/ci4ms/actions)
-![PHP](https://img.shields.io/badge/PHP-%3E%3D8.1-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-%3E%3D8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![CodeIgniter](https://img.shields.io/badge/CodeIgniter-4.x-EF4223?style=for-the-badge&logo=codeigniter&logoColor=white)
 ![Packagist Downloads](https://img.shields.io/packagist/dt/ci4-cms-erp/ci4ms?style=for-the-badge)
 [![Stars](https://img.shields.io/github/stars/ci4-cms-erp/ci4ms?style=for-the-badge)](https://github.com/ci4-cms-erp/ci4ms/stargazers)
