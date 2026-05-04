@@ -85,7 +85,7 @@
 <?php echo $this->endSection(); ?>
 
 <?php echo $this->section('javascript'); ?>
-<script>
+<script type="text/javascript" {csp-script-nonce}>
     document.addEventListener("DOMContentLoaded", function () {
 
         // Tümünü seç / bırak

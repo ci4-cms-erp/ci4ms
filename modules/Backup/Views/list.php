@@ -104,7 +104,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 url: '<?php echo route_to('backup') ?>',
                 type: 'POST',
                 data: (d) => {
-                    d['<?php echo csrf_token() ?>'] = '<?php echo csrf_hash() ?>';
+                    d[CI4MS_CSRF.name] = CI4MS_CSRF.getHash();
                 }
             },
             columns: [{
@@ -131,7 +131,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             var btn = $(this);
             btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> <?php echo lang('Backup.backingUp') ?>');
             $.post('<?php echo route_to('backupCreate') ?>', {
-                "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
             }, function(r) {
                 if (r.success) {
                     showToast('<?php echo lang('Backup.backupCreated') ?>');
@@ -156,7 +156,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
         }).then((result) => {
             if (result.isConfirmed) {
                 $.post('/backend/backup/delete/' + id, {
-                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }, function(r) {
                     if (r.success) {
                         showToast(r.message);

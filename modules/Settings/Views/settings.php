@@ -299,7 +299,7 @@ echo script_tag("be-assets/plugins/elFinder/js/elfinder.min.js");
 echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaultLocale', 'tr') . ".js");
 echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
 echo script_tag("be-assets/js/ci4ms.js") ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     $('.repeater').repeater({
         isFirstItemUndeletable: true,
         show: function() {
@@ -338,7 +338,8 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
 
     $('#webp-convert').on('switchChange.bootstrapSwitch', function(e, state) {
         $.post('<?php echo route_to('elfinderConvertWebp') ?>', {
-            isActive: state ? 1 : 0
+            isActive: state ? 1 : 0,
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
         }, 'json').done(data => {
             showToast(state ? '<?php echo lang('Settings.webpActive') ?>' : '<?php echo lang('Settings.webpDisabled') ?>');
         });
@@ -355,7 +356,8 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             if (res.isConfirmed) {
                 $.post('<?php echo route_to('setTemplate') ?>', {
                     path: path,
-                    tName: templateName
+                    tName: templateName,
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }).done(data => {
                     if (data.result) location.reload();
                 });
@@ -372,7 +374,8 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         let btn = $(this);
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
         $.post('<?php echo route_to('testMail') ?>', {
-            testemail: email
+            testemail: email,
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
         }).done(r => {
             showToast(r.message, r.result ? 'success' : 'error');
             btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> <?php echo lang('Settings.send') ?>');
@@ -384,7 +387,9 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             title: '<?php echo lang('Settings.checkVersionProgress') ?>',
             didOpen: () => Swal.showLoading()
         });
-        $.post('<?php echo route_to('updateVersion') ?>').done(r => {
+        $.post('<?php echo route_to('updateVersion') ?>',{
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+        }).done(r => {
             Swal.close();
             if (r.result) {
                 if (r.update_available) {
@@ -396,7 +401,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                             ${r.changed_count > 10 ? '<br>... <?php echo lang('Settings.andMore') ?>' : ''}
                         </div>`;
                     }
-                    
+
                     Swal.fire({
                         title: '<?php echo lang('Settings.updateAvailableTitle') ?>',
                         html: `<?php echo lang('Settings.currentVersion') ?>: <b>${r.current_version}</b><br>
@@ -434,11 +439,11 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         let form = document.createElement('form');
         form.method = 'POST';
         form.action = '<?php echo route_to('downloadPatch') ?>';
-        
+
         let csrf = document.createElement('input');
         csrf.type = 'hidden';
-        csrf.name = '<?php echo csrf_token() ?>';
-        csrf.value = '<?php echo csrf_hash() ?>';
+        csrf.name = CI4MS_CSRF.name;
+        csrf.value = CI4MS_CSRF.getHash();
         form.appendChild(csrf);
 
         let latest = document.createElement('input');
@@ -469,7 +474,8 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                 });
 
                 $.post('<?php echo route_to('autoUpdate') ?>', {
-                    latest: latestVersion
+                    latest: latestVersion,
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }).done(r => {
                     if (r.result) {
                         Swal.fire('<?php echo lang('Backend.success') ?>', r.message, 'success').then(() => {
@@ -491,7 +497,9 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             didOpen: () => Swal.showLoading()
         });
 
-        $.post('<?php echo route_to('listBackups') ?>').done(r => {
+        $.post('<?php echo route_to('listBackups') ?>',{
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+        }).done(r => {
             Swal.close();
             if (r.result && r.backups.length > 0) {
                 let listHtml = `<div class="table-responsive">
@@ -550,7 +558,8 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                 });
 
                 $.post('<?php echo route_to('rollbackUpdate') ?>', {
-                    backup_name: backupName
+                    backup_name: backupName,
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }).done(r => {
                     if (r.result) {
                         Swal.fire('<?php echo lang('Backend.success') ?>', r.message, 'success').then(() => {

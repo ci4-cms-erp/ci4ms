@@ -140,13 +140,13 @@ echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
 echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js");
 echo script_tag("be-assets/plugins/select2/js/select2.full.min.js");
 echo script_tag("be-assets/js/ci4ms.js"); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     tags([]);
 
     $('.ptitle').on('change', function() {
         let lang = $(this).data('lang');
         $.post('<?php echo route_to('checkSeflink') ?>', {
-            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
             'makeSeflink': $(this).val(),
             'where': 'categories'
         }, 'json').done(function(data) {
@@ -157,7 +157,7 @@ echo script_tag("be-assets/js/ci4ms.js"); ?>
     $('.seflink').on('change', function() {
         let lang = $(this).data('lang');
         $.post('<?php echo route_to('checkSeflink') ?>', {
-            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
             'makeSeflink': $(this).val(),
             'where': 'categories'
         }, 'json').done(function(data) {

@@ -6,11 +6,7 @@ use CodeIgniter\Config\BaseConfig;
 
 class AuthConfig extends BaseConfig
 {
-    public $csrfExcept = [
-        'backend/users/blackList',
-        'backend/users/removeFromBlackList',
-        'backend/users/forceResetPassword'
-    ];
+    public $csrfExcept = [];
 
     public $filters = [
         'auth-rates' => [

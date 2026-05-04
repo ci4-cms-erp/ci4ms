@@ -13,6 +13,13 @@ namespace Modules\Auth\Controllers;
  * For security be sure to declare any new methods as protected or private.
  *
  * @package CodeIgniter
+ *
+ * @property \CodeIgniter\HTTP\IncomingRequest $request
+ * @property \CodeIgniter\HTTP\Response $response
+ * @property \Psr\Log\LoggerInterface $logger
+ * @property \CodeIgniter\Session\Session $session
+ * @property \CodeIgniter\Validation\ValidationInterface $validator
+ * @property \ci4commonmodel\CommonModel $commonModel
  */
 
 use ci4commonModel\CommonModel;

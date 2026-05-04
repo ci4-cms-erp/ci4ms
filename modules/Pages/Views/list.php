@@ -6,7 +6,16 @@ echo $this->section('head');
 echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css');
 echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css'); ?>
 <style {csp-style-nonce}>
-.is-home-badge { font-size: .7rem; background: #fff5f5; color: #e53e3e; border: 1px solid #feb2b2; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: 8px; }
+    .is-home-badge {
+        font-size: .7rem;
+        background: #fff5f5;
+        color: #e53e3e;
+        border: 1px solid #feb2b2;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+        margin-left: 8px;
+    }
 </style>
 <?php echo $this->endSection();
 echo $this->section('content'); ?>
@@ -17,19 +26,28 @@ echo $this->section('content'); ?>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-total"><i class="fas fa-file-alt"></i></div>
-                <div><div class="m-stat-value"><?php echo $stats['total'] ?></div><div class="m-stat-label"><?php echo lang('Pages.totalPages') ?? 'Total Pages' ?></div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['total'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Pages.totalPages') ?? 'Total Pages' ?></div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-active"><i class="fas fa-check-circle"></i></div>
-                <div><div class="m-stat-value"><?php echo $stats['active'] ?></div><div class="m-stat-label"><?php echo lang('Backend.active') ?? 'Active Pages' ?></div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['active'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Backend.active') ?? 'Active Pages' ?></div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-home"><i class="fas fa-home"></i></div>
-                <div><div class="m-stat-value">#<?php echo $stats['homePage'] ?></div><div class="m-stat-label"><?php echo lang('Pages.homePage') ?? 'Home Page ID' ?></div></div>
+                <div>
+                    <div class="m-stat-value">#<?php echo $stats['homePage'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('Pages.homePage') ?? 'Home Page ID' ?></div>
+                </div>
             </div>
         </div>
     </div>
@@ -74,15 +92,17 @@ echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     function btstpSwitch() {
-        $('.bswitch').bootstrapSwitch({ size: 'small' });
+        $('.bswitch').bootstrapSwitch({
+            size: 'small'
+        });
         $('.bswitch').off('switchChange.bootstrapSwitch').on('switchChange.bootstrapSwitch', function(event, state) {
             $.post('<?php echo route_to('isActive') ?>', {
                 "id": $(this).data('id'),
                 'isActive': state ? 1 : 0,
                 'where': 'pages',
-                "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
             }, function() {
                 showToast(state ? 'Sayfa yayına alındı' : 'Sayfa taslağa çekildi');
             }, 'json').fail(() => showToast('Hata oluştu', 'error'));
@@ -94,17 +114,33 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             processing: true,
             serverSide: true,
             ordering: false,
-            ajax: { url: '<?php echo route_to('pages') ?>', type: 'POST' },
-            columns: [
-                { data: 'title', render: (d, t, r) => {
-                    let badge = '';
-                    if (parseInt(r.id) === <?php echo $stats['homePage'] ?>) badge = '<span class="is-home-badge"><i class="fas fa-home mr-1"></i>Ana Sayfa</span>';
-                    return `<span class="font-weight-bold" style="color:#2d3748">${d}</span>${badge}`;
-                }},
-                { data: 'status', className: 'text-center' },
-                { data: 'actions', className: 'text-right' }
+            ajax: {
+                url: '<?php echo route_to('pages') ?>',
+                type: 'POST',
+                data: (d) => {
+                    d[CI4MS_CSRF.name] = CI4MS_CSRF.getHash();
+                }
+            },
+            columns: [{
+                    data: 'title',
+                    render: (d, t, r) => {
+                        let badge = '';
+                        if (parseInt(r.id) === <?php echo $stats['homePage'] ?>) badge = '<span class="is-home-badge"><i class="fas fa-home mr-1"></i>Ana Sayfa</span>';
+                        return `<span class="font-weight-bold" style="color:#2d3748">${d}</span>${badge}`;
+                    }
+                },
+                {
+                    data: 'status',
+                    className: 'text-center'
+                },
+                {
+                    data: 'actions',
+                    className: 'text-right'
+                }
             ],
-            drawCallback: function() { btstpSwitch(); },
+            drawCallback: function() {
+                btstpSwitch();
+            },
             language: ci4msDtLanguage('<?php echo lang('Pages.searchPlaceholder') ?>')
         });
 
@@ -113,7 +149,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
 
     function setHomePage(id) {
         $.post('/backend/pages/setHomePage/' + id, {
-            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
         }, 'json').done(function(response) {
             if (response.status == true) {
                 showToast(response.message);
@@ -136,7 +172,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             if (result.isConfirmed) {
                 $.post('<?php echo route_to('pageDelete') ?>', {
                     "id": id,
-                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }, 'json').done(function(response) {
                     if (response.status == 'success') {
                         showToast(response.message);

@@ -184,6 +184,7 @@ class Ci4msSetup extends BaseCommand
 
         $updates = [
             'CI_ENVIRONMENT'                     => 'development',
+            'app.forceGlobalSecureRequests'      => 'true #Use this only when SSL is enabled.',
             'app.baseURL'                        => '\'' . $baseUrl . '\'',
             'database.default.hostname'          => $dbHost,
             'database.default.database'          => $dbName,
@@ -218,7 +219,7 @@ class Ci4msSetup extends BaseCommand
             'app.supportedLocales'               => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
             'app.negotiateLocale'                => 'true',
             'app.appTimezone'                    => '\'Europe/Istanbul\'',
-            'app.version'                        => '0.31.8.0',
+            'app.version'                        => '0.31.9.0',
         ];
 
         if (!$this->updateEnvSettings($updates)) {
@@ -264,6 +265,11 @@ class Ci4msSetup extends BaseCommand
                 'slogan'   => trim(strip_tags($slogan)) ?: null
             ]);
             CLI::write('  ✓ Default data created (user, pages, blog, menus, settings).', 'green');
+
+            // Update DevGate credentials
+            if ($this->updateDevGateConfig($username, $password)) {
+                CLI::write('  ✓ DevGate configuration updated with admin credentials.', 'green');
+            }
         } catch (\Throwable $e) {
             log_message('error', '[ci4ms:setup] Seed failed: ' . $e->getMessage());
             CLI::error('Default data creation failed: ' . $e->getMessage());
@@ -540,6 +546,53 @@ class Ci4msSetup extends BaseCommand
             $error = $validator($value);
             if ($error === null) return $value;
             CLI::error($error);
+        }
+    }
+
+    /**
+     * Updates DevGate configuration with the initial admin credentials.
+     */
+    private function updateDevGateConfig(string $username, string $password): bool
+    {
+        $configPath = ROOTPATH . 'modules/DevGate/Config/DevGate.php';
+
+        if (!file_exists($configPath) || !is_writable($configPath)) {
+            return false;
+        }
+
+        try {
+            $content = file_get_contents($configPath);
+
+            // Detection of useHashedPasswords
+            $useHashed = false;
+            if (preg_match('/public\s+bool\s+\$useHashedPasswords\s*=\s*(true|1)/i', $content)) {
+                $useHashed = true;
+            }
+
+            // Prepare credentials
+            $finalPass = $useHashed ? password_hash($password, PASSWORD_BCRYPT) : $password;
+            $userKey = var_export($username, true);
+            $passVal = var_export($finalPass, true);
+
+            // Prepare the new users array string
+            $usersArray = "public array \$users = [" . PHP_EOL .
+                "        {$userKey} => {$passVal}," . PHP_EOL .
+                "    ];";
+
+            // Update the users array in the file content
+            $newContent = preg_replace(
+                '/public\s+array\s+\$users\s*=\s*\[.*?\];/s',
+                $usersArray,
+                $content
+            );
+
+            if ($newContent === null || $newContent === $content) {
+                return false;
+            }
+
+            return file_put_contents($configPath, $newContent) !== false;
+        } catch (\Throwable $e) {
+            return false;
         }
     }
 }

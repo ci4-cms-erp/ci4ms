@@ -7,12 +7,34 @@ echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
 echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css");
 echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css"); ?>
 <style {csp-style-nonce}>
-/* elFinder Adjustments */
-#elfinder { border: none !important; border-radius: 0 0 15px 15px; overflow: hidden; }
-.elfinder-navbar { background-color: #f8fafc !important; border-right: 1px solid #edf2f7 !important; }
-.elfinder-toolbar { background-image: none !important; background-color: #fff !important; border-bottom: 1px solid #edf2f7 !important; padding: 10px !important; }
-.elfinder-button { background-image: none !important; border-radius: 6px !important; border-color: #e2e8f0 !important; }
-.elfinder-button:hover { background-color: #edf2f7 !important; }
+    /* elFinder Adjustments */
+    #elfinder {
+        border: none !important;
+        border-radius: 0 0 15px 15px;
+        overflow: hidden;
+    }
+
+    .elfinder-navbar {
+        background-color: #f8fafc !important;
+        border-right: 1px solid #edf2f7 !important;
+    }
+
+    .elfinder-toolbar {
+        background-image: none !important;
+        background-color: #fff !important;
+        border-bottom: 1px solid #edf2f7 !important;
+        padding: 10px !important;
+    }
+
+    .elfinder-button {
+        background-image: none !important;
+        border-radius: 6px !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    .elfinder-button:hover {
+        background-color: #edf2f7 !important;
+    }
 </style>
 <?php echo $this->endSection();
 echo $this->section('content'); ?>
@@ -39,11 +61,12 @@ echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js"); ?>
 <script type="text/javascript" {csp-script-nonce}>
     $(document).ready(function() {
         var elf = $('#elfinder').elfinder({
-            cssAutoLoad: [window.location.origin + '/be-assets/css/ci4ms-elfinder.css?v=<?php echo time(); ?>'],
+            cssAutoLoad: [window.location.origin + '/be-assets/css/ci4ms-elfinder.css'],
             baseUrl: 'media/',
-            url: '/backend/media/elfinderConnection?<?php echo csrf_token() ?>=<?php echo csrf_hash() ?>',
+            url: '/backend/media/elfinderConnection',
+            requestType: 'post',
             height: 700,
-            lang: window.CI4MS_LOCALE || 'tr',
+            lang: window.CI4MS_LOCALE !== 'en' ? (window.CI4MS_LOCALE || 'tr') : 'en',
             workerBaseUrl: "/be-assets/plugins/elFinder/js/worker",
             getFileCallback: function(file, fm) {
                 if (typeof top.elfinder_callback === 'function') {

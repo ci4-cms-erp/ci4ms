@@ -1,5 +1,5 @@
 <?php if (session()->has('error')) : ?>
-    <script {csp-script-nonce}>
+    <script type="text/javascript" {csp-script-nonce}>
         Swal.fire({
             title: "<?php echo lang('Backend.error') ?> !",
             text: '<?php echo session('error') ?>',
@@ -8,7 +8,7 @@
     </script>
 <?php endif;
 if (session()->has('errors')) : ?>
-    <script {csp-script-nonce}>
+    <script type="text/javascript" {csp-script-nonce}>
         Swal.fire({
             icon: 'error',
             title: "<?php echo lang('Backend.error') ?> !",
@@ -20,7 +20,7 @@ if (session()->has('errors')) : ?>
     </script>
 <?php endif;
 if (session()->has('message')) : ?>
-    <script {csp-script-nonce}>
+    <script type="text/javascript" {csp-script-nonce}>
         Swal.fire({
             title: "<?php echo lang('Backend.success') ?>",
             text: '<?php echo session('message') ?>',
@@ -29,7 +29,7 @@ if (session()->has('message')) : ?>
     </script>
 <?php endif;
 if (session()->has('messages')) : ?>
-    <script {csp-script-nonce}>
+    <script type="text/javascript" {csp-script-nonce}>
         Swal.fire({
             title: "<?php echo lang('Backend.success') ?>",
             icon: 'success',
@@ -40,7 +40,7 @@ if (session()->has('messages')) : ?>
     </script>
 <?php endif;
 if (session()->has('warning')) : ?>
-    <script {csp-script-nonce}>
+    <script type="text/javascript" {csp-script-nonce}>
         Swal.fire({
             title: "<?php echo lang('Backend.warning') ?> !",
             text: '<?php echo session('warning') ?>',

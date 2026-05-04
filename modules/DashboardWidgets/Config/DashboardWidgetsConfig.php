@@ -4,10 +4,7 @@ namespace Modules\DashboardWidgets\Config;
 
 class DashboardWidgetsConfig
 {
-    public $csrfExcept = [
-        'backend/dashboard-widgets',
-        'backend/dashboard-widgets/*'
-    ];
+    public $csrfExcept = [];
 
     public $filters = [
         'backendGuard' => ['before' => [

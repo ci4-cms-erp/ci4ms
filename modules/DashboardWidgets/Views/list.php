@@ -80,7 +80,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             ajax: {
                 url: '<?php echo site_url('backend/dashboard-widgets') ?>',
                 type: 'POST',
-                data: (d) => { d['<?php echo csrf_token() ?>'] = '<?php echo csrf_hash() ?>'; }
+                data: (d) => { d[CI4MS_CSRF.name] = CI4MS_CSRF.getHash(); }
             },
             columns: [
                 { data: 0 }, { data: 1 }, { data: 2 }, { data: 3 }, { data: 4 }, { data: 5 },
@@ -94,7 +94,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             $('.btn-toggle-widget').off('click').on('click', function() {
                 var id = $(this).data('id');
                 $.post('<?php echo site_url('backend/dashboard-widgets/toggle/') ?>' + id, {
-                    '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>'
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }, function(r) {
                     showToast(r.message);
                     table.ajax.reload(null, false);
@@ -113,7 +113,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         $.post('<?php echo site_url('backend/dashboard-widgets/delete/') ?>' + id, {
-                            '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>'
+                            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                         }, function(r) {
                             showToast(r.message, r.status === 'success' ? 'success' : 'error');
                             table.ajax.reload(null, false);

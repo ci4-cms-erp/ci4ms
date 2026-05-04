@@ -110,14 +110,17 @@ echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     $(function() {
         var table = $('#userTable').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
                 url: "<?php echo route_to('users') ?>",
-                type: "POST"
+                type: "POST",
+                data: (d) => {
+                    d[CI4MS_CSRF.name]= CI4MS_CSRF.getHash()
+                }
             },
             columns: [{
                     data: "fullname",
@@ -184,7 +187,8 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
 
     function forceResetPassword(uid) {
         $.post("<?php echo route_to('forceResetPassword') ?>", {
-            uid: uid
+            uid: uid,
+            [CI4MS_CSRF.name] : CI4MS_CSRF.getHash()
         }, function(data) {
             if (data.result == true) {
                 showToast(data.error.message);
@@ -207,7 +211,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             if (result.isConfirmed) {
                 $.post('<?php echo route_to('user_del') ?>', {
                     "id": id,
-                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }, 'json').done(function(response) {
                     if (response.status == 'success') {
                         showToast(response.message);

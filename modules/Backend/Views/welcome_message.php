@@ -271,8 +271,8 @@ echo script_tag('be-assets/plugins/sortable/sortable.min.js'); ?>
         var $btnAdd = $('#btn-add-widget');
         var editMode = false;
         var sortable = null;
-        var csrfName = '<?php echo csrf_token() ?>';
-        var csrfHash = '<?php echo csrf_hash() ?>';
+        var csrfName = CI4MS_CSRF.name;
+        var csrfHash = CI4MS_CSRF.getHash();
 
         if (!$container.length || !$btnEdit.length) return;
 

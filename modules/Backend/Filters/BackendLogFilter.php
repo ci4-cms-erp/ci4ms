@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Modules\Backend\Filters;
 
@@ -43,14 +44,10 @@ class BackendLogFilter implements FilterInterface
         $uri = current_url();
         $method = $request->getMethod();
 
-        // Advanced IP Extraction (in case behind Cloudflare/Proxy)
+        // IP address — CI4's getIPAddress() already handles trusted proxies
+        // via App.proxyIPs config. Never read raw $_SERVER headers directly
+        // as they can be spoofed by any HTTP client.
         $ipAddress = $request->getIPAddress();
-        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ipAddress = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0];
-        } elseif (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            $ipAddress = $_SERVER['HTTP_CLIENT_IP'];
-        }
-        $ipAddress = trim($ipAddress);
 
         // Capture Device / User Agent
         /** @var \CodeIgniter\HTTP\IncomingRequest $request */

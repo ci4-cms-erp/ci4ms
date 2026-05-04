@@ -586,8 +586,12 @@ composer outdated</code></pre>
             <h3>File Editor &amp; Themes</h3>
             <ul>
               <li>
-                <strong>Fileeditor:</strong> Uses <code>realpath</code> guards;
-                limit use to trusted roles.
+                <strong>Fileeditor:</strong> Uses <code>realpath</code> guards and a
+                <code>$dangerousExtensions</code> blacklist (<code>.php</code>, <code>.phtml</code>,
+                <code>.phar</code>, <code>.htaccess</code>, etc.) to prevent creating or modifying
+                executable files. Only <code>$allowedExtensions</code> (<code>css</code>, <code>js</code>,
+                <code>html</code>, <code>txt</code>, <code>json</code>, <code>sql</code>, <code>md</code>) can be read/edited.
+                Limit use to trusted roles.
               </li>
               <li>
                 <strong>Themes:</strong> Located under
@@ -623,6 +627,14 @@ composer outdated</code></pre>
                 <strong>Storage:</strong> Backups saved in
                 <code>writable/uploads/backups</code>. Restore directly from the
                 backend or download archives.
+              </li>
+              <li>
+                <strong>Security:</strong> SQL restore enforces a statement whitelist
+                (only <code>INSERT</code>, <code>CREATE TABLE</code>, <code>DROP TABLE</code>,
+                <code>ALTER TABLE</code>, <code>SET</code>, <code>UPDATE</code>, <code>DELETE</code>
+                are allowed). Dangerous commands (<code>LOAD_FILE</code>, <code>INTO OUTFILE</code>,
+                <code>GRANT</code>, <code>CREATE USER</code>, stored procedures) are blocked and
+                logged. Backup files must reside within <code>WRITEPATH</code>.
               </li>
             </ul>
           </div>
@@ -712,7 +724,17 @@ composer outdated</code></pre>
       </section>
 
       <section class="panel">
-        <h2>12. Deployment Checklist</h2>
+        <h2>12. Security Architecture</h2>
+        <p>CI4MS implements modern security practices to protect the application and user data:</p>
+        <ul>
+          <li><strong>CSRF Protection:</strong> Enabled globally. For AJAX requests, <code>public/be-assets/js/ci4ms.js</code> automatically reads the CSRF token from the meta tag and injects it into all AJAX requests. Do not disable CSRF per module unless absolutely necessary.</li>
+          <li><strong>XSS & HTML Sanitization:</strong> Content editors utilize <code>CustomRules::getClean()</code> to scrub HTML through HTMLPurifier. Dangerous schemes like <code>data:</code> and properties like <code>CSS.Trusted</code> are disabled by default.</li>
+          <li><strong>File System Integrity:</strong> The Fileeditor module enforces strict blacklisting for executable extensions (<code>.php</code>, <code>.phtml</code>, <code>.phar</code>, etc.) to prevent Remote Code Execution (RCE). Operations are restricted strictly to safe paths using <code>realpath()</code> boundary validations.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>13. Deployment Checklist</h2>
         <ol>
           <li>Switch to <code>CI_ENVIRONMENT=production</code>.</li>
           <li>Set the public <code>app.baseURL</code>.</li>
@@ -725,6 +747,12 @@ composer outdated</code></pre>
             seeders).
           </li>
           <li>Optional cache warm-up via scripted requests.</li>
+          <li>
+            <strong>Proxy IPs:</strong> If behind Cloudflare or Nginx, configure
+            <code>App.php::$proxyIPs</code> with trusted IP ranges (see commented
+            examples in the file) so <code>$request->getIPAddress()</code> returns
+            real client IPs.
+          </li>
           <li>Disable the debug toolbar in production.</li>
           <li>Set secure permissions (775/664 depending on user/group).</li>
           <li>

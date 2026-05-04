@@ -139,8 +139,9 @@ class Email extends BaseConfig
         }
 
         if (isset($settings->mail)) {
-            $this->fromEmail  = 'noreply@' . $_SERVER['HTTP_HOST'];
-            $this->fromName   = 'noreply@' . $_SERVER['HTTP_HOST'];
+            $host = parse_url(base_url(), PHP_URL_HOST) ?: 'localhost';
+            $this->fromEmail  = 'noreply@' . $host;
+            $this->fromName   = 'noreply@' . $host;
             $this->recipients = $settings->mail->recipients ?? '';
 
             $mailConfig = $settings->mail;

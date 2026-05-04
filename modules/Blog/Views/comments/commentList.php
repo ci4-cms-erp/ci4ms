@@ -60,7 +60,7 @@ echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js');
 echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js');
 echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js');
 echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     let isApprove = true;
     var table = $("#example1").DataTable({
         processing: true,
@@ -108,7 +108,7 @@ echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js')
             type: 'POST',
             data: function(d) {
                 d.isApproved = isApprove;
-                d['<?php echo csrf_token() ?>'] = '<?php echo csrf_hash() ?>';
+                d[CI4MS_CSRF.name] = CI4MS_CSRF.getHash();
             }
         },
         columns: [{
@@ -152,7 +152,7 @@ echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js')
             if (result.isConfirmed) {
                 $.post('<?php echo route_to('commentRemove') ?>', {
                     "id": id,
-                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }, 'json').done(function(response) {
                     if (response.status == 'success') {
                         if (typeof showToast !== 'undefined') {

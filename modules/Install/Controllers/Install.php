@@ -33,6 +33,7 @@ class Install extends Controller
             $updates = [
                 'CI_ENVIRONMENT' => 'development',
                 'app.baseURL' => '\'' . $this->request->getPost('baseUrl') . '\'',
+                'app.forceGlobalSecureRequests' => 'true #Use this only when SSL is enabled.',
                 'database.default.hostname' => $this->request->getPost('host'),
                 'database.default.database' => $this->request->getPost('dbname'),
                 'database.default.username' => $this->request->getPost('dbusername'),
@@ -66,11 +67,11 @@ class Install extends Controller
                 'app.supportedLocales' => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
                 'app.negotiateLocale' => 'true',
                 'app.appTimezone' => '\'Europe/Istanbul\'',
-                'app.version' => '0.31.8.0'
+                'app.version' => '0.31.9.0'
             ];
             if ($this->copyEnvFile() && $this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
-            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+
             $sessionData = [
                 'name' => $this->request->getPost('name'),
                 'surname' => $this->request->getPost('surname'),
@@ -82,7 +83,7 @@ class Install extends Controller
             ];
             if ($this->request->getPost('slogan')) $sessionData['slogan'] = $this->request->getPost('slogan') ?: null;
             session()->setFlashdata('install_data', $sessionData);
-            return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install/dbsetup', 308);
+            return redirect()->to(site_url('install/dbsetup'));
         }
         return view('Modules\Install\Views\install');
     }
@@ -136,8 +137,7 @@ class Install extends Controller
     public function dbsetup()
     {
         $migrate = \Config\Services::migrations();
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-        $baseURL = $protocol . $_SERVER['SERVER_NAME'];
+        $baseURL = rtrim(base_url(), '/');
         try {
             $migrate->setNamespace(null)->latest();
         } catch (\Throwable $e) {

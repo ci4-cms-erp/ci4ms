@@ -75,7 +75,6 @@ echo $this->section('content'); ?>
                 </div>
                 <div class="card-body p-3" style="max-height: 600px; overflow-y: auto; background: #fff;">
                     <?php echo view('Modules\Logs\Views\logs', ['logs' => $logs, 'files' => $files, 'currentFile' => $currentFile]) ?>
-
                 </div>
             </div>
         </div>
@@ -87,7 +86,7 @@ echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     $(document).ready(function() {
 
         $('.table-container tr').on('click', function() {
@@ -124,7 +123,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             if (result.isConfirmed) {
                 $.post('<?php echo route_to('logDelete') ?>', {
                     "id": id,
-                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }, 'json').done(function(response) {
                     if (response.status == 'success') {
                         location.reload();

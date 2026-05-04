@@ -109,7 +109,7 @@ echo $this->section('javascript'); ?>
             clearTimeout(saveTimer);
             saveTimer = setTimeout(function() {
                 $.post('<?php echo site_url('backend/language-manager/translations/save') ?>', {
-                    '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>',
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
                     key_id: el.data('key-id'),
                     language_code: el.data('lang'),
                     value: el.val()
@@ -127,7 +127,7 @@ echo $this->section('javascript'); ?>
             var keyName = $('#newKeyName').val().trim();
             if (!keyName) return;
             $.post('<?php echo site_url('backend/language-manager/translations/add-key') ?>', {
-                '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>',
+                [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
                 group: '<?php echo esc($currentGroup) ?>',
                 key_name: keyName
             }, function(r) {
@@ -152,7 +152,7 @@ echo $this->section('javascript'); ?>
             }).then(function(r) {
                 if (r.isConfirmed) {
                     $.post('<?php echo site_url('backend/language-manager/translations/delete-key/') ?>' + id, {
-                        '<?php echo csrf_token() ?>': '<?php echo csrf_hash() ?>'
+                        [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                     }, function() {
                         location.reload();
                     }, 'json');

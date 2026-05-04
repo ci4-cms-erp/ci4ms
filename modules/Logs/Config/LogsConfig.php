@@ -4,10 +4,7 @@ namespace Modules\Logs\Config;
 
 class LogsConfig
 {
-    public $csrfExcept = [
-        'backend/logs',
-        'backend/logs/*'
-    ];
+    public $csrfExcept = [];
 
     public $filters = [
         'backendGuard' => [

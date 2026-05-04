@@ -4,10 +4,7 @@ namespace Modules\LanguageManager\Config;
 
 class LanguageManagerConfig
 {
-    public $csrfExcept = [
-        'backend/language-manager',
-        'backend/language-manager/*'
-    ];
+    public $csrfExcept = [];
 
     public $filters = [
         'backendGuard' => ['before' => [

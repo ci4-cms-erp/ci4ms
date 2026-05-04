@@ -4,6 +4,7 @@ namespace Modules\Pages\Controllers;
 
 use Modules\Backend\Libraries\CommonTagsLibrary;
 use Modules\Backend\Models\AjaxModel;
+use Modules\Backend\Validation\CustomRules;
 
 class Pages extends \Modules\Backend\Controllers\BaseController
 {
@@ -108,7 +109,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                         'lang'     => $langCode,
                         'title'    => strip_tags(trim($lData['title'])),
                         'seflink'  => strip_tags(trim($lData['seflink'])),
-                        'content'  => $lData['content'],
+                        'content'  => CustomRules::getClean($lData['content']),
                         'seo'      => $seoData
                     ]);
                 }
@@ -154,7 +155,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                     $langUpdate = [
                         'title'   => strip_tags(trim($lData['title'])),
                         'seflink' => strip_tags(trim($lData['seflink'])),
-                        'content' => $lData['content'],
+                        'content' => CustomRules::getClean($lData['content']),
                         'seo'     => $seoData
                     ];
                     if ($existing) {

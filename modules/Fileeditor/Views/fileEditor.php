@@ -56,7 +56,7 @@ echo script_tag('be-assets/plugins/jquery-fancytree/modules/jquery.fancytree.gly
 echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.contextMenu.min.js');
 echo script_tag('be-assets/plugins/jquery-contextmenu/jquery.ui.position.min.js');
 echo script_tag('be-assets/plugins/monaco-editor/vs/loader.js'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     $('body').addClass('sidebar-collapse');
 
     let currentPath = '';

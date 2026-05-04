@@ -112,21 +112,81 @@ class DbBackup
     {
         $extension = pathinfo($filePath, PATHINFO_EXTENSION);
         if ($extension != 'sql') return false;
-        $file = fopen($filePath, 'r');
+
+        // Security: Verify file is within writable directory
+        $realPath = realpath($filePath);
+        if (!$realPath || strpos($realPath, realpath(WRITEPATH)) !== 0) {
+            log_message('error', 'DbBackup::restore — Path traversal attempt blocked: ' . $filePath);
+            return false;
+        }
+
+        $file = fopen($realPath, 'r');
         if (! $file) {
             return false;
         }
 
+        // Dangerous SQL patterns that should never appear in a legitimate backup
+        $dangerousPatterns = [
+            '/\bLOAD_FILE\s*\(/i',
+            '/\bINTO\s+(OUTFILE|DUMPFILE)\b/i',
+            '/\bGRANT\b/i',
+            '/\bCREATE\s+USER\b/i',
+            '/\bDROP\s+USER\b/i',
+            '/\bSYSTEM\s*\(/i',
+            '/\bEXEC\s*\(/i',
+            '/\bxp_cmdshell\b/i',
+            '/\bCREATE\s+(FUNCTION|PROCEDURE|TRIGGER|EVENT)\b/i',
+            '/\bALTER\s+USER\b/i',
+            '/\bSET\s+GLOBAL\b/i',
+            '/\bSHUTDOWN\b/i',
+        ];
+
+        // Allowed SQL statement prefixes (whitelist approach)
+        $allowedPrefixes = [
+            'INSERT', 'CREATE TABLE', 'DROP TABLE', 'ALTER TABLE',
+            'SET', 'UPDATE', 'DELETE', 'LOCK', 'UNLOCK',
+            'START TRANSACTION', 'COMMIT', 'ROLLBACK',
+        ];
+
         $this->db->query('SET FOREIGN_KEY_CHECKS = 0');
 
         $templine = '';
+        $lineNum = 0;
         while (($line = fgets($file)) !== false) {
+            $lineNum++;
             if (substr($line, 0, 2) == '--' || trim($line) == '' || substr($line, 0, 1) == '#') {
                 continue;
             }
 
             $templine .= $line;
             if (substr(trim($line), -1, 1) == ';') {
+                $trimmed = trim($templine);
+
+                // Check for dangerous patterns
+                foreach ($dangerousPatterns as $pattern) {
+                    if (preg_match($pattern, $trimmed)) {
+                        log_message('error', "DbBackup::restore — Dangerous SQL blocked at line {$lineNum}: " . mb_substr($trimmed, 0, 100));
+                        fclose($file);
+                        $this->db->query('SET FOREIGN_KEY_CHECKS = 1');
+                        return false;
+                    }
+                }
+
+                // Verify statement starts with an allowed prefix
+                $isAllowed = false;
+                foreach ($allowedPrefixes as $prefix) {
+                    if (stripos($trimmed, $prefix) === 0) {
+                        $isAllowed = true;
+                        break;
+                    }
+                }
+
+                if (!$isAllowed) {
+                    log_message('warning', "DbBackup::restore — Unrecognized SQL skipped at line {$lineNum}: " . mb_substr($trimmed, 0, 100));
+                    $templine = '';
+                    continue;
+                }
+
                 $this->db->query($templine);
                 $templine = '';
             }

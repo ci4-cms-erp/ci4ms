@@ -19,9 +19,7 @@ echo $this->section('content'); ?>
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
 
             <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <a href="<?php echo route_to('pages', 1) ?>" class="btn btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
-                </button>
+                <a href="<?php echo route_to('pages', 1) ?>" class="btn btn-outline-info btn-sm"><?php echo lang('Backend.backToList') ?></a>
             </div>
         </div>
         <div class="card-body">
@@ -141,12 +139,12 @@ echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaul
 echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
 echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js");
 echo script_tag("be-assets/js/ci4ms.js"); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     tags([]);
 
     $('.ptitle').on('change', function() {
         $.post('<?php echo route_to('checkSeflink') ?>', {
-            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
             'makeSeflink': $(this).val(),
             'where': 'pages'
         }, 'json').done(function(data) {
@@ -156,7 +154,7 @@ echo script_tag("be-assets/js/ci4ms.js"); ?>
 
     $('.seflink').on('change', function() {
         $.post('<?php echo route_to('checkSeflink') ?>', {
-            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
             'makeSeflink': $(this).val(),
             'where': 'pages'
         }, 'json').done(function(data) {

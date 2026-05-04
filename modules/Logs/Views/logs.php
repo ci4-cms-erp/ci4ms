@@ -5,7 +5,7 @@
         <br><br>
     </div>
 <?php else: ?>
-    <table id="table-log" class="table table-responsive table-striped table-hover">
+    <table id="table-log" class="table table-striped table-hover w-100">
         <thead>
             <tr>
                 <th>Level</th>

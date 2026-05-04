@@ -50,7 +50,7 @@ echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     var table;
     $(function() {
         table = $("#example1").DataTable({
@@ -60,9 +60,8 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             ajax: {
                 url: '<?php echo route_to('categories') ?>',
                 type: 'POST',
-                data: {
-                    isApproved: true,
-                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                data: (d) => {
+                    d[CI4MS_CSRF.name] = CI4MS_CSRF.getHash();
                 }
             },
             columns: [{
@@ -93,7 +92,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             if (result.isConfirmed) {
                 $.post('<?php echo route_to('categoryDelete') ?>', {
                     "id": id,
-                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }, 'json').done(function(response) {
                     if (response.status == 'success') {
                         if (typeof showToast !== 'undefined') {

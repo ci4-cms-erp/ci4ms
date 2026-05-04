@@ -5,7 +5,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 [![Release](https://img.shields.io/github/v/release/ci4-cms-erp/ci4ms?style=for-the-badge&label=release)](https://github.com/ci4-cms-erp/ci4ms/releases)
 [![License](https://img.shields.io/github/license/ci4-cms-erp/ci4ms?style=for-the-badge)](https://github.com/ci4-cms-erp/ci4ms/blob/main/LICENSE)
 [![Build](https://img.shields.io/github/actions/workflow/status/ci4-cms-erp/ci4ms/docker-test.yml?style=for-the-badge&label=build)](https://github.com/ci4-cms-erp/ci4ms/actions)
-![PHP](https://img.shields.io/badge/PHP-%3E%3D8.1-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-%3E%3D8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![CodeIgniter](https://img.shields.io/badge/CodeIgniter-4.x-EF4223?style=for-the-badge&logo=codeigniter&logoColor=white)
 ![Packagist Downloads](https://img.shields.io/packagist/dt/ci4-cms-erp/ci4ms?style=for-the-badge)
 [![Stars](https://img.shields.io/github/stars/ci4-cms-erp/ci4ms?style=for-the-badge)](https://github.com/ci4-cms-erp/ci4ms/stargazers)
@@ -22,6 +22,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - **Flexible content management:** Page and blog entries include SEO metadata, categories, tags, and full comment workflows.
 - **Media & files:** Includes elFinder-powered media management, a built-in file editor, and an in-panel log viewer.
 - **Automatic Updates:** Modernized `UpdateService` provides a "One-Click Update" system with atomic file operations, automated GitHub version discovery (bypassing 300-file limits), and secure rollback management.
+- **Security Architecture:** Global CSRF protection across all AJAX endpoints, strict HTTP security headers (CSP, HSTS, X-Frame-Options), executable file upload blacklists, and HTMLPurifier sanitization to prevent XSS and RCE attacks.
 - **Backup Support:** Updates automatically trigger a full backup of modified files before applying patches, with a dedicated management interface for restores.
 - **Theme system:** The `public/templates/*` structure and the `Modules\Theme` module enable installing or upgrading themes from ZIP packages.
 - **Setup & automation:** Offers a web-based installer (`/install`) plus a single CLI command (`php spark ci4ms:setup`) for automated installation, default data seeding, and route generation. Module scaffolding is available via `php spark make:module`.
@@ -142,7 +143,7 @@ Key files:
 | Pages            | Static page management     | SEO fields, inline shortcode parsing                  |
 | Menu             | Menu builder               | Drag-and-drop ordering, slug helpers                  |
 | Media            | Media manager              | elFinder integration, optional WebP conversion        |
-| Fileeditor       | Project file editor        | Safe read/write/rename/move/delete                    |
+| Fileeditor       | Project file editor        | Safe read/write/rename; dangerous extension blacklist |
 | Settings         | System configuration       | One-click updates, company/social/mail settings, i18n support |
 | Users            | User & role management     | Shield groups, reset tracking                         |
 | Methods          | Route → permission mapping | Module toggling, router scan                          |
@@ -150,7 +151,7 @@ Key files:
 | ModulesInstaller | Module ZIP installer       | Upload + cache invalidation                           |
 | Theme            | Theme manager              | ZIP upload, DB migration support, duplicate checks    |
 | Install          | Web installer              | Creates `.env`, triggers migrations                   |
-| Backup           | Database backup manager    | Create, download, and restore backups                 |
+| Backup           | Database backup manager    | Create, download, and restore with SQL sanitization   |
 | DashboardWidgets | Dashboard statistics       | Modular widget system for admin overview              |
 | LanguageManager  | Language file manager      | Edit and manage translation files from the backend    |
 
@@ -184,7 +185,7 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 - `composer test` — runs PHPUnit.
 - The GitHub Actions workflow (`.github/workflows/docker-test.yaml`) automatically builds the Docker image and runs migrations on every push to `master`.
 - **Maintenance mode**: When `settings.maintenanceMode.scalar == 1`, the `Ci4ms` filter redirects visitors to `maintenance-mode`.
-- **Security**: `Fileeditor` and `Media` enforce `realpath` guards. Limit access in production environments.
+- **Security**: `Fileeditor` enforces `realpath` guards and a dangerous extension blacklist (`.php`, `.phtml`, `.phar`, `.htaccess`) to prevent RCE. `Backup` restore uses SQL statement whitelist to block malicious queries (`LOAD_FILE`, `GRANT`, etc.). `HTMLPurifier` config is hardened against XSS bypass (`data:` URIs blocked, `CSS.Trusted` disabled). All `$_SERVER` reads replaced with CI4 `base_url()`/`site_url()` helpers. Configure `App.php::$proxyIPs` if behind Cloudflare/Nginx.
 
 ## Additional Docs
 

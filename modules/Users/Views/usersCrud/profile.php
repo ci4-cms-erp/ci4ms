@@ -179,9 +179,7 @@ echo $this->section('content'); ?>
 
     <?php
     $pastSessions = array_filter($allSessions, fn($s) => ! $s['is_active']);
-    ?>
-
-    <?php if (! empty($pastSessions)): ?>
+    if (! empty($pastSessions)): ?>
         <div class="card card-outline card-secondary">
             <div class="card-header">
                 <h3 class="card-title font-weight-bold text-muted">
@@ -223,7 +221,7 @@ echo $this->section('content'); ?>
 </section>
 <?php echo $this->endSection();
 echo $this->section('javascript'); ?>
-<script>
+<script type="text/javascript" {csp-script-nonce}>
     document.getElementById('avatarInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;

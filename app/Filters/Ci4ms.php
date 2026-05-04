@@ -35,8 +35,7 @@ class Ci4ms implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         if (!file_exists(ROOTPATH . '.env')) {
-            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-            return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install');
+            return redirect()->to(site_url('install'));
         }
         if ((bool)cache()->get('settings')['maintenanceMode']->scalar === true) return redirect()->route('maintenance-mode');
     }

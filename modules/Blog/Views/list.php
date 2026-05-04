@@ -89,7 +89,7 @@ echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     function btstpSwitch() {
         $('.bswitch').bootstrapSwitch({
             size: 'small'
@@ -99,7 +99,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 "id": $(this).data('id'),
                 'isActive': state ? 1 : 0,
                 'where': 'blog',
-                "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
             }, function(res) {
                 showToast(state ? '<?php echo lang('Backend.published') ?? 'İçerik yayına alındı' ?>' : '<?php echo lang('Backend.drafted') ?? 'İçerik taslağa çekildi' ?>');
             }, 'json').fail(() => showToast('Hata oluştu', 'error'));
@@ -114,8 +114,8 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             ajax: {
                 url: '<?php echo route_to('blogs') ?>',
                 type: 'POST',
-                data: {
-                    isApproved: true
+                data: (d) => {
+                    d[CI4MS_CSRF.name] = CI4MS_CSRF.getHash();
                 }
             },
             columns: [{
@@ -154,7 +154,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             if (result.isConfirmed) {
                 $.post('<?php echo route_to('blogDelete') ?>', {
                     "id": id,
-                    "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>"
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }, 'json').done(function(response) {
                     if (response.status == 'success') {
                         showToast(response.message);

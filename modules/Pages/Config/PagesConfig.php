@@ -4,10 +4,7 @@ namespace Modules\Pages\Config;
 
 class PagesConfig extends \CodeIgniter\Config\BaseConfig
 {
-    public $csrfExcept = [
-        'backend/Pages',
-        'backend/Pages/*',
-    ];
+    public $csrfExcept = [];
 
     public $filters = [
         'backendGuard' => ['before' => [

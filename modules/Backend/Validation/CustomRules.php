@@ -135,28 +135,29 @@ class CustomRules
         // 1. Preserve CSS classes and IDs
         $config->set('Attr.EnableID', true);
 
-        // 2. Allow inline CSS (style="...")
-        $config->set('CSS.AllowTricky', true);
-        $config->set('CSS.Proprietary', true);
-        $config->set('CSS.Trusted', true);
+        // 2. Allow specific CSS but don't trust everything
+        $config->set('CSS.AllowTricky', true); // Often needed for editor styles (visibility etc.)
+        $config->set('CSS.Proprietary', true); // For browser-specific prefixes
+        $config->set('CSS.Trusted', false);   // NEVER trust CSS fully; let Purifier filter properties.
 
         // 3. Iframe support (Youtube, Vimeo)
         $config->set('HTML.SafeIframe', true);
         $config->set('URI.SafeIframeRegexp', '%^(https?:)?//(www\.youtube(?:-nocookie)?\.com/embed/|player\.vimeo\.com/video/)%');
 
-        // 4. Allow links to open in new tab (target="_blank")
+        // 4. Allow links to open in new tab and force noopener/noreferrer (Security Best Practice)
+        $config->set('HTML.TargetBlank', true);
         $config->set('Attr.AllowedFrameTargets', ['_blank']);
+        $config->set('Attr.AllowedRel', ['nofollow', 'noopener', 'noreferrer', 'external']);
 
-        // 5. Allowed URI schemes (including data: for Base64)
+        // 5. Allowed URI schemes
+        // 'data' is NOT allowed — Base64 images are protected via placeholder mechanism above.
+        // This blocks data:text/html;base64 XSS bypass attacks.
         $config->set('URI.AllowedSchemes', [
             'http'   => true,
             'https'  => true,
             'mailto' => true,
             'ftp'    => true,
-            'nntp'   => true,
-            'news'   => true,
             'tel'    => true,
-            'data'   => true
         ]);
 
         // 6. HTML5 Semantic Elements

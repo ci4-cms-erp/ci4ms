@@ -212,6 +212,38 @@ class App extends BaseConfig
      *         '192.168.5.0/24' => 'X-Real-IP',
      *     ]
      *
+     * ── Cloudflare Example ──
+     * If your site is behind Cloudflare, add their IP ranges below.
+     * Full list: https://www.cloudflare.com/ips/
+     *
+     *     [
+     *         '173.245.48.0/20'  => 'CF-Connecting-IP',
+     *         '103.21.244.0/22'  => 'CF-Connecting-IP',
+     *         '103.22.200.0/22'  => 'CF-Connecting-IP',
+     *         '103.31.4.0/22'    => 'CF-Connecting-IP',
+     *         '141.101.64.0/18'  => 'CF-Connecting-IP',
+     *         '108.162.192.0/18' => 'CF-Connecting-IP',
+     *         '190.93.240.0/20'  => 'CF-Connecting-IP',
+     *         '188.114.96.0/20'  => 'CF-Connecting-IP',
+     *         '197.234.240.0/22' => 'CF-Connecting-IP',
+     *         '198.41.128.0/17'  => 'CF-Connecting-IP',
+     *         '162.158.0.0/15'   => 'CF-Connecting-IP',
+     *         '104.16.0.0/13'    => 'CF-Connecting-IP',
+     *         '104.24.0.0/14'    => 'CF-Connecting-IP',
+     *         '172.64.0.0/13'    => 'CF-Connecting-IP',
+     *         '131.0.72.0/22'    => 'CF-Connecting-IP',
+     *     ]
+     *
+     * ── Nginx Reverse Proxy Example ──
+     * If your app runs behind a local Nginx proxy:
+     *
+     *     [
+     *         '127.0.0.1'      => 'X-Real-IP',
+     *         '10.0.0.0/8'     => 'X-Forwarded-For',
+     *         '172.16.0.0/12'  => 'X-Forwarded-For',
+     *         '192.168.0.0/16' => 'X-Forwarded-For',
+     *     ]
+     *
      * @var array<string, string>
      */
     public array $proxyIPs = [];

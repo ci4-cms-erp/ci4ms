@@ -125,7 +125,7 @@ echo $this->section('content'); ?>
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/select2/js/select2.full.min.js'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     $('.select2').select2({
         theme: 'bootstrap4'
     });

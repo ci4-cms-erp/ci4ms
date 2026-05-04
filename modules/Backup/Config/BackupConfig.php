@@ -4,10 +4,7 @@ namespace Modules\Backup\Config;
 
 class BackupConfig
 {
-    public $csrfExcept = [
-        'backend/backup',
-        'backend/backup/*'
-    ];
+    public $csrfExcept = [];
 
     public $filters = [
         'backendGuard' => [

@@ -203,9 +203,9 @@ echo script_tag("be-assets/plugins/select2/js/select2.full.min.js");
 echo script_tag("be-assets/js/ci4ms.js");
 echo script_tag("be-assets/plugins/moment/moment.min.js");
 echo script_tag("be-assets/plugins/inputmask/jquery.inputmask.min.js"); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     $.post('<?php echo route_to('tagify') ?>', {
-        "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
+        [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
         'type': 'blog'
     }, 'json').done(function(data) {
         tags(data);
@@ -214,7 +214,7 @@ echo script_tag("be-assets/plugins/inputmask/jquery.inputmask.min.js"); ?>
     $('.ptitle').on('change', function() {
         let lang = $(this).data('lang');
         $.post('<?php echo route_to('checkSeflink') ?>', {
-            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
             'makeSeflink': $(this).val(),
             'where': 'blog_langs',
             'update': 1,
@@ -228,7 +228,7 @@ echo script_tag("be-assets/plugins/inputmask/jquery.inputmask.min.js"); ?>
     $('.seflink').on('change', function() {
         let lang = $(this).data('lang');
         $.post('<?php echo route_to('checkSeflink') ?>', {
-            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
             'makeSeflink': $(this).val(),
             'where': 'blog_langs',
             'update': 1,

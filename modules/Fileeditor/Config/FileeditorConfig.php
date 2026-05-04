@@ -4,10 +4,7 @@ namespace Modules\Fileeditor\Config;
 
 class FileeditorConfig extends \CodeIgniter\Config\BaseConfig
 {
-    public $csrfExcept = [
-        'backend/fileeditor',
-        'backend/fileeditor/*',
-    ];
+    public $csrfExcept = [];
 
     public $filters = [
         'backendGuard' => ['before' => [

@@ -21,6 +21,16 @@ use CodeIgniter\API\ResponseTrait;
  *     class Home extends BaseController
  *
  * For security be sure to declare any new methods as protected or private.
+ *
+ * @package App\Controllers
+ *
+ * @property \CodeIgniter\HTTP\IncomingRequest $request
+ * @property \CodeIgniter\HTTP\Response $response
+ * @property \Psr\Log\LoggerInterface $logger
+ * @property \CodeIgniter\Session\Session $session
+ * @property \CodeIgniter\Validation\ValidationInterface $validator
+ * @property \ci4commonmodel\CommonModel $commonModel
+ * @property \Modules\LanguageManager\Libraries\TranslationService $translationService
  */
 abstract class BaseController extends Controller
 {
@@ -177,7 +187,7 @@ abstract class BaseController extends Controller
             'alternateLinks' => [], // Default empty, filled by child controllers
             'seoConfig'      => new Seo()
         ];
-        if(is_cli()) $defData['agent']='CLI';
+        if (is_cli()) $defData['agent'] = 'CLI';
         else $defData['agent'] = $this->request->getUserAgent();
 
         // If languages are empty in cache, load them (fallback)

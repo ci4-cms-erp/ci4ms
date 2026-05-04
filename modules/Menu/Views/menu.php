@@ -7,13 +7,13 @@ echo link_tag("be-assets/plugins/nestable2/jquery.nestable.min.css"); ?>
 <style {csp-style-nonce}>
 /* Nestable Premium Style */
 .dd-item > button { height: 32px; font-size: 18px; color: #718096; }
-.dd-handle { 
-    height: 45px; padding: 10px 15px; background: #fff; border: 1px solid #edf2f7; 
-    border-radius: 8px; font-weight: 500; color: #2d3748; 
+.dd-handle {
+    height: 45px; padding: 10px 15px; background: #fff; border: 1px solid #edf2f7;
+    border-radius: 8px; font-weight: 500; color: #2d3748;
     box-shadow: 0 2px 5px rgba(0,0,0,.02);
 }
 .dd-handle:hover { background: #f8fafc; color: #667eea; }
-.dd-content { 
+.dd-content {
     display: flex; align-items: center; justify-content: space-between;
     position: absolute; right: 10px; top: 7px;
 }
@@ -97,18 +97,18 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
     }
 
     function refreshLeftList() {
-        $.post('<?php echo route_to('menuList') ?>', { "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>" }).done(data => $('#list').html(data));
+        $.post('<?php echo route_to('menuList') ?>', { [CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => $('#list').html(data));
     }
 
     function saveMenu() {
-        $.post('<?php echo route_to('queueMenuAjax') ?>', { "queue": $('#nestable-menu').nestable('serialize') }).done(data => {
+        $.post('<?php echo route_to('queueMenuAjax') ?>', { "queue": $('#nestable-menu').nestable('serialize'),[CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => {
             updateNestableUI(data);
             showToast('Menü sıralaması kaydedildi.');
         });
     }
 
     function addPages(id) {
-        $.post('<?php echo route_to('createMenu') ?>', { "id": id, 'where': 'pages_langs' }).done(data => {
+        $.post('<?php echo route_to('createMenu') ?>', { "id": id, 'where': 'pages_langs',[CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => {
             updateNestableUI(data);
             showToast('Sayfa menüye eklendi.');
             refreshLeftList();
@@ -119,6 +119,7 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
         var formData = $('#addCheckedPages').serializeArray();
         formData.push({ name: "where", value: "pages_langs" });
         formData.push({ name: "type", value: "pages_langs" });
+        formData.push({ name: CI4MS_CSRF.name, value: CI4MS_CSRF.getHash() });
         $.post('<?php echo route_to('addMultipleMenu') ?>', formData).done(data => {
             updateNestableUI(data);
             showToast('Seçilen sayfalar eklendi.');
@@ -127,7 +128,7 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
     }
 
     function addBlog(id) {
-        $.post('<?php echo route_to('createMenu') ?>', { "id": id, 'where': 'blog_langs' }).done(data => {
+        $.post('<?php echo route_to('createMenu') ?>', { "id": id, 'where': 'blog_langs',[CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => {
             updateNestableUI(data);
             showToast('Yazı menüye eklendi.');
             refreshLeftList();
@@ -138,6 +139,7 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
         var formData = $('#addCheckedBlog').serializeArray();
         formData.push({ name: "where", value: "blog_langs" });
         formData.push({ name: "type", value: "blog_langs" });
+        formData.push({ name: CI4MS_CSRF.name, value: CI4MS_CSRF.getHash() });
         $.post('<?php echo route_to('addMultipleMenu') ?>', formData).done(data => {
             updateNestableUI(data);
             showToast('Seçilen yazılar eklendi.');
@@ -166,7 +168,7 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
             cancelButtonText: 'Vazgeç'
         }).then(res => {
             if(res.isConfirmed) {
-                $.post('<?php echo route_to('deleteMenuAjax') ?>', { "id": id, "type": type }).done(data => {
+                $.post('<?php echo route_to('deleteMenuAjax') ?>', { "id": id, "type": type,[CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => {
                     updateNestableUI(data);
                     showToast('Menüden çıkarıldı.');
                     refreshLeftList();

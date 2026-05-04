@@ -18,13 +18,7 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
     //--------------------------------------------------------------------
     public $viewLayout = 'Modules\Backend\Views\base';
 
-    public $csrfExcept = [
-        'backend/tagify',
-        'backend/checkSeflink',
-        'backend/isActive',
-        'backend/maintenance',
-        'backend/summary/summary_render'
-    ];
+    public $csrfExcept = [];
 
     public $filters = [
         'backendGuard' => ['before' => [
@@ -34,6 +28,10 @@ class BackendConfig extends \CodeIgniter\Config\BaseConfig
             'backend/isActive',
             'backend/maintenance',
             'backend/profile',
+        ]],
+        'csrfTokenRefreshFilter' => ['after' => [
+            'backend',
+            'backend/*',
         ]],
     ];
 

@@ -524,7 +524,7 @@ echo $this->section('content'); ?>
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag("be-assets/plugins/dropzone/min/dropzone.min.js"); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
 (function() {
     'use strict';
 
@@ -641,7 +641,16 @@ echo script_tag("be-assets/plugins/dropzone/min/dropzone.min.js"); ?>
     });
     myDropzone.on("addedfile", function(file) { file.previewElement.querySelector(".start").onclick = function() { myDropzone.enqueueFile(file); }; });
     myDropzone.on("totaluploadprogress", function(p) { document.querySelector("#total-progress .progress-bar").style.width = p + "%"; });
-    myDropzone.on("sending", function(file) { document.querySelector("#total-progress").style.opacity = "1"; file.previewElement.querySelector(".start").setAttribute("disabled", "disabled"); });
+    myDropzone.on("sending", function(file, xhr, formData) {
+        document.querySelector("#total-progress").style.opacity = "1";
+        file.previewElement.querySelector(".start").setAttribute("disabled", "disabled");
+        xhr.setRequestHeader('X-CSRF-TOKEN', CI4MS_CSRF.getHash());
+        formData.append(CI4MS_CSRF.name, CI4MS_CSRF.getHash());
+    });
+    myDropzone.on("success", function(file, response, e) {
+        var newToken = file.xhr && file.xhr.getResponseHeader('X-CSRF-TOKEN');
+        if (newToken) CI4MS_CSRF.setHash(newToken);
+    });
     myDropzone.on("queuecomplete", function() { document.querySelector("#total-progress").style.opacity = "0"; });
     document.querySelector("#actions .start").onclick = function() { myDropzone.enqueueFiles(myDropzone.getFilesWithStatus(Dropzone.ADDED)); };
     document.querySelector("#actions .cancel").onclick = function() { myDropzone.removeAllFiles(true); };

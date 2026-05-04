@@ -58,10 +58,10 @@ echo $this->section('content') ?>
 <!-- /.content -->
 <?php echo $this->endSection();
 echo $this->section('javascript'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     $('.ptitle').on('change', function() {
         $.post('<?php echo route_to('checkSeflink') ?>', {
-            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
             'makeSeflink': $(this).val(),
             'where': 'tags',
             'id': <?php echo $infos->id ?>,
@@ -73,7 +73,7 @@ echo $this->section('javascript'); ?>
 
     $('.seflink').on('change', function() {
         $.post('<?php echo route_to('checkSeflink') ?>', {
-            "<?php echo csrf_token() ?>": "<?php echo csrf_hash() ?>",
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),
             'makeSeflink': $(this).val(),
             'where': 'tags',
             'id': <?php echo $infos->id ?>,

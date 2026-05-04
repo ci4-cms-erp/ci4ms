@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.9.0] - 2026-05-01
+
+### Security
+
+- **CSRF Architecture Overhaul:** Implemented centralized `ajaxPrefilter` in `ci4ms.js` for automatic CSRF token injection on all AJAX requests. elFinder route exempted from CSRF via `MediaConfig::$csrfExcept` to prevent stale-token 403 errors during multi-request operations.
+- **HTMLPurifier Hardening:** Removed `data:` URI scheme from `AllowedSchemes` to block `data:text/html;base64` XSS bypass attacks (Base64 images use a custom placeholder mechanism). Disabled `CSS.Trusted` to filter dangerous CSS properties. Enabled `HTML.TargetBlank` for automatic `rel="noopener noreferrer"` on external links. Ensured Blog and Pages controllers always persist `CustomRules::getClean()` sanitized content to the database.
+- **IP Spoofing Fix:** Removed raw `$_SERVER['HTTP_X_FORWARDED_FOR']` and `$_SERVER['HTTP_CLIENT_IP']` reads from `BackendLogFilter`. Now relies solely on CI4's `$request->getIPAddress()` which respects `App.proxyIPs` config for trusted proxy detection.
+- **Raw `$_SERVER` Elimination:** Replaced all raw `$_SERVER['HTTP_HOST']`, `$_SERVER['HTTPS']`, and `$_SERVER['SERVER_NAME']` reads with CI4's `base_url()`, `site_url()`, and `parse_url()` helpers across `Email.php`, `Ci4ms.php`, `Install.php`, and `Settings.php`.
+- **Fileeditor RCE Prevention:** Added `$dangerousExtensions` blacklist (`.php`, `.phtml`, `.phar`, `.htaccess`, etc.) to block creating, writing, or renaming executable files via the file editor. Added `file_exists()` overwrite protection for `createFile` and `realpath` boundary validation for `renameFile`.
+- **SQL Restore Hardening:** Implemented a SQL statement whitelist (`INSERT`, `CREATE TABLE`, `DROP TABLE`, etc.) and dangerous command blacklist (`LOAD_FILE`, `INTO OUTFILE`, `GRANT`, `xp_cmdshell`, etc.) in `DbBackup::restore()`. Added path traversal protection requiring backup files to reside within `WRITEPATH`.
+- **Hardcoded Credentials:** Removed plaintext passwords from `DevGate` configuration. Implemented `bcrypt` hashed passwords and enabled `$useHashedPasswords` by default to protect developer credentials.
+
+### Changed
+
+- **DevGate CLI Sync:** `php spark ci4ms:setup` now automatically updates `DevGate.php` with the admin credentials provided during installation, matching the web installer's behaviour.
+- **Proxy Configuration:** Added comprehensive Cloudflare and Nginx reverse proxy configuration examples as comments in `App.php::$proxyIPs`.
+- **URI Schemes:** Removed unused `nntp` and `news` URI schemes from HTMLPurifier configuration.
+
 ## [0.31.8.0] - 2026-04-19
 
 ### Fixed
@@ -293,6 +311,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.31.8.1]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.8.1
 [0.31.8.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.8.0
 [0.31.7.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.7.0
 [0.31.6.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.6.0

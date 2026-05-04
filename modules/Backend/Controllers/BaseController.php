@@ -8,6 +8,17 @@ use Modules\Backend\Libraries\CommonBackendLibrary;
 use Modules\Backend\Config\BackendConfig;
 use CodeIgniter\API\ResponseTrait;
 
+/**
+ * @property \CodeIgniter\HTTP\IncomingRequest $request
+ * @property \CodeIgniter\HTTP\Response $response
+ * @property \Psr\Log\LoggerInterface $logger
+ * @property \CodeIgniter\Session\Session $session
+ * @property \CodeIgniter\Validation\ValidationInterface $validator
+ * @property \ci4commonmodel\CommonModel $commonModel
+ * @property \Modules\Backend\Libraries\CommonBackendLibrary $commonBackendLibrary
+ * @property \CodeIgniter\Encryption\EncrypterInterface $encrypter
+ * @property \Modules\Backend\Config\BackendConfig $backConfig
+ */
 class BaseController extends Controller
 {
     use ResponseTrait;

@@ -179,10 +179,8 @@
     <?php echo script_tag("be-assets/plugins/jquery/jquery.min.js");
     echo script_tag("be-assets/plugins/bootstrap/js/bootstrap.bundle.min.js");
     echo script_tag("be-assets/js/adminlte.min.js");
-
-    echo script_tag("be-assets/js/demo.js");
     echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js"); ?>
-    <script {csp-script-nonce}>
+    <script type="text/javascript" {csp-script-nonce}>
         window.CI4MS_LOCALE = '<?php echo env('app.defaultLocale', 'tr') ?>';
     </script>
     <?php echo script_tag("be-assets/js/ci4ms.js");

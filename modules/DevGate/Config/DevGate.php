@@ -18,8 +18,8 @@ class DevGate extends BaseConfig
      * Set $useHashedPasswords = true to enable hash comparison.
      */
     public array $users = [
-        'admin' => 'bertug',
-        'dev'   => 'devpass',
+        'admin' => 'admin', //'$2y$12$puK4KAwrt.6G.RywpVy0xO6LI7rKAR09L0iArxWzGocGCCLnEzxmy'
+        'dev'   => 'devpass' //'$2y$12$NrHvzuu7zau7lvZskdGjweNO7.5sdTnx95gjLc6K8w5x935eVTlz6'
     ];
 
     /**

@@ -4,6 +4,7 @@ namespace Modules\Blog\Controllers;
 
 use Modules\Backend\Libraries\CommonTagsLibrary;
 use Modules\Backend\Models\AjaxModel;
+use Modules\Backend\Validation\CustomRules;
 
 class Blog extends \Modules\Backend\Controllers\BaseController
 {
@@ -120,7 +121,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                         'lang' => $lanCode,
                         'title' => trim(strip_tags($lanData['title'])),
                         'seflink' => trim(strip_tags($lanData['seflink'])),
-                        'content' => $lanData['content'],
+                        'content' => CustomRules::getClean($lanData['content']),
                         'seo' => !empty($seoData) ? $seoData : ''
                     ]);
                 }
@@ -198,7 +199,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                         'lang' => $lanCode,
                         'title' => trim(strip_tags($lanData['title'])),
                         'seflink' => trim(strip_tags($lanData['seflink'])),
-                        'content' => $lanData['content'],
+                        'content' => CustomRules::getClean($lanData['content']),
                         'seo' => !empty($seoData) ? $seoData : ''
                     ];
 

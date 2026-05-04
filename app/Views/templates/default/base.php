@@ -24,7 +24,7 @@
         <link href="<?php echo base_url('templates/default/assets/ci4ms.css') ?>" rel="stylesheet" />
     <?php endif; ?>
     <link href="<?php echo base_url('templates/default/assets/modern-ci4ms.css') ?>" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <link href="<?php echo base_url('be-assets/plugins/jquery-ui/jquery-ui.min.css') ?>" rel="stylesheet" />
     <?php $isMulti = ($settings->siteLanguageMode ?? 'single') === 'multi';

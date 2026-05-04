@@ -56,12 +56,9 @@ echo $this->section('content'); ?>
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js'); ?>
-<script {csp-script-nonce}>
+<script type="text/javascript" {csp-script-nonce}>
     $(function() {
         bsCustomFileInput.init();
-    });
-    $('#uploadTheme').on('click', function() {
-
     });
 </script>
 <?php echo $this->endSection() ?>

@@ -163,7 +163,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             try {
                 $email = service('email');
 
-                $email->setFrom('noreply@' . $_SERVER['HTTP_HOST'], 'noreply@' . $_SERVER['HTTP_HOST']);
+                $host = parse_url(base_url(), PHP_URL_HOST) ?: 'localhost';
+                $email->setFrom('noreply@' . $host, 'noreply@' . $host);
                 $email->setTo($this->request->getPost('testemail'));
 
                 $email->setSubject(lang('Settings.testMailSubject'));

@@ -190,6 +190,8 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 ### File Editor (`Modules\Fileeditor`)
 
 - Provides tree/file editing within the project root. `realpath` checks prevent path traversal outside `ROOTPATH`.
+- A `$dangerousExtensions` blacklist blocks creating, writing, or renaming executable files (`.php`, `.phtml`, `.phar`, `.htaccess`, etc.) via the editor.
+- Only files with extensions in `$allowedExtensions` (`css`, `js`, `html`, `txt`, `json`, `sql`, `md`) can be read and edited.
 - Restrict access to trusted roles only; changes are immediate and irreversible via the UI.
 
 ### Themes (`Modules\Theme`)
@@ -205,6 +207,7 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 - Generates full database ZIP archives in `writable/uploads/backups/`.
 - Uses `mysqldump` if available, falls back to a PHP-based export.
 - Restore from server-stored archives directly within the backend.
+- **Security:** SQL restore enforces a statement whitelist (only `INSERT`, `CREATE TABLE`, `DROP TABLE`, `ALTER TABLE`, `SET`, `UPDATE`, `DELETE` are allowed). Dangerous commands (`LOAD_FILE`, `INTO OUTFILE`, `GRANT`, `CREATE USER`, stored procedures) are blocked and logged. Backup files must reside within `WRITEPATH`.
 
 ---
 
@@ -241,18 +244,27 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 - Mail issues? Use `Modules\Settings\Controllers\Settings::testMail()` (AJAX) after configuring SMTP.
 - Docker issues? Run `docker compose logs app` to inspect the container output.
 
+## 12. Security Architecture
+
+CI4MS implements modern security practices to protect the application and user data:
+
+- **CSRF Protection:** Enabled globally. For AJAX requests, `public/be-assets/js/ci4ms.js` automatically reads the CSRF token from the `meta` tag and injects it into all AJAX requests via the `X-CSRF-TOKEN` header and POST parameters. Do not disable CSRF per module unless absolutely necessary (e.g. external webhooks or elFinder uploads).
+- **XSS & HTML Sanitization:** Content editors utilize `CustomRules::getClean()` to scrub HTML through HTMLPurifier. Dangerous schemes like `data:` and properties like `CSS.Trusted` are disabled by default.
+- **File System Integrity:** The Fileeditor module enforces strict blacklisting for executable extensions (`.php`, `.phtml`, `.phar`, etc.) to prevent Remote Code Execution (RCE). Operations are restricted strictly to safe paths using `realpath()` boundary validations.
+
 ---
 
-## 12. Deployment Checklist
+## 13. Deployment Checklist
 
 1. Set `CI_ENVIRONMENT = production` in `.env`.
 2. Ensure `app.baseURL` reflects the public domain (include protocol).
 3. Configure the web server document root to `public/` and deny direct access to all other directories.
 4. Run migrations: `php spark migrate --all`.
-5. Cache warm-up (optional): trigger the first page load or run custom warmers.
-6. Disable the debug toolbar: set via `app/Config/Toolbar.php` or the environment flag.
-7. Set proper permissions on writable directories (typically `775`/`664` depending on server user).
-8. Back up `public/uploads/`, the database, and `.env` before major upgrades.
+5. **Proxy IPs:** If behind Cloudflare or Nginx, configure `App.php::$proxyIPs` with trusted ranges (see the commented examples in the file) so that `$request->getIPAddress()` returns real client IPs.
+6. Cache warm-up (optional): trigger the first page load or run custom warmers.
+7. Disable the debug toolbar: set via `app/Config/Toolbar.php` or the environment flag.
+8. Set proper permissions on writable directories (typically `775`/`664` depending on server user).
+9. Back up `public/uploads/`, the database, and `.env` before major upgrades.
 
 ---
 

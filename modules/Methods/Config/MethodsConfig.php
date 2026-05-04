@@ -4,10 +4,7 @@ namespace Modules\Methods\Config;
 
 class MethodsConfig extends \CodeIgniter\Config\BaseConfig
 {
-    public $csrfExcept = [
-        'backend/methods',
-        'backend/methods/*'
-    ];
+    public $csrfExcept = [];
 
     public $filters = [
         'backendGuard' => ['before' => [

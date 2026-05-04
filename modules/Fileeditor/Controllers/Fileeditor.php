@@ -7,6 +7,7 @@ use DirectoryIterator;
 class Fileeditor extends \Modules\Backend\Controllers\BaseController
 {
     protected $allowedExtensions = ['css', 'js', 'html', 'txt', 'json', 'sql', 'md'];
+    protected $dangerousExtensions = ['php', 'phtml', 'phar', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'cgi', 'pl', 'asp', 'aspx', 'jsp', 'sh', 'bat', 'exe', 'htaccess'];
     protected $hiddenItems = [
         '.git',
         '.github',
@@ -115,7 +116,15 @@ if (!$this->allowedFileTypes($fullPath)) {
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
         }
 
-        file_put_contents($fullPath, $content);
+        // Block writing to dangerous file types (defense-in-depth)
+        $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+        if (in_array($ext, $this->dangerousExtensions)) {
+            return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
+        }
+
+        if (file_put_contents($fullPath, $content) === false) {
+            return $this->response->setJSON(['error' => lang('Backend.notUpdated', [''])])->setStatusCode(500);
+        }
 
         return $this->response->setJSON(['success' => true]);
     }
@@ -136,8 +145,17 @@ if (!$this->allowedFileTypes($fullPath)) {
 
         $newPath = dirname($fullPath) . DIRECTORY_SEPARATOR . $newName;
 
-        if (!$this->allowedFileTypes($newName))
-            return $this->failForbidden();
+        // Verify the rename target stays within ROOTPATH
+        $realNewDir = realpath(dirname($fullPath));
+        if (!$realNewDir || strpos($realNewDir . DIRECTORY_SEPARATOR . $newName, realpath(ROOTPATH)) !== 0) {
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+        }
+
+        // Block renaming to dangerous extensions
+        $ext = strtolower(pathinfo($newName, PATHINFO_EXTENSION));
+        if (in_array($ext, $this->dangerousExtensions)) {
+            return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
+        }
 
         if (!$fullPath || !file_exists($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
@@ -171,12 +189,23 @@ if (!$this->allowedFileTypes($fullPath)) {
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
         }
 
+        // Block creating dangerous file types
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        if (in_array($ext, $this->dangerousExtensions)) {
+            return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
+        }
+
         $newFilePath = $fullPath . DIRECTORY_SEPARATOR . $name;
+
+        // Prevent overwriting existing files
+        if (file_exists($newFilePath)) {
+            return $this->response->setJSON(['error' => lang('Fileeditor.fileAlreadyExists')])->setStatusCode(409);
+        }
 
         if (file_put_contents($newFilePath, '') !== false) {
             return $this->response->setJSON(['success' => true]);
         } else {
-            return $this->response->setJSON(['error' => lang('Backend.notCreated', [$newFilePath])])->setStatusCode(500);
+            return $this->response->setJSON(['error' => lang('Backend.notCreated', [''])])->setStatusCode(500);
         }
     }
 

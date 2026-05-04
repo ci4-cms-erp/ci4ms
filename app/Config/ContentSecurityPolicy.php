@@ -54,21 +54,33 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $scriptSrc = 'self';
+    public $scriptSrc = [
+        'self',
+        'unsafe-inline',
+        'unsafe-eval'
+    ];
 
     /**
      * Lists allowed stylesheets' URLs.
      *
      * @var list<string>|string
      */
-    public $styleSrc = 'self';
+    public $styleSrc = [
+        'self',
+        'unsafe-inline',
+        'https://fonts.googleapis.com'
+    ];
 
     /**
      * Defines the origins from which images can be loaded.
      *
      * @var list<string>|string
      */
-    public $imageSrc = 'self';
+    public $imageSrc = [
+        'self',
+        'data:',
+        'https://*'
+    ];
 
     /**
      * Restricts the URLs that can appear in a page's `<base>` element.
@@ -99,7 +111,11 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $fontSrc;
+    public $fontSrc = [
+        'self',
+        'https://fonts.gstatic.com',
+        'data:'
+    ];
 
     /**
      * Lists valid endpoints for submission from `<form>` tags.
@@ -172,5 +188,5 @@ class ContentSecurityPolicy extends BaseConfig
     /**
      * Replace nonce tag automatically
      */
-    public bool $autoNonce = true;
+    public bool $autoNonce = false;
 }
