@@ -2,16 +2,14 @@
 echo $this->section('title');
 echo lang($title->pagename);
 echo $this->endSection();
-echo $this->section('head');
-echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
-echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css");
-echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css");
-echo link_tag("be-assets/plugins/elFinder/css/theme.css");
-echo $this->endSection();
+echo $this->section('head'); ?>
+<link rel="stylesheet" href="/be-assets/plugins/jquery-ui/jquery-ui.css">
+<link rel="stylesheet" href="/be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css">
+<link rel="stylesheet" href="/be-assets/plugins/elFinder/css/elfinder.full.css">
+<link rel="stylesheet" href="/be-assets/plugins/elFinder/css/theme.css">
+<?php echo $this->endSection();
 echo $this->section('content'); ?>
-
 <section class="content pt-3">
-    <!-- Stats Row -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="m-stat-card">
@@ -41,7 +39,6 @@ echo $this->section('content'); ?>
             </div>
         </div>
     </div>
-
     <div class="card premium-card">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title font-weight-bold mb-0"><i class="fas fa-cog mr-2 text-primary"></i> <?php echo lang('Settings.siteSettings') ?></h3>
@@ -131,8 +128,6 @@ echo $this->section('content'); ?>
                                 </div>
                             </form>
                         </div>
-
-                        <!-- Template Tab -->
                         <div class="tab-pane fade" id="tab-template">
                             <div class="row">
                                 <div class="col-12 text-right mb-4">
@@ -164,8 +159,6 @@ echo $this->section('content'); ?>
                                 endforeach; ?>
                             </div>
                         </div>
-
-                        <!-- Social Tab -->
                         <div class="tab-pane fade" id="tab-social">
                             <form action="<?php echo route_to('socialMediaPost') ?>" class="repeater" method="post">
                                 <?php echo csrf_field() ?>
@@ -207,8 +200,6 @@ echo $this->section('content'); ?>
                                 </div>
                             </form>
                         </div>
-
-                        <!-- Mail Tab -->
                         <div class="tab-pane fade" id="tab-mail">
                             <form action="<?php echo route_to('mailSettingsPost') ?>" method="post">
                                 <?php echo csrf_field() ?>
@@ -288,8 +279,6 @@ echo $this->section('content'); ?>
         </div>
     </div>
 </section>
-
-
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
@@ -299,7 +288,7 @@ echo script_tag("be-assets/plugins/elFinder/js/elfinder.min.js");
 echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaultLocale', 'tr') . ".js");
 echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
 echo script_tag("be-assets/js/ci4ms.js") ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $('.repeater').repeater({
         isFirstItemUndeletable: true,
         show: function() {
@@ -387,7 +376,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             title: '<?php echo lang('Settings.checkVersionProgress') ?>',
             didOpen: () => Swal.showLoading()
         });
-        $.post('<?php echo route_to('updateVersion') ?>',{
+        $.post('<?php echo route_to('updateVersion') ?>', {
             [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
         }).done(r => {
             Swal.close();
@@ -497,7 +486,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             didOpen: () => Swal.showLoading()
         });
 
-        $.post('<?php echo route_to('listBackups') ?>',{
+        $.post('<?php echo route_to('listBackups') ?>', {
             [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
         }).done(r => {
             Swal.close();

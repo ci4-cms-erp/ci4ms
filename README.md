@@ -185,7 +185,7 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 - `composer test` — runs PHPUnit.
 - The GitHub Actions workflow (`.github/workflows/docker-test.yaml`) automatically builds the Docker image and runs migrations on every push to `master`.
 - **Maintenance mode**: When `settings.maintenanceMode.scalar == 1`, the `Ci4ms` filter redirects visitors to `maintenance-mode`.
-- **Security**: `Fileeditor` enforces `realpath` guards and a dangerous extension blacklist (`.php`, `.phtml`, `.phar`, `.htaccess`) to prevent RCE. `Backup` restore uses SQL statement whitelist to block malicious queries (`LOAD_FILE`, `GRANT`, etc.). `HTMLPurifier` config is hardened against XSS bypass (`data:` URIs blocked, `CSS.Trusted` disabled). All `$_SERVER` reads replaced with CI4 `base_url()`/`site_url()` helpers. Configure `App.php::$proxyIPs` if behind Cloudflare/Nginx.
+- **Security**: `Fileeditor` enforces `realpath` guards and a dangerous extension blacklist (`.php`, `.phtml`, `.phar`, `.htaccess`) to prevent RCE; destructive operations (`deleteFileOrFolder`, `renameFile`) additionally validate against an extension allowlist to block renaming or deleting critical application files. `Backup` restore uses SQL statement whitelist to block malicious queries (`LOAD_FILE`, `GRANT`, etc.). `HTMLPurifier` config is hardened against XSS bypass (`data:` URIs blocked, `CSS.Trusted` disabled) and `CustomRules::getClean()` output is persisted on every `create` and `update` flow in Blog and Pages controllers to prevent Stored XSS. All `$_SERVER` reads replaced with CI4 `base_url()`/`site_url()` helpers. Configure `App.php::$proxyIPs` if behind Cloudflare/Nginx.
 
 ## Additional Docs
 
@@ -209,7 +209,7 @@ A huge thank you to the security researchers who have helped make **ci4ms** more
 | **[Hunter.](https://github.com/LAW6ZX7)** | Identified Critical Stored XSS in Backend & Blog modules allowing Session Hijacking. | Feb 2026 |
 | **[m1scher](https://github.com/m1scher)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
 | **[alpernae](https://github.com/alpernae)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
-| **[offset](https://github.com/offset)** | Identified Critical vulnerabilities including multiple Stored XSS, Authorization Bypass in Fileeditor, Install Guard Bypass, and CRLF Injection. | Apr 2026 |
+| **[offset](https://github.com/offset)** | Identified Critical vulnerabilities including multiple Stored XSS (Blog & Pages content via broken `html_purify` validation), Authorization Bypass in Fileeditor destructive operations (delete/rename extension allowlist missing), Install Guard Bypass, and CRLF Injection. | Apr – May 2026 |
 | **[fg0x0](https://github.com/fg0x0)** | Identified Critical Arbitrary File Write (Zip Slip RCE) vulnerabilities in Theme::upload and Backup::restore modules. | Apr 2026 |
 | **[0xAlchemist](https://github.com/bugmithlegend)** , **[peeefour](https://github.com/peeefour)** and **[DexterHK](https://github.com/DexterHK)** | Identified Critical Full Account Takeover and Privilege Escalation via Stored DOM Blind XSS in Backup Management (v2). | Apr 2026 |
 | **[dapickle](https://github.com/dapickle)** | Identified Critical Authenticated RCE in Theme installation, Arbitrary Database Table Drop in Theme module, and a Session Management Bypass. | Apr 2026 |

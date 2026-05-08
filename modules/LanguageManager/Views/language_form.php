@@ -1,7 +1,7 @@
 <?php echo $this->extend($backConfig->viewLayout);
-echo $this->section('head');
-echo link_tag('be-assets/plugins/flag-icons/css/flag-icons.min.css');
-echo $this->endSection();
+echo $this->section('head'); ?>
+<link rel="stylesheet" href="/be-assets/plugins/flag-icons/css/flag-icons.min.css">
+<?php echo $this->endSection();
 echo $this->section('content');
 $isEdit = isset($language);
 $formAction = $isEdit ? site_url('backend/language-manager/languages/update/' . $language->id) : site_url('backend/language-manager/languages/create'); ?>
@@ -94,7 +94,7 @@ $formAction = $isEdit ? site_url('backend/language-manager/languages/update/' . 
 </div>
 <?php echo $this->endSection();
 echo $this->section('javascript'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(function() {
         let flags = [];
 

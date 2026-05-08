@@ -4,20 +4,8 @@ echo lang($title->pagename);
 echo $this->endSection();
 echo $this->section('head');
 echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css');
-echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css'); ?>
-<style {csp-style-nonce}>
-    .is-home-badge {
-        font-size: .7rem;
-        background: #fff5f5;
-        color: #e53e3e;
-        border: 1px solid #feb2b2;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: 600;
-        margin-left: 8px;
-    }
-</style>
-<?php echo $this->endSection();
+echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css');
+echo $this->endSection();
 echo $this->section('content'); ?>
 
 <section class="content pt-3">
@@ -59,10 +47,10 @@ echo $this->section('content'); ?>
                 <i class="fas fa-layer-group mr-2 text-info"></i> <?php echo lang($title->pagename) ?>
             </h3>
             <div class="ml-auto">
-                <a href="<?php echo route_to('pageCreate') ?>" class="btn btn-sm btn-success px-4" style="border-radius:10px">
+                <a href="<?php echo route_to('pageCreate') ?>" class="btn btn-sm btn-success px-4">
                     <?php echo lang('Backend.add') ?>
                 </a>
-                <button class="btn btn-sm btn-outline-secondary ml-1" id="btnRefresh" style="border-radius:10px" title="Refresh">
+                <button class="btn btn-sm btn-outline-secondary ml-1" id="btnRefresh" title="Refresh">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
@@ -72,9 +60,9 @@ echo $this->section('content'); ?>
                 <table id="example1" class="table table-hover w-100">
                     <thead>
                         <tr>
-                            <th style="width: 60%"><?php echo lang('Backend.title') ?></th>
-                            <th style="text-align:center"><?php echo lang('Backend.status') ?></th>
-                            <th style="text-align:right"><?php echo lang('Backend.transactions') ?></th>
+                            <th class="w-50"><?php echo lang('Backend.title') ?></th>
+                            <th class="text-center"><?php echo lang('Backend.status') ?></th>
+                            <th class="text-right"><?php echo lang('Backend.transactions') ?></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -84,15 +72,14 @@ echo $this->section('content'); ?>
     </div>
 </section>
 
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript');
+<?php echo $this->endSection();
+echo $this->section('javascript');
 echo script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js");
 echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     function btstpSwitch() {
         $('.bswitch').bootstrapSwitch({
             size: 'small'
@@ -151,7 +138,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
         $.post('/backend/pages/setHomePage/' + id, {
             [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
         }, 'json').done(function(response) {
-            if (response.status == true) {
+            if (response.status === true) {
                 showToast(response.message);
                 table.ajax.reload();
             } else showToast(response.message, 'error');

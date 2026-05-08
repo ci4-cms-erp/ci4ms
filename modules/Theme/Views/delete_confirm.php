@@ -55,9 +55,9 @@
                                                 <div class="col-md-6 mb-2">
                                                     <div class="custom-control custom-checkbox">
                                                         <input type="checkbox" class="custom-control-input table-checkbox"
-                                                               id="tbl_<?php echo esc($table) ?>"
-                                                               name="tables[]"
-                                                               value="<?php echo esc($table) ?>">
+                                                            id="tbl_<?php echo esc($table) ?>"
+                                                            name="tables[]"
+                                                            value="<?php echo esc($table) ?>">
                                                         <label class="custom-control-label" for="tbl_<?php echo esc($table) ?>" style="cursor:pointer; font-family: monospace;">
                                                             <?php echo esc($table) ?>
                                                         </label>
@@ -85,12 +85,12 @@
 <?php echo $this->endSection(); ?>
 
 <?php echo $this->section('javascript'); ?>
-<script type="text/javascript" {csp-script-nonce}>
-    document.addEventListener("DOMContentLoaded", function () {
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
+    document.addEventListener("DOMContentLoaded", function() {
 
         // Tümünü seç / bırak
         const checkAllBtn = document.getElementById('checkAllTables');
-        if(checkAllBtn) {
+        if (checkAllBtn) {
             checkAllBtn.addEventListener('change', function() {
                 const checkboxes = document.querySelectorAll('.table-checkbox');
                 checkboxes.forEach(cb => cb.checked = this.checked);
@@ -98,7 +98,7 @@
         }
 
         // Form Submit
-        document.getElementById('btnConfirmDelete').addEventListener('click', function () {
+        document.getElementById('btnConfirmDelete').addEventListener('click', function() {
             Swal.fire({
                 title: 'Emin misiniz?',
                 text: "Bu tema tamamen silinecek. İşaretlediğiniz tablolar veritabanından kalıcı olarak temizlenecektir. Bu işlem geri alınamaz!",

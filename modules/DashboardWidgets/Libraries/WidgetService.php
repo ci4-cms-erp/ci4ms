@@ -107,7 +107,7 @@ class WidgetService
     {
         $widgets = $this->commonModel->lists(
             'dashboard_widgets',
-            'dashboard_widgets.id, dashboard_widgets.slug, dashboard_widgets.title, dashboard_widgets.icon, dashboard_widgets.color, dashboard_widgets.type, dashboard_widgets.default_size, dashboard_widgets.allowed_groups, COALESCE(user_widget_preferences.is_visible, 1) as visible',
+            'dashboard_widgets.id, dashboard_widgets.slug, dashboard_widgets.title, dashboard_widgets.icon, dashboard_widgets.color, dashboard_widgets.type, dashboard_widgets.default_size, dashboard_widgets.allowed_groups, COALESCE(' . getenv('database.default.DBPrefix') . 'user_widget_preferences.is_visible, 1) as visible',
             ['dashboard_widgets.is_active' => 1],
             'dashboard_widgets.title ASC',
             0,

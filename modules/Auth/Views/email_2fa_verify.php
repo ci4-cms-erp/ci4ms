@@ -1,9 +1,8 @@
-<?php echo $this->extend(config('Auth')->views['layout']) ?>
-
-<?php echo $this->section('title') ?><?php echo lang('Auth.email2FATitle') ?> | Ci4MS - <?php echo getenv('app.version') ?> <?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
-
+<?php echo $this->extend(config('Auth')->views['layout']);
+echo $this->section('title');
+echo lang('Auth.email2FATitle') . ' | Ci4MS - ' . getenv('app.version');
+echo $this->endSection();
+echo $this->section('content') ?>
 <div class="login-box">
     <div class="card card-outline card-success shadow-sm">
         <div class="card-body">
@@ -16,8 +15,8 @@
 
                 <!-- Code -->
                 <div class="mb-2">
-                    <input type="number" class="form-control" name="token" placeholder="000000"
-                        inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" required>
+                    <input type="number" class="form-control" name="token" placeholder="000000" inputmode="numeric"
+                        pattern="[0-9]*" autocomplete="one-time-code" required>
                 </div>
 
                 <div class="d-grid col-8 mx-auto m-3">
@@ -28,5 +27,4 @@
         </div>
     </div>
 </div>
-
 <?php echo $this->endSection() ?>

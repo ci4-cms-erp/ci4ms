@@ -35,13 +35,14 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 $valData['module_id'] = ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero'];
             if (!empty($this->request->getPost('page_id')))
                 $valData['page_id'] = ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero'];
-            if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+            if ($this->validate($valData) === false)
+                return $this->fail($this->validator->getErrors());
             $flag = false;
             if (!empty($this->request->getPost('module_id')) && $this->commonModel->edit('modules', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['id' => $this->request->getPost('module_id')]) && $this->commonModel->edit('auth_permissions_pages', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['module_id' => $this->request->getPost('module_id')]))
                 $flag = true;
             if (!empty($this->request->getPost('page_id')) && $this->commonModel->edit('auth_permissions_pages', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['id' => $this->request->getPost('page_id')]))
                 $flag = true;
-            if ($flag == true) {
+            if ($flag === true) {
                 cache()->delete("{$this->defData['logged_in_user']->id}_permissions");
                 return $this->respond(['success' => 'success'], 200);
             }
@@ -60,7 +61,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[auth_permissions_pages.sefLink]'],
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required'],
             ]);
-            if ($this->validate($valData) == false) return redirect()->route('methodCreate')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false)
+                return redirect()->route('methodCreate')->withInput()->with('errors', $this->validator->getErrors());
             $roles = $this->request->getPost('typeOfPermissions');
             $r = [
                 'create_r' => in_array('create', $roles),
@@ -69,20 +71,22 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'delete_r' => in_array('delete', $roles),
             ];
             $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
-            if ($this->commonModel->create('auth_permissions_pages', [
-                'pagename' => esc(strip_tags(trim($this->request->getPost('pagename')))),
-                'description' => esc(strip_tags(trim($this->request->getPost('description')))),
-                'className' => esc(strip_tags(trim($this->request->getPost('className')))),
-                'methodName' => esc(strip_tags(trim($this->request->getPost('methodName')))),
-                'sefLink' => $this->request->getPost('sefLink'),
-                'hasChild' => $this->request->getPost('hasChild') ?? 0,
-                'pageSort' => !empty($this->request->getPost('pageSort')) ? $this->request->getPost('pageSort') : NULL,
-                'parent_pk' => $this->request->getPost('parent_pk') ?? NULL,
-                'symbol' => !empty($this->request->getPost('symbol')) ? $this->request->getPost('symbol') : NULL,
-                'inNavigation' => $this->request->getPost('inNavigation') ?? 0,
-                'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
-                'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
-            ])) {
+            if (
+                $this->commonModel->create('auth_permissions_pages', [
+                    'pagename' => esc(strip_tags(trim($this->request->getPost('pagename')))),
+                    'description' => esc(strip_tags(trim($this->request->getPost('description')))),
+                    'className' => esc(strip_tags(trim($this->request->getPost('className')))),
+                    'methodName' => esc(strip_tags(trim($this->request->getPost('methodName')))),
+                    'sefLink' => $this->request->getPost('sefLink'),
+                    'hasChild' => $this->request->getPost('hasChild') ?? 0,
+                    'pageSort' => !empty($this->request->getPost('pageSort')) ? $this->request->getPost('pageSort') : NULL,
+                    'parent_pk' => $this->request->getPost('parent_pk') ?? NULL,
+                    'symbol' => !empty($this->request->getPost('symbol')) ? $this->request->getPost('symbol') : NULL,
+                    'inNavigation' => $this->request->getPost('inNavigation') ?? 0,
+                    'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
+                    'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
+                ])
+            ) {
                 return redirect()->route('methodList')->with('success', lang('Backend.created', [$this->request->getPost('pagename')]));
             } else
                 return redirect()->route('methodCreate')->withInput()->with('error', lang('Backend.notCreated', [$this->request->getPost('pagename')]));
@@ -100,7 +104,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
                 'typeOfPermissions' => ['label' => '', 'rules' => 'required']
             ]);
-            if ($this->validate($valData) == false) return redirect()->route('methodUpdate', [$pk])->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false)
+                return redirect()->route('methodUpdate', [$pk])->withInput()->with('errors', $this->validator->getErrors());
             $roles = $this->request->getPost('typeOfPermissions');
             $r = [
                 'create_r' => in_array('create', $roles),
@@ -109,20 +114,22 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 'delete_r' => in_array('delete', $roles),
             ];
             $roles = json_encode($r, JSON_UNESCAPED_UNICODE);
-            if ($this->commonModel->edit('auth_permissions_pages', [
-                'pagename' => esc(strip_tags(trim($this->request->getPost('pagename')))),
-                'description' => esc(strip_tags(trim($this->request->getPost('description')))),
-                'className' => esc(strip_tags(trim($this->request->getPost('className')))),
-                'methodName' => esc(strip_tags(trim($this->request->getPost('methodName')))),
-                'sefLink' => $this->request->getPost('sefLink'),
-                'hasChild' => (bool)$this->request->getPost('hasChild') == true ? 1 : 0,
-                'pageSort' => $this->request->getPost('pageSort') ?? 0,
-                'parent_pk' => $this->request->getPost('parent_pk') ?? NULL,
-                'symbol' => $this->request->getPost('symbol') ?? NULL,
-                'inNavigation' => (bool)$this->request->getPost('inNavigation') == true ? 1 : 0,
-                'isBackoffice' => (bool)$this->request->getPost('isBackoffice') == true ? 1 : 0,
-                'typeOfPermissions' => $roles
-            ], ['id' => $pk])) {
+            if (
+                $this->commonModel->edit('auth_permissions_pages', [
+                    'pagename' => esc(strip_tags(trim($this->request->getPost('pagename')))),
+                    'description' => esc(strip_tags(trim($this->request->getPost('description')))),
+                    'className' => esc(strip_tags(trim($this->request->getPost('className')))),
+                    'methodName' => esc(strip_tags(trim($this->request->getPost('methodName')))),
+                    'sefLink' => $this->request->getPost('sefLink'),
+                    'hasChild' => (bool) $this->request->getPost('hasChild') === true ? 1 : 0,
+                    'pageSort' => $this->request->getPost('pageSort') ?? 0,
+                    'parent_pk' => $this->request->getPost('parent_pk') ?? NULL,
+                    'symbol' => $this->request->getPost('symbol') ?? NULL,
+                    'inNavigation' => (bool) $this->request->getPost('inNavigation') === true ? 1 : 0,
+                    'isBackoffice' => (bool) $this->request->getPost('isBackoffice') === true ? 1 : 0,
+                    'typeOfPermissions' => $roles
+                ], ['id' => $pk])
+            ) {
                 cache()->delete('sidebar_menu');
                 return redirect()->route('methodList')->with('success', lang('Backend.updated', [$this->request->getPost('pagename')]));
             } else
@@ -137,7 +144,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
 
     public function moduleScan()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
 
         $scanner = new \Modules\Methods\Libraries\ModuleScanner();
         $isChanged = $scanner->runScan();
@@ -151,7 +159,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
 
     public function moduleUpload()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
         $file = $this->request->getFile('modules');
 
         if (!$file->isValid() || $file->getClientExtension() !== 'zip') {
@@ -212,14 +221,16 @@ class Methods extends \Modules\Backend\Controllers\BaseController
 
     public function moduleCreate()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
         $valData = ([
             'module_name' => ['label' => lang('Methods.moduleName'), 'rules' => 'required|alpha_dash'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         $moduleName = $this->request->getPost('module_name');
 
-        $moduleName = ucfirst((string)$moduleName);
+        $moduleName = ucfirst((string) $moduleName);
         $modulePath = ROOTPATH . 'modules/' . $moduleName;
 
         if (is_dir($modulePath)) {
@@ -249,22 +260,18 @@ class Methods extends \Modules\Backend\Controllers\BaseController
      */
     public function moduleInfo(int $moduleId)
     {
-        if (!$this->request->isAJAX()) {
+        if (!$this->request->isAJAX())
             return $this->failForbidden();
-        }
 
         $module = $this->commonModel->selectOne('modules', ['id' => $moduleId]);
-        if (empty($module)) {
+        if (empty($module))
             return $this->failNotFound(lang('Methods.deleteModuleFailed'));
-        }
 
-        // Protected module check
-        if (in_array($module->name, self::PROTECTED_MODULES)) {
+        if (in_array($module->name, self::PROTECTED_MODULES))
             return $this->respond([
-                'status'    => 'protected',
-                'message'   => lang('Methods.deleteModuleProtected'),
+                'status' => 'protected',
+                'message' => lang('Methods.deleteModuleProtected'),
             ]);
-        }
 
         $installer = new ModuleInstaller();
         $tables = $installer->getModuleTables($module->name);
@@ -274,7 +281,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         $tableInfo = [];
         foreach ($stats as $tableName => $count) {
             $tableInfo[] = [
-                'name'  => $tableName,
+                'name' => $tableName,
                 'count' => $count,
             ];
             if ($count > 0) {
@@ -283,10 +290,10 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
 
         return $this->respond([
-            'status'       => 'ok',
-            'module_id'    => $module->id,
-            'module_name'  => $module->name,
-            'tables'       => $tableInfo,
+            'status' => 'ok',
+            'module_id' => $module->id,
+            'module_name' => $module->name,
+            'tables' => $tableInfo,
             'totalRecords' => $totalRecords,
         ]);
     }
@@ -296,41 +303,37 @@ class Methods extends \Modules\Backend\Controllers\BaseController
      */
     public function moduleDelete()
     {
-        if (!$this->request->isAJAX() || !$this->request->is('post')) {
+        if (!$this->request->isAJAX() || !$this->request->is('post'))
             return $this->failForbidden();
-        }
 
         $valData = [
-            'module_id'    => ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero'],
+            'module_id' => ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero'],
             'confirm_name' => ['label' => lang('Methods.moduleName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
         ];
-        if ($this->validate($valData) === false) {
+        if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
-        }
 
         $moduleId = (int) $this->request->getPost('module_id');
         $confirmName = trim((string) $this->request->getPost('confirm_name'));
 
         $module = $this->commonModel->selectOne('modules', ['id' => $moduleId]);
-        if (empty($module)) {
+        if (empty($module))
             return $this->failNotFound(lang('Methods.deleteModuleFailed'));
-        }
 
         // Korumalı modül kontrolü
         if (in_array($module->name, self::PROTECTED_MODULES)) {
             return $this->respond([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => lang('Methods.deleteModuleProtected'),
             ]);
         }
 
         // İsim eşleşme kontrolü
-        if ($confirmName !== $module->name) {
+        if ($confirmName !== $module->name)
             return $this->respond([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => lang('Methods.deleteModuleNameMismatch'),
             ]);
-        }
 
         $installer = new ModuleInstaller();
 
@@ -339,38 +342,28 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             $files = glob($migrationPath . '/*.php');
             if (!empty($files)) {
                 $rollbackResult = $installer->rollbackModuleMigrations($module->name);
-                if (!$rollbackResult['success']) {
+                if (!$rollbackResult['success'])
                     return $this->respond([
-                        'status'  => 'error',
+                        'status' => 'error',
                         'message' => lang('Methods.rollbackFailed', [$rollbackResult['error']]),
                     ]);
-                }
             }
         }
 
-
-        // 2) auth_permissions_pages kayıtlarını sil
         $this->commonModel->remove('auth_permissions_pages', ['module_id' => $moduleId]);
-
-        // 3) modules tablosundan kaydı sil
         $this->commonModel->remove('modules', ['id' => $moduleId]);
-
-        // 4) Dosya sisteminden modül klasörünü sil
         $fileResult = $installer->removeModuleFiles($module->name);
-
-        // 5) Cache temizliği
         cache()->delete('sidebar_menu');
         foreach ($this->commonModel->lists('users', 'id') as $user) {
             cache()->delete("{$user->id}_permissions");
         }
 
         $message = lang('Methods.deleteModuleSuccess', [$module->name]);
-        if (!$fileResult['success']) {
+        if (!$fileResult['success'])
             $message .= ' ' . $fileResult['error'];
-        }
 
         return $this->respond([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => $message,
         ]);
     }

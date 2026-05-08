@@ -98,7 +98,7 @@ class Menu extends \Modules\Backend\Controllers\BaseController
             ];
         }
 
-        if ($this->validate($valD) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valD) === false) return $this->fail($this->validator->getErrors());
 
         $pMax = $this->commonModel->selectOne('menu', ['parent' => null], '*', 'queue DESC');
         if (empty($pMax)) $pMax = (object)['queue' => 0];
@@ -149,16 +149,18 @@ class Menu extends \Modules\Backend\Controllers\BaseController
         $langTable = ($info['mainTable'] === 'pages') ? 'pages_langs' : 'blog_langs';
         $fk = $info['fk'];
 
+        $pMax = $this->commonModel->selectOne('menu', ['parent' => null], '*', 'queue DESC');
+        $currentQueue = empty($pMax) ? 0 : (int)$pMax->queue;
+
         foreach ($this->request->getPost('pageChecked') as $item) {
-            $pMax = $this->commonModel->selectOne('menu', ['parent' => null], '*', 'queue DESC');
-            if (empty($pMax)) $pMax = (object)['queue' => 0];
+            $currentQueue++;
 
             $d = $this->commonModel->selectOne($langTable, [$fk => $item, 'lang' => $defaultLang], 'title, seflink');
 
             $data = [
                 'pages_id' => $item,
                 'parent' => null,
-                'queue' => $pMax->queue + 1,
+                'queue' => $currentQueue,
                 'urlType' => $info['urlType'],
                 'title' => $d->title ?? '',
                 'seflink' => $info['prefix'] . ($d->seflink ?? '')
@@ -181,9 +183,11 @@ class Menu extends \Modules\Backend\Controllers\BaseController
         if ($this->commonModel->isHave('menu', ['parent' => $getData->id]) === 1) {
             $reQ = $this->commonModel->lists('menu', '*', ['parent' => $getData->id]);
             $bigQ = $this->commonModel->selectOne('menu', ['parent' => null, 'id!=' => $getData->id], '*', 'queue DESC');
-            if (empty($bigQ)) $bigQ = (object)['queue' => 0];
+            $currentQueue = empty($bigQ) ? 0 : (int)$bigQ->queue;
+
             foreach ($reQ as $item) {
-                $this->commonModel->edit('menu', ['queue' => $bigQ->queue + 1, 'parent' => null], ['id' => $item->id]);
+                $currentQueue++;
+                $this->commonModel->edit('menu', ['queue' => $currentQueue, 'parent' => null], ['id' => $item->id]);
             }
         }
 

@@ -1,9 +1,8 @@
-<?php echo $this->extend(config('Auth')->views['layout']) ?>
-
-<?php echo $this->section('title') ?><?php echo lang('Auth.useMagicLink') ?> | Ci4MS - <?php echo getenv('app.version') ?> <?php echo $this->endSection() ?>
-
-<?php echo $this->section('content') ?>
-
+<?php echo $this->extend(config('Auth')->views['layout']);
+echo $this->section('title');
+echo lang('Auth.useMagicLink') . ' | Ci4MS - ' . getenv('app.version');
+echo $this->endSection();
+echo $this->section('content') ?>
 <div class="login-box">
     <div class="card card-outline card-success shadow-sm">
         <div class="card-body">
@@ -15,5 +14,4 @@
         </div>
     </div>
 </div>
-
 <?php echo $this->endSection() ?>

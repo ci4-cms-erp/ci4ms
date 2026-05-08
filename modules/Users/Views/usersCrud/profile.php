@@ -30,11 +30,9 @@ echo $this->section('content'); ?>
                             <img id="profileImagePreview"
                                 src="<?php echo esc($user->profileIMG) ?>"
                                 alt="Profil Resmi"
-                                class="img-circle elevation-2"
-                                style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #dee2e6;">
+                                class="img-circle elevation-2">
                             <label for="avatarInput"
-                                class="btn btn-sm btn-outline-secondary position-absolute"
-                                style="bottom: 5px; right: 5px; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff;">
+                                class="btn btn-sm btn-outline-secondary position-absolute" id="avatarInputBtn">
                                 <i class="fas fa-camera"></i>
                             </label>
                         </div>
@@ -113,14 +111,14 @@ echo $this->section('content'); ?>
                         <li class="list-group-item px-4 py-3">
                             <div class="d-flex align-items-center">
                                 <!-- Cihaz İkonu -->
-                                <div class="text-center mr-4" style="width: 50px;">
+                                <div class="text-center mr-4 deviceIconSession">
                                     <i class="<?= device_icon($s['device_type']) ?> fa-2x text-secondary"></i>
                                 </div>
 
                                 <!-- Bilgiler -->
                                 <div class="flex-grow-1 overflow-hidden">
                                     <div class="d-flex align-items-center mb-1">
-                                        <span class="font-weight-bold text-truncate mr-2" style="font-size: 1.1rem;">
+                                        <span class="font-weight-bold text-truncate mr-2 browserSession">
                                             <i class="<?= browser_icon($s['browser']) ?> mr-1 text-info"></i>
                                             <?= esc($s['browser']) ?>
                                             <?= $s['browser_version'] ? esc($s['browser_version']) : '' ?>
@@ -189,13 +187,13 @@ echo $this->section('content'); ?>
             <div class="card-body p-0">
                 <ul class="list-group list-group-flush">
                     <?php foreach (array_slice($pastSessions, 0, 10) as $s): ?>
-                        <li class="list-group-item px-4 py-3" style="opacity: 0.8;">
+                        <li class="list-group-item px-4 py-3 browserSessions">
                             <div class="d-flex align-items-center">
-                                <div class="text-center mr-4" style="width: 50px;">
+                                <div class="text-center mr-4 deviceIconSession">
                                     <i class="<?= device_icon($s['device_type']) ?> fa-2x text-muted"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <div class="font-weight-bold text-dark mb-1">
+                                    <div class="font-weight-bold text-dark mb-1 browserSession">
                                         <i class="<?= browser_icon($s['browser']) ?> mr-1"></i>
                                         <?= esc($s['browser']) ?> — <?= esc($s['os']) ?>
                                     </div>
@@ -221,7 +219,7 @@ echo $this->section('content'); ?>
 </section>
 <?php echo $this->endSection();
 echo $this->section('javascript'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     document.getElementById('avatarInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;

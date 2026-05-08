@@ -2,12 +2,11 @@
 echo $this->section('title');
 echo lang($title->pagename);
 echo $this->endSection();
-echo $this->section('head');
-echo link_tag("be-assets/plugins/select2/css/select2.min.css");
-echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css");
-echo $this->endSection();
+echo $this->section('head'); ?>
+<link rel="stylesheet" href="/be-assets/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="/be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<?php echo $this->endSection();
 echo $this->section('content'); ?>
-<!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
@@ -20,10 +19,8 @@ echo $this->section('content'); ?>
                 </ol>
             </div>
         </div>
-    </div><!-- /.container-fluid -->
+    </div>
 </section>
-
-<!-- Main content -->
 <section class="content">
     <div class="card card-outline shadow-sm">
         <div class="card-header">
@@ -104,14 +101,14 @@ echo $this->section('content'); ?>
                 </div>
                 <div class="form-group col-md-9 d-flex align-items-end">
                     <div class="w-100 btn-group btn-group-toggle" data-toggle="buttons">
-                        <label class="btn btn-outline-primary <?php echo $method->inNavigation == true ? 'active' : '' ?>">
-                            <input class="custom-control-input" value="1" name="inNavigation" type="checkbox" id="inNavigation" <?php echo $method->inNavigation == true ? 'checked' : '' ?>> Menüde mi ?
+                        <label class="btn btn-outline-primary <?php echo $method->inNavigation === true ? 'active' : '' ?>">
+                            <input class="custom-control-input" value="1" name="inNavigation" type="checkbox" id="inNavigation" <?php echo $method->inNavigation === true ? 'checked' : '' ?>> Menüde mi ?
                         </label>
-                        <label class="btn btn-outline-primary <?php echo $method->isBackoffice == true ? 'active' : '' ?>">
-                            <input class="custom-control-input" value="1" name="isBackoffice" type="checkbox" id="isBackoffice" <?php echo $method->isBackoffice == true ? 'checked' : '' ?>> Panelde mi ?
+                        <label class="btn btn-outline-primary <?php echo $method->isBackoffice === true ? 'active' : '' ?>">
+                            <input class="custom-control-input" value="1" name="isBackoffice" type="checkbox" id="isBackoffice" <?php echo $method->isBackoffice === true ? 'checked' : '' ?>> Panelde mi ?
                         </label>
-                        <label class="btn btn-outline-primary <?php echo $method->hasChild == true ? 'active' : '' ?>">
-                            <input class="custom-control-input" value="1" name="hasChild" type="checkbox" id="hasChild" <?php echo $method->hasChild == true ? 'checked' : '' ?>> Alt sayfası var mı ?
+                        <label class="btn btn-outline-primary <?php echo $method->hasChild === true ? 'active' : '' ?>">
+                            <input class="custom-control-input" value="1" name="hasChild" type="checkbox" id="hasChild" <?php echo $method->hasChild === true ? 'checked' : '' ?>> Alt sayfası var mı ?
                         </label>
                     </div>
                 </div>
@@ -122,11 +119,10 @@ echo $this->section('content'); ?>
         </div>
     </div>
 </section>
-<!-- /.content -->
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/select2/js/select2.full.min.js'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $('.select2').select2({
         theme: 'bootstrap4'
     });

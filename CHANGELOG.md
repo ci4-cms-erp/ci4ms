@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
-## [0.31.9.0] - 2026-05-01
+## [0.31.9.0] - 2026-05-08
 
 ### Security
 
@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - **Fileeditor RCE Prevention:** Added `$dangerousExtensions` blacklist (`.php`, `.phtml`, `.phar`, `.htaccess`, etc.) to block creating, writing, or renaming executable files via the file editor. Added `file_exists()` overwrite protection for `createFile` and `realpath` boundary validation for `renameFile`.
 - **SQL Restore Hardening:** Implemented a SQL statement whitelist (`INSERT`, `CREATE TABLE`, `DROP TABLE`, etc.) and dangerous command blacklist (`LOAD_FILE`, `INTO OUTFILE`, `GRANT`, `xp_cmdshell`, etc.) in `DbBackup::restore()`. Added path traversal protection requiring backup files to reside within `WRITEPATH`.
 - **Hardcoded Credentials:** Removed plaintext passwords from `DevGate` configuration. Implemented `bcrypt` hashed passwords and enabled `$useHashedPasswords` by default to protect developer credentials.
+- **Stored XSS — Blog Content (reported by offset):** The `html_purify` custom validation rule was applied to the Blog content field but did not enforce sanitization during update operations, allowing authenticated authors to persist malicious scripts. Fixed by ensuring `CustomRules::getClean()` is invoked and its output persisted on both `create` and `update` flows in `Blog.php` controller.
+- **Stored XSS — Pages Content (reported by offset):** Identical bypass in the Pages module: the `html_purify` rule ran validation but the raw unsanitized value was written to the database on update. Fixed by enforcing `CustomRules::getClean()` output persistence in `Pages.php` controller for both creation and editing endpoints.
+- **Fileeditor Destructive Operations Extension Bypass (reported by offset):** The dangerous-extension blacklist was only enforced on `createFile`, `saveFile`, and `renameFile` but not on `deleteFileOrFolder` and `renameFile` when the target was a critical application file (e.g. `.env`, `composer.json`). Added an explicit extension allowlist check to all destructive operations (`deleteFileOrFolder`, `renameFile`) so that renaming or deleting files with critical extensions is blocked regardless of the operation type.
 
 ### Changed
 
@@ -311,6 +314,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.31.9.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.9.0
 [0.31.8.1]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.8.1
 [0.31.8.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.8.0
 [0.31.7.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.7.0

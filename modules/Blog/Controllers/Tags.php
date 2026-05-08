@@ -37,7 +37,7 @@ class Tags extends \Modules\Backend\Controllers\BaseController
             'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
             'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
         ]);
-        if ($this->validate($valData) == false) return redirect()->route('tags')->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) === false) return redirect()->route('tags')->withInput()->with('errors', $this->validator->getErrors());
         if ($this->commonModel->create('tags', ['tag' => trim(strip_tags($this->request->getPost('title'))), 'seflink' => trim(strip_tags($this->request->getPost('seflink')))])) return redirect()->route('tags', [1])->with('message', lang('Backend.created', [esc($this->request->getPost('title'))]));
         else return redirect()->route('tags')->withInput()->with('error', lang('Backend.notCreated', [esc($this->request->getPost('title'))]));
     }
@@ -49,7 +49,7 @@ class Tags extends \Modules\Backend\Controllers\BaseController
                 'title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]']
             ]);
-            if ($this->validate($valData) == false) return redirect()->route('tags')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->route('tags')->withInput()->with('errors', $this->validator->getErrors());
             if ($this->commonModel->edit('tags', ['tag' => trim(strip_tags($this->request->getPost('title'))), 'seflink' => trim(strip_tags($this->request->getPost('seflink')))], ['id' => $id])) return redirect()->route('tags', [1])->with('message', lang('Backend.updated', [esc($this->request->getPost('title'))]));
             else return redirect()->route('tags')->withInput()->with('error', lang('Backend.notUpdated', [esc($this->request->getPost('title'))]));
         }
@@ -63,7 +63,7 @@ class Tags extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
         $tag = $this->commonModel->selectOne('tags', ['id' => $this->request->getPost('id')]);
         if ($this->commonModel->remove('tags', ['id' => $this->request->getPost('id')]) === true) return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$tag->tag])]);
         else return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$tag->tag])]);

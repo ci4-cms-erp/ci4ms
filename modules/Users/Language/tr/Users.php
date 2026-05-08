@@ -1,6 +1,6 @@
 <?php return [
     'usersCrud' => 'Kullanıcı İşlemleri',
-    'users'=>'Kullanıcılar',
+    'users' => 'Kullanıcılar',
     'addUser' => 'Kullanıcı Ekleme',
     'permGroupList' => 'Yetki Grup Listesi',
     'permGroupCreate' => 'Yetki Grubu Oluştur',

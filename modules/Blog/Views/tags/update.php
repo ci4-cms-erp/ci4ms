@@ -58,7 +58,7 @@ echo $this->section('content') ?>
 <!-- /.content -->
 <?php echo $this->endSection();
 echo $this->section('javascript'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $('.ptitle').on('change', function() {
         $.post('<?php echo route_to('checkSeflink') ?>', {
             [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),

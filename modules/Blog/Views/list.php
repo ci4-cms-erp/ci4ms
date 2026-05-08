@@ -7,7 +7,6 @@ echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.cs
 echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css');
 echo $this->endSection();
 echo $this->section('content'); ?>
-
 <section class="content pt-3">
     <!-- Stats Row -->
     <div class="row mb-4">
@@ -80,16 +79,14 @@ echo $this->section('content'); ?>
         </div>
     </div>
 </section>
-
-<?php echo $this->endSection() ?>
-
-<?php echo $this->section('javascript');
+<?php echo $this->endSection();
+echo $this->section('javascript');
 echo script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js");
 echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     function btstpSwitch() {
         $('.bswitch').bootstrapSwitch({
             size: 'small'

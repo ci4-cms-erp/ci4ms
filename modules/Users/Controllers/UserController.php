@@ -123,7 +123,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'password' => ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]']
             ]);
 
-            if ($this->validate($valData) == false) return redirect()->route('create_user')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->route('create_user')->withInput()->with('errors', $this->validator->getErrors());
 
             $users = auth()->getProvider();
             try {
@@ -199,7 +199,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             if ($this->request->getPost('password')) $valData['password'] = ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]'];
 
-            if ($this->validate($valData) == false) return redirect()->route('update_user', [$id])->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->route('update_user', [$id])->withInput()->with('errors', $this->validator->getErrors());
 
             $user = auth()->getProvider();
             $u = $user->withGroups()->findById($id);
@@ -242,7 +242,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
         $user = auth()->getProvider();
         if ($user->inGroup('superadmin')) return redirect()->route('403');
         if ($user->delete($this->request->getPost('id'), true)) {
@@ -271,7 +271,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 $valData['password'] = ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]'];
             }
 
-            if ($this->validate($valData) == false) {
+            if ($this->validate($valData) === false) {
                 return redirect()->route('profile')->withInput()->with('errors', $this->validator->getErrors());
             }
 
@@ -338,7 +338,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 $result = $users->save($user);
             }
 
-            if ((bool)$result == false) return redirect()->route('profile')->withInput()->with('error', lang('Backend.notUpdated', [esc($user->firstname . ' ' . $user->surname)]));
+            if ((bool)$result === false) return redirect()->route('profile')->withInput()->with('error', lang('Backend.notUpdated', [esc($user->firstname . ' ' . $user->surname)]));
             else return redirect()->route('profile')->with('message', lang('Backend.updated', [esc($user->firstname . ' ' . $user->surname)]));
         }
         $this->defData['user'] = auth()->getProvider()->findById(user_id());
@@ -410,7 +410,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = (['note' => ['label' => lang('Backend.notes'), 'rules' => 'required'], 'uid' => ['label' => 'uid', 'rules' => 'required|is_natural_no_zero']]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
 
         $user = auth()->getProvider()->findById($this->request->getPost('uid'));
         if ($user->inGroup('superadmin')) return $this->failForbidden();
@@ -431,7 +431,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = (['uid' => ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero']]);
 
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
         $user = auth()->getProvider()->findById($this->request->getPost('uid'));
         if ($user->inGroup('superadmin')) return $this->failForbidden();
 
@@ -451,7 +451,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = (['uid' => ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero']]);
 
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
 
         $user = auth()->getProvider()->findById($this->request->getPost('uid'));
         if ($user->inGroup('superadmin')) return $this->failForbidden();

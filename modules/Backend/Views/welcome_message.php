@@ -2,99 +2,9 @@
 echo $this->section('title');
 echo lang($title->pagename);
 echo $this->endSection();
-echo $this->section('head'); ?>
-<style>
-    /* Drag handle — default hidden, shown in edit mode */
-    .drag-handle {
-        position: absolute;
-        top: 6px;
-        left: 6px;
-        z-index: 10;
-        cursor: grab;
-        padding: 4px 6px;
-        border-radius: 4px;
-        background: rgba(0, 0, 0, .15);
-        color: #fff;
-        font-size: 14px;
-        display: none;
-    }
-
-    .drag-handle:active {
-        cursor: grabbing;
-    }
-
-    /* Hide button — default hidden, shown in edit mode */
-    .btn-widget-hide {
-        position: absolute;
-        top: 6px;
-        right: 6px;
-        display: none;
-        z-index: 10;
-        background: rgba(0, 0, 0, .15);
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        padding: 3px 7px;
-        font-size: 12px;
-        opacity: .7;
-        transition: opacity .2s;
-    }
-
-    .btn-widget-hide:hover {
-        opacity: 1;
-        color: #fff;
-    }
-
-    /* Edit mode visual cues */
-    .edit-mode .widget-box {
-        outline: 2px dashed rgba(0, 123, 255, .4);
-        outline-offset: -2px;
-    }
-
-    .edit-mode .widget-item {
-        transition: transform .15s ease;
-    }
-
-    /* SortableJS ghost */
-    .sortable-ghost {
-        opacity: .4;
-    }
-
-    .sortable-chosen {
-        box-shadow: 0 8px 25px rgba(0, 0, 0, .2);
-    }
-
-    /* Widget modal list */
-    .widget-toggle-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 14px;
-        border-bottom: 1px solid #eee;
-        transition: background .15s;
-    }
-
-    .widget-toggle-item:hover {
-        background: #f8f9fa;
-    }
-
-    .widget-toggle-item:last-child {
-        border-bottom: none;
-    }
-
-    .widget-toggle-item .widget-info {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .widget-toggle-item .widget-info i {
-        font-size: 18px;
-        width: 24px;
-        text-align: center;
-    }
-</style>
-<?php echo $this->endSection();
+echo $this->section('head');
+echo link_tag('be-assets/plugins/toastr/toastr.min.css');
+echo $this->endSection();
 echo $this->section('content'); ?>
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -108,7 +18,7 @@ echo $this->section('content'); ?>
                     <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-toggle-edit" title="Düzenleme Modu">
                         <i class="fas fa-grip-horizontal mr-1"></i> <?php echo lang('DashboardWidgets.editMode') ?? 'Düzenle' ?>
                     </button>
-                    <button type="button" class="btn btn-outline-primary btn-sm" id="btn-add-widget" title="Widget Ekle" style="display:none;">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btn-add-widget" title="Widget Ekle">
                         <i class="fas fa-plus mr-1"></i> <?php echo lang('DashboardWidgets.addWidget') ?? 'Widget Ekle' ?>
                     </button>
                 </div>
@@ -262,9 +172,10 @@ echo $this->section('content'); ?>
 
 <?php echo $this->endSection();
 
-echo $this->section('javascript');
-echo script_tag('be-assets/plugins/sortable/sortable.min.js'); ?>
-<script>
+echo $this->section('javascript'); ?>
+<?php echo script_tag('be-assets/plugins/sortable/sortable.min.js');
+echo script_tag('be-assets/plugins/toastr/toastr.min.js');?>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(function() {
         var $container = $('#dashboard-sortable');
         var $btnEdit = $('#btn-toggle-edit');
@@ -388,6 +299,9 @@ echo script_tag('be-assets/plugins/sortable/sortable.min.js'); ?>
             $.ajax({
                 url: '<?php echo route_to("dashboardWidgetAvailable") ?>',
                 type: 'GET',
+                data: {
+                    csrfName: csrfHash
+                },
                 dataType: 'json',
                 success: function(res) {
                     if (!res.widgets || !res.widgets.length) {

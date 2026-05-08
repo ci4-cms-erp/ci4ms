@@ -7,16 +7,12 @@ echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.cs
 echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css');
 echo $this->endSection();
 echo $this->section('content'); ?>
-
-<!-- Main content -->
 <section class="content pt-3">
-    <!-- Default box -->
     <div class="card premium-card">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title font-weight-bold mb-0">
                 <i class="fas fa-users-cog mr-2 text-primary"></i> <?php echo lang($title->pagename) ?>
             </h3>
-
             <div class="ml-auto">
                 <a href="<?php echo route_to('group_create') ?>" class="btn btn-sm btn-success px-3" style="border-radius:8px">
                     <?php echo lang('Backend.add') ?>
@@ -26,7 +22,6 @@ echo $this->section('content'); ?>
                 </button>
             </div>
         </div>
-
         <div class="card-body p-0">
             <div class="p-3">
                 <table id="example1" class="table table-hover w-100">
@@ -41,19 +36,15 @@ echo $this->section('content'); ?>
                 </table>
             </div>
         </div>
-        <!-- /.card-body -->
     </div>
-    <!-- /.card -->
-
 </section>
-<!-- /.content -->
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     var table;
     $(function() {
         table = $("#example1").DataTable({

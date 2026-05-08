@@ -2,103 +2,9 @@
 echo $this->section('title');
 echo lang($title->pagename);
 echo $this->endSection();
-echo $this->section('head'); ?>
-<style>
-    .btn-add-row {
-        background: none;
-        border: 1px dashed #aaa;
-        color: #666;
-        border-radius: 4px;
-        padding: 5px 14px;
-        cursor: pointer;
-        font-size: 13px;
-        transition: all .15s;
-        width: 100%;
-        margin-top: 4px;
-    }
-
-    .btn-add-row:hover {
-        border-color: #555;
-        color: #333;
-        background: #f9f9f9;
-    }
-
-    /* ── Section headers ── */
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border-left: 4px solid #d278c9;
-        padding-left: 12px;
-        margin-bottom: 18px;
-        margin-top: 4px;
-    }
-
-    .section-header i {
-        color: #804f7b;
-        font-size: 18px;
-    }
-
-    .section-header h5 {
-        margin: 0;
-        font-weight: 700;
-        color: #333;
-    }
-
-    .section-header small {
-        color: #999;
-        font-size: 12px;
-    }
-
-    /* ── Card tabs ── */
-    .settings-tabs {
-        display: flex;
-        gap: 0;
-        border-bottom: 2px solid #dee2e6;
-        margin-bottom: 20px;
-    }
-
-    .settings-tab {
-        padding: 10px 20px;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 500;
-        color: #6c757d;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -2px;
-        transition: all .15s;
-    }
-
-    .settings-tab:hover {
-        color: #804f7b;
-    }
-
-    .settings-tab.active {
-        color: #804f7b;
-        border-bottom-color: #d278c9;
-    }
-
-    .settings-panel {
-        display: none;
-    }
-
-    .settings-panel.active {
-        display: block;
-    }
-
-    /* ── Preview box ── */
-    .font-preview {
-        margin-top: 8px;
-        padding: 10px 14px;
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        font-size: 18px;
-        color: #333;
-        transition: font-family .3s;
-    }
-</style>
-<?php echo $this->endSection();
+echo $this->section('head');
+echo link_tag('templates/default/assets/temp-settings.css');
+echo $this->endSection();
 echo $this->section('content'); ?>
 <!-- Content Header -->
 <section class="content-header">
@@ -492,7 +398,7 @@ echo $this->section('content'); ?>
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js'); ?>
-<script>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     // ── Tab switching ──
     document.querySelectorAll('.settings-tab').forEach(function(tab) {
         tab.addEventListener('click', function() {

@@ -15,7 +15,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'theme' => ['label' => lang('Theme.backendTheme'), 'rules' => 'uploaded[theme]|ext_in[theme,zip]|mime_in[theme,application/x-zip,application/zip,application/x-zip-compressed,application/s-compressed,multipart/x-zip]'],
         ]);
-        if ($this->validate($valData) == false) return redirect()->route('backendThemes')->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) === false) return redirect()->route('backendThemes')->withInput()->with('errors', $this->validator->getErrors());
         $file = $this->request->getFile('theme');
         $tempPath = WRITEPATH . 'tmp/' . str_replace('_theme.zip', '', $file->getName()) . '/';
         $zip = new \ZipArchive();

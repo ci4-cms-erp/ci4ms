@@ -1,19 +1,16 @@
 <?php echo $this->extend($backConfig->viewLayout);
-
 echo $this->section('title');
 echo lang($title->pagename);
 echo $this->endSection();
-
-echo $this->section('head');
-echo link_tag("be-assets/plugins/tagify/tagify.css");
-echo link_tag("be-assets/plugins/summernote/summernote-bs4.css");
-echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
-echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css");
-echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css");
-echo link_tag("be-assets/plugins/select2/css/select2.min.css");
-echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css");
-echo $this->endSection();
-
+echo $this->section('head'); ?>
+<link rel="stylesheet" href="/be-assets/plugins/tagify/tagify.css">
+<link rel="stylesheet" href="/be-assets/plugins/summernote/summernote-bs4.css">
+<link rel="stylesheet" href="/be-assets/plugins/jquery-ui/jquery-ui.css">
+<link rel="stylesheet" href="/be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css">
+<link rel="stylesheet" href="/be-assets/plugins/elFinder/css/elfinder.full.css">
+<link rel="stylesheet" href="/be-assets/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="/be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<?php echo $this->endSection();
 echo $this->section('content'); ?>
 <!-- Main content -->
 <section class="content pt-3">
@@ -175,7 +172,7 @@ echo script_tag("be-assets/plugins/select2/js/select2.full.min.js");
 echo script_tag("be-assets/js/ci4ms.js");
 echo script_tag("be-assets/plugins/moment/moment.min.js");
 echo script_tag("be-assets/plugins/inputmask/jquery.inputmask.min.js") ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $.ajax({
         method: "POST",
         url: "<?php echo route_to('tagify') ?>",

@@ -28,12 +28,12 @@ class Install extends Controller
             ];
             if ($this->request->getPost('slogan')) $valData['slogan'] = ['label' => lang('Install.slogan'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]'];
 
-            if ($this->validate($valData) == false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
             $updates = [
                 'CI_ENVIRONMENT' => 'development',
                 'app.baseURL' => '\'' . $this->request->getPost('baseUrl') . '\'',
-                'app.forceGlobalSecureRequests' => 'true #Use this only when SSL is enabled.',
+                'app.forceGlobalSecureRequests' => 'false #Use this only when SSL is enabled.',
                 'database.default.hostname' => $this->request->getPost('host'),
                 'database.default.database' => $this->request->getPost('dbname'),
                 'database.default.username' => $this->request->getPost('dbusername'),
@@ -61,7 +61,7 @@ class Install extends Controller
                 'security.cookieName' => '\'csrf_cookie_ci4ms\'',
                 'security.expires' => 7200,
                 'security.regenerate' => 'true',
-                'security.redirect' => 'false',
+                'security.redirect' => 'true',
                 'security.samesite' => '\'Lax\'',
                 'app.defaultLocale' => '\'en\'',
                 'app.supportedLocales' => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',

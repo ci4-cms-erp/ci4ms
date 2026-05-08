@@ -91,7 +91,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
             if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
             if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
 
-            if ($this->validate($valData) == false) return redirect()->route('pageCreate')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->route('pageCreate')->withInput()->with('errors', $this->validator->getErrors());
 
             $data = [
                 'isActive' => (bool)$this->request->getPost('isActive'),
@@ -140,7 +140,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
             if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
             if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
 
-            if ($this->validate($valData) == false) return redirect()->route('pageUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->route('pageUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
 
             $data = [
                 'isActive' => (bool)$this->request->getPost('isActive'),
@@ -196,7 +196,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
         if ($this->commonModel->remove('pages', ['id' => $this->request->getPost('id')]) === true) {
             $this->commonModel->remove('pages_langs', ['pages_id' => $this->request->getPost('id')]);
             return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [''])]);

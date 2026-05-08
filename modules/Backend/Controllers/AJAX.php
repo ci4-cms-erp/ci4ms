@@ -23,7 +23,7 @@ class AJAX extends BaseController
             'type' => ['label' => 'type', 'rules' => 'required']
         ]);
 
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
         if (!empty($this->request->getPost('type'))) {
             if ($this->commonModel->isHave('tags', []) === 1) {
                 $data = ['tags_pivot.tagType' => $this->request->getPost('type')];
@@ -63,7 +63,7 @@ class AJAX extends BaseController
             'where' => ['label' => 'where', 'rules' => 'required|in_list[pages_langs,blog_langs,categories_langs,tags]']
         ]);
 
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
 
         $whereTable = $this->request->getPost('where');
         $locale = $this->request->getPost('locale') ?: ($this->request->getLocale() ?: 'tr');
@@ -120,7 +120,7 @@ class AJAX extends BaseController
             'where' => ['label' => 'where', 'rules' => 'required|in_list[pages,blog]']
         ]);
 
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
 
         if ($this->commonModel->edit($this->request->getPost('where'), ['isActive' => (bool)$this->request->getPost('isActive')], ['id' => $this->request->getPost('id')]))
             return $this->respond(['result' => true], 200);
@@ -137,7 +137,7 @@ class AJAX extends BaseController
         $valData = ([
             'isActive' => ['label' => 'isActive', 'rules' => 'required|in_list[0,1]']
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
         try {
             setting()->set('App.maintenanceMode', (bool)$this->request->getPost('isActive'));
             cache()->delete('settings');

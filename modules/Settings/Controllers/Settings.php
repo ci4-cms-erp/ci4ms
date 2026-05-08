@@ -40,7 +40,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         if (!empty($this->request->getPost('cMap'))) $valData['cMap'] = ['label' => lang('Settings.gmapIframe'), 'rules' => 'required|max_length[2000]'];
         if (!empty($this->request->getPost('cLogo'))) $valData['cLogo'] = ['label' => lang('Settings.companyLogo'), 'rules' => 'required|regex_match[/^[^<>{}=]*$/u]'];
 
-        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) === false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
 
         try {
             setting()->set('App.siteName', esc(trim(strip_tags($this->request->getPost('cName')))));
@@ -116,7 +116,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         }
 
         if (!empty($error)) return redirect()->route('settings')->withInput()->with('errors', $error);
-        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) === false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             setting()->set('App.socialNetwork', json_encode($socialNetwork, JSON_UNESCAPED_UNICODE));
             cache()->delete('settings');
@@ -138,7 +138,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             'mPwd' => ['label' => lang('Settings.mailPassword'), 'rules' => 'required']
         ];
         if (!empty($this->request->getPost('mPwd'))) $valData['mPwd'] = ['label' => lang('Settings.mailPassword'), 'rules' => 'required|min_length[8]'];
-        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) === false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             $data = [
                 'server' => trim(strip_tags($this->request->getPost('mServer'))),
@@ -189,7 +189,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             'path' => ['label' => lang('Backend.path'), 'rules' => 'required'],
             'tName' => ['label' => lang('Backend.name'), 'rules' => 'required']
         ]);
-        if ($this->validate($valData) == false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+        if ($this->validate($valData) === false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
         try {
             $themeName = esc($this->request->getPost('path'));
 
@@ -221,7 +221,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'allowedFiles' => ['label' => lang('Settings.fileTypes'), 'rules' => 'required|alpha_numeric'],
         ]);
-        if ($this->validate($valData) == false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) === false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             $data = explode(',', $this->request->getPost('allowedFiles'));
             setting()->set('Security.allowedFiles', json_encode($data, JSON_UNESCAPED_UNICODE));
@@ -269,7 +269,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             $valData = ([
                 'isActive' => ['label' => lang('Backend.status'), 'rules' => 'required|in_list[0,1]']
             ]);
-            if ($this->validate($valData) == false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+            if ($this->validate($valData) === false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
             try {
                 setting()->set('Elfinder.convertWebp', (bool)$this->request->getPost('isActive'));
                 cache()->delete('settings');

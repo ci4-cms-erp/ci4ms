@@ -27,4 +27,5 @@ return [
     'fileTypeNotAllowed' => 'You cannot create this file type!',
     'fileTypeEditNotAllowed' => 'You cannot edit this file type!',
     'confirmDelete' => 'Confirm Delete',
+    'cspWarning' => 'If CodeIgniter 4 CSP (Content Security Policy) is enabled, the editor may not work properly.',
 ];

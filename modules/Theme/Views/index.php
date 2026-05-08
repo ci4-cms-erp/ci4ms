@@ -56,7 +56,7 @@ echo $this->section('content'); ?>
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(function() {
         bsCustomFileInput.init();
     });

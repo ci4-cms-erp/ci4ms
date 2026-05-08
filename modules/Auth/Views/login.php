@@ -1,10 +1,9 @@
-<?php echo $this->extend(config('Auth')->views['layout']) ?>
-<?php echo $this->section('head') ?>
-<title><?php echo lang('Auth.login') ?> | Ci4MS - <?php echo getenv('app.version') ?></title>
-<?php echo $this->endSection() ?>
-<?php echo $this->section('content') ?>
+<?php echo $this->extend(config('Auth')->views['layout']);
+echo $this->section('head');
+echo '<title>' . lang('Auth.login') . ' | Ci4MS - ' . getenv('app.version') . '</title>';
+echo $this->endSection();
+echo $this->section('content'); ?>
 <div class="login-box">
-    <!-- /.login-logo -->
     <div class="card card-outline card-success shadow-sm">
         <div class="card-header text-center">
             <img src="<?php echo base_url('be-assets/img/bfo-logo.jpg') ?>" alt="" class="img-fluid">
@@ -15,8 +14,8 @@
             <form action="<?php echo route_to('login') ?>" method="post">
                 <?php echo csrf_field() ?>
                 <div class="input-group mb-3">
-                    <input type="email" name="email" class="form-control" placeholder="<?php echo lang('Auth.email') ?>" value="<?php echo old('email') ?>" required
-                        autofocus>
+                    <input type="email" name="email" class="form-control" placeholder="<?php echo lang('Auth.email') ?>"
+                        value="<?php echo old('email') ?>" required autofocus>
                     <div class="input-group-append">
                         <div class="input-group-text">
                             <span class="fas fa-envelope"></span>
@@ -24,7 +23,8 @@
                     </div>
                 </div>
                 <div class="input-group mb-3">
-                    <input type="password" name="password" class="form-control" required placeholder="<?php echo lang('Auth.password') ?>">
+                    <input type="password" name="password" class="form-control" required
+                        placeholder="<?php echo lang('Auth.password') ?>">
                     <div class="input-group-append">
                         <div class="input-group-text">
                             <span class="fas fa-lock"></span>
@@ -48,22 +48,23 @@
                     </div>
                     <!-- /.col -->
                     <div class="col-md-4">
-                        <button type="submit" class="btn btn-success btn-block"><?php echo lang('Auth.loginAction') ?></button>
+                        <button type="submit"
+                            class="btn btn-success btn-block"><?php echo lang('Auth.loginAction') ?></button>
                     </div>
                     <!-- /.col -->
                 </div>
             </form>
             <hr>
-            <?php if (setting('Auth.allowMagicLinkLogins')) : ?>
-                <p class="text-center"><?php echo lang('Auth.forgotPassword') ?> <a href="<?php echo url_to('magic-link') ?>"><?php echo lang('Auth.useMagicLink') ?></a></p>
+            <?php if (setting('Auth.allowMagicLinkLogins')): ?>
+                <p class="text-center"><?php echo lang('Auth.forgotPassword') ?> <a
+                        href="<?php echo url_to('magic-link') ?>"><?php echo lang('Auth.useMagicLink') ?></a></p>
             <?php endif ?>
 
-            <?php if (setting('Auth.allowRegistration')) : ?>
-                <p class="text-center"><?php echo lang('Auth.needAccount') ?> <a href="<?php echo url_to('register') ?>"><?php echo lang('Auth.register') ?></a></p>
+            <?php if (setting('Auth.allowRegistration')): ?>
+                <p class="text-center"><?php echo lang('Auth.needAccount') ?> <a
+                        href="<?php echo url_to('register') ?>"><?php echo lang('Auth.register') ?></a></p>
             <?php endif ?>
         </div>
-        <!-- /.card-body -->
     </div>
-    <!-- /.card -->
 </div>
 <?php echo $this->endSection() ?>

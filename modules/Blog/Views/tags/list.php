@@ -9,10 +9,7 @@ echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4
 echo link_tag('be-assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css');
 echo $this->endSection();
 echo $this->section('content'); ?>
-
-<!-- Main content -->
 <section class="content pt-3">
-    <!-- Default box -->
     <div class="card premium-card">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title font-weight-bold mb-0">
@@ -42,10 +39,7 @@ echo $this->section('content'); ?>
                 </table>
             </div>
         </div>
-        <!-- /.card-body -->
     </div>
-    <!-- /.card -->
-
     <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
         aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -78,7 +72,6 @@ echo $this->section('content'); ?>
         </div>
     </div>
 </section>
-<!-- /.content -->
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
@@ -93,7 +86,7 @@ echo script_tag('be-assets/plugins/pdfmake/vfs_fonts.js');
 echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.html5.min.js');
 echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.print.min.js');
 echo script_tag('be-assets/plugins/datatables-buttons/js/buttons.colVis.min.js'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $('.ptitle').on('change', function() {
         $.post('<?php echo route_to('checkSeflink') ?>', {
             [CI4MS_CSRF.name]: CI4MS_CSRF.getHash(),

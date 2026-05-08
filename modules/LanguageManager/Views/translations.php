@@ -100,7 +100,7 @@ echo $this->section('content'); ?>
 </section>
 <?php echo $this->endSection();
 echo $this->section('javascript'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(function() {
         // Inline save on blur
         var saveTimer;

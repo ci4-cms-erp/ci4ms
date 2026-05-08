@@ -87,7 +87,7 @@ echo $this->section('content'); ?>
                                     <div class="input-group">
                                         <img src="" class="captcha" alt="captcha">
                                         <input type="text" placeholder="captcha" name="captcha" class="form-control">
-                                        <button class="btn btn-secondary" onclick="captchaF()" type="button">New Captcha</button>
+                                        <button class="btn btn-secondary captcha-refresh" type="button">New Captcha</button>
                                     </div>
                                 </div>
                                 <div class="col-6 form-group text-end">

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Modules\Fileeditor\Controllers;
 
@@ -7,24 +8,10 @@ use DirectoryIterator;
 class Fileeditor extends \Modules\Backend\Controllers\BaseController
 {
     protected $allowedExtensions = ['css', 'js', 'html', 'txt', 'json', 'sql', 'md'];
+    protected $coreItems = ['app', 'modules', 'public', 'system', 'vendor', 'index.php', 'spark', 'composer.json', 'composer.lock', '.env', 'env'];
+    protected $dangerousExtensionsAllowed = false;
     protected $dangerousExtensions = ['php', 'phtml', 'phar', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'cgi', 'pl', 'asp', 'aspx', 'jsp', 'sh', 'bat', 'exe', 'htaccess'];
-    protected $hiddenItems = [
-        '.git',
-        '.github',
-        '.idea',
-        '.vscode',
-        'node_modules',
-        'vendor',
-        'writable',
-        '.env',
-        'env',
-        'composer.json',
-        'composer.lock',
-        'tests',
-        'spark',
-        'phpunit.xml.dist',
-        'preload.php'
-    ];
+    protected $hiddenItems = ['.git', '.github', '.idea', '.vscode', 'node_modules', 'vendor', 'writable', '.env', 'env', 'composer.json', 'composer.lock', 'tests', 'spark', 'phpunit.xml.dist', 'preload.php'];
 
     public function index()
     {
@@ -36,9 +23,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $vData = [
             '_' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
         ];
-        if ($this->request->getVar('path')) $vData['path'] = ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]'];
+        if ($this->request->getVar('path'))
+            $vData['path'] = ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]'];
         $valData = ($vData);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path') ?? '/';
 
         $pathParts = explode('/', trim($path, '/'));
@@ -56,12 +45,15 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $result = [];
 
         foreach ($iterator as $file) {
-            if ($file->isDot()) continue;
+            if ($file->isDot())
+                continue;
             $name = $file->getFilename();
             $lowerName = strtolower($name);
 
-            if (strpos($lowerName, '.') === 0) continue;
-            if (in_array($name, $this->hiddenItems)) continue;
+            if (strpos($lowerName, '.') === 0)
+                continue;
+            if (in_array($name, $this->hiddenItems))
+                continue;
             $result[] = [
                 'title' => $name,
                 'key' => $path . '/' . $name,
@@ -75,22 +67,17 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     public function readFile()
     {
-        $valData = ([
-            'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]'],
-        ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        $valData = (['path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]']]);
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
-        if ($this->isHiddenPath($path)) {
+        if ($this->isHiddenPath($path))
             return $this->failForbidden();
-        }
         $fullPath = realpath(ROOTPATH . $path);
-if (!$this->allowedFileTypes($fullPath)) {
-    return $this->failForbidden();
-}
-        if (!$fullPath || !is_file($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
+        if (!$this->allowedFileTypes($fullPath))
+            return $this->failForbidden();
+        if (!$fullPath || !is_file($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
-        }
-
         return $this->response->setJSON(['content' => file_get_contents($fullPath)]);
     }
 
@@ -100,72 +87,53 @@ if (!$this->allowedFileTypes($fullPath)) {
             'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]'],
             'content' => ['label' => '', 'rules' => 'required'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
-        if ($this->isHiddenPath($path)) {
+        if ($this->isHiddenPath($path))
             return $this->failForbidden();
-        }
         $content = $this->request->getVar('content');
         $fullPath = realpath(ROOTPATH . $path);
-
-        if (!$this->allowedFileTypes($fullPath)) {
+        if (!$this->allowedFileTypes($fullPath))
             return $this->failForbidden();
-        }
-
-        if (!$fullPath || !is_file($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
+        if (!$fullPath || !is_file($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
-        }
-
         // Block writing to dangerous file types (defense-in-depth)
         $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-        if (in_array($ext, $this->dangerousExtensions)) {
+        if ($this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions))
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
-        }
-
-        if (file_put_contents($fullPath, $content) === false) {
+        if (file_put_contents($fullPath, $content) === false)
             return $this->response->setJSON(['error' => lang('Backend.notUpdated', [''])])->setStatusCode(500);
-        }
-
         return $this->response->setJSON(['success' => true]);
     }
 
     public function renameFile()
     {
-        $valData = ([
-            'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]'],
-            'newName' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
-        ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        $valData = (['path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]'], 'newName' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]']]);
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
-        if ($this->isHiddenPath($path)) {
+        if ($this->isHiddenPath($path) || $this->isCorePath($path))
             return $this->failForbidden();
-        }
         $newName = $this->request->getVar('newName');
         $fullPath = realpath(ROOTPATH . $path);
-
         $newPath = dirname($fullPath) . DIRECTORY_SEPARATOR . $newName;
 
         // Verify the rename target stays within ROOTPATH
         $realNewDir = realpath(dirname($fullPath));
-        if (!$realNewDir || strpos($realNewDir . DIRECTORY_SEPARATOR . $newName, realpath(ROOTPATH)) !== 0) {
+        if (!$realNewDir || strpos($realNewDir . DIRECTORY_SEPARATOR . $newName, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
-        }
 
         // Block renaming to dangerous extensions
         $ext = strtolower(pathinfo($newName, PATHINFO_EXTENSION));
-        if (in_array($ext, $this->dangerousExtensions)) {
+        if ($this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions))
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
-        }
-
-        if (!$fullPath || !file_exists($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
+        if (!$fullPath || !file_exists($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
-        }
-
-        if (rename($fullPath, $newPath)) {
+        if (rename($fullPath, $newPath))
             return $this->response->setJSON(['success' => true]);
-        } else {
+        else
             return $this->response->setJSON(['error' => lang('Fileeditor.renameFailed')])->setStatusCode(500);
-        }
     }
 
     public function createFile()
@@ -174,39 +142,34 @@ if (!$this->allowedFileTypes($fullPath)) {
             'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]'],
             'name' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
-        if ($this->isHiddenPath($path)) {
+        if ($this->isHiddenPath($path))
             return $this->failForbidden();
-        }
         $name = $this->request->getVar('name');
         $fullPath = realpath(ROOTPATH . $path);
 
         if (!$this->allowedFileTypes($name))
             return $this->failForbidden();
-
-        if (!$fullPath || !is_dir($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
+        if (!$fullPath || !is_dir($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
-        }
 
         // Block creating dangerous file types
         $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        if (in_array($ext, $this->dangerousExtensions)) {
+        if ($this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions))
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
-        }
 
         $newFilePath = $fullPath . DIRECTORY_SEPARATOR . $name;
 
         // Prevent overwriting existing files
-        if (file_exists($newFilePath)) {
+        if (file_exists($newFilePath))
             return $this->response->setJSON(['error' => lang('Fileeditor.fileAlreadyExists')])->setStatusCode(409);
-        }
 
-        if (file_put_contents($newFilePath, '') !== false) {
+        if (file_put_contents($newFilePath, '') !== false)
             return $this->response->setJSON(['success' => true]);
-        } else {
+        else
             return $this->response->setJSON(['error' => lang('Backend.notCreated', [''])])->setStatusCode(500);
-        }
     }
 
     public function createFolder()
@@ -215,25 +178,22 @@ if (!$this->allowedFileTypes($fullPath)) {
             'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]'],
             'name' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.]+$/]'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
-        if ($this->isHiddenPath($path)) {
+        if ($this->isHiddenPath($path))
             return $this->failForbidden();
-        }
         $name = $this->request->getVar('name');
         $fullPath = realpath(ROOTPATH . $path);
-
-        if (!$fullPath || !is_dir($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
+        if (!$fullPath || !is_dir($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
-        }
 
         $newFolderPath = $fullPath . DIRECTORY_SEPARATOR . $name;
 
-        if (mkdir($newFolderPath)) {
+        if (mkdir($newFolderPath))
             return $this->response->setJSON(['success' => true]);
-        } else {
+        else
             return $this->response->setJSON(['error' => lang('Backend.notCreated', [$newFolderPath])])->setStatusCode(500);
-        }
     }
 
     public function deleteFileOrFolder()
@@ -241,36 +201,31 @@ if (!$this->allowedFileTypes($fullPath)) {
         $valData = ([
             'path' => ['label' => '', 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9_ \-\.\/]+$/]'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
-        if ($this->isHiddenPath($path)) {
+        if ($this->isHiddenPath($path) || $this->isCorePath($path))
             return $this->failForbidden();
-        }
         $fullPath = realpath(ROOTPATH . $path);
-
-        if (!$fullPath || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
+        if (!$fullPath || strpos($fullPath, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Fileeditor.invalidFileOrFolder')])->setStatusCode(400);
-        }
 
-        if (is_dir($fullPath)) {
+        if (is_dir($fullPath))
             $result = rmdir($fullPath);
-        } else {
+        else
             $result = unlink($fullPath);
-        }
 
-        if ($result) {
+        if ($result)
             return $this->response->setJSON(['success' => true]);
-        } else {
+        else
             return $this->response->setJSON(['error' => lang('Fileeditor.folderNotEmpty')])->setStatusCode(500);
-        }
     }
 
     private function allowedFileTypes(string $file): bool
     {
         $extension = pathinfo($file, PATHINFO_EXTENSION);
-        if (!in_array(strtolower($extension), $this->allowedExtensions)) {
+        if (!in_array(strtolower($extension), $this->allowedExtensions))
             return false;
-        }
         return true;
     }
 
@@ -278,8 +233,17 @@ if (!$this->allowedFileTypes($fullPath)) {
     {
         $pathParts = explode('/', trim($path, '/'));
         foreach ($pathParts as $part) {
-            if (in_array($part, $this->hiddenItems)) return true;
+            if (in_array($part, $this->hiddenItems))
+                return true;
         }
+        return false;
+    }
+
+    private function isCorePath(string $path): bool
+    {
+        $pathParts = explode('/', trim($path, '/'));
+        if (isset($pathParts[0]) && in_array($pathParts[0], $this->coreItems))
+            return true;
         return false;
     }
 }

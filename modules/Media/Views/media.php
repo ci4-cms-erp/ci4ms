@@ -5,40 +5,9 @@ echo $this->endSection();
 echo $this->section('head');
 echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
 echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css");
-echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css"); ?>
-<style {csp-style-nonce}>
-    /* elFinder Adjustments */
-    #elfinder {
-        border: none !important;
-        border-radius: 0 0 15px 15px;
-        overflow: hidden;
-    }
-
-    .elfinder-navbar {
-        background-color: #f8fafc !important;
-        border-right: 1px solid #edf2f7 !important;
-    }
-
-    .elfinder-toolbar {
-        background-image: none !important;
-        background-color: #fff !important;
-        border-bottom: 1px solid #edf2f7 !important;
-        padding: 10px !important;
-    }
-
-    .elfinder-button {
-        background-image: none !important;
-        border-radius: 6px !important;
-        border-color: #e2e8f0 !important;
-    }
-
-    .elfinder-button:hover {
-        background-color: #edf2f7 !important;
-    }
-</style>
-<?php echo $this->endSection();
+echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css");
+echo $this->endSection();
 echo $this->section('content'); ?>
-
 <section class="content pt-3">
     <div class="card premium-card">
         <div class="card-header d-flex align-items-center">
@@ -51,14 +20,13 @@ echo $this->section('content'); ?>
         </div>
     </div>
 </section>
-
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
 echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js");
 echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaultLocale', 'tr') . ".js");
 echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js"); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(document).ready(function() {
         var elf = $('#elfinder').elfinder({
             cssAutoLoad: [window.location.origin + '/be-assets/css/ci4ms-elfinder.css'],

@@ -7,9 +7,7 @@ echo link_tag('be-assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.cs
 echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css');
 echo $this->endSection();
 echo $this->section('content'); ?>
-
 <section class="content pt-3">
-    <!-- Stats Row -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="m-stat-card">
@@ -39,8 +37,6 @@ echo $this->section('content'); ?>
             </div>
         </div>
     </div>
-
-    <!-- Main Table Card -->
     <div class="card premium-card">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title font-weight-bold mb-0">
@@ -70,8 +66,6 @@ echo $this->section('content'); ?>
                     <tbody></tbody>
                 </table>
             </div>
-
-            <!-- Blacklist Modal -->
             <div class="modal fade" id="blackListModal" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content" style="border-radius:15px;overflow:hidden">
@@ -103,14 +97,13 @@ echo $this->section('content'); ?>
         </div>
     </div>
 </section>
-
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(function() {
         var table = $('#userTable').DataTable({
             processing: true,
@@ -119,7 +112,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 url: "<?php echo route_to('users') ?>",
                 type: "POST",
                 data: (d) => {
-                    d[CI4MS_CSRF.name]= CI4MS_CSRF.getHash()
+                    d[CI4MS_CSRF.name] = CI4MS_CSRF.getHash()
                 }
             },
             columns: [{
@@ -188,9 +181,9 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
     function forceResetPassword(uid) {
         $.post("<?php echo route_to('forceResetPassword') ?>", {
             uid: uid,
-            [CI4MS_CSRF.name] : CI4MS_CSRF.getHash()
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
         }, function(data) {
-            if (data.result == true) {
+            if (data.result === true) {
                 showToast(data.error.message);
                 table.ajax.reload();
             } else showToast('<?= lang('Backend.operationFailed') ?>', 'error');

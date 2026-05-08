@@ -159,6 +159,10 @@ function captchaF() {
       $(".captcha").attr("src", data.capIMG);
     },
   });
+
+  $('.captcha-refresh').click(function () {
+    captchaF();
+  });
 }
 
 captchaF();

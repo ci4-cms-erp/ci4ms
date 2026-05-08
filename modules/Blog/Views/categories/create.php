@@ -2,24 +2,20 @@
 echo $this->section('title');
 echo lang($title->pagename);
 echo $this->endSection();
-echo $this->section('head');
-echo link_tag("be-assets/plugins/tagify/tagify.css");
-echo link_tag("be-assets/plugins/jquery-ui/jquery-ui.css");
-echo link_tag("be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css");
-echo link_tag("be-assets/plugins/elFinder/css/elfinder.full.css");
-echo link_tag("be-assets/plugins/elFinder/css/theme.css");
-echo link_tag("be-assets/plugins/select2/css/select2.min.css");
-echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css");
-echo $this->endSection();
+echo $this->section('head'); ?>
+<link rel="stylesheet" href="/be-assets/plugins/tagify/tagify.css">
+<link rel="stylesheet" href="/be-assets/plugins/jquery-ui/jquery-ui.css">
+<link rel="stylesheet" href="/be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css">
+<link rel="stylesheet" href="/be-assets/plugins/elFinder/css/elfinder.full.css">
+<link rel="stylesheet" href="/be-assets/plugins/elFinder/css/theme.css">
+<link rel="stylesheet" href="/be-assets/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="/be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<?php echo $this->endSection();
 echo $this->section('content'); ?>
-<!-- Main content -->
 <section class="content pt-3">
-
-    <!-- Default box -->
     <div class="card card-outline shadow-sm">
         <div class="card-header">
             <h3 class="card-title font-weight-bold"><?php echo lang($title->pagename) ?></h3>
-
             <div class="card-tools">
                 <a href="<?php echo route_to('categories', 1) ?>" class="btn btn-sm btn-outline-info"><?php echo lang('Backend.backToList') ?></a>
             </div>
@@ -124,12 +120,8 @@ echo $this->section('content'); ?>
                 </div>
             </form>
         </div>
-        <!-- /.card-body -->
     </div>
-    <!-- /.card -->
-
 </section>
-<!-- /.content -->
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
@@ -140,7 +132,7 @@ echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
 echo script_tag("be-assets/plugins/summernote/plugin/elfinder/summernote-ext-elfinder.js");
 echo script_tag("be-assets/plugins/select2/js/select2.full.min.js");
 echo script_tag("be-assets/js/ci4ms.js"); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     tags([]);
 
     $('.ptitle').on('change', function() {

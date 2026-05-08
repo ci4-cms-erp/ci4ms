@@ -1,8 +1,8 @@
 <?php echo $this->extend($backConfig->viewLayout);
-echo $this->section('head');
-echo link_tag("be-assets/plugins/select2/css/select2.min.css");
-echo link_tag("be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css");
-echo $this->endSection();
+echo $this->section('head'); ?>
+<link rel="stylesheet" href="/be-assets/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="/be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<?php echo $this->endSection();
 echo $this->section('content');
 $isEdit = isset($widget);
 $pageTitle = $isEdit ? lang('DashboardWidgets.editWidget') : lang('DashboardWidgets.createWidget');
@@ -143,7 +143,7 @@ $formAction = $isEdit
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag("be-assets/plugins/select2/js/select2.full.min.js"); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(function() {
         $('.select2').select2({
             theme: 'bootstrap4'

@@ -8,30 +8,36 @@ echo link_tag('be-assets/plugins/datatables-responsive/css/responsive.bootstrap4
 echo link_tag('be-assets/plugins/flag-icons/css/flag-icons.min.css');
 echo $this->endSection();
 echo $this->section('content'); ?>
-
 <section class="content pt-3">
-    <!-- Stats Row -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-total"><i class="fas fa-language"></i></div>
-                <div><div class="m-stat-value"><?php echo $stats['total'] ?></div><div class="m-stat-label"><?php echo lang('LanguageManager.totalLanguages') ?? 'Toplam Dil' ?></div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['total'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('LanguageManager.totalLanguages') ?? 'Toplam Dil' ?></div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-active"><i class="fas fa-check-double"></i></div>
-                <div><div class="m-stat-value"><?php echo $stats['active'] ?></div><div class="m-stat-label"><?php echo lang('LanguageManager.activeLanguages') ?? 'Aktif Diller' ?></div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo $stats['active'] ?></div>
+                    <div class="m-stat-label"><?php echo lang('LanguageManager.activeLanguages') ?? 'Aktif Diller' ?></div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-default"><i class="fas fa-star"></i></div>
-                <div><div class="m-stat-value"><?php echo strtoupper($stats['default']) ?></div><div class="m-stat-label"><?php echo lang('LanguageManager.defaultLanguage') ?? 'Varsayılan Dil' ?></div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo strtoupper($stats['default']) ?></div>
+                    <div class="m-stat-label"><?php echo lang('LanguageManager.defaultLanguage') ?? 'Varsayılan Dil' ?></div>
+                </div>
             </div>
         </div>
     </div>
-
     <div class="card premium-card">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title font-weight-bold mb-0">
@@ -67,14 +73,13 @@ echo $this->section('content'); ?>
         </div>
     </div>
 </section>
-
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag('be-assets/plugins/datatables/jquery.dataTables.min.js');
 echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(function() {
         var table = $('#languagesTable').DataTable({
             processing: true,
@@ -82,33 +87,59 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             ajax: {
                 url: '<?php echo route_to('languages') ?>',
                 type: 'POST',
-                data: (d) => { d[CI4MS_CSRF.name] = CI4MS_CSRF.getHash(); }
+                data: (d) => {
+                    d[CI4MS_CSRF.name] = CI4MS_CSRF.getHash();
+                }
             },
-            columns: [
-                { data: 0 }, { data: 1 }, { data: 2 }, { data: 3 }, { data: 4 }, { data: 5 }, { data: 6 }, { data: 7, className: 'text-right' }
-            ],
+            columns: [{
+                data: 0
+            }, {
+                data: 1
+            }, {
+                data: 2
+            }, {
+                data: 3
+            }, {
+                data: 4
+            }, {
+                data: 5
+            }, {
+                data: 6
+            }, {
+                data: 7,
+                className: 'text-right'
+            }],
             language: ci4msDtLanguage('<?php echo lang('LanguageManager.searchPlaceholder') ?>'),
-            drawCallback: function() { bindActions(); }
+            drawCallback: function() {
+                bindActions();
+            }
         });
 
         function bindActions() {
             $('.btn-toggle-lang').off('click').on('click', function() {
                 $.post('<?php echo site_url('backend/language-manager/languages/toggle/') ?>' + $(this).data('id'), {
                     [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
-                }, function(r) { showToast(r.message); table.ajax.reload(null, false); }, 'json');
+                }, function(r) {
+                    showToast(r.message);
+                    table.ajax.reload(null, false);
+                }, 'json');
             });
 
             $('.btn-set-default').off('click').on('click', function() {
                 $.post('<?php echo site_url('backend/language-manager/languages/set-default/') ?>' + $(this).data('id'), {
                     [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
-                }, function(r) { showToast(r.message); table.ajax.reload(null, false); }, 'json');
+                }, function(r) {
+                    showToast(r.message);
+                    table.ajax.reload(null, false);
+                }, 'json');
             });
 
             $('.btn-delete-lang').off('click').on('click', function() {
                 var id = $(this).data('id');
                 Swal.fire({
                     title: '<?php echo lang('Backend.areYouSure') ?>',
-                    icon: 'warning', showCancelButton: true,
+                    icon: 'warning',
+                    showCancelButton: true,
                     confirmButtonColor: '#e53e3e',
                     confirmButtonText: '<?php echo lang('Backend.delete') ?>',
                     cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
@@ -116,7 +147,10 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                     if (result.isConfirmed) {
                         $.post('<?php echo site_url('backend/language-manager/languages/delete/') ?>' + id, {
                             [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
-                        }, function(r) { showToast(r.message, r.status === 'success' ? 'success' : 'error'); table.ajax.reload(null, false); }, 'json');
+                        }, function(r) {
+                            showToast(r.message, r.status === 'success' ? 'success' : 'error');
+                            table.ajax.reload(null, false);
+                        }, 'json');
                     }
                 });
             });

@@ -25,10 +25,6 @@
   margin-left: 10%;
 }
 
-.navbar-kun-cms {
-  background-color: #3d9970;
-}
-
 .card-prz:not(.card-outline) > .card-header {
   background-color: #3d9970;
 }
@@ -82,10 +78,6 @@
 .nav-flat.nav-sidebar > .nav-item .nav-treeview .nav-item > .nav-link,
 .nav-flat.nav-sidebar > .nav-item > .nav-treeview .nav-item > .nav-link {
   border-left: 0.4rem solid !important;
-}
-
-.nav-pills .nav-link:not(.active):hover {
-  color: #519a71 !important;
 }
 
 .register-container {
@@ -249,12 +241,6 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
 }
 
-.page-toggle {
-  position: absolute;
-  right: 15px;
-  top: 15px;
-}
-
 /* Sayfa Öğeleri */
 .page-item {
   border-bottom: 1px solid #eee;
@@ -352,4 +338,232 @@ input:checked + .toggle-slider:before {
 
 .dt-button-collection .dropdown-menu {
   top: unset !important;
+}
+
+#profileIMGsidebar {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border: 3px solid #dee2e6;
+}
+
+#profileImagePreview {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border: 3px solid #dee2e6;
+}
+
+#avatarInputBtn {
+  bottom: 5px;
+  right: 5px;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #fff;
+}
+
+.sidebar .user-panel .info {
+  overflow: hidden;
+  white-space: normal;
+}
+.sidebar .user-panel .info button {
+  white-space: normal;
+  line-height: 1.2;
+}
+
+.deviceIconSession {
+  width: 50px;
+}
+
+.browserSessions {
+  opacity: 0.8;
+}
+
+.browserSession {
+  font-size: 1.1rem;
+}
+
+#btn-add-widget {
+  display: none;
+}
+
+.folders {
+  cursor: pointer;
+}
+
+.is-home-badge {
+  font-size: 0.7rem;
+  background: #fff5f5;
+  color: #e53e3e;
+  border: 1px solid #feb2b2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+/* Drag handle — default hidden, shown in edit mode */
+.drag-handle {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 10;
+  cursor: grab;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+  color: #fff;
+  font-size: 14px;
+  display: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Hide button — default hidden, shown in edit mode */
+.btn-widget-hide {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: none;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.15);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-size: 12px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.btn-widget-hide:hover {
+  opacity: 1;
+  color: #fff;
+}
+
+/* Edit mode visual cues */
+.edit-mode .widget-box {
+  outline: 2px dashed rgba(0, 123, 255, 0.4);
+  outline-offset: -2px;
+}
+
+.edit-mode .widget-item {
+  transition: transform 0.15s ease;
+}
+
+/* SortableJS ghost */
+.sortable-ghost {
+  opacity: 0.4;
+}
+
+.sortable-chosen {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Widget modal list */
+.widget-toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eee;
+  transition: background 0.15s;
+}
+
+.widget-toggle-item:hover {
+  background: #f8f9fa;
+}
+
+.widget-toggle-item:last-child {
+  border-bottom: none;
+}
+
+.widget-toggle-item .widget-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.widget-toggle-item .widget-info i {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+/* elFinder Adjustments */
+#elfinder {
+  border: none !important;
+  border-radius: 0 0 15px 15px;
+  overflow: hidden;
+}
+
+.elfinder-navbar {
+  background-color: #f8fafc !important;
+  border-right: 1px solid #edf2f7 !important;
+}
+
+.elfinder-toolbar {
+  background-image: none !important;
+  background-color: #fff !important;
+  border-bottom: 1px solid #edf2f7 !important;
+  padding: 10px !important;
+}
+
+.elfinder-button {
+  background-image: none !important;
+  border-radius: 6px !important;
+  border-color: #e2e8f0 !important;
+}
+
+.elfinder-button:hover {
+  background-color: #edf2f7 !important;
+}
+
+.dd-item > button {
+  height: 32px;
+  font-size: 18px;
+  color: #718096;
+}
+
+.dd-handle {
+  height: 45px;
+  padding: 10px 15px;
+  background: #fff;
+  border: 1px solid #edf2f7;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #2d3748;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+}
+
+.dd-handle:hover {
+  background: #f8fafc;
+  color: #667eea;
+}
+
+.dd-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: absolute;
+  right: 10px;
+  top: 7px;
+}
+
+body.sidebar-collapse .user-panel,
+body.sidebar-collapse .user-panel .info {
+  margin-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.ui-menu kbd {
+  /* Keyboard shortcuts for ui-contextmenu titles */
+  float: right;
 }

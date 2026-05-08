@@ -3,59 +3,50 @@ echo $this->section('title');
 echo lang($title->pagename);
 echo $this->endSection();
 echo $this->section('head');
-echo link_tag("be-assets/plugins/nestable2/jquery.nestable.min.css"); ?>
-<style {csp-style-nonce}>
-/* Nestable Premium Style */
-.dd-item > button { height: 32px; font-size: 18px; color: #718096; }
-.dd-handle {
-    height: 45px; padding: 10px 15px; background: #fff; border: 1px solid #edf2f7;
-    border-radius: 8px; font-weight: 500; color: #2d3748;
-    box-shadow: 0 2px 5px rgba(0,0,0,.02);
-}
-.dd-handle:hover { background: #f8fafc; color: #667eea; }
-.dd-content {
-    display: flex; align-items: center; justify-content: space-between;
-    position: absolute; right: 10px; top: 7px;
-}
-</style>
-<?php echo $this->endSection();
+echo link_tag("be-assets/plugins/nestable2/jquery.nestable.min.css");
+echo $this->endSection();
 echo $this->section('content'); ?>
-
 <section class="content pt-3">
-    <!-- Stats Row -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-menu"><i class="fas fa-bars"></i></div>
-                <div><div class="m-stat-value" id="stat-menu-count"><?php echo count($nestable2 ?? []) ?></div><div class="m-stat-label">Aktif Menü Sayısı</div></div>
+                <div>
+                    <div class="m-stat-value" id="stat-menu-count"><?php echo count($nestable2 ?? []) ?></div>
+                    <div class="m-stat-label">Aktif Menü Sayısı</div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-pages"><i class="fas fa-file-alt"></i></div>
-                <div><div class="m-stat-value"><?php echo count($pages ?? []) ?></div><div class="m-stat-label">Bekleyen Sayfalar</div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo count($pages ?? []) ?></div>
+                    <div class="m-stat-label">Bekleyen Sayfalar</div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="m-stat-card">
                 <div class="m-stat-icon st-blogs"><i class="fas fa-rss"></i></div>
-                <div><div class="m-stat-value"><?php echo count($blogs ?? []) ?></div><div class="m-stat-label">Bekleyen Yazılar</div></div>
+                <div>
+                    <div class="m-stat-value"><?php echo count($blogs ?? []) ?></div>
+                    <div class="m-stat-label">Bekleyen Yazılar</div>
+                </div>
             </div>
         </div>
     </div>
-
     <div class="row">
-        <!-- Available Items -->
         <div class="col-md-5">
             <div class="card premium-card">
-                <div class="card-header"><h3 class="card-title font-weight-bold mb-0"><i class="fas fa-plus-circle mr-2 text-success"></i> Menü Nesneleri</h3></div>
+                <div class="card-header">
+                    <h3 class="card-title font-weight-bold mb-0"><i class="fas fa-plus-circle mr-2 text-success"></i> Menü Nesneleri</h3>
+                </div>
                 <div class="card-body p-4" id="list">
                     <?php echo view('\Modules\Menu\Views\list') ?>
                 </div>
             </div>
         </div>
-
-        <!-- Menu Structure -->
         <div class="col-md-7">
             <div class="card premium-card">
                 <div class="card-header d-flex align-items-center">
@@ -77,13 +68,10 @@ echo $this->section('content'); ?>
         </div>
     </div>
 </section>
-
-
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
-<script type="text/javascript" {csp-script-nonce}>
-
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(function() {
         $('#nestable-menu').nestable();
     });
@@ -97,18 +85,27 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
     }
 
     function refreshLeftList() {
-        $.post('<?php echo route_to('menuList') ?>', { [CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => $('#list').html(data));
+        $.post('<?php echo route_to('menuList') ?>', {
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+        }).done(data => $('#list').html(data));
     }
 
     function saveMenu() {
-        $.post('<?php echo route_to('queueMenuAjax') ?>', { "queue": $('#nestable-menu').nestable('serialize'),[CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => {
+        $.post('<?php echo route_to('queueMenuAjax') ?>', {
+            "queue": $('#nestable-menu').nestable('serialize'),
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+        }).done(data => {
             updateNestableUI(data);
             showToast('Menü sıralaması kaydedildi.');
         });
     }
 
     function addPages(id) {
-        $.post('<?php echo route_to('createMenu') ?>', { "id": id, 'where': 'pages_langs',[CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => {
+        $.post('<?php echo route_to('createMenu') ?>', {
+            "id": id,
+            'where': 'pages_langs',
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+        }).done(data => {
             updateNestableUI(data);
             showToast('Sayfa menüye eklendi.');
             refreshLeftList();
@@ -117,9 +114,18 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
 
     function addCheckedPages() {
         var formData = $('#addCheckedPages').serializeArray();
-        formData.push({ name: "where", value: "pages_langs" });
-        formData.push({ name: "type", value: "pages_langs" });
-        formData.push({ name: CI4MS_CSRF.name, value: CI4MS_CSRF.getHash() });
+        formData.push({
+            name: "where",
+            value: "pages_langs"
+        });
+        formData.push({
+            name: "type",
+            value: "pages_langs"
+        });
+        formData.push({
+            name: CI4MS_CSRF.name,
+            value: CI4MS_CSRF.getHash()
+        });
         $.post('<?php echo route_to('addMultipleMenu') ?>', formData).done(data => {
             updateNestableUI(data);
             showToast('Seçilen sayfalar eklendi.');
@@ -128,7 +134,11 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
     }
 
     function addBlog(id) {
-        $.post('<?php echo route_to('createMenu') ?>', { "id": id, 'where': 'blog_langs',[CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => {
+        $.post('<?php echo route_to('createMenu') ?>', {
+            "id": id,
+            'where': 'blog_langs',
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+        }).done(data => {
             updateNestableUI(data);
             showToast('Yazı menüye eklendi.');
             refreshLeftList();
@@ -137,9 +147,18 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
 
     function addCheckedBlog() {
         var formData = $('#addCheckedBlog').serializeArray();
-        formData.push({ name: "where", value: "blog_langs" });
-        formData.push({ name: "type", value: "blog_langs" });
-        formData.push({ name: CI4MS_CSRF.name, value: CI4MS_CSRF.getHash() });
+        formData.push({
+            name: "where",
+            value: "blog_langs"
+        });
+        formData.push({
+            name: "type",
+            value: "blog_langs"
+        });
+        formData.push({
+            name: CI4MS_CSRF.name,
+            value: CI4MS_CSRF.getHash()
+        });
         $.post('<?php echo route_to('addMultipleMenu') ?>', formData).done(data => {
             updateNestableUI(data);
             showToast('Seçilen yazılar eklendi.');
@@ -149,7 +168,10 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
 
     function addURL() {
         var formData = $('#addUrls').serializeArray();
-        formData.push({ name: "type", value: "url" });
+        formData.push({
+            name: "type",
+            value: "url"
+        });
         $.post('<?php echo route_to('createMenu') ?>', formData).done(data => {
             updateNestableUI(data);
             showToast('Özel bağlantı eklendi.');
@@ -167,8 +189,12 @@ echo script_tag("be-assets/plugins/nestable2/jquery.nestable.min.js"); ?>
             confirmButtonText: 'Evet, çıkar',
             cancelButtonText: 'Vazgeç'
         }).then(res => {
-            if(res.isConfirmed) {
-                $.post('<?php echo route_to('deleteMenuAjax') ?>', { "id": id, "type": type,[CI4MS_CSRF.name]: CI4MS_CSRF.getHash() }).done(data => {
+            if (res.isConfirmed) {
+                $.post('<?php echo route_to('deleteMenuAjax') ?>', {
+                    "id": id,
+                    "type": type,
+                    [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+                }).done(data => {
                     updateNestableUI(data);
                     showToast('Menüden çıkarıldı.');
                     refreshLeftList();

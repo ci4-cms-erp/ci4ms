@@ -100,7 +100,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 }
             }
 
-            if ($this->validate($valData) == false) return redirect()->route('blogCreate')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->route('blogCreate')->withInput()->with('errors', $this->validator->getErrors());
 
             $data = ['isActive' => (bool)$this->request->getPost('isActive'), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
 
@@ -186,7 +186,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 }
             }
 
-            if ($this->validate($valData) == false) return redirect()->route('blogUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->route('blogUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
 
             $data = ['isActive' => (bool)$this->request->getPost('isActive'), 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
 
@@ -261,7 +261,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
 
         $deleteId = $this->request->getPost('id');
         $defaultLocale = setting('App.defaultLocale') ?: 'tr';
@@ -302,7 +302,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                     'com_name_surname' => esc($result->comFullName),
                     'email' => esc($result->comEmail),
                     'created_at' => $result->created_at,
-                    'status' => ($result->isApproved == true) ? 'Approved' : 'Not approved',
+                    'status' => ($result->isApproved === true) ? 'Approved' : 'Not approved',
                     'process' => '<a href="' . route_to('displayComment', $result->id) . '"
                                class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>
                             <a href="javascript:void(0);" onclick="deleteItem(' . $result->id . ')"
@@ -328,7 +328,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
         $comment = $this->commonModel->selectOne('comments', ['id' => $this->request->getPost('id')]);
         if ($this->commonModel->remove('comments', ['id' => $this->request->getPost('id')]) === true) return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$comment->comFullName])]);
         else return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$comment->comFullName])]);

@@ -83,7 +83,7 @@ class Backup extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'backup_file' => ['label' => 'Backup File', 'rules' => 'uploaded[backup_file]|ext_in[backup_file,zip]'],
         ]);
-        if ($this->validate($valData) == false) return redirect()->route('backup')->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) === false) return redirect()->route('backup')->withInput()->with('errors', $this->validator->getErrors());
         $file = $this->request->getFile('backup_file');
 
         if ($file && $file->isValid() && ! $file->hasMoved()) {

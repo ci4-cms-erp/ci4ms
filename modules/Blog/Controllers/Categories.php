@@ -63,7 +63,7 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 $valData['pageIMGWidth']  = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if ($this->validate($valData) == false) return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
 
             $baseData = ['isActive' => $this->request->getPost('isActive')];
             if (!empty($this->request->getPost('parent'))) $baseData['parent'] = $this->request->getPost('parent');
@@ -126,7 +126,7 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 $valData['pageIMGWidth']  = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if ($this->validate($valData) == false) return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false) return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
 
             $baseData = ['isActive' => $this->request->getPost('isActive')];
             if (!empty($this->request->getPost('parent'))) $baseData['parent'] = $this->request->getPost('parent');
@@ -193,7 +193,7 @@ class Categories extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
 
         $id = $this->request->getPost('id');
         $defaultLocale = setting('App.defaultLocale') ?: 'tr';

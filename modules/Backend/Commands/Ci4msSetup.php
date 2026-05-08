@@ -184,7 +184,8 @@ class Ci4msSetup extends BaseCommand
 
         $updates = [
             'CI_ENVIRONMENT'                     => 'development',
-            'app.forceGlobalSecureRequests'      => 'true #Use this only when SSL is enabled.',
+            'app.forceGlobalSecureRequests'      => 'false #Use this only when SSL is enabled.',
+            'app.CSPEnabled'                     => 'false #Content Security Policy',
             'app.baseURL'                        => '\'' . $baseUrl . '\'',
             'database.default.hostname'          => $dbHost,
             'database.default.database'          => $dbName,
@@ -213,7 +214,7 @@ class Ci4msSetup extends BaseCommand
             'security.cookieName'                => '\'csrf_cookie_ci4ms\'',
             'security.expires'                   => 7200,
             'security.regenerate'                => 'true',
-            'security.redirect'                  => 'false',
+            'security.redirect'                  => 'true',
             'security.samesite'                  => '\'Lax\'',
             'app.defaultLocale'                  => '\'en\'',
             'app.supportedLocales'               => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',

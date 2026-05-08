@@ -14,8 +14,6 @@
  * @link: https://codeigniter4.github.io/CodeIgniter4/
  */
 
-use CodeIgniter\I18n\Time;
-
 if (!function_exists('clearFilter')) {
     /**
      * @param array $array
@@ -160,7 +158,7 @@ if (!function_exists('menu')) {
                 }
                 $title = (str_starts_with($menu->title, 'Frontend.')) ? lang($menu->title) : esc($menu->title);
                 echo '>' . $title . '</a>';
-                
+
                 if ((bool)$menu->hasChildren === true) {
                     $menuClass = empty($menu->parent) ? 'dropdown-menu dropdown-menu-end' : 'dropdown-menu';
                     echo '<ul class="' . $menuClass . '" aria-labelledby="' . $dropdownId . '">';

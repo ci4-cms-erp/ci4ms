@@ -130,7 +130,7 @@ echo $this->section('javascript'); ?>
 <script src="/be-assets/plugins/bs-stepper/js/bs-stepper.min.js"></script>
 <script src="/be-assets/plugins/zxcvbn/zxcvbn.js"></script>
 <script src="/be-assets/plugins/pwstrength-bootstrap/pwstrength-bootstrap.min.js"></script>
-<script type="text/javascript" {csp-script-nonce}>
+<script type="text/javascript" <?php echo csp_script_nonce(); ?>>
   // BS-Stepper Init
   document.addEventListener('DOMContentLoaded', function() {
     window.stepper = new Stepper(document.querySelector('.bs-stepper'))
