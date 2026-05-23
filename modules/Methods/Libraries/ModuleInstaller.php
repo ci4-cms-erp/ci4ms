@@ -90,7 +90,7 @@ class ModuleInstaller
     public function runModuleSeeder(string $moduleName): array
     {
         $seederName = "Modules\\{$moduleName}\\Database\\Seeds\\{$moduleName}Seeder";
-        
+
         // If such a Seeder class exists, run it
         if (class_exists($seederName)) {
             try {
@@ -182,21 +182,30 @@ class ModuleInstaller
             return ['success' => true, 'rolledBack' => 0, 'error' => null];
         }
 
+        /** @var \CodeIgniter\Database\MigrationRunner $migrate */
+        $migrate = Services::migrations();
+        $namespace = 'Modules\\' . $moduleName . '\\Database\\Migrations';
+
         try {
-            /** @var \CodeIgniter\Database\MigrationRunner $migrate */
-            $migrate = Services::migrations();
-            $namespace = 'Modules\\' . $moduleName . '\\Database\\Migrations';
+            $migrate->setNamespace($namespace);
+            $dbGroup = (new \Config\Database())->defaultGroup;
+            $history = $migrate->getHistory($dbGroup);
 
-            // Roll back all migrations (batch 0 = roll back all)
-            $migrate->setNamespace($namespace)->regress(0);
-
-            $files = glob($migrationPath . '/*.php');
-            $rolledBack = is_array($files) ? count($files) : 0;
+            $rolledBack = 0;
+            foreach (array_reverse($history) as $row) {
+                $file = $migrationPath . '/' . $row->version . '_' . $row->class . '.php';
+                if (is_file($file)) {
+                    $migrate->force($file, $namespace);
+                    $rolledBack++;
+                }
+            }
 
             return ['success' => true, 'rolledBack' => $rolledBack, 'error' => null];
         } catch (\Throwable $e) {
             log_message('error', "[ModuleInstaller] Rollback failed for {$moduleName}: {$e->getMessage()}");
             return ['success' => false, 'rolledBack' => 0, 'error' => $e->getMessage()];
+        } finally {
+            $migrate->setNamespace(null);
         }
     }
 

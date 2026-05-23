@@ -165,7 +165,13 @@ function captchaF() {
   });
 }
 
-captchaF();
+$(function () {
+  // captcha img'si render edilmiş sayfalarda (örn. blog/post yorum formu)
+  // gereksiz /commentCaptcha POST'u atmamak için koşullu çalıştır.
+  if ($('.captcha').length) {
+    captchaF();
+  }
+});
 
 $(function () {
   $("#product-search").autocomplete({

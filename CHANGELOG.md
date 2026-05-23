@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.10.0] - 2026-05-23
+
+### Fixed
+
+- **CRITICAL — Single Module Deletion Wiped Entire Database:** `ModuleInstaller::rollbackModuleMigrations()` called `MigrationRunner::regress(0)` under the assumption that `setNamespace()` scoped the rollback to a single module. CI4's `regress()` ignores the namespace filter (it nulls `$this->namespace` internally, and `getBatches()`/`getBatchHistory()` do not filter by namespace), so any uninstall would down every registered module's migrations and drop the entire database. Replaced with a namespace-filtered `getHistory()` walk that calls `force()` per migration, guaranteeing only the target module's tables are dropped and only its `migrations` table rows are removed. Added a `finally` block to reset the shared MigrationRunner singleton's namespace.
+- **Sitemap URL Duplication:** `BlogModel::sitemapItems()` and `PagesModel::sitemapItems()` returned fully-qualified URLs via `site_url()`, but `ci4seopro\Libraries\Seo\Search\SitemapBuilder` prepends `Seo::$baseUrl` to every `loc`, producing malformed `<loc>https://host.tldhttps://host.tld/...</loc>` entries. Models now return paths only (`'/' . ltrim($seflink, '/')`), matching the package contract.
+- **Sitemap Multilingual Coverage:** Both sitemap models now `LEFT JOIN` their `*_langs` tables so localized records are included instead of being filtered out by the primary-table-only query.
+- **Backend CSRF Hidden Input Stale After AJAX:** `setCsrfHash()` in `public/be-assets/js/ci4ms.js` only updated the `<meta name="X-CSRF-TOKEN">` tag after token regeneration, leaving every `csrf_field()` hidden input in the page bound to the previous token. Classic (non-AJAX) form submissions following an AJAX request received `403 Forbidden`. The setter now also writes the new hash to every `input[name="csrf_token_ci4ms"]` on the page.
+- **Backend CSRF Empty-Body POST Token Loss:** When an AJAX POST was sent with `data: null` or no `data` at all, `ajaxPrefilter` created a fresh object and assigned the token to it, but jQuery later re-serialized that object into an empty body, stripping the CSRF parameter. The prefilter now writes a pre-encoded URL-encoded string instead, so the token survives to the wire.
+- **Frontend Captcha Auto-Fire on All Pages:** `public/templates/default/assets/ci4ms.js` invoked `captchaF()` at file scope, firing a `POST /commentCaptcha` request on every public-side page load regardless of whether a captcha image was rendered. Wrapped the call in a DOM-ready guard that runs only when `.captcha` elements exist.
+- **Methods Update View Broken Route:** "Back to list" link in `modules/Methods/Views/update.php` referenced the non-existent route alias `list`; updated to the correct `methodList` alias.
+- **Methods Update View Checkbox Active State:** `inNavigation`, `isBackoffice`, and `hasChild` flags are stored as integers (`1` / `0`) but the view used strict `=== true` comparison, never marking checkboxes as active for existing records. Added `(bool)` casts so the `active` class and `checked` attribute apply correctly.
+
+### Changed
+
+- **elFinder Dialog Reuse:** `pageImgelfinderDialog()` and `pageMultipleImgelfinderDialog()` no longer create a fresh dialog on every call. The first invocation builds the dialog and caches the jQuery wrapper in a module-scoped variable (or keyed map for the multi-image variant); subsequent invocations call `dialogelfinder("open")` on the existing instance. Removes the `destroyOnClose: true` flag on these variants, prevents leaked event handlers, and stops repeated `cssAutoLoad` HTTP requests. The `sync` interval is wrapped in `try/catch` so a destroyed instance no longer throws a polling exception every second.
+- **Captcha Refresh Button Wiring:** The "New Captcha" button in `app/Helpers/templates/default/funcs_helper.php` switched from inline `onclick="captchaF()"` to a `.captcha-refresh` class that the existing jQuery delegation in `captchaF()` already binds. Cleaner separation between markup and behavior.
+
+### Added
+
+- **`.gitignore` Entries:** Excluded `CLAUDE.md` and `ci4ms-specs/` so per-developer agent tooling artifacts stay out of version control.
+
 ## [0.31.9.0] - 2026-05-08
 
 ### Security
@@ -314,6 +336,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.31.10.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.10.0
 [0.31.9.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.9.0
 [0.31.8.1]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.8.1
 [0.31.8.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.8.0

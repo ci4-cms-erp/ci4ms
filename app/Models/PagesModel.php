@@ -11,12 +11,12 @@ class PagesModel extends Model
 
     public static function sitemapItems(): array
     {
-        $pages = model(self::class)->where(['isActive' => true])->orderBy('seflink ASC')->findAll();
+        $pages = model(self::class)->join('pages_langs','pages_langs.id = pages.id','left')->where(['isActive' => true])->orderBy('seflink ASC')->findAll();
         $items = [];
 
         foreach ($pages as $page) {
             $items[] = [
-                'loc'        => site_url($page['seflink']),
+                'loc'        => '/' . ltrim($page['seflink'], '/'),
                 'lastmod'    => $page['updated_at'] ?? $page['creationDate'],
                 'changefreq' => $page['changefreq'] ?? 'weekly',
                 'priority'   => $page['priority'] ?? 0.8,

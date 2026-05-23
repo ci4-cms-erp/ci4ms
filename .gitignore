@@ -146,6 +146,8 @@ dist/
 composer.lock.json
 .antigravityignore
 .claude
+CLAUDE.md
+ci4ms-specs
 tests/*
 phpunit.xml.dist
 node_modules

@@ -11,12 +11,12 @@ class BlogModel extends Model
 
     public static function sitemapItems(): array
     {
-        $blogs = model(self::class)->where(['isActive' => true, 'inXML' => true])->findAll();
+        $blogs = model(self::class)->join('blog_langs','blog_langs.id = blog.id','left')->where(['isActive' => true, 'inXML' => true])->findAll();
         $items = [];
 
         foreach ($blogs as $blog) {
             $items[] = [
-                'loc'        => site_url('blog/' . $blog['seflink']),
+                'loc'        => '/blog/' . ltrim($blog['seflink'], '/'),
                 'lastmod'    => $blog['updated_at'] ?? $blog['created_at'],
                 'changefreq' => 'weekly',
                 'priority'   => 1.0,

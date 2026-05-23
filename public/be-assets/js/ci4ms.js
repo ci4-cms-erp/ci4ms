@@ -27,9 +27,13 @@
   }
 
   function setCsrfHash(newHash) {
-    if (newHash && csrfMeta.length) {
+    if (!newHash) return;
+    if (csrfMeta.length) {
       csrfMeta.attr("content", newHash);
     }
+    // Sayfadaki tüm csrf_field() hidden input'larını da yeniden senkronize et,
+    // yoksa klasik (non-AJAX) form submit'ler bayat token ile 403 alır.
+    $('input[name="' + csrfName + '"]').val(newHash);
   }
 
   /**
@@ -74,9 +78,9 @@
         // Object data — jQuery hasn't serialized it yet
         options.data[csrfName] = hash;
       } else if (!options.data || options.data === null) {
-        // No data — create new object
-        options.data = {};
-        options.data[csrfName] = hash;
+        // No data — create new string instead of object to prevent jQuery serialization issues
+        options.data =
+          encodeURIComponent(csrfName) + "=" + encodeURIComponent(hash);
       } else if (options.data instanceof FormData) {
         // FormData — add via append
         options.data.set(csrfName, hash);
@@ -184,63 +188,65 @@ function ci4msDtLanguage(searchPlaceholder) {
   return cfg;
 }
 
+var _pageImgFmDiv = null;
+
 function pageImgelfinderDialog() {
   var syncInterval;
-  var fm = $("<div/>")
-    .dialogelfinder({
-      url: "/backend/media/elfinderConnection",
-      requestType: "post",
-      lang: window.CI4MS_LOCALE !== 'en' ? (window.CI4MS_LOCALE || 'tr') : 'en',
-      width: 1024,
-      height: 768,
-      workerBaseUrl: "/be-assets/plugins/elFinder/js/worker",
-      destroyOnClose: true,
-      cssAutoLoad: [
-        window.location.origin +
-          "/be-assets/css/ci4ms-elfinder.css",
-      ],
-      getFileCallback: function (files, fm) {
-        $(".pageimg-input").val(files.url.replace(location.origin, ""));
-        $(".pageimg").attr("src", files.url);
-        const img = new Image();
-        img.onload = function () {
-          $("#pageIMGHeight").val(this.height);
-          $("#pageIMGWidth").val(this.width);
-        };
-        img.src = files.url;
+
+  // Daha önce oluşturulmuş dialog varsa yeniden aç, ikinci kez oluşturma
+  if (_pageImgFmDiv !== null) {
+    try { _pageImgFmDiv.dialogelfinder("open"); } catch (e) {
+      _pageImgFmDiv = null;
+    }
+    if (_pageImgFmDiv !== null) return;
+  }
+
+  _pageImgFmDiv = $("<div/>").dialogelfinder({
+    url: "/backend/media/elfinderConnection",
+    requestType: "post",
+    lang: window.CI4MS_LOCALE !== "en" ? window.CI4MS_LOCALE || "tr" : "en",
+    width: 1024,
+    height: 768,
+    workerBaseUrl: "/be-assets/plugins/elFinder/js/worker",
+    cssAutoLoad: [
+      window.location.origin + "/be-assets/css/ci4ms-elfinder.css",
+    ],
+    getFileCallback: function (files) {
+      $(".pageimg-input").val(files.url.replace(location.origin, ""));
+      $(".pageimg").attr("src", files.url).show();
+      var img = new Image();
+      img.onload = function () {
+        $("#pageIMGHeight").val(this.height);
+        $("#pageIMGWidth").val(this.width);
+      };
+      img.src = files.url;
+    },
+    commandsOptions: {
+      getfile: {
+        oncomplete: "close",
+        folders: false,
+        multiple: false,
       },
-      commandsOptions: {
-        getfile: {
-          oncomplete: "close",
-          folders: false,
-          multiple: false,
-        },
+    },
+    soundPath: "/be-assets/plugins/elFinder/sounds",
+    handlers: {
+      upload: function () {
+        $(".elfinder-dialog-error").hide();
       },
-      soundPath: "/be-assets/plugins/elFinder/sounds",
-      handlers: {
-        upload: function () {
-          $(".elfinder-dialog-error").hide();
-        },
-        open: function (event, instance) {
-          // Start sync when elFinder opens
-          startSync(instance);
-        },
-        close: function (event, instance) {
-          // Stop sync when elFinder closes
-          stopSync();
-        },
-        destroy: function (event, instance) {
-          // Stop sync when elFinder is destroyed
-          stopSync();
-        },
+      open: function (_event, instance) {
+        startSync(instance);
       },
-    })
-    .dialogelfinder("instance");
+      close: function () {
+        stopSync();
+      },
+    },
+  });
 
   function startSync(instance) {
+    stopSync();
     syncInterval = setInterval(function () {
-      instance.exec("sync");
-    }, 1000); // 1000 ms (1 second)
+      try { instance.exec("sync"); } catch (e) { stopSync(); }
+    }, 1000);
   }
 
   function stopSync() {
@@ -248,64 +254,62 @@ function pageImgelfinderDialog() {
   }
 }
 
+var _multipleImgFmDivs = {};
+
 function pageMultipleImgelfinderDialog(id) {
   var syncInterval;
 
-  var fm = $("<div/>")
-    .dialogelfinder({
-      url: "/backend/media/elfinderConnection",
-      requestType: "post",
-      lang: window.CI4MS_LOCALE !== 'en' ? (window.CI4MS_LOCALE || 'tr') : 'en',
-      width: "80%",
-      height: 768,
-      destroyOnClose: true,
-      cssAutoLoad: [
-        window.location.origin +
-          "/be-assets/css/ci4ms-elfinder.css?v=",
-      ],
-      getFileCallback: function (files) {
-        $('[name="imgs[' + id + '][pageimg]"]').val(
-          files.url.replace(location.origin, ""),
-        );
-        $('[name="imgs[' + id + '][img]"]').attr("src", files.url);
-        const img = new Image();
-        img.onload = function () {
-          $('[name="imgs[' + id + '][pageIMGHeight]"]').val(this.height);
-          $('[name="imgs[' + id + '][pageIMGWidth]"]').val(this.width);
-        };
-        img.src = files.url;
+  if (_multipleImgFmDivs[id]) {
+    try { _multipleImgFmDivs[id].dialogelfinder("open"); } catch (e) {
+      _multipleImgFmDivs[id] = null;
+    }
+    if (_multipleImgFmDivs[id] !== null) return;
+  }
+
+  _multipleImgFmDivs[id] = $("<div/>").dialogelfinder({
+    url: "/backend/media/elfinderConnection",
+    requestType: "post",
+    lang: window.CI4MS_LOCALE !== "en" ? window.CI4MS_LOCALE || "tr" : "en",
+    width: "80%",
+    height: 768,
+    cssAutoLoad: [
+      window.location.origin + "/be-assets/css/ci4ms-elfinder.css",
+    ],
+    getFileCallback: function (files) {
+      $('[name="imgs[' + id + '][pageimg]"]').val(files.url.replace(location.origin, ""));
+      $('[name="imgs[' + id + '][img]"]').attr("src", files.url);
+      var img = new Image();
+      img.onload = function () {
+        $('[name="imgs[' + id + '][pageIMGHeight]"]').val(this.height);
+        $('[name="imgs[' + id + '][pageIMGWidth]"]').val(this.width);
+      };
+      img.src = files.url;
+    },
+    commandsOptions: {
+      getfile: {
+        oncomplete: "close",
+        folders: false,
       },
-      commandsOptions: {
-        getfile: {
-          oncomplete: "close",
-          folders: false,
-        },
+    },
+    soundPath: "/be-assets/plugins/elFinder/sounds",
+    handlers: {
+      upload: function () {
+        $(".elfinder-dialog-error").hide();
       },
-      soundPath: "/be-assets/plugins/elFinder/sounds",
-      handlers: {
-        upload: function () {
-          $(".elfinder-dialog-error").hide();
-        },
-        open: function (event, instance) {
-          // Start sync when elFinder opens
-          startSync(instance);
-        },
-        close: function (event, instance) {
-          // Stop sync when elFinder closes
-          stopSync();
-        },
-        destroy: function (event, instance) {
-          // Stop sync when elFinder is destroyed
-          stopSync();
-        },
+      open: function (_event, instance) {
+        startSync(instance);
       },
-    })
-    .dialogelfinder("instance");
+      close: function () {
+        stopSync();
+      },
+    },
+  });
 
   function startSync(instance) {
+    stopSync();
     syncInterval = setInterval(function () {
-      instance.exec("sync");
-    }, 1000); // 1000 ms (1 second)
+      try { instance.exec("sync"); } catch (e) { stopSync(); }
+    }, 1000);
   }
 
   function stopSync() {
@@ -338,13 +342,12 @@ function elfinderDialog() {
     .dialogelfinder({
       url: "/backend/media/elfinderConnection",
       requestType: "post",
-      lang: window.CI4MS_LOCALE !== 'en' ? (window.CI4MS_LOCALE || 'tr') : 'en',
+      lang: window.CI4MS_LOCALE !== "en" ? window.CI4MS_LOCALE || "tr" : "en",
       width: "100%",
       height: 768,
       destroyOnClose: true,
       cssAutoLoad: [
-        window.location.origin +
-          "/be-assets/css/ci4ms-elfinder.css?v=",
+        window.location.origin + "/be-assets/css/ci4ms-elfinder.css?v=",
       ],
       getFileCallback: function (files, fm) {
         $(".editor").summernote(
