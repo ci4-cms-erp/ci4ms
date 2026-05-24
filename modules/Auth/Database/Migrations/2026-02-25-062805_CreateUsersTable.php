@@ -20,8 +20,9 @@ class CreateUsersTable extends Migration
                 'null' => false,
             ],
             'profileIMG' => [
-                'type' => 'TEXT',
-                'null' => false,
+                'type' => 'VARCHAR',
+                'constraint' => '255',
+                'null' => true,
                 'default' => 'https://dummyimage.com/50x50/ced4da/6c757d.jpg',
             ],
             'who_created' => [

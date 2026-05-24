@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.31.11.0] - 2026-05-24
+
+### Fixed
+
+- **CRITICAL — Web Installer Broken (404 on `/install/dbsetup`):** `Install::index()` redirected the browser to `install/dbsetup` after writing `.env`, but the route was registered as `POST`-only. The 302 redirect issued a `GET` request, producing `404 — Can't find a route for 'GET: install/dbsetup'` and aborting every web installation. The two-step request flow also relied on flashdata that was lost across the redirect on some session drivers. `index()` now invokes the migration + seed pipeline directly in the same request (no HTTP redirect, no flashdata), and the `install/dbsetup` route was removed entirely to eliminate the dead public endpoint. Reported by community installation feedback.
+- **CRITICAL — CLI Installer Migration Failure (`profileIMG` Default Value):** The `users` table migration declared `profileIMG` as `TEXT NOT NULL` with a string `default`. MySQL/MariaDB reject this with `BLOB, TEXT, GEOMETRY or JSON column 'profileIMG' can't have a default value` on every server version that does not silently relax the rule (most Linux distros, all default strict-mode installs), so `php spark ci4ms:setup` aborted at Step 5/6 before the database was usable. Changed the column to `VARCHAR(255) NULL` so the default URL is preserved and the migration succeeds on every supported MySQL/MariaDB version.
+
+### Changed
+
+- **Install Controller Hardening:** `dbsetup()` is now `private` and accepts the installation payload as a typed `array` parameter, removing the externally callable seed endpoint, the flashdata round-trip, and the empty-payload guard. The `install_dbsetup` route alias and its `role=create` permission are gone, shrinking the installer's attack surface to a single endpoint protected by `InstallFilter` (which returns `404` once `writable/install.lock` exists).
+- **Version Bump:** `app.version` advanced to `0.31.11.0` in both `Install::index()` and `Ci4msSetup::run()` so freshly written `.env` files report the correct release.
+
 ## [0.31.10.0] - 2026-05-23
 
 ### Fixed

@@ -67,12 +67,12 @@ class Install extends Controller
                 'app.supportedLocales' => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
                 'app.negotiateLocale' => 'true',
                 'app.appTimezone' => '\'Europe/Istanbul\'',
-                'app.version' => '0.31.10.0'
+                'app.version' => '0.31.11.0'
             ];
             if ($this->copyEnvFile() && $this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
 
-            $sessionData = [
+            $installData = [
                 'name' => $this->request->getPost('name'),
                 'surname' => $this->request->getPost('surname'),
                 'username' => $this->request->getPost('username'),
@@ -81,9 +81,9 @@ class Install extends Controller
                 'siteName' => $this->request->getPost('siteName'),
                 'baseUrl' => $this->request->getPost('baseUrl'),
             ];
-            if ($this->request->getPost('slogan')) $sessionData['slogan'] = $this->request->getPost('slogan') ?: null;
-            session()->setFlashdata('install_data', $sessionData);
-            return redirect()->to(site_url('install/dbsetup'));
+            if ($this->request->getPost('slogan')) $installData['slogan'] = $this->request->getPost('slogan') ?: null;
+
+            return $this->dbsetup($installData);
         }
         return view('Modules\Install\Views\install');
     }
@@ -134,7 +134,7 @@ class Install extends Controller
         return true;
     }
 
-    public function dbsetup()
+    private function dbsetup(array $installData)
     {
         $migrate = \Config\Services::migrations();
         $baseURL = rtrim(base_url(), '/');
@@ -145,8 +145,6 @@ class Install extends Controller
             return redirect()->route('install')->withInput()->with('errors', ['migration' => $e->getMessage()]);
         }
         $createDBs = new InstallService();
-        $installData = session()->getFlashdata('install_data');
-        if (empty($installData)) return redirect()->to($baseURL);
         $createDBs->createDefaultData([
             'fname' => trim(strip_tags($installData['name'])),
             'sname' => trim(strip_tags($installData['surname'])),

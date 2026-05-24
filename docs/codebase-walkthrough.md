@@ -397,7 +397,7 @@ All settings methods clear the `settings` cache after saving.
 2. `copyEnvFile()` copies `env` → `.env`
 3. `updateEnvSettings()` writes all config values to `.env` (regex-based key=value replacement)
 4. `generateEncryptionKey()` creates `hex2bin:` prefixed random key
-5. Redirects to `/install/dbsetup` with user data in query params
+5. `index()` invokes the private `dbsetup($installData)` directly in the same request — no HTTP redirect, no flashdata, no public endpoint
 6. `dbsetup()`:
    - Runs `$migrate->latest()` to create all database tables
    - Calls `InstallService::createDefaultData()` to seed the database
