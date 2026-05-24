@@ -215,3 +215,13 @@ A huge thank you to the security researchers who have helped make **ci4ms** more
 | **[dapickle](https://github.com/dapickle)** | Identified Critical Authenticated RCE in Theme installation, Arbitrary Database Table Drop in Theme module, and a Session Management Bypass. | Apr 2026 |
 
 > If you find a security vulnerability, please report it via [Security Policy](SECURITY.md).
+
+## 🐞 Bug Reporters
+
+Thanks to the community members who report functional bugs and help us catch regressions before they hit more users.
+
+| Contributor | Contribution | Date |
+| :--- | :--- | :--- |
+| **[spreaderman](https://github.com/spreaderman)** | Reported two installation-blocking regressions in v0.31.10.0: the web installer returning `404 GET install/dbsetup` after the configuration step, and `php spark ci4ms:setup` aborting on the `users.profileIMG` migration due to a `TEXT` column with a default value (rejected by MySQL/MariaDB strict mode). | May 2026 |
+
+> Found a non-security bug? Please [open an issue](https://github.com/ci4-cms-erp/ci4ms/issues) with reproduction steps.
