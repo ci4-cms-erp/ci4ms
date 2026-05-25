@@ -101,4 +101,5 @@ return [
     'rollbackSuccess' => 'System successfully restored to the backup point.',
     'rollbackFail' => 'Rollback failed: {0}',
     'backupNameRequired' => 'Backup name is required.',
+    'superadminRequired' => 'Editing custom JavaScript, custom CSS, or external theme assets requires the superadmin role. Other template settings were not saved.',
 ];

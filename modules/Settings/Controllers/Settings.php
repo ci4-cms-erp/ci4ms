@@ -257,8 +257,25 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     {
         try {
             $postSettings = $this->request->getPost('settings') ?? [];
+            // path and name are owned by the template-activation flow
+            // (templateSelectPost); never let them be rewritten here.
             $protectedKeys = ['path', 'name'];
             $postSettings = array_diff_key($postSettings, array_flip($protectedKeys));
+
+            // customJs / customCss / theme_assets render unescaped inside
+            // <script>, <style>, and <script src=> in the front-end template
+            // (see app/Views/templates/default/base.php). Persisting them is
+            // a site-wide stored-XSS sink, so only superadmins may set them.
+            // Regular admins can still tweak widgets, footer, fonts, display.
+            $superadminOnlyKeys = ['customJs', 'customCss', 'theme_assets'];
+            $touchedSuperadminKeys = array_intersect_key($postSettings, array_flip($superadminOnlyKeys));
+            if (!empty($touchedSuperadminKeys)) {
+                $user = function_exists('auth') ? auth()->user() : null;
+                $isSuperadmin = $user && method_exists($user, 'inGroup') && $user->inGroup('superadmin');
+                if (!$isSuperadmin) {
+                    return redirect()->route('settings')->with('error', lang('Settings.superadminRequired'));
+                }
+            }
 
             // Merge with existing (preserve path, name and any other untouched keys)
             $current = (array)$this->defData['settings']->templateInfos;

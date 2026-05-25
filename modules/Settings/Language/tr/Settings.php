@@ -101,4 +101,5 @@ return [
     'rollbackSuccess' => 'Sistem başarıyla yedek noktasına geri döndürüldü.',
     'rollbackFail' => 'Geri yükleme başarısız oldu: {0}',
     'backupNameRequired' => 'Yedek adı seçilmesi gereklidir.',
+    'superadminRequired' => 'Özel JavaScript, özel CSS veya harici tema asset\'lerini düzenlemek superadmin rolü gerektirir. Diğer şablon ayarları kaydedilmedi.',
 ];
