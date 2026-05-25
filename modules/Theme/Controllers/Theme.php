@@ -10,6 +10,22 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         return view('Modules\Theme\Views\index', $this->defData);
     }
 
+    /** Hard cap on uncompressed theme zip contents, to prevent zip-bomb DoS. */
+    private const MAX_THEME_UNCOMPRESSED_BYTES = 50 * 1024 * 1024;
+
+    /** Per-entry size cap so a single hostile file cannot blow out the budget. */
+    private const MAX_THEME_ENTRY_BYTES = 20 * 1024 * 1024;
+
+    /** Extensions that may exist under public/ inside the zip. */
+    private const ALLOWED_PUBLIC_EXTENSIONS = [
+        'css', 'js', 'map',
+        'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'bmp', 'avif',
+        'woff', 'woff2', 'ttf', 'eot', 'otf',
+        'xml', 'json', 'txt', 'md',
+        'mp4', 'webm', 'ogg', 'mp3', 'wav',
+        'pdf',
+    ];
+
     public function upload()
     {
         $valData = ([
@@ -17,93 +33,147 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         ]);
         if ($this->validate($valData) === false) return redirect()->route('backendThemes')->withInput()->with('errors', $this->validator->getErrors());
         $file = $this->request->getFile('theme');
-        $tempPath = WRITEPATH . 'tmp/' . str_replace('_theme.zip', '', $file->getName()) . '/';
+
         $zip = new \ZipArchive();
-        if ($zip->open($file->getTempName()) === true) {
-            // ── Security: Pre-extraction validation ──────────────────────
-            // Allowed static file extensions for the public/ directory.
-            // PHP files MUST NOT be written under public/ (RCE prevention).
-            $allowedPublicExtensions = [
-                'css',
-                'js',
-                'map',
-                'png',
-                'jpg',
-                'jpeg',
-                'gif',
-                'svg',
-                'webp',
-                'ico',
-                'bmp',
-                'avif',
-                'woff',
-                'woff2',
-                'ttf',
-                'eot',
-                'otf',
-                'xml',
-                'json',
-                'txt',
-                'md',
-                'mp4',
-                'webm',
-                'ogg',
-                'mp3',
-                'wav',
-                'pdf',
-            ];
-
-            $forbiddenEntries = [];
-
-            for ($i = 0; $i < $zip->numFiles; $i++) {
-                $entryName = $zip->getNameIndex($i);
-
-                // 1. Path traversal check (strengthened)
-                if (preg_match('/\.\.[\\/\\\\]/', $entryName) || preg_match('/^[\\/\\\\]/', $entryName)) {
-                    $zip->close();
-                    return redirect()->route('backendThemes')->withInput()
-                        ->with('errors', [lang('Theme.pathTraversalDetected', [$entryName])]);
-                }
-
-                // 2. Forbidden file extension check for public/ directory
-                //    Skip directory entries (they end with /)
-                if (substr($entryName, -1) === '/') {
-                    continue;
-                }
-
-                // Normalize: check files destined for public/
-                $normalizedEntry = strtolower($entryName);
-                if (strpos($normalizedEntry, 'public/') === 0) {
-                    $ext = strtolower(pathinfo($entryName, PATHINFO_EXTENSION));
-                    if (!empty($ext) && !in_array($ext, $allowedPublicExtensions, true)) {
-                        $forbiddenEntries[] = $entryName;
-                    }
-                }
-            }
-
-            if (!empty($forbiddenEntries)) {
-                $zip->close();
-                return redirect()->route('backendThemes')->withInput()
-                    ->with('errors', [lang('Theme.forbiddenFileInZip', [implode(', ', $forbiddenEntries)])]);
-            }
-            // ── End Security ─────────────────────────────────────────────
-
-            $zip->extractTo($tempPath);
-            $zip->close();
-        } else {
+        if ($zip->open($file->getTempName()) !== true) {
             return redirect()->route('backendThemes')->withInput()->with('errors', [lang('Theme.zipOpenFailed')]);
         }
 
-        $themeName = str_replace('_theme.zip', '', $file->getName());
-        $paths = [
-            APPPATH . "Config/templates/" . $themeName,
-            APPPATH . "Controllers/templates/" . $themeName,
-            APPPATH . "Helpers/templates/" . $themeName,
-            APPPATH . "Libraries/templates/" . $themeName,
-            APPPATH . "Views/templates/" . $themeName,
-            ROOTPATH . "public/templates/" . $themeName
-        ];
+        // ── Security: pre-extraction validation ──────────────────────
+        $forbiddenEntries = [];
+        $totalUncompressed = 0;
+        $infoXmlIndex      = null;
+        $hasScreenshot     = false;
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $entryName = $zip->getNameIndex($i);
+            $stat      = $zip->statIndex($i);
+
+            // 1. Reject absolute paths and any segment containing ..
+            if ($entryName === '' || preg_match('/^[\\/\\\\]/', $entryName) || preg_match('/(^|[\\/\\\\])\.\.([\\/\\\\]|$)/', $entryName)) {
+                $zip->close();
+                return redirect()->route('backendThemes')->withInput()
+                    ->with('errors', [lang('Theme.pathTraversalDetected', [$entryName])]);
+            }
+
+            // 2. Per-entry + total size caps (zip-bomb defense)
+            if ($stat !== false) {
+                $size = (int) ($stat['size'] ?? 0);
+                if ($size > self::MAX_THEME_ENTRY_BYTES) {
+                    $zip->close();
+                    return redirect()->route('backendThemes')->withInput()
+                        ->with('errors', [lang('Theme.zipBombDetected', [$entryName])]);
+                }
+                $totalUncompressed += $size;
+                if ($totalUncompressed > self::MAX_THEME_UNCOMPRESSED_BYTES) {
+                    $zip->close();
+                    return redirect()->route('backendThemes')->withInput()
+                        ->with('errors', [lang('Theme.zipBombDetected', [$entryName])]);
+                }
+            }
+
+            // 3. Symlink rejection: Unix file mode lives in the upper 16 bits
+            //    of external_attr; 0xA000 is S_IFLNK.
+            $extAttr = $stat['external_attr'] ?? 0;
+            if (((int) $extAttr >> 16) & 0xA000) {
+                $zip->close();
+                return redirect()->route('backendThemes')->withInput()
+                    ->with('errors', [lang('Theme.symlinkRejected', [$entryName])]);
+            }
+
+            // Skip dir entries for the remaining file-only checks.
+            if (substr($entryName, -1) === '/') {
+                continue;
+            }
+
+            // 4. Locate metadata files (info.xml and screenshot.png at any depth).
+            $basename = strtolower(basename($entryName));
+            if ($basename === 'info.xml' && $infoXmlIndex === null) {
+                $infoXmlIndex = $i;
+            } elseif ($basename === 'screenshot.png') {
+                $hasScreenshot = true;
+            }
+
+            // 5. Restrict file extensions under public/ to static assets only.
+            $normalizedEntry = strtolower($entryName);
+            if (strpos($normalizedEntry, 'public/') === 0) {
+                $ext = strtolower(pathinfo($entryName, PATHINFO_EXTENSION));
+                if (!empty($ext) && !in_array($ext, self::ALLOWED_PUBLIC_EXTENSIONS, true)) {
+                    $forbiddenEntries[] = $entryName;
+                }
+            }
+        }
+
+        if (!empty($forbiddenEntries)) {
+            $zip->close();
+            return redirect()->route('backendThemes')->withInput()
+                ->with('errors', [lang('Theme.forbiddenFileInZip', [implode(', ', $forbiddenEntries)])]);
+        }
+
+        if ($infoXmlIndex === null || !$hasScreenshot) {
+            $zip->close();
+            return redirect()->route('backendThemes')->withInput()
+                ->with('errors', [lang('Theme.metadataMissing')]);
+        }
+
+        // ── Read and validate info.xml WITHOUT extracting ──
+        $infoXmlContent = $zip->getFromIndex($infoXmlIndex);
+        if ($infoXmlContent === false || $infoXmlContent === '') {
+            $zip->close();
+            return redirect()->route('backendThemes')->withInput()
+                ->with('errors', [lang('Theme.metadataMissing')]);
+        }
+
+        $themeName = $this->parseThemeSlugFromInfoXml($infoXmlContent);
+        if ($themeName === null) {
+            $zip->close();
+            return redirect()->route('backendThemes')->withInput()
+                ->with('errors', [lang('Theme.invalidSlug')]);
+        }
+
+        // tempPath is now derived from the validated slug, not from
+        // $file->getName(). The slug regex [a-z0-9_-]+ guarantees it cannot
+        // escape WRITEPATH/tmp/ via concatenation.
+        $tempPath = rtrim(WRITEPATH . 'tmp/' . $themeName, '/') . '/';
+
+        // Reject if a quarantine dir with this slug is already half-installed,
+        // so we never extract over arbitrary content.
+        if (is_dir($tempPath)) {
+            $zip->close();
+            return redirect()->route('backendThemes')->withInput()
+                ->with('errors', [lang('Theme.tempDirExists', [$themeName])]);
+        }
+
+        $zip->extractTo($tempPath);
+        $zip->close();
+
+        // ── Post-extraction validation ──────────────────────────────
+        // Reject if any extracted file ended up as a symlink (defense-in-depth
+        // beyond the external_attr check above, which doesn't catch every
+        // ZIP variant).
         helper('Modules\Theme\Helpers\themes');
+        if ($this->containsSymlinks($tempPath)) {
+            deleteFldr(rtrim($tempPath, '/'));
+            return redirect()->route('backendThemes')->withInput()
+                ->with('errors', [lang('Theme.symlinkRejected', [''])]);
+        }
+
+        // Verify screenshot.png on disk is actually a PNG image (not a
+        // PHP polyglot named screenshot.png).
+        if (!$this->extractedScreenshotIsRealPng($tempPath)) {
+            deleteFldr(rtrim($tempPath, '/'));
+            return redirect()->route('backendThemes')->withInput()
+                ->with('errors', [lang('Theme.screenshotInvalid')]);
+        }
+
+        $paths = [
+            APPPATH . 'Config/templates/'      . $themeName,
+            APPPATH . 'Controllers/templates/' . $themeName,
+            APPPATH . 'Helpers/templates/'     . $themeName,
+            APPPATH . 'Libraries/templates/'   . $themeName,
+            APPPATH . 'Views/templates/'       . $themeName,
+            ROOTPATH . 'public/templates/'     . $themeName,
+        ];
         $duplicates = findDuplicateSubfolders($paths);
         if (!empty($duplicates)) {
             echo lang('Theme.foldersWithSameNameHeader');
@@ -112,7 +182,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
                 foreach ($dirs as $dir) {
                     echo lang('Install.foldersWithSameNameListItem', [$dir]);
                 }
-                echo "</ul>";
+                echo '</ul>';
             }
             deleteFldr(rtrim($tempPath, '/'));
         } else {
@@ -121,6 +191,81 @@ class Theme extends \Modules\Backend\Controllers\BaseController
             cache()->delete('templates_list');
             return redirect()->route('backendThemes')->with('log', $log);
         }
+    }
+
+    /**
+     * Parse the <slug> element out of an info.xml document with XXE / network
+     * lookups disabled, then validate it against the same regex used for
+     * persisted template paths. Returns the trimmed slug on success or null.
+     */
+    private function parseThemeSlugFromInfoXml(string $xmlContent): ?string
+    {
+        $prevErrors = libxml_use_internal_errors(true);
+        try {
+            $xml = simplexml_load_string($xmlContent, 'SimpleXMLElement', LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        } finally {
+            libxml_use_internal_errors($prevErrors);
+            libxml_clear_errors();
+        }
+        if ($xml === false) {
+            return null;
+        }
+        $slug = isset($xml->slug) ? trim((string) $xml->slug) : '';
+        if (!function_exists('valid_template_slug') || !valid_template_slug($slug)) {
+            return null;
+        }
+        return $slug;
+    }
+
+    /**
+     * Walk the freshly-extracted theme tree and return true if any file or
+     * directory is a symlink. Defense-in-depth on top of the entry-level
+     * external_attr check, since some ZIP encoders don't expose Unix attrs.
+     */
+    private function containsSymlinks(string $root): bool
+    {
+        if (!is_dir($root)) {
+            return false;
+        }
+        try {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+        } catch (\Throwable $e) {
+            return true; // unreadable = fail closed
+        }
+        foreach ($iterator as $file) {
+            if (is_link($file->getPathname())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * After extraction, locate screenshot.png anywhere under the tmp tree and
+     * verify it is a real PNG image (getimagesize is robust against PHP/HTML
+     * polyglots that just rename a .php payload to screenshot.png).
+     */
+    private function extractedScreenshotIsRealPng(string $root): bool
+    {
+        try {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
+            );
+        } catch (\Throwable $e) {
+            return false;
+        }
+        foreach ($iterator as $file) {
+            if ($file->isFile() && strtolower($file->getFilename()) === 'screenshot.png') {
+                $info = @getimagesize($file->getPathname());
+                if (is_array($info) && ($info[2] ?? null) === IMAGETYPE_PNG) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public function deleteConfirm(string $slug)

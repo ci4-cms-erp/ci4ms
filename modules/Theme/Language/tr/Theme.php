@@ -18,4 +18,10 @@ return [
     'deleted'=>'Silindi : {0}',
     'forbiddenFileInZip'          => 'ZIP arşivinde yasaklı dosya türü tespit edildi: {0}. public/ dizini altında yalnızca statik dosyalara (css, js, resimler, fontlar, xml, json) izin verilir. PHP dosyalarına izin verilmez.',
     'pathTraversalDetected'       => 'ZIP arşiv girişinde olası dizin geçişi (path traversal) saldırısı tespit edildi: {0}',
+    'zipBombDetected'             => 'Yüklenen arşiv çok büyük veya boyutu aşırı bir giriş içeriyor ({0}). Açma işlemi reddedildi.',
+    'symlinkRejected'             => 'Yüklenen arşiv sembolik bağ ({0}) içeriyor. Tema paketlerinde symlink kullanımına izin verilmez.',
+    'metadataMissing'             => 'Yüklenen arşiv beklenen konumda geçerli bir info.xml veya screenshot.png içermiyor.',
+    'invalidSlug'                 => 'info.xml dosyası geçerli bir <slug> tanımlamıyor. Slug en fazla 64 karakter ve [a-z0-9_-]+ desenine uymalı.',
+    'tempDirExists'               => 'Önceki bir yükleme denemesi "{0}" teması için bir geçici dizin bıraktı. Yeniden denemeden önce silin.',
+    'screenshotInvalid'           => 'Yüklenen arşivin içindeki screenshot.png geçerli bir PNG görseli değil.',
 ];
