@@ -126,10 +126,12 @@ class App extends BaseConfig
     {
         parent::__construct();
 
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
-            $this->baseURL = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/";
-        }
+        // NOTE: $baseURL is set explicitly here and via app.baseURL in .env
+        // (the installer writes the operator-supplied URL there). Do NOT
+        // override it from $_SERVER['HTTP_HOST']: an attacker can send any
+        // Host header, and password-reset / email-verification links built
+        // via base_url() would then point at attacker-controlled domains —
+        // a one-click account-takeover primitive.
 
         // Load supported locales dynamically if we have a DB connection
         if (is_file(ROOTPATH . '.env')) {
