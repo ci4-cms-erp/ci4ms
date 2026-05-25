@@ -157,6 +157,12 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
     }
 
+    /** Hard cap on uncompressed module zip contents, to prevent zip-bomb DoS. */
+    private const MAX_MODULE_UNCOMPRESSED_BYTES = 50 * 1024 * 1024;
+
+    /** Per-entry size cap. */
+    private const MAX_MODULE_ENTRY_BYTES = 20 * 1024 * 1024;
+
     public function moduleUpload()
     {
         if (!$this->request->isAJAX())
@@ -167,42 +173,119 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipFile')]);
         }
 
-        $tempPath = WRITEPATH . 'tmp/';
         $zip = new ZipArchive();
-
-        if ($zip->open($file->getTempName()) === true) {
-            for ($i = 0; $i < $zip->numFiles; $i++) {
-                $entryName = $zip->getNameIndex($i);
-                $realEntry = realpath($tempPath . $entryName);
-                if ($realEntry !== false && strpos($realEntry, realpath($tempPath)) !== 0) {
-                    $zip->close();
-                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipPath')]);
-                }
-                if (preg_match('/\.\./', $entryName)) {
-                    $zip->close();
-                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipPathTraversal')]);
-                }
-            }
-            $zip->extractTo($tempPath);
-            $zip->close();
-        } else {
+        if ($zip->open($file->getTempName()) !== true) {
             return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipOpenFailed')]);
         }
 
-        $folders = array_filter(glob($tempPath . '*'), 'is_dir');
-        $moduleFolder = basename(reset($folders));
-        $finalPath = ROOTPATH . "modules/" . $moduleFolder;
+        // ── Pre-extraction validation ──────────────────────────────
+        // Validate every entry STRING-side before any file actually exists.
+        // The previous realpath() containment check was dead code: realpath
+        // returns false for paths that don't exist yet (i.e. pre-extraction),
+        // so the short-circuit `$realEntry !== false && ...` never fired.
+        $totalUncompressed = 0;
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $entryName = $zip->getNameIndex($i);
+            $stat      = $zip->statIndex($i);
 
+            if ($entryName === ''
+                || preg_match('/^[\\/\\\\]/', $entryName)            // absolute path
+                || preg_match('/^[A-Za-z]:[\\/\\\\]/', $entryName)   // Windows drive letter
+                || preg_match('/(^|[\\/\\\\])\.\.([\\/\\\\]|$)/', $entryName) // .. segment anywhere
+                || str_contains($entryName, "\0")                    // null byte
+            ) {
+                $zip->close();
+                return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipPathTraversal')]);
+            }
+
+            if ($stat !== false) {
+                $size = (int) ($stat['size'] ?? 0);
+                if ($size > self::MAX_MODULE_ENTRY_BYTES) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipBombDetected')]);
+                }
+                $totalUncompressed += $size;
+                if ($totalUncompressed > self::MAX_MODULE_UNCOMPRESSED_BYTES) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipBombDetected')]);
+                }
+
+                // Entry-level symlink rejection (S_IFLNK in upper 16 bits of external_attr).
+                $extAttr = (int) ($stat['external_attr'] ?? 0);
+                if (($extAttr >> 16) & 0xA000) {
+                    $zip->close();
+                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.symlinkRejected')]);
+                }
+            }
+        }
+
+        // ── Extract to a dedicated quarantine directory ───────────
+        // Random suffix isolates concurrent uploads and stops one upload from
+        // colliding with files another half-finished upload left behind.
+        $quarantine = WRITEPATH . 'tmp/module_upload_' . bin2hex(random_bytes(8)) . '/';
+        if (!@mkdir($quarantine, 0750, true) && !is_dir($quarantine)) {
+            $zip->close();
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipOpenFailed')]);
+        }
+
+        $zip->extractTo($quarantine);
+        $zip->close();
+
+        helper('filesystem');
+
+        // ── Post-extraction validation ────────────────────────────
+        // Defense-in-depth symlink walk for ZIPs whose external_attr didn't
+        // expose Unix mode bits.
+        if ($this->extractedTreeContainsSymlink($quarantine)) {
+            delete_files($quarantine, true);
+            @rmdir($quarantine);
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.symlinkRejected')]);
+        }
+
+        // Exactly one top-level directory expected (the module folder itself).
+        $folders = array_filter(glob($quarantine . '*'), 'is_dir');
+        if (count($folders) !== 1) {
+            delete_files($quarantine, true);
+            @rmdir($quarantine);
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipPath')]);
+        }
+        $sourceDir    = reset($folders);
+        $moduleFolder = basename($sourceDir);
+
+        // Module folder name must be a safe PascalCase-ish identifier so it
+        // is a valid PSR-4 namespace component AND can't escape modules/ via
+        // concatenation when it later flows into Modules\{Folder}\… loads.
+        if (!preg_match('/^[A-Za-z][A-Za-z0-9_]{0,49}$/', $moduleFolder)) {
+            delete_files($quarantine, true);
+            @rmdir($quarantine);
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipPath')]);
+        }
+
+        $finalPath = ROOTPATH . 'modules/' . $moduleFolder;
         if (is_dir($finalPath)) {
-            helper('filesystem');
-            delete_files($tempPath, true);
+            delete_files($quarantine, true);
+            @rmdir($quarantine);
             return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.moduleAlreadyExists')]);
         }
 
-        rename(reset($folders), $finalPath);
+        // Final containment check: $sourceDir must resolve INSIDE the quarantine.
+        $realSource     = realpath($sourceDir);
+        $realQuarantine = realpath($quarantine);
+        if ($realSource === false || $realQuarantine === false
+            || strncmp($realSource, rtrim($realQuarantine, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, strlen(rtrim($realQuarantine, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) !== 0) {
+            delete_files($quarantine, true);
+            @rmdir($quarantine);
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipPath')]);
+        }
 
-        helper('filesystem');
-        delete_files($tempPath, true);
+        if (!rename($sourceDir, $finalPath)) {
+            delete_files($quarantine, true);
+            @rmdir($quarantine);
+            return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipOpenFailed')]);
+        }
+
+        delete_files($quarantine, true);
+        @rmdir($quarantine);
 
         // Run migrations for the newly installed module
         $installer = new ModuleInstaller();
@@ -217,6 +300,32 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
 
         return $this->response->setJSON(['status' => 'success', 'message' => $message]);
+    }
+
+    /**
+     * Walk a freshly-extracted directory tree and return true if any entry is
+     * a symbolic link. Defense-in-depth on top of the pre-extraction
+     * external_attr check.
+     */
+    private function extractedTreeContainsSymlink(string $root): bool
+    {
+        if (!is_dir($root)) {
+            return false;
+        }
+        try {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+        } catch (\Throwable $e) {
+            return true; // unreadable = fail closed
+        }
+        foreach ($iterator as $entry) {
+            if (is_link($entry->getPathname())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function moduleCreate()

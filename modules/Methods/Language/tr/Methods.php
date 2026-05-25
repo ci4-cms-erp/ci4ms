@@ -72,4 +72,6 @@ return [
     'copiedToClipboard' => 'Panoya kopyalandı',
     'invalidZipPath' => 'ZIP geçersiz yollar içeriyor.',
     'zipPathTraversal' => 'ZIP dosyasında dizin gezdirme (path traversal) hatası var.',
+    'zipBombDetected' => 'Yüklenen arşiv çok büyük veya boyutu aşırı bir giriş içeriyor. Açma işlemi reddedildi.',
+    'symlinkRejected' => 'Yüklenen arşiv sembolik bağ içeriyor. Modül paketlerinde symlink kullanımına izin verilmez.',
 ];

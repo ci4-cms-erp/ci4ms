@@ -72,4 +72,6 @@ return [
     'copiedToClipboard' => 'Copied to clipboard',
     'invalidZipPath' => 'ZIP contains invalid paths.',
     'zipPathTraversal' => 'ZIP contains path traversal.',
+    'zipBombDetected' => 'Uploaded archive is too large or contains an oversized entry. Refusing to extract.',
+    'symlinkRejected' => 'Uploaded archive contains a symbolic link. Symlinks are not allowed in module packages.',
 ];
