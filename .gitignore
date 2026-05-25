@@ -151,3 +151,4 @@ ci4ms-specs
 tests/*
 phpunit.xml.dist
 node_modules
+.security-audit

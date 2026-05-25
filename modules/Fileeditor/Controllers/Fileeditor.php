@@ -92,6 +92,8 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $path = $this->request->getVar('path');
         if ($this->isHiddenPath($path))
             return $this->failForbidden();
+        if ($this->pathContainsSymlink($path))
+            return $this->failForbidden();
         $content = $this->request->getVar('content');
         $fullPath = realpath(ROOTPATH . $path);
         if (!$this->allowedFileTypes($fullPath))
@@ -100,7 +102,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
         // Block writing to dangerous file types (defense-in-depth)
         $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-        if ($this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions))
+        if (!$this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions, true))
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
         if (file_put_contents($fullPath, $content) === false)
             return $this->response->setJSON(['error' => lang('Backend.notUpdated', [''])])->setStatusCode(500);
@@ -115,7 +117,17 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $path = $this->request->getVar('path');
         if ($this->isHiddenPath($path) || $this->isCorePath($path))
             return $this->failForbidden();
+        if ($this->pathContainsSymlink($path))
+            return $this->failForbidden();
         $newName = $this->request->getVar('newName');
+
+        // Reject the rename target outright if the new name is not in the editor's
+        // allowlist (css, js, html, txt, json, sql, md). Without this, a content
+        // payload first written to a .html file could be promoted to .php and
+        // executed by the web server — the exact regression patched in e1aad28.
+        if (!$this->allowedFileTypes($newName))
+            return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
+
         $fullPath = realpath(ROOTPATH . $path);
         $newPath = dirname($fullPath) . DIRECTORY_SEPARATOR . $newName;
 
@@ -124,9 +136,9 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if (!$realNewDir || strpos($realNewDir . DIRECTORY_SEPARATOR . $newName, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
 
-        // Block renaming to dangerous extensions
+        // Block renaming to dangerous extensions (defense-in-depth alongside the allowlist above)
         $ext = strtolower(pathinfo($newName, PATHINFO_EXTENSION));
-        if ($this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions))
+        if (!$this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions, true))
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
         if (!$fullPath || !file_exists($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
@@ -157,7 +169,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
         // Block creating dangerous file types
         $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        if ($this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions))
+        if (!$this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions, true))
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
 
         $newFilePath = $fullPath . DIRECTORY_SEPARATOR . $name;
@@ -206,14 +218,22 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $path = $this->request->getVar('path');
         if ($this->isHiddenPath($path) || $this->isCorePath($path))
             return $this->failForbidden();
+        if ($this->pathContainsSymlink($path))
+            return $this->failForbidden();
         $fullPath = realpath(ROOTPATH . $path);
         if (!$fullPath || strpos($fullPath, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Fileeditor.invalidFileOrFolder')])->setStatusCode(400);
 
-        if (is_dir($fullPath))
+        if (is_dir($fullPath)) {
             $result = rmdir($fullPath);
-        else
+        } else {
+            // Restrict deletion to the editor's allowlist so an admin can't be
+            // tricked (or coerced via CSRF) into removing protective files such
+            // as .htaccess that gate PHP execution in upload directories.
+            if (!$this->allowedFileTypes($fullPath))
+                return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
             $result = unlink($fullPath);
+        }
 
         if ($result)
             return $this->response->setJSON(['success' => true]);
@@ -241,9 +261,35 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
     private function isCorePath(string $path): bool
     {
+        // Walk every segment so that traversal tricks like 'evil/../public/x'
+        // cannot bypass the gate by hiding a core segment behind '..'.
         $pathParts = explode('/', trim($path, '/'));
-        if (isset($pathParts[0]) && in_array($pathParts[0], $this->coreItems))
-            return true;
+        foreach ($pathParts as $part) {
+            if (in_array($part, $this->coreItems, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if any segment of $path (under ROOTPATH) is a symlink.
+     * Catches the case where an attacker plants a symlink and then targets
+     * file operations at it to read/write/rename/delete the symlink's
+     * target instead of the symlink itself.
+     */
+    private function pathContainsSymlink(string $path): bool
+    {
+        $check = rtrim(ROOTPATH, DIRECTORY_SEPARATOR);
+        foreach (explode('/', trim($path, '/')) as $part) {
+            if ($part === '' || $part === '.' || $part === '..') {
+                continue;
+            }
+            $check .= DIRECTORY_SEPARATOR . $part;
+            if (is_link($check)) {
+                return true;
+            }
+        }
         return false;
     }
 }
