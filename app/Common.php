@@ -249,3 +249,50 @@ function sanitizePost(array $data, array $allowRaw = []): array
     }
     return $sanitized;
 }
+
+if (!function_exists('valid_template_slug')) {
+    /**
+     * True if $slug is a safe template/theme directory name.
+     * Lowercase letters, digits, underscore, hyphen only; max 64 chars.
+     * Rejects path separators, dots, null bytes — anything that could
+     * escape Config/templates/ via concatenation.
+     */
+    function valid_template_slug(?string $slug): bool
+    {
+        if ($slug === null || $slug === '') {
+            return false;
+        }
+        if (strlen($slug) > 64) {
+            return false;
+        }
+        return (bool) preg_match('/^[a-z0-9_-]+$/', $slug);
+    }
+}
+
+if (!function_exists('resolve_template_path')) {
+    /**
+     * Resolves a template slug against a trusted $base directory
+     * (e.g. APPPATH . 'Config/templates/') and confirms the resulting
+     * realpath is contained inside $base. Returns the absolute path on
+     * success, or null if validation fails for any reason.
+     */
+    function resolve_template_path(string $base, ?string $slug): ?string
+    {
+        if (!valid_template_slug($slug)) {
+            return null;
+        }
+        $baseReal = realpath($base);
+        if ($baseReal === false) {
+            return null;
+        }
+        $candidate = realpath($base . $slug);
+        if ($candidate === false) {
+            return null;
+        }
+        $baseReal = rtrim($baseReal, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if (strncmp($candidate . DIRECTORY_SEPARATOR, $baseReal, strlen($baseReal)) !== 0) {
+            return null;
+        }
+        return $candidate;
+    }
+}

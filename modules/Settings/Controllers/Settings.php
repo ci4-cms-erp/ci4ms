@@ -186,13 +186,19 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([
-            'path' => ['label' => lang('Backend.path'), 'rules' => 'required'],
-            'tName' => ['label' => lang('Backend.name'), 'rules' => 'required']
+            'path' => ['label' => lang('Backend.path'), 'rules' => 'required|regex_match[/^[a-z0-9_-]+$/]|max_length[64]'],
+            'tName' => ['label' => lang('Backend.name'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]|max_length[128]']
         ]);
         if ($this->validate($valData) === false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
-        try {
-            $themeName = esc($this->request->getPost('path'));
 
+        $themeName = (string) $this->request->getPost('path');
+
+        // Defense-in-depth: confirm the slug points to an actual installed theme dir.
+        if (resolve_template_path(APPPATH . 'Config/templates/', $themeName) === null) {
+            return $this->respond(['status' => 'error', 'errors' => ['path' => lang('Backend.invalid', [lang('Backend.path')])]], 422);
+        }
+
+        try {
             // RUN AUTO MIGRATION WHEN ACTIVATED
             $migrate = \Config\Services::migrations();
             $migrate->setNamespace('App');
@@ -204,7 +210,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
 
             setting()->set('App.templateInfos', json_encode([
                 'path' => $themeName,
-                'name' => esc($this->request->getPost('name'))
+                'name' => (string) $this->request->getPost('tName')
             ], JSON_UNESCAPED_UNICODE));
             cache()->delete('settings');
             return $this->respond(['result' => true]);
@@ -237,7 +243,11 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function templateSettings()
     {
-        return view('templates/' . $this->defData['settings']->templateInfos->path . '/temp-settings', $this->defData);
+        $path = $this->defData['settings']->templateInfos->path ?? null;
+        if (resolve_template_path(APPPATH . 'Views/templates/', $path) === null) {
+            return $this->failNotFound();
+        }
+        return view('templates/' . $path . '/temp-settings', $this->defData);
     }
 
     /**

@@ -37,9 +37,10 @@
     * Include Templates Routes Files
     * --------------------------------------------------------------------
     */
-    if (!empty($settings->templateInfos->path)) {
-    $routesPath = APPPATH . 'Config/templates/' . $settings->templateInfos->path . '/Routes.php';
-    if (is_file($routesPath)) {
+    if (!empty($settings->templateInfos->path)
+    && ($templateDir = resolve_template_path(APPPATH . 'Config/templates/', $settings->templateInfos->path)) !== null) {
+    $routesPath = $templateDir . '/Routes.php';
+    if (is_file($routesPath) && realpath($routesPath) === $routesPath) {
     require($routesPath);
     }
     }

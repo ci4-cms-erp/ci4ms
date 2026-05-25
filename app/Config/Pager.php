@@ -44,13 +44,20 @@ class Pager extends BaseConfig
     private function loadThemePaginationTemplates()
     {
         $settings = (object)cache('settings');
-        $themePath = APPPATH . "Views" . DIRECTORY_SEPARATOR . "templates" . DIRECTORY_SEPARATOR . "{$settings->templateInfos->path}" . DIRECTORY_SEPARATOR;
-        $paginationTemplates = glob($themePath . 'pagination_*.php');
+        $themeSlug = $settings->templateInfos->path ?? null;
+        $themeDir = resolve_template_path(
+            APPPATH . 'Views' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR,
+            $themeSlug
+        );
+        if ($themeDir === null) {
+            return;
+        }
+        $paginationTemplates = glob($themeDir . DIRECTORY_SEPARATOR . 'pagination_*.php');
 
         if (!empty($paginationTemplates)) {
             foreach ($paginationTemplates as $template) {
                 $templateName = basename($template, '.php');
-                $this->templates[$settings->templateInfos->path] = "App\Views\\templates\\".$settings->templateInfos->path."\\".$templateName;
+                $this->templates[$themeSlug] = "App\\Views\\templates\\" . $themeSlug . "\\" . $templateName;
             }
         }
     }

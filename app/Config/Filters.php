@@ -163,8 +163,12 @@ class Filters extends BaseFilters
             }
         }
 
-        if (!empty($this->settings) && isset($this->settings->templateInfos) && isset($this->settings->templateInfos->path))
-            $mods[] = APPPATH . 'Filters/templates/' . $this->settings->templateInfos->path;
+        if (!empty($this->settings) && isset($this->settings->templateInfos->path)) {
+            $filtersDir = resolve_template_path(APPPATH . 'Filters/templates/', $this->settings->templateInfos->path);
+            if ($filtersDir !== null) {
+                $mods[] = $filtersDir;
+            }
+        }
 
         $this->loadDynamicFilters($mods);
 
@@ -275,18 +279,24 @@ class Filters extends BaseFilters
         $this->mergeCsrfExcept($allCsrfExcept);
         if (file_exists(ROOTPATH . '.env') && !empty($this->commonModel)) {
             try {
-                if ($this->commonModel->db->tableExists('settings') && isset($this->settings->templateInfos->path)) {
-                    $themeConfigPath = APPPATH . 'Config/templates/' . $this->settings->templateInfos->path;
-                    if (file_exists($themeConfigPath) && is_file($themeConfigPath . '/' . ucfirst($this->settings->templateInfos->path) . 'Config.php')) {
-                        $className = '\\Config\\templates\\' . $this->settings->templateInfos->path . '\\' . ucfirst($this->settings->templateInfos->path) . 'Config';
-                        $themeConfig = new $className();
+                $themeSlug = $this->settings->templateInfos->path ?? null;
+                $themeConfigDir = ($this->commonModel->db->tableExists('settings'))
+                    ? resolve_template_path(APPPATH . 'Config/templates/', $themeSlug)
+                    : null;
+                if ($themeConfigDir !== null) {
+                    $configFile = $themeConfigDir . '/' . ucfirst($themeSlug) . 'Config.php';
+                    if (is_file($configFile) && realpath($configFile) === $configFile) {
+                        $className = '\\Config\\templates\\' . $themeSlug . '\\' . ucfirst($themeSlug) . 'Config';
+                        if (class_exists($className)) {
+                            $themeConfig = new $className();
 
-                        if (!empty($themeConfig->csrfExcept)) {
-                            $this->mergeCsrfExcept($themeConfig->csrfExcept);
-                        }
+                            if (!empty($themeConfig->csrfExcept)) {
+                                $this->mergeCsrfExcept($themeConfig->csrfExcept);
+                            }
 
-                        if (!empty($themeConfig->filters)) {
-                            $this->filters = array_merge($this->filters, $themeConfig->filters);
+                            if (!empty($themeConfig->filters)) {
+                                $this->filters = array_merge($this->filters, $themeConfig->filters);
+                            }
                         }
                     }
                 }
