@@ -30,10 +30,19 @@ class Install extends Controller
 
             if ($this->validate($valData) === false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
+            // Default cookie.secure to true whenever the operator-supplied
+            // baseURL is https://. Local-dev installs over http:// fall back
+            // to false. This matches the secure-by-default posture of the
+            // committed Cookie.php config without breaking HTTP dev setups.
+            $isHttps = stripos((string) $this->request->getPost('baseUrl'), 'https://') === 0;
+            $cookieSecureValue = $isHttps
+                ? 'true'
+                : 'false #Set this to true after enabling HTTPS in production.';
+
             $updates = [
                 'CI_ENVIRONMENT' => 'development',
                 'app.baseURL' => '\'' . $this->request->getPost('baseUrl') . '\'',
-                'app.forceGlobalSecureRequests' => 'false #Use this only when SSL is enabled.',
+                'app.forceGlobalSecureRequests' => $isHttps ? 'true' : 'false #Set to true after enabling HTTPS.',
                 'database.default.hostname' => $this->request->getPost('host'),
                 'database.default.database' => $this->request->getPost('dbname'),
                 'database.default.username' => $this->request->getPost('dbusername'),
@@ -45,7 +54,7 @@ class Install extends Controller
                 'cookie.expires' => 0,
                 'cookie.path' => '\'/\'',
                 'cookie.domain' => '\'\'',
-                'cookie.secure' => 'false #Don\'t forget to set it to true when buying production mode.',
+                'cookie.secure' => $cookieSecureValue,
                 'cookie.httponly' => 'true',
                 'cookie.samesite' => '\'Lax\'',
                 'cookie.raw' => 'false',

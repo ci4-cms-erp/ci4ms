@@ -53,8 +53,13 @@ class Cookie extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * Cookie will only be set if a secure HTTPS connection exists.
+     *
+     * DEFAULT IS true (secure-by-default). Local-dev environments that
+     * intentionally serve over plain HTTP must override this to false
+     * via cookie.secure in .env. Production deployments should leave it
+     * true so session and CSRF cookies are never sent over HTTP.
      */
-    public bool $secure = false;
+    public bool $secure = true;
 
     /**
      * --------------------------------------------------------------------------
