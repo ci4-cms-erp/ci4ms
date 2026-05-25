@@ -43,4 +43,5 @@ return [
     'lastName' => 'Soyadınız',
     'password' => 'Şifreniz',
     'foldersWithSameNameListItem' => 'Aynı İsimli Klasörler',
+    'invalidNonce' => 'Yükleme oturumu eksik veya süresi dolmuş. Lütfen sayfayı yenileyip formu tekrar gönderin.',
 ];

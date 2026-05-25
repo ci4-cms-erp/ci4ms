@@ -7,9 +7,24 @@ use Modules\Install\Services\InstallService;
 
 class Install extends Controller
 {
+    /** Cookie name carrying the per-installer-session nonce. */
+    private const INSTALL_NONCE_COOKIE = 'install_nonce';
+
     public function index()
     {
         if ($this->request->is('post')) {
+            // Pre-validate the install nonce. The shipped CSRF middleware is
+            // disabled on install/* in InstallConfig (no session exists yet to
+            // bind the standard token to), so we bind the form to a cookie
+            // value the browser only sends back when the POST is same-site.
+            // Combined with the SameSite=Lax default this neutralises the
+            // pre-install CSRF window described in audit Finding 16.
+            $cookieNonce = (string) ($this->request->getCookie(self::INSTALL_NONCE_COOKIE) ?? '');
+            $postNonce   = (string) ($this->request->getPost(self::INSTALL_NONCE_COOKIE) ?? '');
+            if ($cookieNonce === '' || $postNonce === '' || !hash_equals($cookieNonce, $postNonce)) {
+                return redirect()->back()->withInput()->with('errors', ['install' => lang('Install.invalidNonce')]);
+            }
+
             $valData = [
                 'baseUrl' => ['label' => lang('Install.baseUrl'), 'rules' => 'required|valid_url'],
                 'host' => ['label' => lang('Install.databaseHost'), 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9._-]+$/]'],
@@ -94,7 +109,30 @@ class Install extends Controller
 
             return $this->dbsetup($installData);
         }
-        return view('Modules\Install\Views\install');
+
+        // GET: ensure the browser holds an install_nonce cookie, generate one
+        // if missing, and pass the value to the view so the form can echo it
+        // back as a hidden field. Reusing an existing cookie avoids breaking
+        // multi-tab / reload UX during the install flow.
+        helper('cookie');
+        $nonce = (string) ($this->request->getCookie(self::INSTALL_NONCE_COOKIE) ?? '');
+        if ($nonce === '' || !preg_match('/^[a-f0-9]{32}$/', $nonce)) {
+            $nonce = bin2hex(random_bytes(16));
+            // Lax SameSite (CI4 default) and httpOnly: cross-origin POSTs
+            // won't carry this cookie, so the hash_equals() above will fail
+            // for any attacker-driven form submission.
+            set_cookie([
+                'name'     => self::INSTALL_NONCE_COOKIE,
+                'value'    => $nonce,
+                'expire'   => 3600,
+                'path'     => '/',
+                'secure'   => $this->request->isSecure(),
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+        }
+
+        return view('Modules\Install\Views\install', ['installNonce' => $nonce]);
     }
 
     private function updateEnvSettings(array $updates)

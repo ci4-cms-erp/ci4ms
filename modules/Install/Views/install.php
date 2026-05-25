@@ -13,6 +13,7 @@ echo $this->section('content'); ?>
         <?php echo view('Modules\Auth\Views\_message_block') ?>
         <form action="<?php echo route_to('install') ?>" method="post">
           <?php echo csrf_field() ?>
+          <input type="hidden" name="install_nonce" value="<?php echo esc($installNonce ?? '', 'attr') ?>">
           <div class="bs-stepper">
             <div class="bs-stepper-header" role="tablist">
               <!-- your steps here -->

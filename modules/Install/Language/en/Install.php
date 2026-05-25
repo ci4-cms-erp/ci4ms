@@ -43,4 +43,5 @@ return [
     'lastName' => 'Last Name',
     'password' => 'Password',
     'foldersWithSameNameListItem' => 'Folders With Same Name List Item',
+    'invalidNonce' => 'The install session is missing or expired. Reload this page and submit the form again.',
 ];
