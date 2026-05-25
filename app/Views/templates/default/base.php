@@ -86,9 +86,9 @@
                                         $activeLang = reset($languages);
                                     if ($activeLang): ?>
                                         <span
-                                            class="fi fi-<?php echo ($activeLang->code === 'en' ? 'gb' : $activeLang->code) ?> rounded-1"></span>
+                                            class="fi fi-<?php echo esc($activeLang->code === 'en' ? 'gb' : $activeLang->code, 'attr') ?> rounded-1"></span>
                                         <span
-                                            class="d-none d-lg-inline fw-600 text-uppercase small"><?php echo $activeLang->code ?></span>
+                                            class="d-none d-lg-inline fw-600 text-uppercase small"><?php echo esc($activeLang->code) ?></span>
                                     <?php endif; ?>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2"
@@ -101,13 +101,19 @@
                                     $remainingPath = implode('/', $currentSegments);
                                     foreach ($languages as $lang):
                                         $fallbackUrl = site_url($lang->code . ($remainingPath ? '/' . $remainingPath : '/'));
-                                        $targetUrl = $alternateLinks[$lang->code] ?? $fallbackUrl;
+                                        $candidateUrl = $alternateLinks[$lang->code] ?? $fallbackUrl;
+                                        // Only allow same-origin or relative URLs in the hreflang switcher
+                                        // so a poisoned $alternateLinks entry can't redirect visitors off-site.
+                                        $targetUrl = (is_string($candidateUrl)
+                                            && (str_starts_with($candidateUrl, '/') || str_starts_with($candidateUrl, base_url())))
+                                            ? $candidateUrl
+                                            : $fallbackUrl;
                                         if ($activeLang->code != $lang->code) { ?>
                                             <li>
                                                 <a class="dropdown-item d-flex align-items-center gap-2 py-2"
-                                                    href="<?php echo $targetUrl ?>">
+                                                    href="<?php echo esc($targetUrl, 'url') ?>">
                                                     <span
-                                                        class="fi fi-<?php echo ($lang->code === 'en' ? 'gb' : $lang->code) ?> rounded-1"></span>
+                                                        class="fi fi-<?php echo esc($lang->code === 'en' ? 'gb' : $lang->code, 'attr') ?> rounded-1"></span>
                                                     <?php echo esc($lang->title) ?>
                                                 </a>
                                             </li>
