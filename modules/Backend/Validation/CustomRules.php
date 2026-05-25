@@ -113,16 +113,23 @@ class CustomRules
             throw new \RuntimeException('HTMLPurifier library not found. Please run "composer require ezyang/htmlpurifier".');
         }
 
-        // --- Base64 image protection algorithm ---
-        // HTMLPurifier removes Base64 data assuming SVG may contain malicious code.
-        // To prevent theme design breakage, we mask these images with temporary URLs before purification.
+        // --- Base64 raster-image protection algorithm ---
+        // HTMLPurifier strips data: URIs because SVG (data:image/svg+xml)
+        // can carry inline <script> / onload handlers and other XSS vectors.
+        // To preserve embedded raster images (jpeg/png/gif/webp/avif) we
+        // swap them for opaque placeholder URLs before purification and
+        // restore them afterwards.
+        //
+        // SECURITY: the allowlist below MUST exclude svg+xml. A previous
+        // version of this regex matched any `data:image/*` and let SVG
+        // bypass HTMLPurifier entirely — the audit's Finding 8 stored XSS.
         $placeholders = [];
         $html = preg_replace_callback(
-            '/(src|href)=["\']?(data:image\/[^"\' ]+)["\']?/i',
+            '/(src|href)=(["\'])(data:image\/(?:png|jpe?g|gif|webp|avif|bmp)(?:;[^"\']*)?,[A-Za-z0-9+\/=]+)\2/i',
             function ($matches) use (&$placeholders) {
                 $id = 'http://ci4ms-dummy.local/img_' . count($placeholders) . '.png';
-                $placeholders[$id] = $matches[2];
-                return $matches[1] . '="' . $id . '"';
+                $placeholders[$id] = $matches[3];
+                return $matches[1] . '=' . $matches[2] . $id . $matches[2];
             },
             $html
         );
