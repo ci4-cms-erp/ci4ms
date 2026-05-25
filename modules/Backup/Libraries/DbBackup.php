@@ -150,51 +150,153 @@ class DbBackup
 
         $this->db->query('SET FOREIGN_KEY_CHECKS = 0');
 
-        $templine = '';
-        $lineNum = 0;
-        while (($line = fgets($file)) !== false) {
-            $lineNum++;
-            if (substr($line, 0, 2) == '--' || trim($line) == '' || substr($line, 0, 1) == '#') {
+        $stmtNum = 0;
+        foreach ($this->splitStatements($file) as $statement) {
+            $stmtNum++;
+            $trimmed = trim($statement);
+            if ($trimmed === '') continue;
+
+            // Check for dangerous patterns
+            foreach ($dangerousPatterns as $pattern) {
+                if (preg_match($pattern, $trimmed)) {
+                    log_message('error', "DbBackup::restore — Dangerous SQL blocked at statement {$stmtNum}: " . mb_substr($trimmed, 0, 100));
+                    fclose($file);
+                    $this->db->query('SET FOREIGN_KEY_CHECKS = 1');
+                    return false;
+                }
+            }
+
+            // Verify statement starts with an allowed prefix
+            $isAllowed = false;
+            foreach ($allowedPrefixes as $prefix) {
+                if (stripos($trimmed, $prefix) === 0) {
+                    $isAllowed = true;
+                    break;
+                }
+            }
+
+            if (!$isAllowed) {
+                log_message('warning', "DbBackup::restore — Unrecognized SQL skipped at statement {$stmtNum}: " . mb_substr($trimmed, 0, 100));
                 continue;
             }
 
-            $templine .= $line;
-            if (substr(trim($line), -1, 1) == ';') {
-                $trimmed = trim($templine);
-
-                // Check for dangerous patterns
-                foreach ($dangerousPatterns as $pattern) {
-                    if (preg_match($pattern, $trimmed)) {
-                        log_message('error', "DbBackup::restore — Dangerous SQL blocked at line {$lineNum}: " . mb_substr($trimmed, 0, 100));
-                        fclose($file);
-                        $this->db->query('SET FOREIGN_KEY_CHECKS = 1');
-                        return false;
-                    }
-                }
-
-                // Verify statement starts with an allowed prefix
-                $isAllowed = false;
-                foreach ($allowedPrefixes as $prefix) {
-                    if (stripos($trimmed, $prefix) === 0) {
-                        $isAllowed = true;
-                        break;
-                    }
-                }
-
-                if (!$isAllowed) {
-                    log_message('warning', "DbBackup::restore — Unrecognized SQL skipped at line {$lineNum}: " . mb_substr($trimmed, 0, 100));
-                    $templine = '';
-                    continue;
-                }
-
-                $this->db->query($templine);
-                $templine = '';
-            }
+            $this->db->query($statement);
         }
 
         $this->db->query('SET FOREIGN_KEY_CHECKS = 1');
 
         fclose($file);
         return true;
+    }
+
+    /**
+     * Stream a SQL file and yield one statement at a time, tracking quote and
+     * comment state so a `;` inside a string literal, identifier backtick,
+     * or comment does NOT terminate the statement prematurely.
+     *
+     * Replaces the previous "split on lines ending with ';'" heuristic, which
+     * could chop an INSERT mid-value if a row contained `;\n` inside a string
+     * and then process the malformed remainder against the whitelist.
+     *
+     * Handles:
+     *  - single/double/backtick quotes with backslash escapes and SQL doubled
+     *    quote escapes ('' inside '...', "" inside "..." etc.)
+     *  - -- line comments
+     *  - # line comments
+     *  - / * ... * / block comments
+     *  - bare semicolons inside string literals (preserved, not split)
+     */
+    private function splitStatements($fileHandle): \Generator
+    {
+        $buffer        = '';
+        $quote         = null; // null | "'" | '"' | '`'
+        $inLineComment = false;
+        $inBlock       = false;
+        $escapeNext    = false;
+
+        while (!feof($fileHandle)) {
+            $chunk = fread($fileHandle, 8192);
+            if ($chunk === false || $chunk === '') break;
+
+            for ($i = 0, $len = strlen($chunk); $i < $len; $i++) {
+                $c    = $chunk[$i];
+                $next = $i + 1 < $len ? $chunk[$i + 1] : '';
+
+                // Inside a backslash-escape (only meaningful inside quotes).
+                if ($escapeNext) {
+                    $buffer .= $c;
+                    $escapeNext = false;
+                    continue;
+                }
+
+                // Inside /* ... */
+                if ($inBlock) {
+                    if ($c === '*' && $next === '/') {
+                        $inBlock = false;
+                        $i++; // skip '/'
+                    }
+                    continue;
+                }
+
+                // Inside -- or # line comment
+                if ($inLineComment) {
+                    if ($c === "\n") {
+                        $inLineComment = false;
+                        $buffer .= "\n"; // keep newline for readability
+                    }
+                    continue;
+                }
+
+                // Inside a quoted string / identifier
+                if ($quote !== null) {
+                    $buffer .= $c;
+                    if ($c === '\\') {
+                        $escapeNext = true;
+                        continue;
+                    }
+                    if ($c === $quote) {
+                        // SQL doubled-quote escape: '' inside '…' is a literal quote
+                        if ($next === $quote) {
+                            $buffer .= $next;
+                            $i++;
+                        } else {
+                            $quote = null;
+                        }
+                    }
+                    continue;
+                }
+
+                // Bare context — recognise quote starts, comments, and statement end
+                if ($c === "'" || $c === '"' || $c === '`') {
+                    $quote = $c;
+                    $buffer .= $c;
+                    continue;
+                }
+                if ($c === '-' && $next === '-') {
+                    $inLineComment = true;
+                    $i++; // skip second '-'
+                    continue;
+                }
+                if ($c === '#') {
+                    $inLineComment = true;
+                    continue;
+                }
+                if ($c === '/' && $next === '*') {
+                    $inBlock = true;
+                    $i++; // skip '*'
+                    continue;
+                }
+                if ($c === ';') {
+                    yield $buffer;
+                    $buffer = '';
+                    continue;
+                }
+                $buffer .= $c;
+            }
+        }
+
+        if (trim($buffer) !== '') {
+            yield $buffer;
+        }
     }
 }
