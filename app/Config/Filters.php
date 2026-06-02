@@ -28,22 +28,22 @@ class Filters extends BaseFilters
      * or [filter_name => [classname1, classname2, ...]]
      */
     public array $aliases = [
-        'csrf'          => CSRF::class,
-        'toolbar'       => DebugToolbar::class,
-        'honeypot'      => Honeypot::class,
-        'invalidchars'  => InvalidChars::class,
+        'csrf' => CSRF::class,
+        'toolbar' => DebugToolbar::class,
+        'honeypot' => Honeypot::class,
+        'invalidchars' => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
-        'cors'          => Cors::class,
-        'forcehttps'    => ForceHTTPS::class,
+        'cors' => Cors::class,
+        'forcehttps' => ForceHTTPS::class,
         //'pagecache'     => PageCache::class,
         //'performance'   => PerformanceMetrics::class,
-        'session'     => \CodeIgniter\Shield\Filters\SessionAuth::class,
-        'tokens'      => \CodeIgniter\Shield\Filters\TokenAuth::class,
-        'hmac'        => \CodeIgniter\Shield\Filters\HmacAuth::class,
-        'chain'       => \CodeIgniter\Shield\Filters\ChainAuth::class,
-        'auth-rates'  => \CodeIgniter\Shield\Filters\AuthRates::class,
-        'group'       => \CodeIgniter\Shield\Filters\GroupFilter::class,
-        'permission'  => \CodeIgniter\Shield\Filters\PermissionFilter::class,
+        'session' => \CodeIgniter\Shield\Filters\SessionAuth::class,
+        'tokens' => \CodeIgniter\Shield\Filters\TokenAuth::class,
+        'hmac' => \CodeIgniter\Shield\Filters\HmacAuth::class,
+        'chain' => \CodeIgniter\Shield\Filters\ChainAuth::class,
+        'auth-rates' => \CodeIgniter\Shield\Filters\AuthRates::class,
+        'group' => \CodeIgniter\Shield\Filters\GroupFilter::class,
+        'permission' => \CodeIgniter\Shield\Filters\PermissionFilter::class,
         'force-reset' => \CodeIgniter\Shield\Filters\ForcePasswordResetFilter::class,
         //'jwt'         => \CodeIgniter\Shield\Filters\JWTAuth::class,
         'seofilter' => SearchSeoFilter::class,
@@ -137,16 +137,17 @@ class Filters extends BaseFilters
                     $formatRules = new \CodeIgniter\Validation\FormatRules();
                     foreach ($this->settings as $setting) {
                         if ($formatRules->valid_json($setting->value) === true)
-                            $set[$setting->key] = (object)json_decode($setting->value, JSON_UNESCAPED_UNICODE);
-                        else $set[$setting->key] = $setting->value;
+                            $set[$setting->key] = (object) json_decode($setting->value, JSON_UNESCAPED_UNICODE);
+                        else
+                            $set[$setting->key] = $setting->value;
                     }
                     cache()->save('settings', $set, 86400);
-                    $this->settings = (object)$set;
+                    $this->settings = (object) $set;
                 } else {
-                    $this->settings = (object)cache('settings');
+                    $this->settings = (object) cache('settings');
                 }
             } catch (\Throwable $e) {
-                $this->settings = (object)[];
+                $this->settings = (object) [];
             }
         }
 
@@ -163,12 +164,8 @@ class Filters extends BaseFilters
             }
         }
 
-        if (!empty($this->settings) && isset($this->settings->templateInfos->path)) {
-            $filtersDir = resolve_template_path(APPPATH . 'Filters/templates/', $this->settings->templateInfos->path);
-            if ($filtersDir !== null) {
-                $mods[] = $filtersDir;
-            }
-        }
+        if (!empty($this->settings) && isset($this->settings->templateInfos) && isset($this->settings->templateInfos->path))
+            $mods[] = APPPATH . 'Filters/templates/' . $this->settings->templateInfos->path;
 
         $this->loadDynamicFilters($mods);
 
@@ -188,6 +185,7 @@ class Filters extends BaseFilters
             \Modules\Auth\Filters\Ci4MsAuthFilter::class,
             \Modules\Backend\Filters\BackendLogFilter::class,
             \Modules\Auth\Filters\SessionTracker::class,
+            \Modules\Backend\Filters\CsrfTokenRefreshFilter::class,
         ];
         $this->aliases['langfilter'] = [
             \App\Filters\Ci4ms::class,
@@ -248,6 +246,34 @@ class Filters extends BaseFilters
         $allFilters = [];
         $allGlobals = [];
 
+        if (!empty($this->settings) && isset($this->settings->templateInfos) && isset($this->settings->templateInfos->path)) {
+            $configClass = '\\Config\\templates\\' . $this->settings->templateInfos->path . '\\ThemeConfig';
+            if (class_exists($configClass)) {
+                $configInstance = new $configClass();
+                if (property_exists($configInstance, 'csrfExcept') && is_array($configInstance->csrfExcept)) {
+                    $allCsrfExcept = array_merge($allCsrfExcept, $configInstance->csrfExcept);
+                }
+                if (property_exists($configInstance, 'filters') && is_array($configInstance->filters)) {
+                    foreach ($configInstance->filters as $filterName => $filterRules) {
+                        if (!isset($allFilters[$filterName])) {
+                            $allFilters[$filterName] = $filterRules;
+                        } else {
+                            foreach ($filterRules as $filterType => $paths) {
+                                if (!isset($allFilters[$filterName][$filterType])) {
+                                    $allFilters[$filterName][$filterType] = [];
+                                }
+                                $allFilters[$filterName][$filterType] = array_merge($allFilters[$filterName][$filterType], $paths);
+                            }
+                        }
+                    }
+                }
+                if (property_exists($configInstance, 'globals') && is_array($configInstance->globals)) {
+                    $allGlobals = array_merge($allGlobals, $configInstance->globals);
+                }
+                $allCsrfExcept = array_unique($allCsrfExcept);
+            }
+        }
+
         foreach ($modules as $module) {
             $configClass = "Modules\\{$module}\\Config\\{$module}Config";
             if (class_exists($configClass)) {
@@ -276,33 +302,20 @@ class Filters extends BaseFilters
             }
         }
         $this->filters = array_merge($this->filters, $allFilters);
+
+        // backendGuard'ın before rotalarını otomatik olarak after'a da yay.
+        // Böylece CsrfTokenRefreshFilter alias içinde tanımlanmış tüm korumalı
+        // rotalarda her module config'e ayrıca csrfTokenRefreshFilter eklemeye gerek kalmaz.
+        if (!empty($this->filters['backendGuard']['before'])) {
+            $this->filters['backendGuard']['after'] = array_unique([
+                ...($this->filters['backendGuard']['after'] ?? []),
+                ...$this->filters['backendGuard']['before'],
+            ]);
+        }
+
         $this->mergeCsrfExcept($allCsrfExcept);
-        if (file_exists(ROOTPATH . '.env') && !empty($this->commonModel)) {
-            try {
-                $themeSlug = $this->settings->templateInfos->path ?? null;
-                $themeConfigDir = ($this->commonModel->db->tableExists('settings'))
-                    ? resolve_template_path(APPPATH . 'Config/templates/', $themeSlug)
-                    : null;
-                if ($themeConfigDir !== null) {
-                    $configFile = $themeConfigDir . '/' . ucfirst($themeSlug) . 'Config.php';
-                    if (is_file($configFile) && realpath($configFile) === $configFile) {
-                        $className = '\\Config\\templates\\' . $themeSlug . '\\' . ucfirst($themeSlug) . 'Config';
-                        if (class_exists($className)) {
-                            $themeConfig = new $className();
-
-                            if (!empty($themeConfig->csrfExcept)) {
-                                $this->mergeCsrfExcept($themeConfig->csrfExcept);
-                            }
-
-                            if (!empty($themeConfig->filters)) {
-                                $this->filters = array_merge($this->filters, $themeConfig->filters);
-                            }
-                        }
-                    }
-                }
-            } catch (\Throwable $e) {
-                // Ignore DB errors during install
-            }
+        if (!empty($allGlobals)) {
+            $this->globals = array_merge_recursive($this->globals, $allGlobals);
         }
     }
 }

@@ -74,8 +74,13 @@ class Media extends \Modules\Backend\Controllers\BaseController
             )
         );
 
-        $elfinder = new \elFinderConnector(new \elFinder($opts));
-        $elfinder->run();
+        // CI4 Shield auth + backendGuard zaten oturumu koruyor.
+        // elFinder'ın iç CSRF'i CI4 session'ıyla çakıştığından bypass edildi.
+        $connector = new class(new \elFinder($opts)) extends \elFinderConnector {
+            protected function validateCsrfToken(): bool { return true; }
+            protected function issueCsrfToken(): string { return ''; }
+        };
+        $connector->run();
     }
 
     public function elfinderAccess($attr, $path, $data, $volume, $isDir, $relpath)

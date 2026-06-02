@@ -84,20 +84,23 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
         $('.bswitch').bootstrapSwitch({
             size: 'small'
         });
-        $('.bswitch').off('switchChange.bootstrapSwitch').on('switchChange.bootstrapSwitch', function(event, state) {
-            $.post('<?php echo route_to('isActive') ?>', {
+        $('.bswitch').off('switchChange.bootstrapSwitch').on('switchChange.bootstrapSwitch', function (event, state) {
+            $.post('<?php echo route_to('pageIsActive') ?>', {
                 "id": $(this).data('id'),
                 'isActive': state ? 1 : 0,
                 'where': 'pages',
                 [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
-            }, function() {
+            }, function () {
                 showToast(state ? 'Sayfa yayına alındı' : 'Sayfa taslağa çekildi');
             }, 'json').fail(() => showToast('Hata oluştu', 'error'));
         });
     }
 
-    $(function() {
-        var table = $("#example1").DataTable({
+    var table;
+    var homePageId = <?php echo (int) $stats['homePage'] ?>;
+
+    $(function () {
+        table = $("#example1").DataTable({
             processing: true,
             serverSide: true,
             ordering: false,
@@ -109,23 +112,23 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 }
             },
             columns: [{
-                    data: 'title',
-                    render: (d, t, r) => {
-                        let badge = '';
-                        if (parseInt(r.id) === <?php echo $stats['homePage'] ?>) badge = '<span class="is-home-badge"><i class="fas fa-home mr-1"></i>Ana Sayfa</span>';
-                        return `<span class="font-weight-bold" style="color:#2d3748">${d}</span>${badge}`;
-                    }
-                },
-                {
-                    data: 'status',
-                    className: 'text-center'
-                },
-                {
-                    data: 'actions',
-                    className: 'text-right'
+                data: 'title',
+                render: (d, t, r) => {
+                    let badge = '';
+                    if (parseInt(r.id) === homePageId) badge = '<span class="is-home-badge"><i class="fas fa-home mr-1"></i>Ana Sayfa</span>';
+                    return `<span class="font-weight-bold" style="color:#2d3748">${d}</span>${badge}`;
                 }
+            },
+            {
+                data: 'status',
+                className: 'text-center'
+            },
+            {
+                data: 'actions',
+                className: 'text-right'
+            }
             ],
-            drawCallback: function() {
+            drawCallback: function () {
                 btstpSwitch();
             },
             language: ci4msDtLanguage('<?php echo lang('Pages.searchPlaceholder') ?>')
@@ -137,8 +140,9 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
     function setHomePage(id) {
         $.post('/backend/pages/setHomePage/' + id, {
             [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
-        }, 'json').done(function(response) {
+        }, 'json').done(function (response) {
             if (response.status === true) {
+                homePageId = parseInt(id);
                 showToast(response.message);
                 table.ajax.reload();
             } else showToast(response.message, 'error');
@@ -160,7 +164,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 $.post('<?php echo route_to('pageDelete') ?>', {
                     "id": id,
                     [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
-                }, 'json').done(function(response) {
+                }, 'json').done(function (response) {
                     if (response.status == 'success') {
                         showToast(response.message);
                         table.ajax.reload();

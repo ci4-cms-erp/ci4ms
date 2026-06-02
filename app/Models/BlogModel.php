@@ -11,7 +11,11 @@ class BlogModel extends Model
 
     public static function sitemapItems(): array
     {
-        $blogs = model(self::class)->join('blog_langs','blog_langs.id = blog.id','left')->where(['isActive' => true, 'inXML' => true])->findAll();
+        $where=['isActive' => true,'inXML' => true];
+        if(setting()->get('App.siteLanguageMode')==='single'){
+            $where['blog_langs.lang']=setting()->get('App.defaultLocale');
+        }
+        $blogs = model(self::class)->join('blog_langs','blog_langs.id = blog.id','left')->where($where)->findAll();
         $items = [];
 
         foreach ($blogs as $blog) {

@@ -42,7 +42,6 @@ class Menu extends \Modules\Backend\Controllers\BaseController
      */
     private function clearMenuCache(): void
     {
-        cache()->delete('menus');
         $langs = cache('frontend_languages');
         if ($langs === null) {
             $rows = $this->commonModel->lists('languages', 'code', [
@@ -52,7 +51,7 @@ class Menu extends \Modules\Backend\Controllers\BaseController
             $langs = array_column($rows, 'code');
         }
         foreach ($langs as $lang) {
-            cache()->delete('menus_' . $lang);
+            cache()->delete('menus_' . $lang->code);
         }
     }
 

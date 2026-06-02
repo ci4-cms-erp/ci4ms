@@ -23,9 +23,9 @@ echo $this->section('content'); ?>
 <?php echo $this->endSection();
 echo $this->section('javascript');
 echo script_tag("be-assets/plugins/jquery-ui/jquery-ui.js");
-echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js");
-echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaultLocale', 'tr') . ".js");
-echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js"); ?>
+echo script_tag("be-assets/plugins/elFinder/js/elfinder.full.js?v=2.1.67");
+echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaultLocale', 'tr') . ".js?v=2.1.67");
+echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js?v=2.1.67"); ?>
 <script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $(document).ready(function() {
         var elf = $('#elfinder').elfinder({

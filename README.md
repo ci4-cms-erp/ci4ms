@@ -172,7 +172,7 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 
 ## Developer Notes
 
-- **Cache keys**: `settings` (24h), `menus` (24h), `{userId}_permissions`. Clear with `php spark cache:clear` or `cache()->delete()`.
+- **Cache keys**: `settings` (24h), `menus_{locale}` (per-locale, 24h), `{userId}_permissions`. Clear with `php spark cache:clear` or `cache()->delete()`.
 - **Base controller**: Extend `Modules\Backend\Controllers\BaseController` for new backend controllers; it prepares session user, navigation, mail settings, and shared data.
 - **Permissions**: Register new secured routes in `Modules\Methods` (or via the database) so the permission filter recognizes them.
 - **Slug generation**: `seflink()` handles transliteration (including Turkish characters).

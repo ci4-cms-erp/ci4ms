@@ -66,4 +66,5 @@
     'currentSessionTerminated' => 'Your current session has been closed.',
     'avatarSizeExceeded' => 'File size cannot exceed 2MB.',
     'last10PastSessions' => 'Only the last 10 past sessions are listed.',
+    'cannotDeleteSuperadmin' => 'Superadmin users cannot be deleted.',
 ];

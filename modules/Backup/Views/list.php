@@ -96,8 +96,9 @@ echo script_tag('be-assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.j
 echo script_tag('be-assets/plugins/datatables-responsive/js/dataTables.responsive.min.js');
 echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js'); ?>
 <script type="text/javascript" <?php echo csp_script_nonce(); ?>>
+    var table;
     $(function() {
-        var table = $("#backupTable").DataTable({
+        table = $("#backupTable").DataTable({
             processing: true,
             serverSide: true,
             ajax: {
@@ -132,15 +133,21 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> <?php echo lang('Backup.backingUp') ?>');
             $.post('<?php echo route_to('backupCreate') ?>', {
                 [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
-            }, function(r) {
+            }, 'json')
+            .done(function(r) {
                 if (r.success) {
                     showToast('<?php echo lang('Backup.backupCreated') ?>');
-                    table.ajax.reload();
-                } else showToast(r.error, 'error');
-                btn.prop('disabled', false).html('<i class="fas fa-plus-circle mr-2"></i> <?php echo lang('Backup.createNow') ?>');
-            }, 'json').fail(() => {
+                } else {
+                    showToast(r.error, 'error');
+                }
+            })
+            .fail(function() {
                 showToast('<?php echo lang('Backup.errorOccurred') ?>', 'error');
+            })
+            .always(function() {
                 btn.prop('disabled', false).html('<i class="fas fa-plus-circle mr-2"></i> <?php echo lang('Backup.createNow') ?>');
+                // complete() meta tag'i güncelledikten SONRA çalışsın diye setTimeout kullanılır.
+                setTimeout(function() { table.ajax.reload(); }, 0);
             });
         });
     });
@@ -157,12 +164,17 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             if (result.isConfirmed) {
                 $.post('/backend/backup/delete/' + id, {
                     [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
-                }, function(r) {
+                }, 'json')
+                .done(function(r) {
                     if (r.success) {
                         showToast(r.message);
-                        $('#backupTable').DataTable().ajax.reload();
-                    } else showToast(r.error, 'error');
-                }, 'json');
+                    } else {
+                        showToast(r.error, 'error');
+                    }
+                })
+                .always(function() {
+                    setTimeout(function() { table.ajax.reload(); }, 0);
+                });
             }
         });
     }

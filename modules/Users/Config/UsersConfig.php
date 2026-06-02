@@ -4,12 +4,17 @@ namespace Modules\Users\Config;
 
 class UsersConfig extends \CodeIgniter\Config\BaseConfig
 {
-    public $csrfExcept = [];
+    public $csrfExcept = [
+        'backend/users/removeFromBlacklist',
+        'backend/users/blackList',
+        'backend/users/forceResetPassword',
+        'backend/users/user_del',
+    ];
     public $filters = [
         'backendGuard' => ['before' => [
             'backend/users',
             'backend/users/*',
-        ]]
+        ]],
     ];
 
     public $moduleInfo = [

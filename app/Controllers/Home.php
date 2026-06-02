@@ -31,7 +31,7 @@ class Home extends BaseController
             $pages = $this->commonModel->lists(
                 'pages',
                 'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
-                ['pages.id' => $homePageId, 'pages_langs.lang' => $locale],
+                ['pages.id' => $homePageId, 'pages_langs.lang' => $locale,'pages.isActive'=>1],
                 'pages.id DESC', 1, 0, [], [],
                 [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
                 ['isReset' => true]
@@ -41,7 +41,7 @@ class Home extends BaseController
                 $pages = $this->commonModel->lists(
                     'pages',
                     'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
-                    ['pages.id' => $homePageId, 'pages_langs.lang' => $defaultLang],
+                    ['pages.id' => $homePageId, 'pages_langs.lang' => $defaultLang,'pages.isActive'=>1],
                     'pages.id DESC', 1, 0, [], [],
                     [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
                     ['isReset' => true]
@@ -52,7 +52,7 @@ class Home extends BaseController
             $pages = $this->commonModel->lists(
                 'pages',
                 'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
-                ['pages_langs.seflink' => $seflink, 'pages_langs.lang' => $locale],
+                ['pages_langs.seflink' => $seflink, 'pages_langs.lang' => $locale,'pages.isActive'=>1],
                 'pages.id DESC', 1, 0, [], [],
                 [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
                 ['isReset' => true]
@@ -62,7 +62,7 @@ class Home extends BaseController
                 $pages = $this->commonModel->lists(
                     'pages',
                     'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
-                    ['pages_langs.seflink' => $seflink, 'pages_langs.lang' => $defaultLang],
+                    ['pages_langs.seflink' => $seflink, 'pages_langs.lang' => $defaultLang,'pages.isActive'=>1],
                     'pages.id DESC', 1, 0, [], [],
                     [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
                     ['isReset' => true]

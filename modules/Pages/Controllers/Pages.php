@@ -24,7 +24,8 @@ class Pages extends \Modules\Backend\Controllers\BaseController
 
             $locale = empty(session()->get('customLocale')) ? \Config\Services::request()->getLocale() : session()->get('customLocale');
             $defaultLocale = setting('App.defaultLocale') ?: 'tr';
-            if (setting('App.siteLanguageMode') == 'single') $locale = $defaultLocale;
+            if (setting('App.siteLanguageMode') == 'single')
+                $locale = $defaultLocale;
 
             $db = db_connect();
             $builder = $db->table('pages m');
@@ -46,9 +47,9 @@ class Pages extends \Modules\Backend\Controllers\BaseController
             $totalDisplayRecords = $totalRecords;
 
             foreach ($results as $result) {
-                $result->status = '<input type="checkbox" name="my-checkbox" class="bswitch" ' . ((bool)$result->isActive === true ? 'checked' : '') . ' data-id="' . $result->id . '" data-off-color="danger" data-on-color="success">';
+                $result->status = '<input type="checkbox" name="my-checkbox" class="bswitch" ' . ((bool) $result->isActive === true ? 'checked' : '') . ' data-id="' . $result->id . '" data-off-color="danger" data-on-color="success">';
 
-                $isHome = (int)setting('App.homePage') === (int)$result->id;
+                $isHome = (int) setting('App.homePage') === (int) $result->id;
                 $homeIcon = $isHome ? 'fas fa-home text-success' : 'fas fa-home text-secondary';
                 $homeTitle = $isHome ? lang('Pages.isHomePage') : lang('Pages.setAsHomePage');
                 $homeBtn = '<button type="button" onclick="setHomePage(' . $result->id . ')" class="btn btn-outline-dark btn-sm mr-1" title="' . $homeTitle . '"><i class="' . $homeIcon . '"></i></button>';
@@ -69,7 +70,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
         $this->defData['stats'] = [
             'total' => $this->commonModel->count('pages'),
             'active' => $this->commonModel->count('pages', ['isActive' => 1]),
-            'homePage' => (int)setting('App.homePage')
+            'homePage' => (int) setting('App.homePage')
         ];
         return view('Modules\Pages\Views\list', $this->defData);
     }
@@ -88,13 +89,16 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                 $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
+            if (!empty($this->request->getPost('description')))
+                $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
+            if (!empty($this->request->getPost('keywords')))
+                $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
 
-            if ($this->validate($valData) === false) return redirect()->route('pageCreate')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false)
+                return redirect()->route('pageCreate')->withInput()->with('errors', $this->validator->getErrors());
 
             $data = [
-                'isActive' => (bool)$this->request->getPost('isActive'),
+                'isActive' => (bool) $this->request->getPost('isActive'),
                 'inMenu' => false
             ];
 
@@ -106,16 +110,16 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                 foreach ($langsData as $langCode => $lData) {
                     $this->commonModel->create('pages_langs', [
                         'pages_id' => $insertID,
-                        'lang'     => $langCode,
-                        'title'    => strip_tags(trim($lData['title'])),
-                        'seflink'  => strip_tags(trim($lData['seflink'])),
-                        'content'  => CustomRules::getClean($lData['content']),
-                        'seo'      => $seoData
+                        'lang' => $langCode,
+                        'title' => strip_tags(trim($lData['title'])),
+                        'seflink' => strip_tags(trim($lData['seflink'])),
+                        'content' => CustomRules::getClean($lData['content']),
+                        'seo' => $seoData
                     ]);
                 }
                 return redirect()->route('pages', [1])->with('message', lang('Backend.created', ['']));
-            }
-            else return redirect()->route('pageCreate')->withInput()->with('error', lang('Backend.notCreated', ['']));
+            } else
+                return redirect()->route('pageCreate')->withInput()->with('error', lang('Backend.notCreated', ['']));
         }
         $translationService = new \Modules\LanguageManager\Libraries\TranslationService();
         $this->defData['languages'] = $translationService->getActiveLanguages();
@@ -137,13 +141,16 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                 $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if (!empty($this->request->getPost('description'))) $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
-            if (!empty($this->request->getPost('keywords'))) $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
+            if (!empty($this->request->getPost('description')))
+                $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
+            if (!empty($this->request->getPost('keywords')))
+                $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
 
-            if ($this->validate($valData) === false) return redirect()->route('pageUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false)
+                return redirect()->route('pageUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
 
             $data = [
-                'isActive' => (bool)$this->request->getPost('isActive'),
+                'isActive' => (bool) $this->request->getPost('isActive'),
             ];
 
             if ($this->commonModel->edit('pages', $data, ['id' => $id])) {
@@ -153,10 +160,10 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                 foreach ($langsData as $langCode => $lData) {
                     $existing = $this->commonModel->selectOne('pages_langs', ['pages_id' => $id, 'lang' => $langCode]);
                     $langUpdate = [
-                        'title'   => strip_tags(trim($lData['title'])),
+                        'title' => strip_tags(trim($lData['title'])),
                         'seflink' => strip_tags(trim($lData['seflink'])),
                         'content' => CustomRules::getClean($lData['content']),
-                        'seo'     => $seoData
+                        'seo' => $seoData
                     ];
                     if ($existing) {
                         $this->commonModel->edit('pages_langs', $langUpdate, ['id' => $existing->id]);
@@ -167,8 +174,8 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                     }
                 }
                 return redirect()->route('pages', [1])->with('message', lang('Backend.updated', ['']));
-            }
-            else return redirect()->route('pageUpdate', [$id])->withInput()->with('error', lang('Backend.notUpdated', ['']));
+            } else
+                return redirect()->route('pageUpdate', [$id])->withInput()->with('error', lang('Backend.notUpdated', ['']));
         }
 
         $this->defData['pageInfo'] = $this->commonModel->selectOne('pages', ['id' => $id]);
@@ -196,25 +203,67 @@ class Pages extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         if ($this->commonModel->remove('pages', ['id' => $this->request->getPost('id')]) === true) {
             $this->commonModel->remove('pages_langs', ['pages_id' => $this->request->getPost('id')]);
             return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [''])]);
-        }
-        else return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [''])]);
+        } else
+            return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [''])]);
     }
 
     public function setHomePage(int $id)
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
         try {
-            $currentHome = (int)setting('App.homePage');
-            if ($currentHome === $id) setting()->forget('App.homePage');
-            else setting()->set('App.homePage', $id);
+            $currentHome = (int) setting('App.homePage');
+            if ($currentHome === $id)
+                setting()->forget('App.homePage');
+            else
+                setting()->set('App.homePage', $id);
             cache()->delete('settings');
             return $this->respond(['status' => true, 'message' => lang('Backend.updated', [lang('Pages.homePage')])], 200);
         } catch (\Exception $e) {
             return $this->fail($e->getMessage());
         }
+    }
+
+    public function isActive(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
+        $valData = ([
+            'id' => ['label' => 'id', 'rules' => 'required|is_natural_no_zero'],
+            'isActive' => ['label' => 'isActive', 'rules' => 'required|in_list[0,1]'],
+            'where' => ['label' => 'where', 'rules' => 'required|in_list[pages]']
+        ]);
+
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
+
+        if (
+            $this->commonModel->edit('pages', [
+                'isActive' => (bool) $this->request->getPost('isActive'),
+            ], ['id' => $this->request->getPost('id')])
+        ) {
+            if ((bool) $this->request->getPost('isActive') === false && $this->commonModel->isHave('menu', ['pages_id' => $this->request->getPost('id'), 'urlType' => 'pages'])) {
+                $this->commonModel->remove('menu', ['pages_id' => $this->request->getPost('id'), 'urlType' => 'pages']);
+                $this->commonModel->edit('pages', ['inMenu' => 0], ['id' => $this->request->getPost('id')]);
+                $langs = cache('frontend_languages');
+                if ($langs === null) {
+                    $rows = $this->commonModel->lists('languages', 'code', [
+                        'is_active' => 1,
+                        'is_frontend' => 1,
+                    ]);
+                    $langs = array_column($rows, 'code');
+                }
+                foreach ($langs as $lang) {
+                    cache()->delete('menus_' . $lang->code);
+                }
+            }
+            return $this->respond(['status' => 'success', 'message' => lang('Backend.updated', [lang('Pages.homePage')])], 200);
+        } else
+            return $this->respond(['status' => 'error', 'message' => lang('Backend.notUpdated', [lang('Pages.homePage')])], 200);
     }
 }

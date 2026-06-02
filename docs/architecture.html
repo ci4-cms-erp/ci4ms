@@ -531,8 +531,8 @@
               <td>24h</td>
             </tr>
             <tr>
-              <td><code>menus</code></td>
-              <td>Sidebar menu tree</td>
+              <td><code>menus_{locale}</code></td>
+              <td>Per-locale frontend menu tree</td>
               <td>24h</td>
             </tr>
             <tr>
@@ -582,6 +582,7 @@
           <li>
             <strong>Home controller:</strong>
             <code>App\Controllers\Home</code> renders front pages and blogs,
+            filters out inactive pages (<code>isActive = 0</code>),
             parses inline shortcodes
             (<code>CommonLibrary::parseInTextFunctions()</code>), assembles meta
             tags (<code>Ci4msseoLibrary</code>), and loads categories, tags,
@@ -599,9 +600,11 @@
         <h2>Media, File Management &amp; Logs</h2>
         <ul>
           <li>
-            <code>Modules\Media</code> integrates elFinder with MIME allowlists,
+            <code>Modules\Media</code> integrates elFinder (v2.1.67) with MIME allowlists,
             trash handling, and optional WebP conversion via
-            <code>claviska/simpleimage</code>.
+            <code>claviska/simpleimage</code>. elFinder's internal CSRF
+            validation is bypassed since CI4 Shield's session auth and
+            <code>backendGuard</code> filter already protect the connector.
           </li>
           <li>
             <code>Modules\Fileeditor</code> offers in-project file

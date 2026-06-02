@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.32.0.0] - 2026-06-03
+
+### Added
+
+- **Pages: Inline Status Toggle:** New `isActive()` AJAX endpoint allows administrators to activate or deactivate pages directly from the DataTables listing without opening the edit form. Deactivating a page automatically removes it from the navigation menu and invalidates the corresponding per-locale menu cache.
+- **Pages: Homepage Badge:** The pages list now shows a visual "Home" badge next to the page currently set as the homepage, updating in real time when the homepage selection changes.
+- **Sitemap Stylesheet:** Added `public/sitemap.css` to style the XML sitemap with a clean, readable layout for browsers.
+- **Users: Superadmin Delete Protection:** `user_del()` now verifies the caller holds the `superadmin` role and prevents deletion of any user belonging to the `superadmin` group, returning a localized error message (`cannotDeleteSuperadmin`) instead.
+- **Menu Module: Full Internationalization:** All hardcoded Turkish strings in the Menu module views and JavaScript (stat labels, toast messages, confirm dialogs) have been replaced with `lang()` calls backed by new language keys in both English and Turkish language files.
+
+### Changed
+
+- **elFinder Upgrade to 2.1.67:** Updated all elFinder JS, CSS, and i18n files from 2.1.66 to 2.1.67. Added three new help files (`fr`, `zh_CN`, `zh_TW`). Asset `<script>` tags now include a `?v=2.1.67` cache-buster.
+- **elFinder CSRF Bypass:** elFinder's internal CSRF token validation has been disabled via an anonymous class override because CI4 Shield's session-based authentication and the `backendGuard` filter already protect the connector endpoint; the internal CSRF mechanism was causing stale-token 403 errors during multi-request file operations.
+- **Frontend: Inactive Pages Hidden:** `App\Controllers\Home` now adds an `isActive = 1` condition when resolving page content, preventing deactivated pages from being rendered on the public site.
+- **Sitemap: Single-Language Mode:** `BlogModel::sitemapItems()` and `PagesModel::sitemapItems()` now check `App.siteLanguageMode`; in single-language mode, only records matching the default locale are emitted, eliminating duplicate sitemap entries.
+- **Users: DataTables Search Fix:** Removed the erroneous `$like = []` reassignment in `UserController::index()` that was silently discarding the search string parsed from the DataTables request.
+- **Users: CSRF Exemptions:** Added `backend/users/removeFromBlacklist`, `backend/users/blackList`, `backend/users/forceResetPassword`, and `backend/users/user_del` to `UsersConfig::$csrfExcept` so AJAX-based user management actions no longer fail on token regeneration.
+- **Users: `user_del()` Signature Change:** The method no longer accepts a URL segment parameter; the target user ID is now read exclusively from POST data, matching the AJAX call pattern.
+- **Backup Module: AJAX Reliability:** Backup create and delete operations now use the `.done()/.fail()/.always()` promise chain instead of the legacy `$.post(url, data, callback, type)` signature. The DataTables reload is deferred via `setTimeout(0)` to ensure it runs after the CSRF meta tag update.
+- **Backup & Users Views: DataTable Scope Fix:** The DataTable instance variable in both Backup and Users list views is now declared at module scope (outside the `$(function(){})` wrapper) so that external functions (e.g. create/delete handlers) can call `table.ajax.reload()` without `ReferenceError`.
+- **Filters.php: Template Filter Path Simplification:** The active theme's filter directory is now resolved with a simple `APPPATH` concatenation instead of the `resolve_template_path()` helper, removing an unnecessary abstraction layer and null-check branch.
+- **Menu Module: `refreshLeftList()` changed from POST to GET:** The left sidebar panel refresh now uses `$.get()` instead of `$.post()`, matching the idempotent nature of the request and eliminating the need for CSRF token injection on a read-only call.
+- **Pages Controller: Code Style Normalization:** Minor formatting changes (alignment, brace style, cast spacing) applied across the Pages controller for consistency with the project's coding standards.
+
+### Fixed
+
+- **Users: Search Broken in DataTables:** The `$like` variable was overwritten with an empty array immediately after being parsed from the DataTables request, making search effectively non-functional. The erroneous reassignment has been removed.
+- **Pages: `setHomePage` Client-Side Stale Badge:** After toggling the homepage via AJAX, the JavaScript `homePageId` variable was not updated, causing the "Home" badge to appear on the wrong row until a full page reload. The variable is now updated immediately upon a successful response.
+
 ## [0.31.11.0] - 2026-05-24
 
 ### Fixed
@@ -348,6 +378,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - Expanded database migrations and introduced new supporting libraries.
 
+[0.32.0.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.32.0.0
+[0.31.11.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.11.0
 [0.31.10.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.10.0
 [0.31.9.0]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.9.0
 [0.31.8.1]: https://github.com/ci4-cms-erp/ci4ms/releases/tag/0.31.8.1

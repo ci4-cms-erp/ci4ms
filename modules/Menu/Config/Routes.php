@@ -4,6 +4,6 @@ $routes->group('backend/menu', ['namespace' => 'Modules\Menu\Controllers'], func
     $routes->post('createMenu', 'Menu::create', ['as' => 'createMenu','role'=>'create']);
     $routes->post('deleteMenuAjax', 'Menu::delete_ajax', ['as' => 'deleteMenuAjax','role'=>'delete']);
     $routes->post('queueMenuAjax', 'Menu::queue_ajax', ['as' => 'queueMenuAjax','role'=>'update']);
-    $routes->post('menuList', 'Menu::listURLs', ['as' => 'menuList','role'=>'read']);
+    $routes->get('menuList', 'Menu::listURLs', ['as' => 'menuList','role'=>'read']);
     $routes->post('addMultipleMenu', 'Menu::addMultipleMenu', ['as' => 'addMultipleMenu','role'=>'create']);
 });

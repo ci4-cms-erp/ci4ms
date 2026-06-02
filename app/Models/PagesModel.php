@@ -11,7 +11,11 @@ class PagesModel extends Model
 
     public static function sitemapItems(): array
     {
-        $pages = model(self::class)->join('pages_langs','pages_langs.id = pages.id','left')->where(['isActive' => true])->orderBy('seflink ASC')->findAll();
+        $where=['isActive' => true];
+        if(setting()->get('App.siteLanguageMode')==='single'){
+            $where['pages_langs.lang']=setting()->get('App.defaultLocale');
+        }
+        $pages = model(self::class)->join('pages_langs','pages_langs.id = pages.id','left')->where($where)->orderBy('seflink ASC')->findAll();
         $items = [];
 
         foreach ($pages as $page) {

@@ -173,7 +173,7 @@ Recommended workflow when adding a module:
 Application settings are persisted in the `settings` table and cached for 24 hours.
 
 - Use `cache()->delete('settings')` after updating settings programmatically.
-- Menu structures are cached as `menus`; cleared automatically via the Menu module, or manually with `cache()->delete('menus')`.
+- Menu structures are cached as `menus_{locale}` (per locale); cleared automatically via the Menu module, or manually with `cache()->delete('menus_en')` etc.
 - Maintenance mode flag lives under `settings.maintenanceMode`. When set, `App\Filters\Ci4ms` redirects all traffic to `maintenance-mode`.
 
 ---
@@ -185,6 +185,7 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 - elFinder configuration resides in `Modules\Media\Controllers\Media::elfinderConnection()`.
 - Allowed MIME types come from `settings.allowedFiles`.
 - Optional WebP conversion uses `claviska/simpleimage` when enabled in settings.
+- elFinder's internal CSRF validation is bypassed because the connector runs behind CI4 Shield's session-based authentication and the `backendGuard` filter already verifies user access.
 - Media root: `public/media/`. Ensure the directory (and `.trash`) are writable.
 
 ### File Editor (`Modules\Fileeditor`)

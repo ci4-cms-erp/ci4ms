@@ -90,7 +90,7 @@ public string $supportDirectory = __DIR__ . '/../../vendor/codeigniter4/framewor
 | Cache key | Contents | TTL |
 |---|---|---|
 | `settings` | Decoded JSON settings values | 24h |
-| `menus` | Sidebar menu tree | 24h |
+| `menus_{locale}` | Per-locale frontend menu tree | 24h |
 | `{userId}_permissions` | Per-user permission flags | Until invalidated |
 
 Clear all caches with `php spark cache:clear` or selectively via `cache()->delete($key)`.
@@ -107,15 +107,16 @@ Clear all caches with `php spark cache:clear` or selectively via `cache()->delet
 
 `App\Controllers\Home` renders front-end pages/blogs:
 
+- Filters out inactive pages (`isActive = 0`) so deactivated content never reaches the frontend.
 - Parses inline shortcodes via `CommonLibrary::parseInTextFunctions()`.
 - Builds meta tags and JSON-LD with `Ci4msseoLibrary`.
 - Loads categories/tags, authors, breadcrumbs, and comment data.
 
-Blog and Pages modules store SEO data as JSON (`coverImage`, `description`, `keywords`).
+Blog and Pages modules store SEO data as JSON (`coverImage`, `description`, `keywords`). Sitemap models honour the `App.siteLanguageMode` setting: in single-language mode, only the default locale's records are emitted to avoid duplicate sitemap entries.
 
 ## Media, File Management & Logs
 
-- `Modules\Media` integrates elFinder, with a MIME allowlist from settings and optional WebP conversion (`claviska/simpleimage`).
+- `Modules\Media` integrates elFinder (v2.1.67), with a MIME allowlist from settings and optional WebP conversion (`claviska/simpleimage`). elFinder's internal CSRF validation is bypassed because CI4 Shield's session-based auth and `backendGuard` filter already protect the connector endpoint.
 - `Modules\Fileeditor` provides project-level file browse/edit operations with `realpath` guardrails.
 - `Modules\Logs` implements a custom `LogViewer` library so administrators can securely inspect `writable/logs/` from `/backend/logs` without shell access.
 - `Modules\Backup` provides database backup and restore functionality, generating `.zip` archives in `writable/uploads/backups/`.

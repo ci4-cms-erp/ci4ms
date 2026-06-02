@@ -22,7 +22,6 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         if ($this->request->is('post') && $this->request->isAJAX()) {
             $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $like = $parsed['searchString'];
-            $like = [];
             $users = auth()->getProvider();
             $users->select('users.*, auth_identities.secret as email, auth_identities.force_reset')
                 ->withGroups()
@@ -41,7 +40,6 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 $users->groupEnd();
             }
             $results = $users->findAll($parsed['length'], $parsed['start']);
-
             $users->select('users.*, auth_identities.secret as email')
                 ->join('auth_identities', 'auth_identities.user_id = users.id')
                 ->where(['users.deleted_at' => null])
@@ -233,18 +231,20 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * @param string $id
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
-    public function user_del(string $id)
+    public function user_del()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX() || !auth()->user()->inGroup('superadmin')) return $this->failForbidden();
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
         if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
         $user = auth()->getProvider();
-        if ($user->inGroup('superadmin')) return redirect()->route('403');
+        $targetUser = $user->withGroups()->findById($this->request->getPost('id'));
+        if ($targetUser?->inGroup('superadmin')) {
+            return $this->failForbidden(lang('Users.cannotDeleteSuperadmin'));
+        }
         if ($user->delete($this->request->getPost('id'), true)) {
             return  $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$user->username])]);
         }
