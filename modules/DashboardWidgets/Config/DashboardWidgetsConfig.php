@@ -13,6 +13,15 @@ class DashboardWidgetsConfig
         ]]
     ];
 
+    /**
+     * Allowed custom widget data provider classes.
+     * Each class must implement WidgetDataProviderInterface; only the FQCNs
+     * listed here are accepted as a data_source. Empty by default = disabled.
+     *
+     * @var class-string<\Modules\DashboardWidgets\Libraries\WidgetDataProviderInterface>[]
+     */
+    public array $dataProviders = [];
+
     public $moduleInfo = [
         'icon' => 'fas fa-th-large',
     ];

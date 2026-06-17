@@ -123,4 +123,12 @@ return [
     'showHidden' => 'छिपे हुए दिखाएं',
     'refresh' => 'रीफ्रेश करें',
     'processNote' => 'प्रक्रिया नोट',
+    // 503 countdown
+    'err503CdTitle' => 'वापसी का अनुमानित समय',
+    'err503CdSub' => 'हमारा काम तेज़ी से आगे बढ़ रहा है।',
+    'errCdHours' => 'घंटे',
+    'errCdMinutes' => 'मिनट',
+    'errCdSeconds' => 'सेकंड',
+    // sidebar maintenance badge
+    'menuInMaintenance' => 'रखरखाव में',
 ];

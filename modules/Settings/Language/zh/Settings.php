@@ -86,4 +86,7 @@ return [
     'rollbackSuccess' => '系统已成功恢复到备份点。',
     'rollbackFail' => '恢复失败：{0}',
     'backupNameRequired' => '备份名称为必填项。',
+    // Backend Maintenance
+    'backendMaintenanceMinutes' => '预计时长（分钟）',
+    'backendMaintenanceModuleMinutes' => '时长（分钟）',
 ];

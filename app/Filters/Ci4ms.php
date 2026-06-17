@@ -14,7 +14,8 @@ class Ci4ms implements FilterInterface
 
     public function __construct()
     {
-        if (file_exists(ROOTPATH . '.env')) $this->commonModel = new CommonModel();
+        if (file_exists(ROOTPATH . '.env'))
+            $this->commonModel = new CommonModel();
     }
 
     /**
@@ -35,9 +36,12 @@ class Ci4ms implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         if (!file_exists(ROOTPATH . '.env')) {
-            return redirect()->to(site_url('install'));
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+            return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install');
+
         }
-        if ((bool)cache()->get('settings')['maintenanceMode']->scalar === true) return redirect()->route('maintenance-mode');
+        if ((bool) cache()->get('settings')['maintenanceMode']->scalar === true)
+            return redirect()->route('maintenance-mode');
     }
 
     /**

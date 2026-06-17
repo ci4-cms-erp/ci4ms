@@ -101,5 +101,21 @@ return [
     'rollbackSuccess' => 'Sistem başarıyla yedek noktasına geri döndürüldü.',
     'rollbackFail' => 'Geri yükleme başarısız oldu: {0}',
     'backupNameRequired' => 'Yedek adı seçilmesi gereklidir.',
-    'superadminRequired' => 'Özel JavaScript, özel CSS veya harici tema asset\'lerini düzenlemek superadmin rolü gerektirir. Diğer şablon ayarları kaydedilmedi.',
+    'superadminRequired'       => 'Özel JavaScript, özel CSS veya harici tema asset\'lerini düzenlemek superadmin rolü gerektirir. Diğer şablon ayarları kaydedilmedi.',
+    // Lock Screen
+    'idleTimeoutEnabled'        => 'Oturum Kilit Ekranı',
+    'idleTimeoutMinutes'        => 'Kilit süresi (dk)',
+    'minutes'                   => 'dk',
+    'idleTimeoutActive'         => 'Kilit ekranı aktif edildi.',
+    'idleTimeoutDisabled'       => 'Kilit ekranı devre dışı bırakıldı.',
+    'idleTimeoutMinutesSaved'   => 'Kilit süresi {0} dakika olarak kaydedildi.',
+    'idleTimeoutMinutesInvalid' => 'Geçerli bir süre giriniz (1-480 dakika).',
+    // Backend Maintenance
+    'backendMaintenance'               => 'Backend Bakımı',
+    'backendMaintenanceAll'            => 'Bakım: Tüm Backend',
+    'backendMaintenanceModules'        => 'Bakımdaki modüller',
+    'backendMaintenanceSuperadminNote' => 'Superadmin kullanıcılar asla kilitlenmez.',
+    'backendMaintenanceUpdated'        => 'Backend bakım ayarları güncellendi.',
+    'backendMaintenanceMinutes'        => 'Tahmini süre (dakika)',
+    'backendMaintenanceModuleMinutes'  => 'Süre (dk)',
 ];

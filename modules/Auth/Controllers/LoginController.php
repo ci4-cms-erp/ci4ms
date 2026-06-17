@@ -115,7 +115,17 @@ class LoginController extends BaseController
         // otherwise you cannot check the user in `logoutRedirect()`.
         $url = config('Auth')->logoutRedirect();
 
+        $userId    = auth()->id();
+        $sessionId = session()->get('ci4ms_session_tracker_id');
+
         auth()->logout();
+
+        if ($userId && $sessionId) {
+            $model = new \Modules\Auth\Models\UserSessionModel();
+            $model->terminateSession((int) $userId, $sessionId, true);
+        }
+
+        session()->destroy();
 
         return redirect()->to($url)->with('message', lang('Auth.successLogout'));
     }

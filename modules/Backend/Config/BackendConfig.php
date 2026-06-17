@@ -5,15 +5,6 @@ namespace Modules\Backend\Config;
 class BackendConfig extends \CodeIgniter\Config\BaseConfig
 {
     //--------------------------------------------------------------------
-    // Views used by Auth Controllers
-    //--------------------------------------------------------------------
-
-    public $views = [
-        '403' => 'Modules\Backend\Views\errors\html\error_403',
-        '404' => 'Modules\Backend\Views\errors\html\error_404'
-    ];
-
-    //--------------------------------------------------------------------
     // Layout for the views to extend
     //--------------------------------------------------------------------
     public $viewLayout = 'Modules\Backend\Views\base';

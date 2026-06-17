@@ -29,22 +29,23 @@ class SessionTracker implements FilterInterface
     {
         helper('device');
 
-        $userId  = auth()->id();
+        $userId = auth()->id();
 
         if (! $userId) {
             return;
         }
 
-        $session = session();
+        $hasRememberToken = isset($_COOKIE['remember_token']) && ! empty($_COOKIE['remember_token']);
+
+        $session   = session();
         $sessionId = $session->get('ci4ms_session_tracker_id');
-        
+
         if (! $sessionId) {
             $sessionId = bin2hex(random_bytes(16));
             $session->set('ci4ms_session_tracker_id', $sessionId);
         }
-        
-        $model     = new UserSessionModel();
 
+        $model  = new UserSessionModel();
         $exists = $model->where('session_id', $sessionId)->first();
 
         if (! $exists) {
@@ -58,12 +59,17 @@ class SessionTracker implements FilterInterface
                 ip:         $request->getIPAddress()
             );
         } else {
-            // If the current device's session status in the database has been remotely set to "is_active = 0",
-            // forces the visitor out of their current device.
             if ($exists['is_active'] == 0) {
                 auth()->logout();
                 session()->destroy();
                 return redirect()->route('login')->with('error', lang('Users.currentSessionTerminated'));
+            }
+
+            if (! $hasRememberToken && ! empty($exists['locked_at'])) {
+                $currentUrl = $request->getUri()->getPath();
+                if (! str_starts_with($currentUrl, '/backend/lock')) {
+                    return redirect()->to('/backend/lock?redirect=' . urlencode($currentUrl));
+                }
             }
 
             $model->touchSession($sessionId);

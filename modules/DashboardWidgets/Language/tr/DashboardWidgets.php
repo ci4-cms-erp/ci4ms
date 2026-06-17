@@ -34,7 +34,7 @@ return [
     'slugPlaceholder'    => 'ornek-widget',
     'titlePlaceholder'   => 'Widget Başlığı',
     'descPlaceholder'    => 'Kısa açıklama',
-    'sourcePlaceholder'  => 'Class::method',
+    'sourcePlaceholder'  => 'Modules\\...\\WidgetProvider (kayıtlı)',
 
     'seedDefaults'       => 'Varsayılanları Yükle',
     'seedConfirmTitle'   => 'Varsayılan widgetları yüklemek istiyor musunuz?',
@@ -55,7 +55,6 @@ return [
     'totalWidgets' => 'Toplam Widget',
     'systemWidgets' => 'Sistem Widgetları',
     'slug' => 'URL Uzantısı (Slug)',
-    'allowedGroups' => 'İzin Verilen Gruplar',
-    'allowedGroupsPlaceholder' => 'Grup Seçiniz',
-    'superAdminNote' => 'Not: Süper Adminlere her zaman açıktır.',
+    'invalidDataSource'  => 'Seçilen veri kaynağı izin verilen bir sağlayıcı değil.',
+    'notAllowed'         => 'Bu widget\'ı görüntüleme yetkiniz yok.',
 ];

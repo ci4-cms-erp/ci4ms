@@ -123,4 +123,12 @@ return [
     'showHidden' => 'إظهار المخفي',
     'refresh' => 'تحديث',
     'processNote' => 'ملاحظة العملية',
+    // 503 countdown
+    'err503CdTitle' => 'الوقت التقديري للعودة',
+    'err503CdSub' => 'أعمالنا تتقدم بسرعة.',
+    'errCdHours' => 'ساعات',
+    'errCdMinutes' => 'دقائق',
+    'errCdSeconds' => 'ثوانٍ',
+    // sidebar maintenance badge
+    'menuInMaintenance' => 'قيد الصيانة',
 ];

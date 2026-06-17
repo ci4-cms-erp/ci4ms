@@ -567,3 +567,7 @@ body.sidebar-collapse .user-panel .info {
   /* Keyboard shortcuts for ui-contextmenu titles */
   float: right;
 }
+
+.brand-link img {
+  height: 25px !important;
+}

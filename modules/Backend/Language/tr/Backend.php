@@ -136,4 +136,73 @@ return [
     'showHidden' => 'Gizlileri Göster',
     'refresh' => 'Yenile',
     'processNote' => 'İşlem Notu',
+
+    // Error Pages
+    'errHomePage'              => 'Ana Sayfa',
+    'errGoBack'                => 'Geri Dön',
+    'errRetry'                 => 'Tekrar Dene',
+
+    // 403
+    'err403Title'              => '403 - Erişim Reddedildi',
+    'err403Heading'            => 'Erişim Reddedildi',
+    'err403Body'               => 'Bu sayfayı görüntüleme yetkiniz bulunmamaktadır.<br>Lütfen yönetici ile iletişime geçin.',
+
+    // 404
+    'err404Title'              => '404 - Sayfa Bulunamadı',
+    'err404Heading'            => 'Sayfa Bulunamadı',
+    'err404Body'               => 'Aradığınız sayfa bulunamadı veya taşınmış olabilir.<br>Lütfen URL\'yi kontrol edin.',
+
+    // 429
+    'err429Title'              => '429 - Çok Fazla İstek',
+    'err429Heading'            => 'Çok Fazla İstek',
+    'err429Body'               => 'Kısa sürede çok fazla istek gönderdiniz.<br>Lütfen birkaç dakika bekleyip tekrar deneyin.',
+
+    // 500
+    'err500Title'              => '500 - Sunucu Hatası',
+    'err500Heading'            => 'Sunucu Hatası',
+    'err500Body'               => 'Sunucuda beklenmedik bir hata oluştu.<br>Lütfen daha sonra tekrar deneyin veya yönetici ile iletişime geçin.',
+
+    // 503
+    'err503Title'              => '503 - Servis Kullanım Dışı',
+    'err503Heading'            => 'Servis Kullanım Dışı',
+    'err503Body'               => 'Sistem şu anda bakım modunda veya geçici olarak kullanılamıyor.<br>Lütfen kısa süre sonra tekrar deneyin.',
+    'err503CdTitle'            => 'Tahmini geri dönüş süresi',
+    'err503CdSub'              => 'Çalışmalarımız hızla devam ediyor.',
+    'errCdHours'               => 'Saat',
+    'errCdMinutes'             => 'Dakika',
+    'errCdSeconds'             => 'Saniye',
+    // sidebar maintenance badge
+    'menuInMaintenance'        => 'Bakımda',
+
+    // production fallback
+    'errProdTitle'             => 'Sistem Hatası',
+    'errProdHeading'           => 'Beklenmedik Bir Hata Oluştu',
+    'errProdBody'              => 'Sistemde bir sorun meydana geldi. Ekibimiz bilgilendirildi.<br>Lütfen daha sonra tekrar deneyin.',
+
+    // error_exception (dev debug)
+    'errExcTitle'              => 'Hata Ayrıntıları',
+    'errExcSearchGoogle'       => 'Google\'da Ara',
+    'errExcTabBacktrace'       => 'Backtrace',
+    'errExcTabServer'          => 'Sunucu',
+    'errExcTabRequest'         => 'İstek',
+    'errExcTabResponse'        => 'Yanıt',
+    'errExcTabMemory'          => 'Bellek',
+    'errExcArguments'          => 'parametreler',
+    'errExcInternalCode'       => '{PHP dahili kod}',
+    'errExcNoGetPost'          => 'Gösterilecek $_GET, $_POST veya $_COOKIE verisi yok.',
+    'errExcMemoryUsage'        => 'Kullanılan Bellek',
+    'errExcMemoryPeak'         => 'Tepe Bellek',
+    'errExcMemoryLimit'        => 'Bellek Limiti',
+    'errExcResponseStatus'     => 'Yanıt Durumu',
+    'errExcConstants'          => 'Sabitler',
+    'errExcHeaders'            => 'Başlıklar',
+    'errExcLine'               => 'Satır',
+    'errExcHttpMethod'         => 'HTTP Metodu',
+    'errExcIpAddress'          => 'IP Adresi',
+    'errExcIsAjax'             => 'AJAX İsteği?',
+    'errExcIsSecure'           => 'Güvenli İstek?',
+    'errExcYes'                => 'Evet',
+    'errExcNo'                 => 'Hayır',
+    'errExcPath'               => 'Yol',
+    'errExcUserAgent'          => 'Tarayıcı',
 ];

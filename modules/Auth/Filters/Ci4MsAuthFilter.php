@@ -22,6 +22,8 @@ class Ci4MsAuthFilter implements FilterInterface
 
         $router = service('router');
         $controllerName = $router->controllerName();
+        $lang = service('language');
+        $lang->setLocale($user->own_language);
 
         $dbClassName = str_replace('\\', '-', $controllerName);
         if (substr($dbClassName, 0, 1) !== '-') {
@@ -52,8 +54,17 @@ class Ci4MsAuthFilter implements FilterInterface
             }
         }
 
+        $permissionString = strtolower($page->pagename) . '.' . $this->neededAction($page);
+        if (! auth()->user()->can($permissionString)) {
+            return redirect('403');
+        }
+    }
+
+    protected function neededAction(object $page): string
+    {
         $neededAction = 'read';
-        $pagePermissions = \json_decode($page->typeOfPermissions, JSON_UNESCAPED_UNICODE);
+        $pagePermissions = \json_decode($page->typeOfPermissions, true, 512, JSON_UNESCAPED_UNICODE) ?? [];
+
         if (array_key_exists('read_r', $pagePermissions) && $pagePermissions['read_r'] == 1) {
             $neededAction = 'read';
         }
@@ -67,10 +78,7 @@ class Ci4MsAuthFilter implements FilterInterface
             $neededAction = 'create';
         }
 
-        $permissionString = strtolower($page->pagename) . '.' . $neededAction;
-        if (! auth()->user()->can($permissionString)) {
-            return redirect()->to('/backend/403');
-        }
+        return $neededAction;
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null) {}

@@ -54,19 +54,21 @@ class Categories extends \Modules\Backend\Controllers\BaseController
 
             $valData = [];
             foreach ($langInputs as $l => $in) {
-                $valData["lang.{$l}.title"]   = ['label' => lang('Backend.title')." ({$l})", 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'];
-                $valData["lang.{$l}.seflink"] = ['label' => lang('Backend.url')." ({$l})", 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'];
+                $valData["lang.{$l}.title"] = ['label' => lang('Backend.title') . " ({$l})", 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'];
+                $valData["lang.{$l}.seflink"] = ['label' => lang('Backend.url') . " ({$l})", 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'];
             }
 
             if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg']       = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-                $valData['pageIMGWidth']  = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
+                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if ($this->validate($valData) === false) return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false)
+                return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
 
             $baseData = ['isActive' => $this->request->getPost('isActive')];
-            if (!empty($this->request->getPost('parent'))) $baseData['parent'] = $this->request->getPost('parent');
+            if (!empty($this->request->getPost('parent')))
+                $baseData['parent'] = $this->request->getPost('parent');
 
             $categories_id = $this->commonModel->create('categories', $baseData);
 
@@ -75,10 +77,10 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 foreach ($langInputs as $l => $in) {
                     $insertLang = [
                         'categories_id' => $categories_id,
-                        'lang'          => $l,
-                        'title'         => trim(strip_tags($in['title'])),
-                        'seflink'       => trim(strip_tags($in['seflink'])),
-                        'seo'           => !empty($seoData) ? $seoData : null
+                        'lang' => $l,
+                        'title' => trim(strip_tags($in['title'])),
+                        'seflink' => trim(strip_tags($in['seflink'])),
+                        'seo' => !empty($seoData) ? $seoData : null
                     ];
                     $this->commonModel->create('categories_langs', $insertLang);
                 }
@@ -104,7 +106,7 @@ class Categories extends \Modules\Backend\Controllers\BaseController
             $this->defData['languages'] = [];
         }
 
-        return view('Modules\Blog\Views\categories\create', $this->defData);
+        return view('Modules\Blog\Views\categories\form', $this->defData);
     }
 
     public function edit(string $id)
@@ -117,27 +119,29 @@ class Categories extends \Modules\Backend\Controllers\BaseController
 
             $valData = [];
             foreach ($langInputs as $l => $in) {
-                $valData["lang.{$l}.title"]   = ['label' => lang('Backend.title')." ({$l})", 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'];
-                $valData["lang.{$l}.seflink"] = ['label' => lang('Backend.url')." ({$l})", 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'];
+                $valData["lang.{$l}.title"] = ['label' => lang('Backend.title') . " ({$l})", 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'];
+                $valData["lang.{$l}.seflink"] = ['label' => lang('Backend.url') . " ({$l})", 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'];
             }
 
             if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg']       = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-                $valData['pageIMGWidth']  = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
+                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
+                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
                 $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
             }
-            if ($this->validate($valData) === false) return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($valData) === false)
+                return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
 
             $baseData = ['isActive' => $this->request->getPost('isActive')];
-            if (!empty($this->request->getPost('parent'))) $baseData['parent'] = $this->request->getPost('parent');
+            if (!empty($this->request->getPost('parent')))
+                $baseData['parent'] = $this->request->getPost('parent');
 
             if ($this->commonModel->edit('categories', $baseData, ['id' => $id])) {
                 $seoData = $this->commonBackendLibrary->buildSeoData($this->request->getPost());
                 foreach ($langInputs as $l => $in) {
                     $langData = [
-                        'title'         => trim(strip_tags($in['title'])),
-                        'seflink'       => trim(strip_tags($in['seflink'])),
-                        'seo'           => !empty($seoData) ? $seoData : null
+                        'title' => trim(strip_tags($in['title'])),
+                        'seflink' => trim(strip_tags($in['seflink'])),
+                        'seo' => !empty($seoData) ? $seoData : null
                     ];
 
                     if ($this->commonModel->isHave('categories_langs', ['categories_id' => $id, 'lang' => $l]) === 1) {
@@ -157,10 +161,10 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 return redirect()->route('categories')->withInput()->with('error', lang('Backend.notUpdated', ['Kategori']));
             }
         }
-
+        if (empty($this->defData['infos'] = $this->commonModel->selectOne('categories', ['id' => $id])))
+            return $this->showError();
         $locale = $this->request->getLocale();
         $this->defData = array_merge($this->defData, [
-            'infos' => $this->commonModel->selectOne('categories', ['id' => $id]),
             'categories' => $this->commonModel->lists('categories', 'categories.*, categories_langs.title as title', ['categories.id!=' => $id], 'categories.id DESC', 0, 0, [], [], [
                 ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'left']
             ])
@@ -184,16 +188,18 @@ class Categories extends \Modules\Backend\Controllers\BaseController
             $this->defData['languages'] = [];
         }
 
-        return view('Modules\Blog\Views\categories\update', $this->defData);
+        return view('Modules\Blog\Views\categories\form', $this->defData);
     }
 
     public function delete()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
 
         $id = $this->request->getPost('id');
         $defaultLocale = setting('App.defaultLocale') ?: 'tr';
@@ -201,7 +207,9 @@ class Categories extends \Modules\Backend\Controllers\BaseController
         $title = $categoryLang ? $categoryLang->title : 'Kategori';
 
         // cascade will take care of deleting from categories_langs
-        if ($this->commonModel->remove('categories', ['id' => $id]) === true) return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$title])]);
-        else return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$title])]);
+        if ($this->commonModel->remove('categories', ['id' => $id]) === true)
+            return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$title])]);
+        else
+            return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$title])]);
     }
 }

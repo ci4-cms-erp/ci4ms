@@ -78,23 +78,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
     public function create()
     {
         if ($this->request->is('post')) {
-            $valData = ([
-                'lang.*.title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
-                'lang.*.seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
-                'lang.*.content' => ['label' => lang('Backend.content'), 'rules' => 'required|html_purify'],
-                'isActive' => ['label' => lang('Backend.draft') . ' / ' . lang('Backend.publish'), 'rules' => 'required|in_list[0,1]']
-            ]);
-            if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
-                $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
-            }
-            if (!empty($this->request->getPost('description')))
-                $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-            if (!empty($this->request->getPost('keywords')))
-                $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
-
-            if ($this->validate($valData) === false)
+            if ($this->validate($this->validationRules()) === false)
                 return redirect()->route('pageCreate')->withInput()->with('errors', $this->validator->getErrors());
 
             $data = [
@@ -123,30 +107,13 @@ class Pages extends \Modules\Backend\Controllers\BaseController
         }
         $translationService = new \Modules\LanguageManager\Libraries\TranslationService();
         $this->defData['languages'] = $translationService->getActiveLanguages();
-        return view('Modules\Pages\Views\create', $this->defData);
+        return view('Modules\Pages\Views\form', $this->defData);
     }
 
     public function update($id)
     {
         if ($this->request->is('post')) {
-            $valData = ([
-                'lang.*.title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
-                'lang.*.seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
-                'lang.*.content' => ['label' => lang('Backend.content'), 'rules' => 'required|html_purify'],
-                'isActive' => ['label' => lang('Backend.draft') . ' / ' . lang('Backend.publish'), 'rules' => 'required|in_list[0,1]']
-            ]);
-
-            if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
-                $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
-            }
-            if (!empty($this->request->getPost('description')))
-                $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
-            if (!empty($this->request->getPost('keywords')))
-                $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
-
-            if ($this->validate($valData) === false)
+            if ($this->validate($this->validationRules()) === false)
                 return redirect()->route('pageUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
 
             $data = [
@@ -178,7 +145,8 @@ class Pages extends \Modules\Backend\Controllers\BaseController
                 return redirect()->route('pageUpdate', [$id])->withInput()->with('error', lang('Backend.notUpdated', ['']));
         }
 
-        $this->defData['pageInfo'] = $this->commonModel->selectOne('pages', ['id' => $id]);
+        if (empty($this->defData['pageInfo'] = $this->commonModel->selectOne('pages', ['id' => $id])))
+            return $this->showError();
         $translations = $this->commonModel->lists('pages_langs', '*', ['pages_id' => $id]);
         $langsData = [];
         foreach ($translations as $t) {
@@ -195,7 +163,7 @@ class Pages extends \Modules\Backend\Controllers\BaseController
         $translationService = new \Modules\LanguageManager\Libraries\TranslationService();
         $this->defData['languages'] = $translationService->getActiveLanguages();
 
-        return view('Modules\Pages\Views\update', $this->defData);
+        return view('Modules\Pages\Views\form', $this->defData);
     }
 
     public function delete_post()
@@ -265,5 +233,27 @@ class Pages extends \Modules\Backend\Controllers\BaseController
             return $this->respond(['status' => 'success', 'message' => lang('Backend.updated', [lang('Pages.homePage')])], 200);
         } else
             return $this->respond(['status' => 'error', 'message' => lang('Backend.notUpdated', [lang('Pages.homePage')])], 200);
+    }
+
+    private function validationRules(): array
+    {
+        $valData = [
+            'lang.*.title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+            'lang.*.seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
+            'lang.*.content' => ['label' => lang('Backend.content'), 'rules' => 'required|html_purify'],
+            'isActive' => ['label' => lang('Backend.draft') . ' / ' . lang('Backend.publish'), 'rules' => 'required|in_list[0,1]']
+        ];
+
+        if (!empty($this->request->getPost('pageimg'))) {
+            $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^(https?:\/\/[a-zA-Z0-9\/:.\-_~%]+|\/[a-zA-Z0-9\/.\-_]+)\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?[a-zA-Z0-9=&_\-.%]*)?$/i]'];
+            $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
+            $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
+        }
+        if (!empty($this->request->getPost('description')))
+            $valData['description'] = ['label' => lang('Backend.seoDescription'), 'rules' => 'required'];
+        if (!empty($this->request->getPost('keywords')))
+            $valData['keywords'] = ['label' => lang('Backend.seoKeywords'), 'rules' => 'required'];
+
+        return $valData;
     }
 }

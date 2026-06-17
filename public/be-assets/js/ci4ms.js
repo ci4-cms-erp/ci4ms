@@ -19,7 +19,8 @@
  */
 (function () {
   var csrfMeta = $('meta[name="X-CSRF-TOKEN"]');
-  var csrfName = "csrf_token_ci4ms"; // .env security.tokenName — POST body parameter name
+  var csrfNameMeta = $('meta[name="csrf-token-name"]');
+  var csrfName = csrfNameMeta.length ? csrfNameMeta.attr("content") : "csrf_token_ci4ms"; // <meta name="csrf-token-name"> = csrf_token() — POST body parameter name (.env security.tokenName)
   var csrfHeader = "X-CSRF-TOKEN"; // .env security.headerName — header + meta tag name
 
   function getCsrfHash() {
@@ -195,7 +196,9 @@ function pageImgelfinderDialog() {
 
   // Daha önce oluşturulmuş dialog varsa yeniden aç, ikinci kez oluşturma
   if (_pageImgFmDiv !== null) {
-    try { _pageImgFmDiv.dialogelfinder("open"); } catch (e) {
+    try {
+      _pageImgFmDiv.dialogelfinder("open");
+    } catch (e) {
       _pageImgFmDiv = null;
     }
     if (_pageImgFmDiv !== null) return;
@@ -208,9 +211,7 @@ function pageImgelfinderDialog() {
     width: 1024,
     height: 768,
     workerBaseUrl: "/be-assets/plugins/elFinder/js/worker",
-    cssAutoLoad: [
-      window.location.origin + "/be-assets/css/ci4ms-elfinder.css",
-    ],
+    cssAutoLoad: [window.location.origin + "/be-assets/css/ci4ms-elfinder.css"],
     getFileCallback: function (files) {
       $(".pageimg-input").val(files.url.replace(location.origin, ""));
       $(".pageimg").attr("src", files.url).show();
@@ -245,7 +246,11 @@ function pageImgelfinderDialog() {
   function startSync(instance) {
     stopSync();
     syncInterval = setInterval(function () {
-      try { instance.exec("sync"); } catch (e) { stopSync(); }
+      try {
+        instance.exec("sync");
+      } catch (e) {
+        stopSync();
+      }
     }, 1000);
   }
 
@@ -260,7 +265,9 @@ function pageMultipleImgelfinderDialog(id) {
   var syncInterval;
 
   if (_multipleImgFmDivs[id]) {
-    try { _multipleImgFmDivs[id].dialogelfinder("open"); } catch (e) {
+    try {
+      _multipleImgFmDivs[id].dialogelfinder("open");
+    } catch (e) {
       _multipleImgFmDivs[id] = null;
     }
     if (_multipleImgFmDivs[id] !== null) return;
@@ -272,11 +279,11 @@ function pageMultipleImgelfinderDialog(id) {
     lang: window.CI4MS_LOCALE !== "en" ? window.CI4MS_LOCALE || "tr" : "en",
     width: "80%",
     height: 768,
-    cssAutoLoad: [
-      window.location.origin + "/be-assets/css/ci4ms-elfinder.css",
-    ],
+    cssAutoLoad: [window.location.origin + "/be-assets/css/ci4ms-elfinder.css"],
     getFileCallback: function (files) {
-      $('[name="imgs[' + id + '][pageimg]"]').val(files.url.replace(location.origin, ""));
+      $('[name="imgs[' + id + '][pageimg]"]').val(
+        files.url.replace(location.origin, ""),
+      );
       $('[name="imgs[' + id + '][img]"]').attr("src", files.url);
       var img = new Image();
       img.onload = function () {
@@ -308,7 +315,11 @@ function pageMultipleImgelfinderDialog(id) {
   function startSync(instance) {
     stopSync();
     syncInterval = setInterval(function () {
-      try { instance.exec("sync"); } catch (e) { stopSync(); }
+      try {
+        instance.exec("sync");
+      } catch (e) {
+        stopSync();
+      }
     }, 1000);
   }
 
@@ -417,3 +428,75 @@ $(document).ready(function () {
     });
   }
 });
+
+/**
+ * CI4MS Idle Lock — Hareketsizlik algılayıp /backend/lock sayfasına yönlendirir.
+ * DB'ye locked_at yazılır, ardından lock sayfasına redirect yapılır.
+ */
+(function () {
+  "use strict";
+
+  if (!window.CI4MS_IDLE_ENABLED) {
+    return;
+  }
+
+  // Remember me aktifse lock screen devre dışı
+  var hasRemember = document.cookie.split(";").some(function (c) {
+    return c.trim().indexOf("remember_token=") === 0;
+  });
+  if (hasRemember) {
+    return;
+  }
+
+  var IDLE_MS = (window.CI4MS_IDLE_MINUTES || 15) * 60 * 1000;
+  var idleTimer = null;
+  var isLocked = false;
+
+  function lockScreen() {
+    if (isLocked) {
+      return;
+    }
+    isLocked = true;
+
+    var redirect = encodeURIComponent(
+      window.location.pathname + window.location.search,
+    );
+
+    // DB'ye lock durumu yaz, sonra lock sayfasına yönlendir
+    fetch("/backend/lock/set", {
+      method: "POST",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": (window.CI4MS_CSRF && window.CI4MS_CSRF.getHash()) || "",
+      },
+      credentials: "same-origin",
+    }).finally(function () {
+      window.location.href = "/backend/lock?redirect=" + redirect;
+    });
+  }
+
+  function resetTimer() {
+    if (isLocked) {
+      return;
+    }
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(lockScreen, IDLE_MS);
+  }
+
+  ["mousemove", "keydown", "click", "scroll", "touchstart"].forEach(
+    function (e) {
+      document.addEventListener(e, resetTimer, true);
+    },
+  );
+
+  // Tab gizlenince zamanlayıcıyı başlat
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden && !isLocked) {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(lockScreen, IDLE_MS);
+    }
+  });
+
+  resetTimer();
+})();

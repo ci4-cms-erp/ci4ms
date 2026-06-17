@@ -23,7 +23,7 @@ Backend ana panelina özelleştirilebilir widget'lar ekleyerek istatistik, grafi
 
 - **Başlık**: Widget başlığı
 - **Tip**: counter / chart / table / html
-- **Veri SQL'i**: Widget'ın göstereceği verileri çeken SQL sorgusu
+- **Veri Kaynağı**: Widget verisini sağlayan kayıtlı sağlayıcı sınıfı (FQCN). Sınıf `WidgetDataProviderInterface`'i uygulamalı ve `DashboardWidgetsConfig::$dataProviders` beyaz listesinde tanımlı olmalıdır. Boş bırakılabilir.
 - **Boyut**: col-3, col-4, col-6, col-12 (grid genişliği)
 - **Sıralama**: Paneldeki gösterim sırası
 - **Renk / İkon**: Görsel özelleştirme
@@ -35,7 +35,7 @@ Ana panel kontrolleri widget listesini otomatik çeker ve grid layout'ta göster
 
 ### 4. Güvenlik
 
-SQL sorguları yalnızca SELECT ile sınırlıdır. INSERT/UPDATE/DELETE içeren sorgular engellenir.
+`data_source` yalnızca `DashboardWidgetsConfig::$dataProviders` beyaz listesinde kayıtlı ve `WidgetDataProviderInterface`'i uygulayan sınıfları, sabit `getData()` metodu üzerinden çalıştırır. Rastgele sınıf örnekleme/metot çağırma mümkün değildir; beyaz liste boşsa özellik kapalıdır. Widget verisi uçları (`data/{slug}`) ayrıca `allowed_groups` grup yetkisine tabidir.
 
 ## Rota Yapısı
 

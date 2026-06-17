@@ -86,4 +86,7 @@ return [
     'rollbackSuccess' => 'تمت استعادة النظام بنجاح إلى نقطة النسخ الاحتياطي.',
     'rollbackFail' => 'فشلت الاستعادة: {0}',
     'backupNameRequired' => 'اسم النسخة الاحتياطية مطلوب.',
+    // Backend Maintenance
+    'backendMaintenanceMinutes' => 'المدة التقديرية (بالدقائق)',
+    'backendMaintenanceModuleMinutes' => 'المدة (دقيقة)',
 ];

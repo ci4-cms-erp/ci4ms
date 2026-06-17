@@ -1,45 +1,31 @@
-<?php echo $this->extend($backConfig->viewLayout);
-echo $this->section('head'); ?>
-<title>Ci4ms <?php echo $config->vers ?> | 404 File Not Found</title>
-<?php echo $this->endSection();
-echo $this->section('content'); ?>
-<!-- Content Header (Page header) -->
-<section class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1>404 Error Page</h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?php echo base_url('/backend') ?>">Anasayfa</a></li>
-                    <li class="breadcrumb-item active">404 - File Not Found</li>
-                </ol>
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-</section>
-
-<!-- Main content -->
-<section class="content">
-    <div class="error-page">
-        <h2 class="headline text-warning"> 404 File Not Found</h2>
-
-        <div class="error-content">
-            <h3><i class="fas fa-exclamation-triangle text-warning"></i> Oops! Page not found.</h3>
-
-            <p>
-                <?php if (!empty($message) && $message !== '(null)') :
-                    echo esc($message);
-                else : ?>
-                    Sorry! Cannot seem to find the page you were looking for.
-                <?php endif ?>
-            </p>
-            <div><a href="<?php echo previous_url() ?>" class="btn btn-warning"> Geri Dön</a></div>
-        </div>
-        <!-- /.error-content -->
+<?php
+ob_start();
+?>
+<div class="error-card">
+    <div class="error-code text-warning">404</div>
+    <div class="error-icon text-warning">
+        <i class="fas fa-search"></i>
     </div>
-    <!-- /.error-page -->
-</section>
-<!-- /.content -->
-<?php echo $this->endSection() ?>
+    <h2><?= lang('Backend.err404Heading') ?></h2>
+    <p>
+        <?php if (!empty($message) && $message !== '(null)') : ?>
+            <?= esc($message) ?>
+        <?php else : ?>
+            <?= lang('Backend.err404Body') ?>
+        <?php endif; ?>
+    </p>
+    <div class="d-flex justify-content-center" style="gap: 0.75rem;">
+        <a href="<?= base_url('backend') ?>" class="btn btn-warning">
+            <i class="fas fa-home mr-1"></i> <?= lang('Backend.errHomePage') ?>
+        </a>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left mr-1"></i> <?= lang('Backend.errGoBack') ?>
+        </a>
+    </div>
+</div>
+<?php
+$errorContent = ob_get_clean();
+echo view('Modules\Backend\Views\errors\html\error_layout', [
+    'pageTitle'    => lang('Backend.err404Title'),
+    'errorContent' => $errorContent,
+]);

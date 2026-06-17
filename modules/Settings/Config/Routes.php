@@ -17,4 +17,6 @@ $routes->group('backend/settings', ['namespace' => 'Modules\Settings\Controllers
     $routes->post('autoUpdate', 'Settings::autoUpdate', ['as' => 'autoUpdate','role'=>'update']);
     $routes->post('listBackups', 'Settings::listBackups', ['as' => 'listBackups','role'=>'update']);
     $routes->post('rollbackUpdate', 'Settings::rollbackUpdate', ['as' => 'rollbackUpdate','role'=>'update']);
+    $routes->post('saveIdleTimeout', 'Settings::saveIdleTimeout', ['as' => 'saveIdleTimeout','role'=>'update']);
+    $routes->post('saveBackendMaintenance', 'Settings::saveBackendMaintenance', ['as' => 'saveBackendMaintenance', 'role' => 'update']);
 });

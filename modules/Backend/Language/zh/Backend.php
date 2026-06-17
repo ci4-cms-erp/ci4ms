@@ -123,4 +123,12 @@ return [
     'showHidden' => '显示隐藏项',
     'refresh' => '刷新',
     'processNote' => '操作备注',
+    // 503 countdown
+    'err503CdTitle' => '预计恢复时间',
+    'err503CdSub' => '我们的工作正在快速推进。',
+    'errCdHours' => '小时',
+    'errCdMinutes' => '分钟',
+    'errCdSeconds' => '秒',
+    // sidebar maintenance badge
+    'menuInMaintenance' => '维护中',
 ];

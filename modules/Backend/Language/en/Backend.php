@@ -137,4 +137,73 @@ return [
     'showHidden' => 'Show Hidden',
     'refresh' => 'Refresh',
     'processNote' => 'Process Note',
+
+    // Error Pages
+    'errHomePage'              => 'Home Page',
+    'errGoBack'                => 'Go Back',
+    'errRetry'                 => 'Try Again',
+
+    // 403
+    'err403Title'              => '403 - Access Denied',
+    'err403Heading'            => 'Access Denied',
+    'err403Body'               => 'You do not have permission to view this page.<br>Please contact the administrator.',
+
+    // 404
+    'err404Title'              => '404 - Page Not Found',
+    'err404Heading'            => 'Page Not Found',
+    'err404Body'               => 'The page you are looking for could not be found or may have moved.<br>Please check the URL.',
+
+    // 429
+    'err429Title'              => '429 - Too Many Requests',
+    'err429Heading'            => 'Too Many Requests',
+    'err429Body'               => 'You have sent too many requests in a short period of time.<br>Please wait a few minutes and try again.',
+
+    // 500
+    'err500Title'              => '500 - Internal Server Error',
+    'err500Heading'            => 'Internal Server Error',
+    'err500Body'               => 'An unexpected error occurred on the server.<br>Please try again later or contact the administrator.',
+
+    // 503
+    'err503Title'              => '503 - Service Unavailable',
+    'err503Heading'            => 'Service Unavailable',
+    'err503Body'               => 'The system is currently in maintenance mode or temporarily unavailable.<br>Please try again shortly.',
+    'err503CdTitle'            => 'Estimated time to return',
+    'err503CdSub'              => 'Our work is progressing quickly.',
+    'errCdHours'               => 'Hours',
+    'errCdMinutes'             => 'Minutes',
+    'errCdSeconds'             => 'Seconds',
+    // sidebar maintenance badge
+    'menuInMaintenance'        => 'Under maintenance',
+
+    // production fallback
+    'errProdTitle'             => 'System Error',
+    'errProdHeading'           => 'An Unexpected Error Occurred',
+    'errProdBody'              => 'Something went wrong on our end. Our team has been notified.<br>Please try again later.',
+
+    // error_exception (dev debug)
+    'errExcTitle'              => 'Error Details',
+    'errExcSearchGoogle'       => 'Search on Google',
+    'errExcTabBacktrace'       => 'Backtrace',
+    'errExcTabServer'          => 'Server',
+    'errExcTabRequest'         => 'Request',
+    'errExcTabResponse'        => 'Response',
+    'errExcTabMemory'          => 'Memory',
+    'errExcArguments'          => 'arguments',
+    'errExcInternalCode'       => '{PHP internal code}',
+    'errExcNoGetPost'          => 'No \$_GET, \$_POST, or \$_COOKIE data to show.',
+    'errExcMemoryUsage'        => 'Memory Usage',
+    'errExcMemoryPeak'         => 'Peak Memory',
+    'errExcMemoryLimit'        => 'Memory Limit',
+    'errExcResponseStatus'     => 'Response Status',
+    'errExcConstants'          => 'Constants',
+    'errExcHeaders'            => 'Headers',
+    'errExcLine'               => 'Line',
+    'errExcHttpMethod'         => 'HTTP Method',
+    'errExcIpAddress'          => 'IP Address',
+    'errExcIsAjax'             => 'AJAX Request?',
+    'errExcIsSecure'           => 'Secure Request?',
+    'errExcYes'                => 'Yes',
+    'errExcNo'                 => 'No',
+    'errExcPath'               => 'Path',
+    'errExcUserAgent'          => 'User Agent',
 ];

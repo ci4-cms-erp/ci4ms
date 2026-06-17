@@ -86,4 +86,7 @@ return [
     'rollbackSuccess' => 'Система успешно восстановлена до точки резервного копирования.',
     'rollbackFail' => 'Ошибка восстановления: {0}',
     'backupNameRequired' => 'Имя резервной копии обязательно.',
+    // Backend Maintenance
+    'backendMaintenanceMinutes' => 'Примерная длительность (минуты)',
+    'backendMaintenanceModuleMinutes' => 'Длительность (мин)',
 ];

@@ -86,4 +86,7 @@ return [
     'rollbackSuccess' => 'システムがバックアップポイントに正常に復元されました。',
     'rollbackFail' => '復元に失敗しました: {0}',
     'backupNameRequired' => 'バックアップ名は必須です。',
+    // Backend Maintenance
+    'backendMaintenanceMinutes' => '推定時間（分）',
+    'backendMaintenanceModuleMinutes' => '時間（分）',
 ];

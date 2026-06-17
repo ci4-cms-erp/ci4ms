@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [0.33.0.0] - 2026-06-17
+
+### Security
+
+- **Broken Access Control:** Fixed an issue where the Media module's "read" permission unintentionally granted full file write and delete capabilities.
+- **Unsafe Reflection:** Secured the Dashboard Widgets `data_source` execution to prevent arbitrary method invocation that could disclose sensitive data like password hashes.
+- **Remote Code Execution (RCE):** Prevented RCE vulnerabilities arising from unsafe template-function parsing within Page content.
+- **Stored XSS:** Patched a Stored Cross-Site Scripting (XSS) vulnerability via the Pages Cover Image URL that could lead to an admin account takeover.
+*(All security issues above reported by [iltosec](https://github.com/iltosec))*
+
+### Added
+
+- **Rate Limiting:** Introduced `ThrottleFilter` and `BackendThrottleFilter` to provide rate limiting (429 Too Many Requests) across the application.
+- **Maintenance Mode:** Added `BackendMaintenanceFilter` and `BackendMaintenance` library to elegantly handle 503 Service Unavailable scenarios.
+- **Custom Exception Handling:** Implemented `BackendExceptionHandler` for improved presentation of HTTP errors (403, 404, 429, 500, 503).
+- **Idle Lock Screen:** Added `LockController` and `lock.php` view, along with updates to `ci4ms.js`, to lock inactive administrative sessions.
+- **Widget Security:** Introduced `WidgetDataProviderInterface` to strictly enforce data sourcing contracts for Dashboard Widgets.
+
+### Changed
+
+- **Error Handling:** Removed legacy `Errors.php` controller in favor of the new `BackendExceptionHandler` system.
+- **Module Views Unified:** Consolidated `create.php` and `update.php` into a unified `form.php` structure across `Pages` and `Blog` modules for maintainability.
+- **Session Tracking:** Updated `SessionTracker` to track locked sessions with a `locked_at` timestamp.
+
 ## [0.32.0.0] - 2026-06-03
 
 ### Added

@@ -3,6 +3,7 @@
 return [
     'languageManager'    => 'Language Manager',
     'languages'          => 'Languages',
+    'language'           => 'Language',
     'translations'       => 'Translations',
     'createLanguage'     => 'Add Language',
     'editLanguage'       => 'Edit Language',

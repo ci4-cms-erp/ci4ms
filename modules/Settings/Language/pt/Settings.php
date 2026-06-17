@@ -86,4 +86,7 @@ return [
     'rollbackSuccess' => 'Sistema restaurado com sucesso para o ponto de backup.',
     'rollbackFail' => 'Falha na restauração: {0}',
     'backupNameRequired' => 'O nome do backup é obrigatório.',
+    // Backend Maintenance
+    'backendMaintenanceMinutes' => 'Duração estimada (minutos)',
+    'backendMaintenanceModuleMinutes' => 'Duração (min)',
 ];

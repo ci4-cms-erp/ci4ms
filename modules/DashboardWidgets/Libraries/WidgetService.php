@@ -69,6 +69,18 @@ class WidgetService
     // ══════════════════════════════════════════════════
 
     /**
+     * Returns whether the user can access the widget based on the allowed_groups JSON.
+     * Empty list = open to everyone; superadmin always has access.
+     *
+     * @param array<int, string> $userGroups
+     */
+    protected function widgetAllowedForGroups(?string $allowedGroupsJson, array $userGroups, bool $isSuperAdmin): bool
+    {
+        $allowed = json_decode($allowedGroupsJson ?? '[]', true);
+        return empty($allowed) || $isSuperAdmin || (bool) array_intersect($userGroups, $allowed);
+    }
+
+    /**
      * Get all active widgets with user preferences overlaid.
      *
      * @return array<object>
@@ -89,8 +101,7 @@ class WidgetService
 
         $filtered = [];
         foreach ($widgets as $w) {
-            $allowed = json_decode($w->allowed_groups ?? '[]', true);
-            if (empty($allowed) || $isSuperAdmin || array_intersect($userGroups, $allowed)) {
+            if ($this->widgetAllowedForGroups($w->allowed_groups ?? null, $userGroups, $isSuperAdmin)) {
                 $filtered[] = $w;
             }
         }
@@ -125,8 +136,7 @@ class WidgetService
 
         $filtered = [];
         foreach ($widgets as $w) {
-            $allowed = json_decode($w->allowed_groups ?? '[]', true);
-            if (empty($allowed) || $isSuperAdmin || array_intersect($userGroups, $allowed)) {
+            if ($this->widgetAllowedForGroups($w->allowed_groups ?? null, $userGroups, $isSuperAdmin)) {
                 $filtered[] = $w;
             }
         }
@@ -317,6 +327,30 @@ class WidgetService
     // ══════════════════════════════════════════════════
 
     /**
+     * Returns the data of a widget, validating the user's allowed_groups access.
+     * Returns null if the widget does not exist/is inactive or if the user has no access.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getWidgetDataForUser(int $userId, string $slug): ?array
+    {
+        $widget = $this->commonModel->selectOne('dashboard_widgets', ['slug' => $slug, 'is_active' => 1]);
+        if (!$widget) {
+            return null;
+        }
+
+        $user         = auth()->getProvider()->findById($userId);
+        $userGroups   = $user ? $user->getGroups() : [];
+        $isSuperAdmin = $user ? $user->inGroup('superadmin') : false;
+
+        if (!$this->widgetAllowedForGroups($widget->allowed_groups ?? null, $userGroups, $isSuperAdmin)) {
+            return null;
+        }
+
+        return $this->getWidgetData($slug);
+    }
+
+    /**
      * Fetch data for a widget by its slug.
      * Routes to the appropriate built-in data provider.
      */
@@ -409,16 +443,17 @@ class WidgetService
     }
 
     /**
-     * Resolve custom data_source string. Format: ClassName::methodName
+     * Resolve custom data_source. Only classes registered in the DashboardWidgetsConfig::$dataProviders
+     * whitelist AND implementing the WidgetDataProviderInterface
+     * are executed via the fixed getData() method.
      */
     protected function resolveDataSource(string $source): array
     {
-        if (str_contains($source, '::')) {
-            [$class, $method] = explode('::', $source, 2);
-            if (class_exists($class) && method_exists($class, $method)) {
-                $obj = new $class();
-                return (array) $obj->{$method}();
-            }
+        $allowed = (new \Modules\DashboardWidgets\Config\DashboardWidgetsConfig())->dataProviders;
+
+        if (in_array($source, $allowed, true)
+            && is_a($source, WidgetDataProviderInterface::class, true)) {
+            return (new $source())->getData();
         }
 
         return ['value' => '—', 'label' => 'Unknown source'];

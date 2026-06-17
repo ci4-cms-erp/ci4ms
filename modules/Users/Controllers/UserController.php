@@ -111,6 +111,10 @@ class UserController extends \Modules\Backend\Controllers\BaseController
      */
     public function create_user()
     {
+        $this->defData['languages'] = $this->commonModel->lists('languages', 'code,name');
+        $languages = array_map(function ($language) {
+            return $language->code;
+        }, $this->defData['languages']);
         if ($this->request->is('post')) {
             $valData = ([
                 'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]|is_unique[users.username]',
@@ -118,7 +122,8 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 'surname' => ['label' => lang('Backend.lastName'), 'rules' => 'required|regex_match[/^[^\x3c\x3e\x7b\x7d\x3d]+$/u]'],
                 'email' => ['label' => lang('Auth.email'), 'rules' => 'required|valid_email|is_unique[auth_identities.secret]'],
                 'group.*' => ['label' => lang('Users.authority'), 'rules' => 'required|is_natural_no_zero'],
-                'password' => ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]']
+                'password' => ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]'],
+                'own_language' => ['label' => lang('Backend.ownLanguage'), 'rules' => 'required|in_list[' . implode(',', $languages) . ']'],
             ]);
 
             if ($this->validate($valData) === false) return redirect()->route('create_user')->withInput()->with('errors', $this->validator->getErrors());
@@ -160,7 +165,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         }
         $this->defData['groups'] = $this->commonModel->lists('auth_groups', '*', ['group!=' => 'superadmin']);
         $this->defData['authLib'] = $this->authLib;
-        return view('Modules\Users\Views\usersCrud\createUser', $this->defData);
+        return view('Modules\Users\Views\usersCrud\form', $this->defData);
     }
 
     private function sendActivationEmail($user, $code)
@@ -186,13 +191,18 @@ class UserController extends \Modules\Backend\Controllers\BaseController
      */
     public function update_user(int $id)
     {
+        $this->defData['languages'] = $this->commonModel->lists('languages', 'code,name');
+        $languages = array_map(function ($language) {
+            return $language->code;
+        }, $this->defData['languages']);
         if ($this->request->is('post')) {
             $valData = ([
                 'username' => 'required|regex_match[/\A[a-zA-Z0-9\.]+\z/]|min_length[3]|max_length[30]',
                 'firstname' => ['label' => lang('Backend.firstName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'surname' => ['label' => lang('Backend.lastName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'email' => ['label' => lang('Auth.email'), 'rules' => 'required|valid_email'],
-                'group.*' => ['label' => lang('Users.authority'), 'rules' => 'required|is_natural_no_zero']
+                'group.*' => ['label' => lang('Users.authority'), 'rules' => 'required|is_natural_no_zero'],
+                'own_language' => ['label' => lang('Backend.ownLanguage'), 'rules' => 'required|in_list[' . implode(',', $languages) . ']'],
             ]);
 
             if ($this->request->getPost('password')) $valData['password'] = ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]'];
@@ -227,7 +237,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         $this->defData['groups'] = $this->commonModel->lists('auth_groups', '*', ['group!=' => 'superadmin']);
         $this->defData['userInfo'] = $user->withGroups()->findById($id);
 
-        return view('Modules\Users\Views\usersCrud\updateUser', $this->defData);
+        return view('Modules\Users\Views\usersCrud\form', $this->defData);
     }
 
     /**
@@ -256,16 +266,21 @@ class UserController extends \Modules\Backend\Controllers\BaseController
      */
     public function profile()
     {
+        $this->defData['languages'] = $this->commonModel->lists('languages', 'code,name');
+        $languages = array_map(function ($language) {
+            return $language->code;
+        }, $this->defData['languages']);
         if ($this->request->is('post')) {
-            $valData = ([
-                'firstname' => ['label' => lang('Backend.firstName'), 'rules' => 'required'],
-                'surname' => ['label' => lang('Backend.lastName'), 'rules' => 'required'],
+            $valData = [
+                'firstname' => ['label' => lang('Backend.firstName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+                'surname' => ['label' => lang('Backend.lastName'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
                 'email' => ['label' => lang('Auth.email'), 'rules' => 'required|valid_email'],
                 'profileIMG' => [
                     'label' => lang('Users.profileIMG'),
                     'rules' => 'is_image[profileIMG]|mime_in[profileIMG,image/jpg,image/jpeg,image/png,image/webp]|max_size[profileIMG,2048]|max_dims[profileIMG,150,150]'
-                ]
-            ]);
+                ],
+                'own_language' => ['label' => lang('Backend.ownLanguage'), 'rules' => 'required|in_list[' . implode(',', $languages) . ']'],
+            ];
 
             if ($this->request->getPost('password')) {
                 $valData['password'] = ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]'];
@@ -282,7 +297,8 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             $data = [
                 'email' => $this->request->getPost('email'),
                 'firstname' => esc($this->request->getPost('firstname')),
-                'surname' => esc($this->request->getPost('surname'))
+                'surname' => esc($this->request->getPost('surname')),
+                'own_language' => $this->request->getPost('own_language'),
             ];
 
             // Image Upload Handling

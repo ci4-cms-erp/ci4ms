@@ -3,6 +3,7 @@
 return [
     'languageManager'    => 'Dil Yönetimi',
     'languages'          => 'Diller',
+    'language'          => 'Dil',
     'translations'       => 'Çeviriler',
     'createLanguage'     => 'Dil Ekle',
     'editLanguage'       => 'Dil Düzenle',

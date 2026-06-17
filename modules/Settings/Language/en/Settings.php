@@ -101,5 +101,21 @@ return [
     'rollbackSuccess' => 'System successfully restored to the backup point.',
     'rollbackFail' => 'Rollback failed: {0}',
     'backupNameRequired' => 'Backup name is required.',
-    'superadminRequired' => 'Editing custom JavaScript, custom CSS, or external theme assets requires the superadmin role. Other template settings were not saved.',
+    'superadminRequired'       => 'Editing custom JavaScript, custom CSS, or external theme assets requires the superadmin role. Other template settings were not saved.',
+    // Lock Screen
+    'idleTimeoutEnabled'        => 'Session Lock Screen',
+    'idleTimeoutMinutes'        => 'Lock timeout (min)',
+    'minutes'                   => 'min',
+    'idleTimeoutActive'         => 'Session lock screen enabled.',
+    'idleTimeoutDisabled'       => 'Session lock screen disabled.',
+    'idleTimeoutMinutesSaved'   => 'Lock timeout saved as {0} minutes.',
+    'idleTimeoutMinutesInvalid' => 'Please enter a valid timeout (1-480 minutes).',
+    // Backend Maintenance
+    'backendMaintenance'               => 'Backend Maintenance',
+    'backendMaintenanceAll'            => 'Maintenance: Entire Backend',
+    'backendMaintenanceModules'        => 'Modules in maintenance',
+    'backendMaintenanceSuperadminNote' => 'Superadmins are never locked out.',
+    'backendMaintenanceUpdated'        => 'Backend maintenance settings updated.',
+    'backendMaintenanceMinutes'        => 'Estimated duration (minutes)',
+    'backendMaintenanceModuleMinutes'  => 'Duration (min)',
 ];

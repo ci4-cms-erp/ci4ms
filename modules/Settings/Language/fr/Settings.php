@@ -86,4 +86,7 @@ return [
     'rollbackSuccess' => 'Système restauré avec succès au point de sauvegarde.',
     'rollbackFail' => 'Échec de la restauration : {0}',
     'backupNameRequired' => 'Le nom de la sauvegarde est obligatoire.',
+    // Backend Maintenance
+    'backendMaintenanceMinutes' => 'Durée estimée (minutes)',
+    'backendMaintenanceModuleMinutes' => 'Durée (min)',
 ];

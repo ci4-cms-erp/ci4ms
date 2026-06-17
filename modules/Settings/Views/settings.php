@@ -107,9 +107,55 @@ echo $this->section('content'); ?>
                                                     <label class="mb-0"><i class="fas fa-tools mr-2 text-muted"></i> <?php echo lang('Settings.maintenanceMode') ?></label>
                                                     <input type="checkbox" id="maintenance-mode" class="bswitch" <?php echo setting('App.maintenanceMode') ? 'checked' : '' ?> data-size="mini">
                                                 </div>
-                                                <div class="d-flex justify-content-between align-items-center">
+                                                <?php $bm = $backendMaintenance ?? ['all' => false, 'until' => null, 'modules' => []]; ?>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <label class="mb-0"><i class="fas fa-server mr-2 text-muted"></i> <?php echo lang('Settings.backendMaintenanceAll') ?></label>
+                                                    <input type="checkbox" id="backend-maintenance-all" class="bswitch" <?php echo !empty($bm['all']) ? 'checked' : '' ?> data-size="mini">
+                                                </div>
+                                                <?php
+                                                // Aktif global bakımda kalan dakika prefill'i (gelecekteki until için).
+                                                $bmGlobalMinutes = (!empty($bm['until']) && $bm['until'] > time()) ? (int) ceil(($bm['until'] - time()) / 60) : '';
+                                                ?>
+                                                <div class="form-group mb-2" id="backend-maintenance-minutes-wrap" style="<?php echo !empty($bm['all']) ? '' : 'display:none' ?>">
+                                                    <label class="small text-muted mb-1"><?php echo lang('Settings.backendMaintenanceMinutes') ?></label>
+                                                    <input type="number" min="1" id="backend-maintenance-minutes" class="form-control form-control-sm" placeholder="60" value="<?php echo $bmGlobalMinutes ?>" style="width:110px;border-radius:8px">
+                                                </div>
+                                                <div id="backend-maintenance-modules" class="mb-3 pl-2">
+                                                    <small class="text-muted d-block mb-1"><?php echo lang('Settings.backendMaintenanceModules') ?></small>
+                                                    <?php foreach (($backendMaintenanceModules ?? []) as $bmModule):
+                                                        $bmChecked = array_key_exists($bmModule, $bm['modules'] ?? []);
+                                                        $bmUntil   = $bm['modules'][$bmModule] ?? null;
+                                                        $bmMinutes = ($bmUntil !== null && $bmUntil > time()) ? (int) ceil(($bmUntil - time()) / 60) : '';
+                                                    ?>
+                                                        <div class="form-check d-flex align-items-center mb-1" style="gap:8px">
+                                                            <input class="form-check-input backend-maintenance-module" type="checkbox" value="<?php echo esc($bmModule) ?>" id="bm-mod-<?php echo esc($bmModule) ?>" <?php echo $bmChecked ? 'checked' : '' ?> <?php echo !empty($bm['all']) ? 'disabled' : '' ?>>
+                                                            <label class="form-check-label mb-0" for="bm-mod-<?php echo esc($bmModule) ?>"><?php echo esc($bmModule) ?></label>
+                                                            <input type="number" min="1" class="form-control form-control-sm backend-maintenance-module-minutes" data-module="<?php echo esc($bmModule) ?>" title="<?php echo lang('Settings.backendMaintenanceModuleMinutes') ?>" placeholder="<?php echo lang('Settings.backendMaintenanceModuleMinutes') ?>" value="<?php echo $bmMinutes ?>" style="width:110px;<?php echo $bmChecked ? '' : 'display:none' ?>">
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                    <small class="text-muted d-block mt-1"><i class="fas fa-info-circle mr-1"></i> <?php echo lang('Settings.backendMaintenanceSuperadminNote') ?></small>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
                                                     <label class="mb-0"><i class="fas fa-globe mr-2 text-muted"></i> <?php echo lang('Settings.languageModeMulti') ?></label>
                                                     <input type="checkbox" id="language-mode" class="bswitch" <?php echo setting('App.siteLanguageMode') === 'multi' ? 'checked' : '' ?> data-size="mini">
+                                                </div>
+                                                <hr class="my-2">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <label class="mb-0"><i class="fas fa-lock mr-2 text-muted"></i> <?php echo lang('Settings.idleTimeoutEnabled') ?></label>
+                                                    <input type="checkbox" id="idle-timeout-enabled" class="bswitch" <?php echo (setting('Auth.idleTimeoutEnabled') !== false) ? 'checked' : '' ?> data-size="mini">
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center" id="idle-timeout-minutes-row" <?php echo (setting('Auth.idleTimeoutEnabled') === false) ? 'style="display:none!important"' : '' ?>>
+                                                    <label class="mb-0 text-muted" style="font-size:13px"><i class="fas fa-clock mr-1"></i> <?php echo lang('Settings.idleTimeoutMinutes') ?></label>
+                                                    <div class="d-flex align-items-center" style="gap:6px">
+                                                        <input type="number" id="idle-timeout-minutes" class="form-control form-control-sm text-center"
+                                                            style="width:70px;border-radius:8px"
+                                                            value="<?php echo (int)(setting('Auth.idleTimeoutMinutes') ?: 15) ?>"
+                                                            min="1" max="480">
+                                                        <span class="text-muted" style="font-size:12px"><?php echo lang('Settings.minutes') ?></span>
+                                                        <button type="button" id="save-idle-minutes" class="btn btn-sm btn-outline-success" style="border-radius:8px;padding:2px 8px">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -317,11 +363,88 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         });
     });
 
+    function saveBackendMaintenance() {
+        var all = $('#backend-maintenance-all').is(':checked') ? 1 : 0;
+        var modules = {};
+        $('.backend-maintenance-module:checked').each(function() {
+            var name = $(this).val();
+            modules[name] = parseInt($('.backend-maintenance-module-minutes[data-module="' + name + '"]').val(), 10) || 0;
+        });
+        $.post('<?php echo route_to('saveBackendMaintenance') ?>', {
+            all: all,
+            minutes: parseInt($('#backend-maintenance-minutes').val(), 10) || 0,
+            modules: modules
+        }, 'json').done(function() {
+            showToast('<?php echo lang('Settings.backendMaintenanceUpdated') ?>');
+        });
+    }
+
+    $('#backend-maintenance-all').on('switchChange.bootstrapSwitch', function(e, state) {
+        $('#backend-maintenance-minutes-wrap').toggle(state);
+        $('.backend-maintenance-module').prop('disabled', state);
+        saveBackendMaintenance();
+    });
+
+    $('#backend-maintenance-minutes').on('change', function() {
+        saveBackendMaintenance();
+    });
+
+    $('.backend-maintenance-module').on('change', function() {
+        $('.backend-maintenance-module-minutes[data-module="' + $(this).val() + '"]').toggle(this.checked);
+        saveBackendMaintenance();
+    });
+
+    $('.backend-maintenance-module-minutes').on('change', function() {
+        saveBackendMaintenance();
+    });
+
     $('#language-mode').on('switchChange.bootstrapSwitch', function(e, state) {
         $.post('<?php echo route_to('saveLanguageMode') ?>', {
             mode: state ? 'multi' : 'single'
         }, 'json').done(data => {
             showToast('<?php echo lang('Settings.languageModeUpdated') ?>'.replace('{0}', state ? 'Multi' : 'Single'));
+        });
+    });
+
+    // Lock Screen — Idle Timeout Switch
+    $('#idle-timeout-enabled').on('switchChange.bootstrapSwitch', function(e, state) {
+        $.ajax({
+            url: '<?php echo route_to('saveIdleTimeout') ?>',
+            type: 'POST',
+            data: {
+                type: 'enabled',
+                isActive: state ? 1 : 0,
+                [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+            },
+            dataType: 'json'
+        }).done(function(data) {
+            if (state) {
+                $('#idle-timeout-minutes-row').addClass('d-flex').show();
+            } else {
+                $('#idle-timeout-minutes-row').removeClass('d-flex').hide();
+            }
+            showToast(state ? '<?php echo lang('Settings.idleTimeoutActive') ?>' : '<?php echo lang('Settings.idleTimeoutDisabled') ?>');
+        });
+    });
+
+    // Lock Screen — Idle Timeout Dakika Kaydet
+    $('#save-idle-minutes').on('click', function() {
+        let minutes = parseInt($('#idle-timeout-minutes').val(), 10);
+        if (!minutes || minutes < 1 || minutes > 480) {
+            showToast('<?php echo lang('Settings.idleTimeoutMinutesInvalid') ?>', 'error');
+            return;
+        }
+        $.ajax({
+            url: '<?php echo route_to('saveIdleTimeout') ?>',
+            type: 'POST',
+            data: {
+                type: 'minutes',
+                minutes: minutes,
+                [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+            },
+            dataType: 'json'
+        }).done(function(data) {
+            showToast('<?php echo lang('Settings.idleTimeoutMinutesSaved') ?>'.replace('{0}', minutes));
         });
     });
 

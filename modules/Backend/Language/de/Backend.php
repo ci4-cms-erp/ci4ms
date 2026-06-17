@@ -123,4 +123,12 @@ return [
     'showHidden' => 'Versteckte anzeigen',
     'refresh' => 'Aktualisieren',
     'processNote' => 'Vorgangsnotiz',
+    // 503 countdown
+    'err503CdTitle' => 'Voraussichtliche Rückkehrzeit',
+    'err503CdSub' => 'Unsere Arbeiten schreiten zügig voran.',
+    'errCdHours' => 'Stunden',
+    'errCdMinutes' => 'Minuten',
+    'errCdSeconds' => 'Sekunden',
+    // sidebar maintenance badge
+    'menuInMaintenance' => 'In Wartung',
 ];

@@ -43,7 +43,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             if (!empty($this->request->getPost('page_id')) && $this->commonModel->edit('auth_permissions_pages', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['id' => $this->request->getPost('page_id')]))
                 $flag = true;
             if ($flag === true) {
-                cache()->delete("{$this->defData['logged_in_user']->id}_permissions");
+                cache()->delete('sidebar_menu');
                 return $this->respond(['success' => 'success'], 200);
             }
         }
@@ -56,12 +56,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     public function create()
     {
         if ($this->request->is('post')) {
-            $valData = ([
-                'pagename' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-                'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]|is_unique[auth_permissions_pages.sefLink]'],
-                'typeOfPermissions' => ['label' => '', 'rules' => 'required'],
-            ]);
-            if ($this->validate($valData) === false)
+            if ($this->validate($this->validationRules()) === false)
                 return redirect()->route('methodCreate')->withInput()->with('errors', $this->validator->getErrors());
             $roles = $this->request->getPost('typeOfPermissions');
             $r = [
@@ -93,18 +88,13 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
         $this->defData['modules'] = $this->commonModel->lists('modules');
         $this->defData['permPages'] = $this->commonModel->lists('auth_permissions_pages');
-        return view('Modules\Methods\Views\create', $this->defData);
+        return view('Modules\Methods\Views\form', $this->defData);
     }
 
     public function update(int $pk)
     {
         if ($this->request->is('post')) {
-            $valData = ([
-                'pagename' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-                'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
-                'typeOfPermissions' => ['label' => '', 'rules' => 'required']
-            ]);
-            if ($this->validate($valData) === false)
+            if ($this->validate($this->validationRules()) === false)
                 return redirect()->route('methodUpdate', [$pk])->withInput()->with('errors', $this->validator->getErrors());
             $roles = $this->request->getPost('typeOfPermissions');
             $r = [
@@ -138,8 +128,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         $this->defData['method'] = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pk]);
         $this->defData['methods'] = $this->commonModel->lists('auth_permissions_pages', '*', ['id!=' => $pk, 'inNavigation' => true], 'pagename ASC');
         $this->defData['modules'] = $this->commonModel->lists('modules');
-        $this->defData['permPages'] = $this->commonModel->lists('auth_permissions_pages');
-        return view('Modules\Methods\Views\update', $this->defData);
+        return view('Modules\Methods\Views\form', $this->defData);
     }
 
     public function moduleScan()
@@ -186,9 +175,10 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         $totalUncompressed = 0;
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $entryName = $zip->getNameIndex($i);
-            $stat      = $zip->statIndex($i);
+            $stat = $zip->statIndex($i);
 
-            if ($entryName === ''
+            if (
+                $entryName === ''
                 || preg_match('/^[\\/\\\\]/', $entryName)            // absolute path
                 || preg_match('/^[A-Za-z]:[\\/\\\\]/', $entryName)   // Windows drive letter
                 || preg_match('/(^|[\\/\\\\])\.\.([\\/\\\\]|$)/', $entryName) // .. segment anywhere
@@ -249,7 +239,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             @rmdir($quarantine);
             return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipPath')]);
         }
-        $sourceDir    = reset($folders);
+        $sourceDir = reset($folders);
         $moduleFolder = basename($sourceDir);
 
         // Module folder name must be a safe PascalCase-ish identifier so it
@@ -269,10 +259,12 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         }
 
         // Final containment check: $sourceDir must resolve INSIDE the quarantine.
-        $realSource     = realpath($sourceDir);
+        $realSource = realpath($sourceDir);
         $realQuarantine = realpath($quarantine);
-        if ($realSource === false || $realQuarantine === false
-            || strncmp($realSource, rtrim($realQuarantine, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, strlen(rtrim($realQuarantine, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) !== 0) {
+        if (
+            $realSource === false || $realQuarantine === false
+            || strncmp($realSource, rtrim($realQuarantine, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, strlen(rtrim($realQuarantine, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) !== 0
+        ) {
             delete_files($quarantine, true);
             @rmdir($quarantine);
             return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.invalidZipPath')]);
@@ -330,13 +322,11 @@ class Methods extends \Modules\Backend\Controllers\BaseController
 
     public function moduleCreate()
     {
-        if (!$this->request->isAJAX())
-            return $this->failForbidden();
+        if (!$this->request->isAJAX()) return $this->failForbidden();
         $valData = ([
             'module_name' => ['label' => lang('Methods.moduleName'), 'rules' => 'required|alpha_dash'],
         ]);
-        if ($this->validate($valData) === false)
-            return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
         $moduleName = $this->request->getPost('module_name');
 
         $moduleName = ucfirst((string) $moduleName);
@@ -475,5 +465,14 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             'status' => 'success',
             'message' => $message,
         ]);
+    }
+
+    private function validationRules(): array
+    {
+        return [
+            'pagename' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+            'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+            'typeOfPermissions' => ['label' => '', 'rules' => 'required']
+        ];
     }
 }

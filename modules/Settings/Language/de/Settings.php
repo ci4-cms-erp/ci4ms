@@ -86,4 +86,7 @@ return [
     'rollbackSuccess' => 'System erfolgreich auf den Sicherungspunkt zurückgesetzt.',
     'rollbackFail' => 'Wiederherstellung fehlgeschlagen: {0}',
     'backupNameRequired' => 'Sicherungsname ist erforderlich.',
+    // Backend Maintenance
+    'backendMaintenanceMinutes' => 'Geschätzte Dauer (Minuten)',
+    'backendMaintenanceModuleMinutes' => 'Dauer (Min.)',
 ];

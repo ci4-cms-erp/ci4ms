@@ -21,7 +21,6 @@
     <?php echo script_tag("be-assets/plugins/jquery/jquery.min.js");
     echo script_tag("be-assets/plugins/bootstrap/js/bootstrap.bundle.min.js");
     echo script_tag("be-assets/js/adminlte.min.js");
-    echo script_tag("be-assets/js/demo.js");
     echo $this->renderSection('javascript') ?>
 </body>
 

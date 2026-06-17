@@ -123,4 +123,12 @@ return [
     'showHidden' => '非表示項目を表示',
     'refresh' => '更新',
     'processNote' => '操作メモ',
+    // 503 countdown
+    'err503CdTitle' => '復旧までの推定時間',
+    'err503CdSub' => '作業は順調に進んでいます。',
+    'errCdHours' => '時間',
+    'errCdMinutes' => '分',
+    'errCdSeconds' => '秒',
+    // sidebar maintenance badge
+    'menuInMaintenance' => 'メンテナンス中',
 ];

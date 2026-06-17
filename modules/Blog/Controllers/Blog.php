@@ -45,7 +45,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             $results = $this->commonModel->lists('blog', 'blog.id, blog_langs.title, blog.isActive', $postData, 'blog.id DESC', $parsed['length'], $parsed['start'], $like, [], $joins);
             $totalRecords = $this->commonModel->lists('blog', 'blog.id', $postData, 'blog.id DESC', 0, 0, $like, [], $joins, ['count' => true]);
             foreach ($results as $result) {
-                $result->isActive = '<input type="checkbox" name="my-checkbox" class="bswitch" ' . ((bool)$result->isActive === true ? 'checked' : '') . ' data-id="' . $result->id . '" data-off-color="danger" data-on-color="success">';
+                $result->isActive = '<input type="checkbox" name="my-checkbox" class="bswitch" ' . ((bool) $result->isActive === true ? 'checked' : '') . ' data-id="' . $result->id . '" data-off-color="danger" data-on-color="success">';
                 $result->actions = '<a href="' . route_to('blogUpdate', $result->id) . '"
                                    class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>
                                    <a href="javascript:void(0);" onclick="deleteItem(' . $result->id . ')"
@@ -77,32 +77,12 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         $languages = $translationService->getActiveLanguages();
 
         if ($this->request->is('post')) {
-            $valData = ([
-                'lang.*.title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
-                'lang.*.seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
-                'lang.*.content' => ['label' => lang('Backend.content'), 'rules' => 'required|html_purify'],
-                'isActive' => ['label' => lang('Backend.publish') . ' / ' . lang('Backend.draft'), 'rules' => 'required|in_list[0,1]'],
-                'categories.*' => ['label' => lang('Blog.categories'), 'rules' => 'required|is_natural_no_zero'],
-                'author' => ['label' => lang('Blog.author'), 'rules' => 'required|is_natural_no_zero'],
-                'created_at' => ['label' => lang('Backend.createdAt'), 'rules' => 'required|valid_date[d.m.Y H:i:s]']
-            ]);
-            if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImage'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
-                $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
-            }
-
             $langsPost = $this->request->getPost('lang');
-            // manual seflink unique check
-            foreach ($langsPost as $lanCode => $lanData) {
-                if ($this->commonModel->isHave('blog_langs', ['seflink' => $lanData['seflink']]) === 1) {
-                    return redirect()->route('blogCreate')->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz. Seflink: ' . $lanData['seflink']);
-                }
-            }
 
-            if ($this->validate($valData) === false) return redirect()->route('blogCreate')->withInput()->with('errors', $this->validator->getErrors());
+            if ($this->validate($this->validationRules($langsPost)) === false)
+                return redirect()->route('blogCreate')->withInput()->with('errors', $this->validator->getErrors());
 
-            $data = ['isActive' => (bool)$this->request->getPost('isActive'), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
+            $data = ['isActive' => (bool) $this->request->getPost('isActive'), 'inMenu' => false, 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
 
             $insertID = $this->commonModel->create('blog', $data);
             if ($insertID) {
@@ -135,20 +115,23 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 // keywords are per language? For now, the existing form has one keyword field or multiple?
                 // Currently it has one. We'll add tags globally.
                 $firstLang = array_key_first($langsPost);
-                if (!empty($this->request->getPost('keywords'))) $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', (string)$insertID, 'tags');
+                if (!empty($this->request->getPost('keywords')))
+                    $this->commonTagsLib->checkTags($this->request->getPost('keywords'), 'blogs', (string) $insertID, 'tags');
                 return redirect()->route('blogs', [1])->with('message', lang('Backend.created', [esc($langsPost[$firstLang]['title'])]));
-            } else return redirect()->route('blogCreate')->withInput()->with('error', lang('Backend.notCreated', ['Blog']));
+            } else
+                return redirect()->route('blogCreate')->withInput()->with('error', lang('Backend.notCreated', ['Blog']));
         }
         $locale = empty(session()->get('customLocale')) ? \Config\Services::request()->getLocale() : session()->get('customLocale');
         $defaultLocale = setting('App.defaultLocale') ?: 'tr';
-        if (setting('App.siteLanguageMode') == 'single') $locale = $defaultLocale;
+        if (setting('App.siteLanguageMode') == 'single')
+            $locale = $defaultLocale;
 
         $this->defData['categories'] = $this->commonModel->lists('categories', 'categories.id, categories_langs.title, categories_langs.seflink', ['categories.isActive' => true], 'categories.id ASC', 0, 0, [], [], [
-             ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'left']
+            ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'left']
         ]);
         $this->defData['authors'] = $this->commonModel->lists('users', '*', ['active' => 1]);
         $this->defData['languages'] = $languages;
-        return view('Modules\Blog\Views\create', $this->defData);
+        return view('Modules\Blog\Views\form', $this->defData);
     }
 
     /**
@@ -161,34 +144,11 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         $languages = $translationService->getActiveLanguages();
 
         if ($this->request->is('post')) {
-            $valData = ([
-                'lang.*.title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
-                'lang.*.seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
-                'lang.*.content' => ['label' => lang('Backend.content'), 'rules' => 'required|html_purify'],
-                'isActive' => ['label' => lang('Backend.publish') . ' / ' . lang('Backend.draft'), 'rules' => 'required|in_list[0,1]'],
-                'categories.*' => ['label' => lang('Blog.categories'), 'rules' => 'required|is_natural_no_zero'],
-                'author' => ['label' => lang('Blog.author'), 'rules' => 'required|is_natural_no_zero'],
-                'created_at' => ['label' => lang('Backend.createdAt'), 'rules' => 'required|valid_date[d.m.Y H:i:s]']
-            ]);
-            if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImage'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
-                $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
-            }
-
             $langsPost = $this->request->getPost('lang');
-            // Check unique seflink for languages, ignoring self
-            foreach ($langsPost as $lanCode => $lanData) {
-                // query blog_langs where seflink equals and blog_id != $id
-                $check = $this->commonModel->selectOne('blog_langs', ['seflink' => $lanData['seflink'], 'blog_id !=' => $id]);
-                if (!empty($check)) {
-                    return redirect()->route('blogUpdate', [$id])->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz. Seflink: ' . $lanData['seflink']);
-                }
-            }
+            if ($this->validate($this->validationRules($langsPost, $id)) === false)
+                return redirect()->route('blogUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
 
-            if ($this->validate($valData) === false) return redirect()->route('blogUpdate', [$id])->withInput()->with('errors', $this->validator->getErrors());
-
-            $data = ['isActive' => (bool)$this->request->getPost('isActive'), 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
+            $data = ['isActive' => (bool) $this->request->getPost('isActive'), 'author' => $this->request->getPost('author'), 'created_at' => date('Y-m-d H:i:s', strtotime($this->request->getPost('created_at')))];
 
             if ($this->commonModel->edit('blog', $data, ['id' => $id])) {
                 foreach ($langsPost as $lanCode => $lanData) {
@@ -220,21 +180,23 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 }
                 $firstLang = array_key_first($langsPost);
                 return redirect()->route('blogs', [1])->with('message', lang('Backend.updated', [esc($langsPost[$firstLang]['title'])]));
-            } else return redirect()->route('blogUpdate', [$id])->withInput()->with('error', lang('Backend.notUpdated', ['Blog']));
+            } else
+                return redirect()->route('blogUpdate', [$id])->withInput()->with('error', lang('Backend.notUpdated', ['Blog']));
         }
         $this->defData['tags'] = $this->model->limitTags_ajax(['tags_pivot.tagType' => 'blogs', 'tags_pivot.piv_id' => $id]);
         $t = [];
         foreach ($this->defData['tags'] as $tag) {
-            $t[] = ['id' => (string)$tag->id, 'value' => $tag->tag];
+            $t[] = ['id' => (string) $tag->id, 'value' => $tag->tag];
         }
         $locale = empty(session()->get('customLocale')) ? \Config\Services::request()->getLocale() : session()->get('customLocale');
         $defaultLocale = setting('App.defaultLocale') ?: 'tr';
-        if (setting('App.siteLanguageMode') == 'single') $locale = $defaultLocale;
-
+        if (setting('App.siteLanguageMode') == 'single')
+            $locale = $defaultLocale;
+        if (empty($this->defData['infos'] = $this->commonModel->selectOne('blog', ['id' => $id])))
+            return $this->showError();
         $this->defData['categories'] = $this->commonModel->lists('categories', 'categories.id, categories_langs.title, categories_langs.seflink', ['categories.isActive' => true], 'categories.id ASC', 0, 0, [], [], [
-             ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'left']
+            ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'left']
         ]);
-        $this->defData['infos'] = $this->commonModel->selectOne('blog', ['id' => $id]);
 
         $langRows = $this->commonModel->lists('blog_langs', '*', ['blog_id' => $id]);
         $langsData = [];
@@ -249,7 +211,43 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         $this->defData['authors'] = $this->commonModel->lists('users', '*', ['active' => 1]);
         $this->defData['languages'] = $languages;
         unset($t);
-        return view('Modules\Blog\Views\update', $this->defData);
+        return view('Modules\Blog\Views\form', $this->defData);
+    }
+
+    private function validationRules($langsPost, $id): array
+    {
+        $valData = [
+            'lang.*.title' => ['label' => lang('Backend.title'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]'],
+            'lang.*.seflink' => ['label' => lang('Backend.url'), 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'],
+            'lang.*.content' => ['label' => lang('Backend.content'), 'rules' => 'required|html_purify'],
+            'isActive' => ['label' => lang('Backend.publish') . ' / ' . lang('Backend.draft'), 'rules' => 'required|in_list[0,1]'],
+            'categories.*' => ['label' => lang('Blog.categories'), 'rules' => 'required|is_natural_no_zero'],
+            'author' => ['label' => lang('Blog.author'), 'rules' => 'required|is_natural_no_zero'],
+            'created_at' => ['label' => lang('Backend.createdAt'), 'rules' => 'required|valid_date[d.m.Y H:i:s]']
+        ];
+        if (!empty($this->request->getPost('pageimg'))) {
+            $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^(https?:\/\/[a-zA-Z0-9\/:.\-_~%]+|\/[a-zA-Z0-9\/.\-_]+)\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?[a-zA-Z0-9=&_\-.%]*)?$/i]'];
+            $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
+            $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
+        }
+
+        if (!empty($id)) {
+            // Check unique seflink for languages, ignoring self
+            foreach ($langsPost as $lanCode => $lanData) {
+                // query blog_langs where seflink equals and blog_id != $id
+                $check = $this->commonModel->selectOne('blog_langs', ['seflink' => $lanData['seflink'], 'blog_id !=' => $id]);
+                if (!empty($check)) {
+                    return redirect()->route('blogUpdate', [$id])->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz. Seflink: ' . $lanData['seflink']);
+                }
+            }
+        } else {
+            foreach ($langsPost as $lanCode => $lanData) {
+                if ($this->commonModel->isHave('blog_langs', ['seflink' => $lanData['seflink']]) === 1) {
+                    return redirect()->route('blogCreate')->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz. Seflink: ' . $lanData['seflink']);
+                }
+            }
+        }
+        return $valData;
     }
 
     /**
@@ -257,19 +255,23 @@ class Blog extends \Modules\Backend\Controllers\BaseController
      */
     public function delete()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
 
         $deleteId = $this->request->getPost('id');
         $defaultLocale = setting('App.defaultLocale') ?: 'tr';
         $blogLang = $this->commonModel->selectOne('blog_langs', ['blog_id' => $deleteId, 'lang' => $defaultLocale]);
         $title = $blogLang ? $blogLang->title : 'Blog';
 
-        if ($this->commonModel->remove('blog', ['id' => $deleteId]) === true) return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$title])]);
-        else return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$title])]);
+        if ($this->commonModel->remove('blog', ['id' => $deleteId]) === true)
+            return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$title])]);
+        else
+            return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$title])]);
     }
 
     /**
@@ -282,7 +284,8 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $searchData = ['isApproved' => $this->request->getPost('isApproved') == 'true' ? true : false];
             $like = [];
-            if (!empty($parsed['searchString'])) $like = ['comFullName' => $parsed['searchString'], 'comEmail' => $parsed['searchString']];
+            if (!empty($parsed['searchString']))
+                $like = ['comFullName' => $parsed['searchString'], 'comEmail' => $parsed['searchString']];
             $results = $this->commonModel->lists(
                 'comments',
                 '*',
@@ -324,14 +327,18 @@ class Blog extends \Modules\Backend\Controllers\BaseController
 
     public function commentRemove()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
         $valData = ([
             'id' => ['label' => '', 'rules' => 'required|is_natural_no_zero'],
         ]);
-        if ($this->validate($valData) === false) return $this->fail($this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return $this->fail($this->validator->getErrors());
         $comment = $this->commonModel->selectOne('comments', ['id' => $this->request->getPost('id')]);
-        if ($this->commonModel->remove('comments', ['id' => $this->request->getPost('id')]) === true) return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$comment->comFullName])]);
-        else return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$comment->comFullName])]);
+        if ($this->commonModel->remove('comments', ['id' => $this->request->getPost('id')]) === true)
+            return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$comment->comFullName])]);
+        else
+            return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$comment->comFullName])]);
     }
 
     public function displayComment(int $id)
@@ -346,7 +353,8 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         $rules = [
             'options' => 'required|is_natural_no_zero|in_list[1,2]'
         ];
-        if (!$this->validate($rules)) return redirect()->route('displayComment', [$id])->withInput()->with('errors', $this->validator->getErrors());
+        if (!$this->validate($rules))
+            return redirect()->route('displayComment', [$id])->withInput()->with('errors', $this->validator->getErrors());
         $isApproved = $this->request->getPost('options');
         if ($isApproved === 1) {
             if ($this->commonModel->edit('comments', ['isApproved' => $isApproved], ['id' => $id])) {
@@ -369,7 +377,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
         if (empty($this->defData['badwords']))
             $this->defData['badwords'] = null;
         else {
-            $this->defData['badwords'] = (object)[
+            $this->defData['badwords'] = (object) [
                 'list' => implode(',', $this->defData['badwords']['list']),
                 'status' => $this->defData['badwords']['status'],
                 'autoReject' => $this->defData['badwords']['autoReject'],

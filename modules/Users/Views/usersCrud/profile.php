@@ -67,6 +67,20 @@ echo $this->section('content'); ?>
                         <input type="text" class="form-control" name="password" minlength="8">
                     </div>
                 </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="own_language"><?php echo lang('LanguageManager.languages') ?></label>
+                        <select name="own_language" id="own_language" class="form-control select2bs4"
+                            data-placeholder="<?php echo lang('Backend.selectOption', [lang('LanguageManager.language')]) ?>">
+                            <option value=""><?php echo lang('Backend.select') ?></option>
+                            <?php foreach ($languages as $language): ?>
+                                <option value="<?php echo $language->code ?>" <?php echo set_select('own_language',$language->code, $language->code===$user->own_language) ?>>
+                                    <?php echo esc($language->name) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
                 <div class="col-md-12">
                     <button class="btn btn-outline-success float-right"><?php echo lang('Backend.update') ?></button>
                 </div>

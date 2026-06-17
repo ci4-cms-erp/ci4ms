@@ -4,6 +4,7 @@ namespace Modules\Settings\Controllers;
 
 use Config\Mimes;
 use Modules\Settings\Libraries\UpdateService;
+use Modules\Backend\Libraries\BackendMaintenance;
 
 class Settings extends \Modules\Backend\Controllers\BaseController
 {
@@ -20,6 +21,15 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     {
         $this->defData['request'] = $this->request;
         $this->defData['mimes'] = Mimes::$mimes;
+
+        // normalize(): stdClass / array / eski düz liste formatlarını kanonik
+        // {all, until, modules: map} yapısına çevirir; view kalan dakika
+        // prefill'i için until değerlerini kullanır.
+        $this->defData['backendMaintenance'] = BackendMaintenance::normalize(
+            cache('settings')['backendMaintenance'] ?? null
+        );
+        $this->defData['backendMaintenanceModules'] = $this->backendMaintenanceModules();
+
         return view('Modules\Settings\Views\settings', $this->defData);
     }
 
@@ -358,6 +368,132 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 'message' => lang('Backend.notUpdated', [lang('Settings.languageMode')]) . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Lock Screen — Hareketsizlik zaman aşımı ayarlarını kaydeder.
+     * idleTimeoutEnabled (bool) ve idleTimeoutMinutes (int) değerlerini günceller.
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface
+     */
+    public function saveIdleTimeout(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->failForbidden();
+        }
+
+        // idleTimeoutEnabled ayarı (0 veya 1)
+        if ($this->request->getPost('type') === 'enabled') {
+            $valRules = [
+                'isActive' => ['label' => lang('Backend.status'), 'rules' => 'required|in_list[0,1]'],
+            ];
+            if ($this->validate($valRules) === false) {
+                return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+            }
+            try {
+                setting()->set('Auth.idleTimeoutEnabled', (bool) $this->request->getPost('isActive'));
+                cache()->delete('settings');
+                return $this->respond(['status' => 'success']);
+            } catch (\Exception $e) {
+                return $this->respond(['status' => 'error', 'message' => $e->getMessage()], 500);
+            }
+        }
+
+        // idleTimeoutMinutes ayarı (1-480 dakika arası)
+        if ($this->request->getPost('type') === 'minutes') {
+            $valRules = [
+                'minutes' => ['label' => lang('Settings.idleTimeoutMinutes'), 'rules' => 'required|is_natural_no_zero|less_than_equal_to[480]'],
+            ];
+            if ($this->validate($valRules) === false) {
+                return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+            }
+            try {
+                setting()->set('Auth.idleTimeoutMinutes', (int) $this->request->getPost('minutes'));
+                cache()->delete('settings');
+                return $this->respond(['status' => 'success', 'minutes' => (int) $this->request->getPost('minutes')]);
+            } catch (\Exception $e) {
+                return $this->respond(['status' => 'error', 'message' => $e->getMessage()], 500);
+            }
+        }
+
+        return $this->respond(['status' => 'error', 'message' => 'Invalid type'], 400);
+    }
+
+    /**
+     * Backend bakım modunu kaydeder (tüm backend + tahmini süre (dakika) +
+     * modül bazlı bakım map'i: modulAdi => dakika).
+     * `App.backendMaintenance = {all, until, modules: map}` yazar
+     * (BackendMaintenanceFilter okur).
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface
+     */
+    public function saveBackendMaintenance(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->failForbidden();
+        }
+
+        $valData = [
+            'all'     => ['label' => lang('Settings.backendMaintenanceAll'), 'rules' => 'required|in_list[0,1]'],
+            'minutes' => ['label' => lang('Settings.backendMaintenanceMinutes'), 'rules' => 'permit_empty|is_natural'],
+        ];
+        if ($this->validate($valData) === false) {
+            return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+        }
+
+        try {
+            $all     = (bool) $this->request->getPost('all');
+            $minutes = (int) $this->request->getPost('minutes');
+
+            // modules map'i yalnızca gerçekten var olan modüllere göre allowlist'lenir.
+            $allowed = $this->backendMaintenanceModules();
+            $posted  = (array) ($this->request->getPost('modules') ?? []);
+            $modules = [];
+            foreach ($posted as $name => $moduleMinutes) {
+                $name = (string) $name;
+                if (! in_array($name, $allowed, true)) {
+                    continue;
+                }
+                $moduleMinutes  = (int) $moduleMinutes;
+                // dakika > 0 ise bitiş timestamp'i, değilse süresiz (null)
+                $modules[$name] = $moduleMinutes > 0 ? time() + ($moduleMinutes * 60) : null;
+            }
+
+            setting()->set('App.backendMaintenance', json_encode([
+                'all'     => $all,
+                'until'   => ($all && $minutes > 0) ? time() + ($minutes * 60) : null,
+                'modules' => $modules,
+            ], JSON_UNESCAPED_UNICODE));
+            cache()->delete('settings');
+
+            return $this->respond([
+                'status'  => 'success',
+                'message' => lang('Settings.backendMaintenanceUpdated'),
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('Backend.notUpdated', [lang('Settings.backendMaintenance')]),
+            ], 500);
+        }
+    }
+
+    /**
+     * Bakıma alınabilecek modüllerin (backend sayfası olan, altyapı hariç)
+     * distinct listesini döndürür. 1 saat cache'lenir.
+     *
+     * @return string[]
+     */
+    private function backendMaintenanceModules(): array
+    {
+        if ($cached = cache('backend_maintenance_modules')) {
+            return $cached;
+        }
+        $rows       = $this->commonModel->lists('auth_permissions_pages', 'className');
+        $classNames = array_map(static fn($row) => $row->className, $rows);
+        $modules    = BackendMaintenance::selectableModules($classNames);
+        cache()->save('backend_maintenance_modules', $modules, 3600);
+        return $modules;
     }
 
     /**

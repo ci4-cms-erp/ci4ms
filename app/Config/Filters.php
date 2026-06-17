@@ -183,14 +183,20 @@ class Filters extends BaseFilters
             \CodeIgniter\Shield\Filters\SessionAuth::class,
             \CodeIgniter\Shield\Filters\ForcePasswordResetFilter::class,
             \Modules\Auth\Filters\Ci4MsAuthFilter::class,
+            \Modules\Backend\Filters\BackendMaintenanceFilter::class,
             \Modules\Backend\Filters\BackendLogFilter::class,
             \Modules\Auth\Filters\SessionTracker::class,
             \Modules\Backend\Filters\CsrfTokenRefreshFilter::class,
+            \Modules\Backend\Filters\BackendThrottleFilter::class,
         ];
         $this->aliases['langfilter'] = [
             \App\Filters\Ci4ms::class,
             \Modules\LanguageManager\Filters\LocaleFilter::class,
         ];
+
+        $this->aliases['throttle']   = \App\Filters\ThrottleFilter::class;
+        $this->aliases['auth-rates'] = \Modules\Auth\Filters\AuthThrottleFilter::class;
+        
         foreach ($directories as $directory) {
             if (is_dir($directory)) {
                 foreach (glob("$directory/*.php") as $file) {

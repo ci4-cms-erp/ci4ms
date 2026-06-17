@@ -17,6 +17,7 @@
     <link href="/be-assets/custom.css" rel="stylesheet" type="text/css">
 
     <?php echo csrf_meta();
+    echo '<meta name="csrf-token-name" content="' . csrf_token() . '">';
     echo $this->renderSection('head') ?>
 </head>
 
@@ -38,7 +39,7 @@
         <aside class="main-sidebar sidebar-light-olive elevation-1">
             <!-- Brand Logo -->
             <a href="<?php echo base_url('backend') ?>" class="brand-link navbar-ci4ms text-center">
-                <img src="/be-assets/img/logo-w.png" alt="" class="img-responsive" height="25">
+                <img src="/be-assets/img/logo-w.png" alt="" class="img-fluid">
             </a>
 
             <!-- Sidebar -->
@@ -120,19 +121,30 @@
                                     $is_active = isset($active_ids[$id]);
                                     $has_child = (bool) $nav->hasChild;
 
+                                    // Maintenance state (annotated per-request in generateSidebar)
+                                    $maintenance_badge = !empty($nav->maintenanceBadge);
+                                    $maintenance_disabled = !empty($nav->maintenanceDisabled);
+
                                     // Calculate CSS classes
                                     $li_class = ($is_active && $has_child) ? 'menu-is-opening menu-open' : '';
                                     $link_class = $is_active ? 'active' : '';
+                                    if ($maintenance_disabled)
+                                        $link_class = trim($link_class . ' disabled');
 
                                     // Pre-calculate URL
                                     $u = explode('/', $nav->sefLink);
                                     $href = empty($u[1]) ? route_to($u[0]) : route_to($u[0], $u[1]);
+                                    if ($maintenance_disabled)
+                                        $href = 'javascript:void(0)';
                                     ?>
                                     <li class="nav-item <?php echo $li_class ?>">
-                                        <a href="<?php echo $href ?>" class="nav-link <?php echo $link_class ?>">
+                                        <a href="<?php echo $href ?>" class="nav-link <?php echo $link_class ?>" <?php echo $maintenance_disabled ? 'tabindex="-1" aria-disabled="true"' : '' ?>>
                                             <i class="nav-icon <?php echo $nav->symbol ?>"></i>
                                             <p>
                                                 <?php echo lang($nav->pagename) ?>
+                                                <?php if ($maintenance_badge): ?>
+                                                    <span class="right badge badge-warning" title="<?php echo lang('Backend.menuInMaintenance') ?>"><i class="fas fa-tools"></i></span>
+                                                <?php endif; ?>
                                                 <?php echo $has_child ? '<i class="right fas fa-angle-left"></i>' : '' ?>
                                             </p>
                                         </a>
@@ -187,6 +199,8 @@
     echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js"); ?>
     <script type="text/javascript" <?php echo csp_script_nonce(); ?>>
         window.CI4MS_LOCALE = '<?php echo env('app.defaultLocale', 'tr') ?>';
+        window.CI4MS_IDLE_ENABLED = <?php echo (setting('Auth.idleTimeoutEnabled') !== false) ? 'true' : 'false' ?>;
+        window.CI4MS_IDLE_MINUTES = <?php echo (int) (setting('Auth.idleTimeoutMinutes') ?: 15) ?>;
     </script>
     <?php echo script_tag("be-assets/js/ci4ms.js");
     echo view('Modules\Backend\Views\sweetalert_message_block', [], ['debug' => false]);

@@ -18,7 +18,8 @@ class UserModel extends ShieldUserModel
             'firstname',
             'surname',
             'profileIMG',
-            'who_created'
+            'who_created',
+            'own_language'
         ];
     }
 }

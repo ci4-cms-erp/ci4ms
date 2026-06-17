@@ -10,6 +10,28 @@ class CommonLibrary
     protected $config;
     protected $commonModel;
 
+    /**
+     * Allowlist of shortcode handlers that parseInTextFunctions() may invoke.
+     *
+     * The key is the EXACT inline token as written in page content between
+     * `{` and `/}` (e.g. `App\Libraries\Shortcodes|year` for a static method,
+     * or `some_function` for a plain function). Only tokens present here are
+     * ever passed to call_user_func(); anything else is stripped from the
+     * output. This prevents arbitrary class/method or function execution from
+     * attacker-controlled content (RCE).
+     *
+     * Register new shortcodes here explicitly — never widen this to a
+     * namespace/prefix match or a blacklist.
+     *
+     * @var array<string,bool>
+     */
+    private array $allowedShortcodes = [
+        // '\App\Libraries\Shortcodes|currentYear' => true,
+        '\App\Libraries\templates\default\Ci4mstemplateLib|categories' => true,
+        '\App\Libraries\templates\default\Ci4mstemplateLib|contactForm' => true,
+        '\App\Libraries\templates\default\Ci4mstemplateLib|gmapiframe' => true,
+    ];
+
     public function __construct()
     {
         $this->config = new Auth();
@@ -26,7 +48,8 @@ class CommonLibrary
         $part = explode($start, $string);
         $d = [];
         foreach ($part as $item) {
-            if (strpos($item, '/}')) $d[] = explode($end, $item);
+            if (strpos($item, '/}'))
+                $d[] = explode($end, $item);
         }
         $part = null;
         foreach ($d as $item) {
@@ -35,8 +58,8 @@ class CommonLibrary
         return $part;
     }
 
-    //TODO: çoklu veri işlenmesi için virgül kullanılır hale getirilecek.(,)
     /**
+     * TODO: çoklu veri işlenmesi için virgül kullanılır hale getirilecek.(,)
      * Undocumented function
      *
      * @param string $string
@@ -63,14 +86,33 @@ class CommonLibrary
             $val = $this->findFunction($string, '[/', '/]');
             $v = array_values($val)[0];
         }
-        if (empty($functions)) return $string;
-        foreach ($functions as $function) {
+        if (empty($functions))
+            return $string;
+        $data = [];
+        foreach ($functions as $token => $function) {
             $f = explode('|', $function);
-            if (strpos($f[1], '[/')) $f[1] = strstr($f[1], '[/', true);
-            if (!empty($val)) $data[$function] = call_user_func_array($f, [$v]);
-            else $data[$function] = call_user_func($f);
+            if (isset($f[1]) && strpos($f[1], '[/'))
+                $f[1] = strstr($f[1], '[/', true);
+
+            // SECURITY: only invoke explicitly registered shortcode handlers.
+            // The class/method (or function) name comes from user-editable page
+            // content; calling it unconditionally is an RCE primitive.
+            $resolved = implode('|', $f);
+            if (empty($this->allowedShortcodes[$resolved])) {
+                $data[$token] = '';
+                continue;
+            }
+
+            // A two-part token is a [Class, method] static callable; a single
+            // part is a plain function name (an array with one element is not
+            // a valid callable).
+            $callable = count($f) === 1 ? $f[0] : $f;
+            if (!empty($val))
+                $data[$token] = call_user_func_array($callable, [$v]);
+            else
+                $data[$token] = call_user_func($callable);
         }
-        return str_replace(array_keys($functions), $data, $string);
+        return str_replace(array_keys($functions), array_values($data), $string);
     }
 
     /**
@@ -91,8 +133,10 @@ class CommonLibrary
             $comment = preg_replace($pattern, str_repeat('*', strlen('$0')), $comment);
             return $comment;
         }
-        if ($status) return preg_replace($pattern, str_repeat('*', strlen('$0')), $comment);
-        if ($autoAccept) return $comment;
+        if ($status)
+            return preg_replace($pattern, str_repeat('*', strlen('$0')), $comment);
+        if ($autoAccept)
+            return $comment;
         return false;
     }
 
@@ -112,21 +156,24 @@ class CommonLibrary
                 ['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']
             ]);
             if (!empty($pages)) {
-                return (object)['title' => $pages[0]->title, 'seflink' => '/'];
+                return (object) ['title' => $pages[0]->title, 'seflink' => '/'];
             }
         }
 
         // Fallback to menu check for '/'
-        if (empty(cache('menus'))) $menus = $this->commonModel->lists('menu', '*', [], 'queue ASC');
-        else $menus = (object)cache('menus');
+        if (empty(cache('menus')))
+            $menus = $this->commonModel->lists('menu', '*', [], 'queue ASC');
+        else
+            $menus = (object) cache('menus');
 
         $homepage = array_filter((array) $menus, function ($menu) {
             return $menu->seflink == '/';
         });
 
-        if (!empty($homepage)) return reset($homepage);
+        if (!empty($homepage))
+            return reset($homepage);
 
-        return (object)['title' => lang('Backend.home'), 'seflink' => '/'];
+        return (object) ['title' => lang('Backend.home'), 'seflink' => '/'];
     }
 
     /**
@@ -155,7 +202,7 @@ class CommonLibrary
     private function getPageBreadcrumbs($id)
     {
         $locale = \Config\Services::request()->getLocale();
-        $menus = (object)cache('menus');
+        $menus = (object) cache('menus');
         $homepage = $this->getHomepageBreadcrumb();
 
         if (is_integer($id))
@@ -177,7 +224,8 @@ class CommonLibrary
                 $pageData = $this->commonModel->lists('pages', 'pages_langs.title', ['pages.id' => $id, 'pages_langs.lang' => $locale], 'pages.id DESC', 1, 0, [], [], [
                     ['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']
                 ]);
-                if (!empty($pageData)) $title = $pageData[0]->title;
+                if (!empty($pageData))
+                    $title = $pageData[0]->title;
             } else if (is_string($id)) {
                 $title = trim($id, '/');
                 $title = ucfirst(explode('/', $title)[0]);
@@ -203,7 +251,8 @@ class CommonLibrary
                     $pData = $this->commonModel->lists('pages', 'pages_langs.title', ['pages.id' => $parent_menu->pages_id, 'pages_langs.lang' => $locale], 'pages.id DESC', 1, 0, [], [], [
                         ['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']
                     ]);
-                    if (!empty($pData)) $parent_title = $pData[0]->title;
+                    if (!empty($pData))
+                        $parent_title = $pData[0]->title;
                 }
 
                 array_unshift($path, ['title' => $parent_title, 'url' => site_url($parent_menu->seflink)]);
@@ -213,7 +262,8 @@ class CommonLibrary
             }
         }
 
-        foreach ($path as $p) $breadcrumbs[] = $p;
+        foreach ($path as $p)
+            $breadcrumbs[] = $p;
 
         // Localized title for current page
         $currPageData = $this->commonModel->lists('pages', 'pages_langs.title', ['pages.id' => $id, 'pages_langs.lang' => $locale], 'pages.id DESC', 1, 0, [], [], [

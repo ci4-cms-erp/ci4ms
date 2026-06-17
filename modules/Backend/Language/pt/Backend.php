@@ -123,4 +123,12 @@ return [
     'showHidden' => 'Mostrar ocultos',
     'refresh' => 'Atualizar',
     'processNote' => 'Nota de processo',
+    // 503 countdown
+    'err503CdTitle' => 'Tempo estimado de retorno',
+    'err503CdSub' => 'Nosso trabalho está avançando rapidamente.',
+    'errCdHours' => 'Horas',
+    'errCdMinutes' => 'Minutos',
+    'errCdSeconds' => 'Segundos',
+    // sidebar maintenance badge
+    'menuInMaintenance' => 'Em manutenção',
 ];

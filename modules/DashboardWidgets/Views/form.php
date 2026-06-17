@@ -99,6 +99,7 @@ $formAction = $isEdit
                                     <label><?php echo lang('DashboardWidgets.dataSource') ?></label>
                                     <input type="text" class="form-control" name="data_source" value="<?php echo esc($isEdit ? $widget->data_source : '') ?>"
                                         placeholder="<?php echo lang('DashboardWidgets.sourcePlaceholder') ?>">
+                                    <div class="invalid-feedback" id="err-data_source"></div>
                                 </div>
                             </div>
                             <div class="col-md-4">

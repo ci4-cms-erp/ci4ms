@@ -86,4 +86,7 @@ return [
     'rollbackSuccess' => 'सिस्टम सफलतापूर्वक बैकअप बिंदु पर पुनर्स्थापित किया गया।',
     'rollbackFail' => 'पुनर्स्थापना विफल: {0}',
     'backupNameRequired' => 'बैकअप नाम आवश्यक है।',
+    // Backend Maintenance
+    'backendMaintenanceMinutes' => 'अनुमानित अवधि (मिनट)',
+    'backendMaintenanceModuleMinutes' => 'अवधि (मिनट)',
 ];

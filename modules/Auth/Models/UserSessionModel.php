@@ -26,6 +26,7 @@ class UserSessionModel extends Model
         'country',
         'city',
         'last_activity',
+        'locked_at',
         'is_active',
         'created_at',
         'terminated_at',
@@ -103,6 +104,35 @@ class UserSessionModel extends Model
             ->update();
 
         $cache->save($cacheKey, true, 60); // 60 sn cooldown
+    }
+
+    /**
+     * Belirli bir session_id için ekranı kilitler (locked_at = NOW()).
+     * Sadece o cihazın oturumunu etkiler, diğer cihazlar etkilenmez.
+     *
+     * @param string $sessionId Kilitlenecek cihazın kalıcı tanımlayıcısı
+     * @return void
+     */
+    public function lockSession(string $sessionId): void
+    {
+        $this->where('session_id', $sessionId)
+             ->where('is_active', 1)
+             ->set('locked_at', date('Y-m-d H:i:s'))
+             ->update();
+    }
+
+    /**
+     * Belirli bir session_id için ekran kilidini kaldırır (locked_at = NULL).
+     * Başarılı şifre doğrulaması sonrasında çağrılır.
+     *
+     * @param string $sessionId Kilidi açılacak cihazın kalıcı tanımlayıcısı
+     * @return void
+     */
+    public function unlockSession(string $sessionId): void
+    {
+        $this->where('session_id', $sessionId)
+             ->set('locked_at', null)
+             ->update();
     }
 
     /**

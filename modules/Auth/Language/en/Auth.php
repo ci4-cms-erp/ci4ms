@@ -97,5 +97,16 @@ return [
     'badCaptcha' => 'Captcha is wrong.',
     'generatePasswordMessage' => 'You are just one step away from your new password, create your password now.',
     'forgotPasswordMessage' => 'Forgot your password? You can easily get a new one here with your email address.',
-    'loginMessage' => 'Please log in to start your session',
+    'loginMessage'          => 'Please log in to start your session',
+
+    // Lock Screen
+    'screenLocked'          => 'Session Locked',
+    'enterPasswordToUnlock' => 'Enter your password to continue.',
+    'unlockScreen'          => 'Unlock',
+    'unlockSuccess'         => 'Session unlocked successfully.',
+    'unlockFailed'          => 'Incorrect password. Attempts remaining: {0}.',
+    'tooManyUnlockAttempts' => 'Too many failed attempts. Your session has been terminated for security.',
+    'switchAccount'         => 'Sign in with a different account',
+    'lockScreenInfo'        => 'Your session has been temporarily locked. Your data is protected.',
+    'unlockError'           => 'Connection error. Please try again.',
 ];

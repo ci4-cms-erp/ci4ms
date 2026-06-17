@@ -101,6 +101,60 @@ class Exceptions extends BaseConfig
      */
     public function handler(int $statusCode, Throwable $exception): ExceptionHandlerInterface
     {
+        // Backend modülü bağlamında ise kendi handler'ımızı kullan
+        if ($this->isBackendContext($exception)) {
+            return new \Modules\Backend\Exceptions\BackendExceptionHandler($this);
+        }
+
         return new ExceptionHandler($this);
+    }
+
+    /**
+     * Checks whether the exception is within the Backend module context.
+     *
+     * 3-layer check:
+     * 1. Is the active controller in the Backend namespace?
+     * 2. Was the exception thrown from a Backend module file?
+     * 3. Is there a Backend module class in the call stack?
+     */
+
+    private function isBackendContext(Throwable $exception): bool
+    {
+        // 1. Aktif controller Backend namespace'inde mi?
+        try {
+            $controller = service('router')->controllerName();
+
+            if ($controller && str_starts_with($controller, 'Modules\\Backend\\')) {
+                return true;
+            }
+        } catch (\Throwable $e) {
+            // Router henüz hazır değilse atla
+        }
+
+        // 2. Exception Backend modülü içindeki bir dosyadan mı fırlatıldı?
+        if (str_contains($exception->getFile(), 'modules' . DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR)) {
+            return true;
+        }
+
+        // 3. Call stack'te Backend modülü sınıfı var mı?
+        foreach ($exception->getTrace() as $frame) {
+            if (!isset($frame['class'])) {
+                continue;
+            }
+            // Doğrudan Backend namespace'inde mi?
+            if (str_starts_with($frame['class'], 'Modules\\Backend\\')) {
+                return true;
+            }
+            // BaseController'ı extend eden herhangi bir sınıf mı?
+            // (Pages, Blog, Catalog vb. backend modülleri bunu karşılar)
+            if (
+                class_exists($frame['class'], false)
+                && is_subclass_of($frame['class'], 'Modules\\Backend\\Controllers\\BaseController')
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

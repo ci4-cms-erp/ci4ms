@@ -22,7 +22,7 @@ class Install extends Controller
             $cookieNonce = (string) ($this->request->getCookie(self::INSTALL_NONCE_COOKIE) ?? '');
             $postNonce   = (string) ($this->request->getPost(self::INSTALL_NONCE_COOKIE) ?? '');
             if ($cookieNonce === '' || $postNonce === '' || !hash_equals($cookieNonce, $postNonce)) {
-                return redirect()->back()->withInput()->with('errors', ['install' => lang('Install.invalidNonce')]);
+                return redirect()->route_to('install')->withInput()->with('errors', ['install' => lang('Install.invalidNonce')]);
             }
 
             $valData = [

@@ -123,4 +123,12 @@ return [
     'showHidden' => 'Показать скрытые',
     'refresh' => 'Обновить',
     'processNote' => 'Примечание к процессу',
+    // 503 countdown
+    'err503CdTitle' => 'Примерное время возвращения',
+    'err503CdSub' => 'Наша работа быстро продвигается.',
+    'errCdHours' => 'Часы',
+    'errCdMinutes' => 'Минуты',
+    'errCdSeconds' => 'Секунды',
+    // sidebar maintenance badge
+    'menuInMaintenance' => 'На обслуживании',
 ];

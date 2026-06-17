@@ -99,5 +99,16 @@ return [
     'forgotPasswordMessage' => 'Şifrenizi mi unuttunuz? Burada e-mail adresiniz ile kolayca yeni bir şifre alabilirsiniz.',
     'loginMessage' => 'Oturumunuzu başlatmak için giriş yapın',
     'membershipPasswordReset' => 'Membership Password Reset',
-    'passwordResetMessage' => 'Your membership password has been reset. Your password reset request is valid until {reset_expires}. Please click <a href="{reset_link}"><b>here</b></a> to set your new password.',
+    'passwordResetMessage'    => 'Your membership password has been reset. Your password reset request is valid until {reset_expires}. Please click <a href="{reset_link}"><b>here</b></a> to set your new password.',
+
+    // Lock Screen
+    'screenLocked'          => 'Oturum Kilitlendi',
+    'enterPasswordToUnlock' => 'Devam etmek için şifrenizi girin.',
+    'unlockScreen'          => 'Kilidi Aç',
+    'unlockSuccess'         => 'Oturumunuz başarıyla açıldı.',
+    'unlockFailed'          => 'Şifre hatalı. Kalan deneme hakkı: {0}.',
+    'tooManyUnlockAttempts' => 'Çok fazla hatalsız deneme. Güvenlik amacıyla oturumunuz sonlandırıldı.',
+    'switchAccount'         => 'Farklı hesapla giriş yap',
+    'lockScreenInfo'        => 'Oturumunuz geçici olarak kilitlendi. Verileriniz korunmaktadır.',
+    'unlockError'           => 'Bağlantı hatası. Lütfen tekrar deneyin.',
 ];

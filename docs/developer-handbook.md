@@ -252,6 +252,8 @@ CI4MS implements modern security practices to protect the application and user d
 - **CSRF Protection:** Enabled globally. For AJAX requests, `public/be-assets/js/ci4ms.js` automatically reads the CSRF token from the `meta` tag and injects it into all AJAX requests via the `X-CSRF-TOKEN` header and POST parameters. Do not disable CSRF per module unless absolutely necessary (e.g. external webhooks or elFinder uploads).
 - **XSS & HTML Sanitization:** Content editors utilize `CustomRules::getClean()` to scrub HTML through HTMLPurifier. Dangerous schemes like `data:` and properties like `CSS.Trusted` are disabled by default.
 - **File System Integrity:** The Fileeditor module enforces strict blacklisting for executable extensions (`.php`, `.phtml`, `.phar`, etc.) to prevent Remote Code Execution (RCE). Operations are restricted strictly to safe paths using `realpath()` boundary validations.
+- **Rate Limiting:** Protects the application against brute-force and DDoS attacks via `ThrottleFilter` and `BackendThrottleFilter` (HTTP 429 Too Many Requests).
+- **Session Security:** Inactive administrative sessions are automatically locked by `LockController` to prevent unauthorized access.
 
 ---
 

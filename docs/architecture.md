@@ -29,7 +29,7 @@ Authentication is powered by **CodeIgniter Shield** (`codeigniter4/shield`):
 - Shield database tables: `auth_groups`, `auth_identities`, `auth_groups_users`, with proper foreign keys.
 - Backend requests pass through `Modules\Backend\Filters\BackendAfterLoginFilter`:
   - Redirects to logout if the user is not authenticated.
-  - Validates permissions with `AuthLibrary::has_perm()`; otherwise redirects to `/backend/403`.
+  - Validates permissions with `AuthLibrary::has_perm()`; otherwise redirects to `/backend/403` (handled via `BackendExceptionHandler`).
   - Validates theme metadata (`info.xml`, `screenshot.png`) and warms the settings cache.
 - `Modules\Backend\Controllers\BaseController` centralizes:
   - Logged-in user lookup via `Modules\Users\Models\UserscrudModel::loggedUser()`.
@@ -39,6 +39,9 @@ Authentication is powered by **CodeIgniter Shield** (`codeigniter4/shield`):
   - `auth_users_permissions` stores user-specific overrides.
   - `Modules\Methods` manages these tables and can auto-scan routes to populate permissions.
 - Backend activity is logged via `Modules\Backend\Filters\BackendLogFilter` (IP, user agent, action, module) for audit trail purposes.
+- Inactive administrative sessions are secured via `Modules\Auth\Controllers\LockController` which locks the session and sets a `locked_at` timestamp.
+- Application-wide rate limiting is enforced via `ThrottleFilter` and `Modules\Backend\Filters\BackendThrottleFilter` (HTTP 429).
+- Maintenance mode is gracefully handled by `Modules\Backend\Filters\BackendMaintenanceFilter` and the `BackendMaintenance` library (HTTP 503).
 
 ## Module Pattern
 

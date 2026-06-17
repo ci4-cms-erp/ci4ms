@@ -17,7 +17,7 @@ if (!function_exists('nestable')) {
                                 <div class="dd-content">
                                     <div class="d-flex justify-content-between align-items-center">';
 
-                if ((bool)$menu->hasChildren === true)
+                if ((bool) $menu->hasChildren === true)
                     echo '<button class="dd-nodrag btn btn-sm btn-light dd-collapse float-left" data-action="collapse"><i class="fas fa-sort-down"></i></button>
 <button class="dd-expand btn btn-sm btn-light float-left" data-action="expand" type="button"><i class="fas fa-caret-right"></i></button>';
 
@@ -28,9 +28,11 @@ if (!function_exists('nestable')) {
                               </div>
                                     </div>
                                 </div>';
-                if ((bool)$menu->hasChildren === true) echo '<ol class="dd-list">';
+                if ((bool) $menu->hasChildren === true)
+                    echo '<ol class="dd-list">';
                 nestable($menus, $menu->id);
-                if ((bool)$menu->hasChildren === true) echo '</ol>';
+                if ((bool) $menu->hasChildren === true)
+                    echo '</ol>';
                 echo '</li>';
             }
         }
@@ -40,7 +42,7 @@ if (!function_exists('nestable')) {
 if (!function_exists('format_number')) {
     function format_number($n = '')
     {
-        return ($n === '') ? '' : number_format((float)$n, 2, '.', ',');
+        return ($n === '') ? '' : number_format((float) $n, 2, '.', ',');
     }
 }
 
@@ -55,5 +57,39 @@ if (!function_exists('randomPassword')) {
             $pass[] = $alphabet[$n];
         }
         return implode($pass); //turn the array into a string
+    }
+}
+
+/**
+ * Backend module special error pages renderer.
+ *
+ * Instead of using show_404() / throw PageNotFoundException, use this:
+ *   return $this->showError();
+ *   return $this->showError(403);
+ *   return $this->showError(500, 'special message');
+ *
+ * Since it uses CI4's view() renderer, lang(), base_url() etc. works smoothly inside the view.
+ *
+ * @param int         $statusCode HTTP status code (403, 404, 429, 500, 503 …)
+ * @param string|null $message    Special message to pass to the view
+ */
+if (!function_exists('showError')) {
+    function showError(int $statusCode = 404, ?string $message = null): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $viewBase = 'Modules\\Backend\\Views\\errors\\html\\';
+        $viewFile = $viewBase . 'error_' . $statusCode;
+
+        // Belirtilen status code için view yoksa fallback
+        if (!is_file(ROOTPATH . 'modules/Backend/Views/errors/html/error_' . $statusCode . '.php')) {
+            $viewFile = (ENVIRONMENT === 'production')
+                ? $viewBase . 'production'
+                : $viewBase . 'error_exception';
+        }
+
+        $body = view($viewFile, ['message' => $message ?? lang('Backend.recordNotFound')]);
+
+        return response()
+            ->setStatusCode($statusCode)
+            ->setBody($body);
     }
 }
