@@ -144,7 +144,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 if (!$users->save($user)) return redirect()->route('create_user')->withInput()->with('errors', $users->errors());
                 $new_user = $users->findById($users->getInsertID());
 
-                $groups = $this->commonModel->lists('auth_groups', 'group', ['group!=' => 'superadmin'], 'id ASC', 0, 0, [], ['id' => $this->request->getPost('group')]);
+                $groups = $this->commonModel->lists('auth_groups', 'group', ['group!=' => 'superadmin'], 'id ASC', 0, 0, [], [], [], ['isReset' => false,], ['key' => 'id', 'where' => $this->request->getPost('group')]);
                 $groupNames = array_column($groups, 'group');
                 $new_user->syncGroups(...$groupNames);
 
@@ -227,7 +227,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             $u->fill($data);
             if ($user->save($u)) {
-                $groups = $this->commonModel->lists('auth_groups', 'group', ['group!=' => 'superadmin'], 'id ASC', 0, 0, [], ['id' => $this->request->getPost('group')]);
+                $groups = $this->commonModel->lists('auth_groups', 'group', ['group!=' => 'superadmin'], 'id ASC', 0, 0, [], [], [], ['isReset' => false,], ['key' => 'id', 'where' => $this->request->getPost('group')]);
                 $groupNames = array_column($groups, 'group');
                 $u->syncGroups(...$groupNames);
                 return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
