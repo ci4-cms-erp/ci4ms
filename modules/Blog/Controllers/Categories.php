@@ -58,11 +58,7 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 $valData["lang.{$l}.seflink"] = ['label' => lang('Backend.url') . " ({$l})", 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'];
             }
 
-            if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
-                $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
-            }
+            $valData = array_merge($valData, $this->coverImageRules());
             if ($this->validate($valData) === false)
                 return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
 
@@ -123,11 +119,7 @@ class Categories extends \Modules\Backend\Controllers\BaseController
                 $valData["lang.{$l}.seflink"] = ['label' => lang('Backend.url') . " ({$l})", 'rules' => 'required|regex_match[/^[a-z0-9]+(?:-[a-z0-9]+)*$/]'];
             }
 
-            if (!empty($this->request->getPost('pageimg'))) {
-                $valData['pageimg'] = ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-                $valData['pageIMGWidth'] = ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'];
-                $valData['pageIMGHeight'] = ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'];
-            }
+            $valData = array_merge($valData, $this->coverImageRules());
             if ($this->validate($valData) === false)
                 return redirect()->route('categories')->withInput()->with('errors', $this->validator->getErrors());
 
@@ -211,5 +203,25 @@ class Categories extends \Modules\Backend\Controllers\BaseController
             return $this->respond(['status' => 'success', 'message' => lang('Backend.deleted', [$title])]);
         else
             return $this->respond(['status' => 'error', 'message' => lang('Backend.notDeleted', [$title])]);
+    }
+
+    /**
+     * Builds the cover-image validation rules when a pageimg value is present.
+     *
+     * The pageimg rule only accepts http(s):// or root-relative URLs ending in a
+     * known image extension, blocking the stored-XSS vector via the cover image URL.
+     *
+     * @return array<string, array<string, string>> Validation rules keyed by field name; empty when no pageimg posted.
+     */
+    private function coverImageRules(): array
+    {
+        if (empty($this->request->getPost('pageimg')))
+            return [];
+
+        return [
+            'pageimg' => ['label' => lang('Backend.coverImgURL'), 'rules' => 'required|regex_match[/^(https?:\/\/[a-zA-Z0-9\/:.\-_~%]+|\/[a-zA-Z0-9\/.\-_]+)\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?[a-zA-Z0-9=&_\-.%]*)?$/i]'],
+            'pageIMGWidth' => ['label' => lang('Backend.coverImgWith'), 'rules' => 'required|is_natural_no_zero'],
+            'pageIMGHeight' => ['label' => lang('Backend.coverImgHeight'), 'rules' => 'required|is_natural_no_zero'],
+        ];
     }
 }

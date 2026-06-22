@@ -69,6 +69,13 @@ echo $this->section('content'); ?>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
+                        <label for="current_password"><?php echo lang('Users.currentPassword') ?></label>
+                        <input type="password" class="form-control" name="current_password" id="current_password" autocomplete="current-password">
+                        <small class="text-muted"><?php echo lang('Auth.password') ?></small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
                         <label for="own_language"><?php echo lang('LanguageManager.languages') ?></label>
                         <select name="own_language" id="own_language" class="form-control select2bs4"
                             data-placeholder="<?php echo lang('Backend.selectOption', [lang('LanguageManager.language')]) ?>">

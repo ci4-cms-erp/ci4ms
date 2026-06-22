@@ -66,4 +66,6 @@
     'avatarSizeExceeded' => 'Dosya boyutu 2MB\'dan büyük olamaz.',
     'last10PastSessions' => 'Sadece son 10 geçmiş oturum listelenmektedir.',
     'cannotDeleteSuperadmin' => 'Superadmin kullanıcıları silinemez.',
+    'currentPassword' => 'Mevcut Şifre',
+    'currentPasswordWrong' => 'Girdiğiniz mevcut şifre hatalı.',
 ];

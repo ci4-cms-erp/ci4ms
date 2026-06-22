@@ -213,7 +213,7 @@ A huge thank you to the security researchers who have helped make **ci4ms** more
 | **[fg0x0](https://github.com/fg0x0)** | Identified Critical Arbitrary File Write (Zip Slip RCE) vulnerabilities in Theme::upload and Backup::restore modules. | Apr 2026 |
 | **[0xAlchemist](https://github.com/bugmithlegend)** , **[peeefour](https://github.com/peeefour)** and **[DexterHK](https://github.com/DexterHK)** | Identified Critical Full Account Takeover and Privilege Escalation via Stored DOM Blind XSS in Backup Management (v2). | Apr 2026 |
 | **[dapickle](https://github.com/dapickle)** | Identified Critical Authenticated RCE in Theme installation, Arbitrary Database Table Drop in Theme module, and a Session Management Bypass. | Apr 2026 |
-| **[iltosec](https://github.com/iltosec)** | Identified Broken Access Control in Media module, Unsafe Reflection in Dashboard Widgets, RCE via template-function parsing in Pages, and Stored XSS in Pages Cover Image URL leading to Account Takeover. | Jun 2026 |
+| **[iltosec](https://github.com/iltosec)** | Identified Broken Access Control in Media module, Unsafe Reflection in Dashboard Widgets, RCE via template-function parsing in Pages, and Stored XSS in Pages Cover Image URL leading to Account Takeover (the residual instance of the same Cover Image URL Stored XSS class in Blog Categories was subsequently hardened as well). | Jun 2026 |
 
 > If you find a security vulnerability, please report it via [Security Policy](SECURITY.md).
 

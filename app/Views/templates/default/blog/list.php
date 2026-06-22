@@ -7,11 +7,11 @@ echo $this->section('content'); ?>
         <div class="text-center my-5">
             <h1 class="fw-bolder">
                 <?php if (isset($category))
-                    echo $category->title;
+                    echo esc($category->title);
                 else echo 'Blog'; ?>
             </h1>
         </div>
-        <div onload=""></div>
+        <div></div>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <?php foreach ($breadcrumbs as $breadcrumb) { ?>
@@ -49,7 +49,7 @@ echo $this->section('content'); ?>
                                             <div class="badge bg-primary bg-gradient rounded-pill mb-2"><?php echo esc($tag->tag) ?></div>
                                         <?php endforeach; ?>
                                         <a class="text-decoration-none link-dark stretched-link"
-                                            href="<?php echo site_url('blog/' . $blog->seflink) ?>">
+                                            href="<?php echo esc(site_url('blog/' . $blog->seflink), 'attr') ?>">
                                             <div class="h5 card-title mb-3"><?php echo esc($blog->title) ?></div>
                                         </a>
                                         <?php if (!empty($blog->seo->description)) { ?><p class="card-text mb-0"><?php echo esc($blog->seo->description) ?></p> <?php } ?>

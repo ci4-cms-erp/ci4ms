@@ -67,4 +67,6 @@
     'avatarSizeExceeded' => 'File size cannot exceed 2MB.',
     'last10PastSessions' => 'Only the last 10 past sessions are listed.',
     'cannotDeleteSuperadmin' => 'Superadmin users cannot be deleted.',
+    'currentPassword' => 'Current Password',
+    'currentPasswordWrong' => 'The current password you entered is incorrect.',
 ];

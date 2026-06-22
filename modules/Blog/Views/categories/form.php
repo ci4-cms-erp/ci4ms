@@ -178,7 +178,7 @@ echo $this->section('content'); ?>
                     <!-- Kapak Görseli -->
                     <div class="col-md-12 form-group">
                         <label><?php echo lang('Backend.coverImage') ?></label>
-                        <img src="<?php echo old('pageimg', !empty($seoInfo->coverImage) ? $seoInfo->coverImage : '') ?>"
+                        <img src="<?php echo esc(old('pageimg', !empty($seoInfo->coverImage) ? $seoInfo->coverImage : '')) ?>"
                              class="pageimg img-fluid">
                     </div>
                     <div class="col-md-12 form-group">

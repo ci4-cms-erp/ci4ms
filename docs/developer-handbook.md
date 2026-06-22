@@ -186,6 +186,7 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 - Allowed MIME types come from `settings.allowedFiles`.
 - Optional WebP conversion uses `claviska/simpleimage` when enabled in settings.
 - elFinder's internal CSRF validation is bypassed because the connector runs behind CI4 Shield's session-based authentication and the `backendGuard` filter already verifies user access.
+- Write/delete access is gated by a layered access-control chain: the elFinder write commands are declared once as the `Media::WRITE_COMMANDS` class constant (single source of truth) and shared by both the controller-level 403 gate (via the pure, unit-testable `isWriteBlocked()` helper) and elFinder's disabled-commands list, so a "read" permission cannot silently grant write/delete access. The elFinder `debug` flag is gated to non-production (`ENVIRONMENT !== 'production'`) to avoid leaking connector debug data in production.
 - Media root: `public/media/`. Ensure the directory (and `.trash`) are writable.
 
 ### File Editor (`Modules\Fileeditor`)
@@ -250,7 +251,7 @@ Application settings are persisted in the `settings` table and cached for 24 hou
 CI4MS implements modern security practices to protect the application and user data:
 
 - **CSRF Protection:** Enabled globally. For AJAX requests, `public/be-assets/js/ci4ms.js` automatically reads the CSRF token from the `meta` tag and injects it into all AJAX requests via the `X-CSRF-TOKEN` header and POST parameters. Do not disable CSRF per module unless absolutely necessary (e.g. external webhooks or elFinder uploads).
-- **XSS & HTML Sanitization:** Content editors utilize `CustomRules::getClean()` to scrub HTML through HTMLPurifier. Dangerous schemes like `data:` and properties like `CSS.Trusted` are disabled by default.
+- **XSS & HTML Sanitization:** Content editors utilize `CustomRules::getClean()` to scrub HTML through HTMLPurifier. Dangerous schemes like `data:` and properties like `CSS.Trusted` are disabled by default. Persisted, backend-editable values must also be output-encoded with `esc()` when rendered — both in backend views and frontend templates (e.g. Blog/Pages cover-image `<img src>` attributes, category titles, SEO `description` blobs). Cover-image URL fields additionally enforce a strict input regex that accepts only `http(s)://` or `/`-relative URLs ending in a known image extension, rejecting `"`, `=`, whitespace, and `()` to prevent attribute breakouts.
 - **File System Integrity:** The Fileeditor module enforces strict blacklisting for executable extensions (`.php`, `.phtml`, `.phar`, etc.) to prevent Remote Code Execution (RCE). Operations are restricted strictly to safe paths using `realpath()` boundary validations.
 - **Rate Limiting:** Protects the application against brute-force and DDoS attacks via `ThrottleFilter` and `BackendThrottleFilter` (HTTP 429 Too Many Requests).
 - **Session Security:** Inactive administrative sessions are automatically locked by `LockController` to prevent unauthorized access.

@@ -284,6 +284,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             if ($this->request->getPost('password')) {
                 $valData['password'] = ['label' => lang('Auth.password'), 'rules' => 'required|min_length[8]'];
+                $valData['current_password'] = ['label' => lang('Users.currentPassword'), 'rules' => 'required'];
             }
 
             if ($this->validate($valData) === false) {
@@ -314,6 +315,11 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             }
 
             if (!empty($this->request->getPost('password'))) {
+                // Defense-in-depth: require and verify the current password before changing it.
+                $currentPassword = (string) $this->request->getPost('current_password');
+                if (!service('passwords')->verify($currentPassword, $user->password_hash)) {
+                    return redirect()->route('profile')->withInput()->with('error', lang('Users.currentPasswordWrong'));
+                }
                 $data['password'] = $this->request->getPost('password');
                 if ($user->requiresPasswordReset()) $user->undoForcePasswordReset();
             }

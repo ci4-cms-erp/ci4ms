@@ -5,7 +5,7 @@ echo $this->section('content'); ?>
 <header class="py-5 bg-light border-bottom mb-4">
     <div class="container">
         <div class="text-center my-5">
-            <h1 class="fw-bolder"><?php echo $tagInfo->tag ?></h1>
+            <h1 class="fw-bolder"><?php echo esc($tagInfo->tag) ?></h1>
         </div>
         <div onload=""></div>
         <nav aria-label="breadcrumb">
@@ -39,7 +39,7 @@ echo $this->section('content'); ?>
                                 <div class="card h-100 shadow border-0">
                                     <img class="card-img-top"
                                         src="<?php echo (!empty($blog->seo->coverImage)) ? esc($blog->seo->coverImage) : 'https://dummyimage.com/600x350/ced4da/6c757d' ?>"
-                                        alt="<?php echo $blog->title ?>" />
+                                        alt="<?php echo esc($blog->title) ?>" />
                                     <div class="card-body p-4">
                                         <?php foreach ($blog->tags as $tag): ?>
                                             <div class="badge bg-primary bg-gradient rounded-pill mb-2"><?php echo esc($tag->tag) ?></div>
@@ -48,7 +48,7 @@ echo $this->section('content'); ?>
                                             href="<?php echo site_url('blog/' . $blog->seflink) ?>">
                                             <div class="h5 card-title mb-3"><?php echo esc($blog->title) ?></div>
                                         </a>
-                                        <p class="card-text mb-0"><?php echo $blog->seo->description ?></p>
+                                        <?php if (!empty($blog->seo->description)) { ?><p class="card-text mb-0"><?php echo esc($blog->seo->description) ?></p> <?php } ?>
                                     </div>
                                     <div class="card-footer p-4 pt-0 bg-transparent border-top-0">
                                         <div class="d-flex align-items-end justify-content-between">
