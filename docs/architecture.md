@@ -62,6 +62,7 @@ Use `php spark make:module Foo` (provided by `ci4-cms-erp/ext_module_generator`)
 
 - Copies `env` to `.env`, updates base settings, triggers migrations, and seeds defaults via `InstallService`.
 - Regenerates `app/Config/Routes.php` from the `DefaultRoutes.php` template.
+- Because `.env` is written *inside the same request* that runs the installation, the `Config\Database` and `Config\Encryption` singletons — both instantiated at process boot, before `.env` existed — still hold empty boot-time values. The installer therefore rebinds them at runtime: `Install::dbsetup()` merges the POST-supplied credentials into the `default` database group before running migrations (so the runner and `InstallService` connect to the real schema instead of issuing `SHOW TABLES FROM ` with a blank name), and `Install::generateEncryptionKey()` writes the freshly generated key back into the live `Config\Encryption` singleton as decoded binary so the encrypter works within the same request.
 
 ### CLI (`php spark ci4ms:setup`)
 

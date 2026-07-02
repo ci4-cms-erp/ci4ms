@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
-## [Unreleased]
+## [0.33.2.0] - 2026-07-03
+
+### Fixed
+
+- **Web Installer Silently Aborting on a Fresh Install (Empty Database Name / Missing Encryption Key):** A from-scratch web installation (`/install`) could fail mid-flow because `.env` is written *inside* the same request that runs the installation, but the `Config\Database` and `Config\Encryption` singletons were instantiated at process boot — while `.env` still did not exist — and kept their empty boot-time values. This produced two failures: (a) the migration runner connected with an empty database name and issued `SHOW TABLES FROM ` (blank), triggering a SQL syntax error that bounced the operator back to the installer form; and (b) `InstallService::createDefaultData()` threw `EncryptionException: Encrypter needs a starter key`. `Install::dbsetup()` now rebinds the `default` database connection group at runtime with the POST-supplied credentials *before* running migrations, so both the migration runner and `InstallService` connect to the real schema. `Install::generateEncryptionKey()` now writes the freshly generated key back into the live `Config\Encryption` singleton as decoded binary (the `hex2bin:`-prefixed value persisted in `.env` stays consistent for later boots), so the encrypter works within the same request.
+- **Fatal Error on Install Nonce Mismatch:** The install nonce-mismatch path called `redirect()->route_to('install')`; `route_to()` is not a valid `RedirectResponse` method and produced a fatal error instead of redirecting back to the installer form. Corrected to `redirect()->route('install')`.
+*(Install bug reported by [SIENSIS](https://github.com/SIENSIS))*
 
 ## [0.33.1.0] - 2026-06-22
 

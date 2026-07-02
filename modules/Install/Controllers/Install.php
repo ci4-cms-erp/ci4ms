@@ -22,7 +22,7 @@ class Install extends Controller
             $cookieNonce = (string) ($this->request->getCookie(self::INSTALL_NONCE_COOKIE) ?? '');
             $postNonce   = (string) ($this->request->getPost(self::INSTALL_NONCE_COOKIE) ?? '');
             if ($cookieNonce === '' || $postNonce === '' || !hash_equals($cookieNonce, $postNonce)) {
-                return redirect()->route_to('install')->withInput()->with('errors', ['install' => lang('Install.invalidNonce')]);
+                return redirect()->route('install')->withInput()->with('errors', ['install' => lang('Install.invalidNonce')]);
             }
 
             $valData = [
@@ -91,7 +91,7 @@ class Install extends Controller
                 'app.supportedLocales' => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
                 'app.negotiateLocale' => 'true',
                 'app.appTimezone' => '\'Europe/Istanbul\'',
-                'app.version' => '0.31.11.0'
+                'app.version' => '0.33.2.0'
             ];
             if ($this->copyEnvFile() && $this->updateEnvSettings($updates)) $this->generateEncryptionKey();
 
@@ -178,13 +178,39 @@ class Install extends Controller
             $contents .= PHP_EOL . $replacement;
         }
         file_put_contents($envPath, $contents);
+
+        /* The Config\Encryption singleton was created at process boot, before
+        .env existed, so its $key is empty. Rebind it to the decoded binary
+        key here so Services::encrypter() works later in THIS same request
+        (InstallService::createDefaultData). We store the decoded form
+        because BaseConfig only parses the hex2bin: prefix at construction
+        time, which has already passed for this request. */
+        config('Encryption')->key = hex2bin(substr($key, 8));
+
         return true;
     }
 
     private function dbsetup(array $installData)
     {
+        /* The .env file was written earlier in this same request, but the
+        Config\Database singleton was instantiated at process boot — before
+        .env existed — so its `default` group still carries an empty
+        database name. Rebind the default group to the operator-supplied
+        values here so both the migration runner below and InstallService
+        (which opens the shared `default` connection) connect to the real
+        database instead of issuing `SHOW TABLES FROM ` against an empty schema.*/
+        $dbConfig = config('Database');
+        $dbConfig->default = array_merge($dbConfig->default, [
+            'hostname' => (string) $this->request->getPost('host'),
+            'username' => (string) $this->request->getPost('dbusername'),
+            'password' => (string) $this->request->getPost('dbpassword'),
+            'database' => (string) $this->request->getPost('dbname'),
+            'DBDriver' => (string) $this->request->getPost('dbdriver'),
+            'DBPrefix' => (string) $this->request->getPost('dbpre'),
+            'port'     => (int) $this->request->getPost('dbport'),
+        ]);
+
         $migrate = \Config\Services::migrations();
-        $baseURL = rtrim(base_url(), '/');
         try {
             $migrate->setNamespace(null)->latest();
         } catch (\Throwable $e) {
@@ -215,18 +241,17 @@ class Install extends Controller
         $content = file_get_contents($file);
         $content = str_replace('<@', '<?', $content);
         if (! is_dir(WRITEPATH . 'backups/') && !is_dir(FCPATH . 'media/.tmb') && !is_dir(FCPATH . 'media/.trash')) {
-
             mkdir(WRITEPATH . 'backups/', 0755, true);
             mkdir(FCPATH . 'media/.tmb', 0755, true);
             mkdir(FCPATH . 'media/.trash', 0755, true);
         }
         if (!write_file(APPPATH . 'Config/Routes.php', $content)) {
-            return redirect()->to($baseURL)->withInput()->with('errors', ['route' => lang('Install.routeFileError')]);
+            return redirect()->to($installData['baseUrl'])->withInput()->with('errors', ['route' => lang('Install.routeFileError')]);
         }
 
         file_put_contents(WRITEPATH . 'install.lock', 'Installed at: ' . date('Y-m-d H:i:s'));
         chmod(WRITEPATH . 'install.lock', 0444);
-        return redirect()->to($baseURL, 301);
+        return redirect()->to($installData['baseUrl'], 301);
     }
 
     /**
