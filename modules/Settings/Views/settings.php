@@ -157,6 +157,11 @@ echo $this->section('content'); ?>
                                                         </button>
                                                     </div>
                                                 </div>
+                                                <hr class="my-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <label class="mb-0"><i class="fas fa-map-marker-alt mr-2 text-muted"></i> <?php echo lang('Settings.geoLookupEnabled') ?></label>
+                                                    <input type="checkbox" id="geo-lookup-enabled" class="bswitch" <?php echo setting('Auth.geoLookupEnabled') ? 'checked' : '' ?> data-size="mini">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -424,6 +429,25 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                 $('#idle-timeout-minutes-row').removeClass('d-flex').hide();
             }
             showToast(state ? '<?php echo lang('Settings.idleTimeoutActive') ?>' : '<?php echo lang('Settings.idleTimeoutDisabled') ?>');
+        });
+    });
+
+    // Session Geo Lookup Switch (yerel GeoIP)
+    $('#geo-lookup-enabled').on('switchChange.bootstrapSwitch', function(e, state) {
+        $.ajax({
+            url: '<?php echo route_to('saveGeoLookup') ?>',
+            type: 'POST',
+            data: {
+                isActive: state ? 1 : 0,
+                [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+            },
+            dataType: 'json'
+        }).done(function(data) {
+            if (data.dbMissing) {
+                showToast('<?php echo lang('Settings.geoDbMissing') ?>');
+            } else {
+                showToast(state ? '<?php echo lang('Settings.geoLookupActive') ?>' : '<?php echo lang('Settings.geoLookupDisabled') ?>');
+            }
         });
     });
 

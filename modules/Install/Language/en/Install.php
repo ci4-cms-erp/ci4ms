@@ -44,4 +44,6 @@ return [
     'password' => 'Password',
     'foldersWithSameNameListItem' => 'Folders With Same Name List Item',
     'invalidNonce' => 'The install session is missing or expired. Reload this page and submit the form again.',
+    'geoLookup' => 'Enable session location tracking (local GeoIP database)',
+    'geoLookupHint' => 'Derives approximate city/country for login sessions locally — no data is sent to third parties. Requires downloading the free DB-IP database after install: php spark ci4ms:geoip-update. Uses "IP Geolocation by DB-IP" (CC BY 4.0); attribution required if enabled.',
 ];

@@ -106,6 +106,7 @@ class Install extends Controller
                 'baseUrl' => $this->request->getPost('baseUrl'),
             ];
             if ($this->request->getPost('slogan')) $installData['slogan'] = $this->request->getPost('slogan') ?: null;
+            $installData['geoLookup'] = $this->request->getPost('geoLookup') ? '1' : '0';
 
             return $this->dbsetup($installData);
         }

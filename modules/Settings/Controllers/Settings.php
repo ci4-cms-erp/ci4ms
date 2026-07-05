@@ -45,12 +45,17 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             'cMail' => ['label' => lang('Settings.companyEmail'), 'rules' => 'required|valid_email'],
         ]);
 
-        if (!empty($this->request->getPost('cSlogan'))) $valData['cSlogan'] = ['label' => lang('Settings.companySlogan'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
-        if (!empty($this->request->getPost('cGSM'))) $valData['cGSM'] = ['label' => lang('Settings.companyGsm'), 'rules' => 'required|regex_match[/^[\d\s\+\-\(\)]{7,25}$/]'];
-        if (!empty($this->request->getPost('cMap'))) $valData['cMap'] = ['label' => lang('Settings.gmapIframe'), 'rules' => 'required|max_length[2000]'];
-        if (!empty($this->request->getPost('cLogo'))) $valData['cLogo'] = ['label' => lang('Settings.companyLogo'), 'rules' => 'required|regex_match[/^[^<>{}=]*$/u]'];
+        if (!empty($this->request->getPost('cSlogan')))
+            $valData['cSlogan'] = ['label' => lang('Settings.companySlogan'), 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'];
+        if (!empty($this->request->getPost('cGSM')))
+            $valData['cGSM'] = ['label' => lang('Settings.companyGsm'), 'rules' => 'required|regex_match[/^[\d\s\+\-\(\)]{7,25}$/]'];
+        if (!empty($this->request->getPost('cMap')))
+            $valData['cMap'] = ['label' => lang('Settings.gmapIframe'), 'rules' => 'required|max_length[2000]'];
+        if (!empty($this->request->getPost('cLogo')))
+            $valData['cLogo'] = ['label' => lang('Settings.companyLogo'), 'rules' => 'required|regex_match[/^[^<>{}=]*$/u]'];
 
-        if ($this->validate($valData) === false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
 
         try {
             setting()->set('App.siteName', esc(trim(strip_tags($this->request->getPost('cName')))));
@@ -60,8 +65,10 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 'phone' => esc(trim(strip_tags($this->request->getPost('cPhone')))),
                 'email' => esc(trim(strip_tags($this->request->getPost('cMail'))))
             ];
-            if (!empty($this->request->getPost('cSlogan'))) setting()->set('App.slogan', esc(trim(strip_tags($this->request->getPost('cSlogan')))));
-            if (!empty($this->request->getPost('cGSM'))) $data['gsm'] = esc(trim(strip_tags($this->request->getPost('cGSM'))));
+            if (!empty($this->request->getPost('cSlogan')))
+                setting()->set('App.slogan', esc(trim(strip_tags($this->request->getPost('cSlogan')))));
+            if (!empty($this->request->getPost('cGSM')))
+                $data['gsm'] = esc(trim(strip_tags($this->request->getPost('cGSM'))));
             if (!empty($this->request->getPost('cMap'))) {
                 $mapValue = trim(strip_tags($this->request->getPost('cMap'), '<iframe>'));
                 // Strip all attributes except safe ones for iframes
@@ -88,7 +95,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 );
                 setting()->set('Gmap.map_iframe', $mapValue);
             }
-            if (!empty($this->request->getPost('cLogo'))) setting()->set('App.logo', esc(trim(strip_tags($this->request->getPost('cLogo')))));
+            if (!empty($this->request->getPost('cLogo')))
+                setting()->set('App.logo', esc(trim(strip_tags($this->request->getPost('cLogo')))));
 
             setting()->set('App.contact', json_encode($data, JSON_UNESCAPED_UNICODE));
             cache()->delete('settings');
@@ -113,7 +121,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 $error['link'] = lang('Settings.socialMediaLinkMustBeUrl');
                 unset($socialNetwork[$key]);
             }
-            if (!empty($error)) return redirect()->route('settings')->withInput()->with('errors', $error);
+            if (!empty($error))
+                return redirect()->route('settings')->withInput()->with('errors', $error);
             if (!is_string($item['smName'])) {
                 $error['snName'] = lang('Settings.socialMediaNameMustBeText');
                 unset($socialNetwork[$key]);
@@ -125,8 +134,10 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             }
         }
 
-        if (!empty($error)) return redirect()->route('settings')->withInput()->with('errors', $error);
-        if ($this->validate($valData) === false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
+        if (!empty($error))
+            return redirect()->route('settings')->withInput()->with('errors', $error);
+        if ($this->validate($valData) === false)
+            return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             setting()->set('App.socialNetwork', json_encode($socialNetwork, JSON_UNESCAPED_UNICODE));
             cache()->delete('settings');
@@ -147,8 +158,10 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             'mAddress' => ['label' => lang('Settings.mailAddress'), 'rules' => 'required|valid_email'],
             'mPwd' => ['label' => lang('Settings.mailPassword'), 'rules' => 'required']
         ];
-        if (!empty($this->request->getPost('mPwd'))) $valData['mPwd'] = ['label' => lang('Settings.mailPassword'), 'rules' => 'required|min_length[8]'];
-        if ($this->validate($valData) === false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
+        if (!empty($this->request->getPost('mPwd')))
+            $valData['mPwd'] = ['label' => lang('Settings.mailPassword'), 'rules' => 'required|min_length[8]'];
+        if ($this->validate($valData) === false)
+            return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             $data = [
                 'server' => trim(strip_tags($this->request->getPost('mServer'))),
@@ -158,7 +171,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 'protocol' => trim(strip_tags($this->request->getPost('mProtocol'))),
                 'tls' => false
             ];
-            if ($this->request->getPost('mTls')) $data['tls'] = true;
+            if ($this->request->getPost('mTls'))
+                $data['tls'] = true;
             setting()->set('App.mail', json_encode($data));
             cache()->delete('settings');
             return redirect()->route('settings')->withInput()->with('message', lang('Backend.updated', [lang('Settings.mailSettings')]));
@@ -194,12 +208,14 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function templateSelectPost()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
         $valData = ([
             'path' => ['label' => lang('Backend.path'), 'rules' => 'required|regex_match[/^[a-z0-9_-]+$/]|max_length[64]'],
             'tName' => ['label' => lang('Backend.name'), 'rules' => 'required|regex_match[/^[^<>{}=]+$/u]|max_length[128]']
         ]);
-        if ($this->validate($valData) === false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+        if ($this->validate($valData) === false)
+            return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
 
         $themeName = (string) $this->request->getPost('path');
 
@@ -237,7 +253,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         $valData = ([
             'allowedFiles' => ['label' => lang('Settings.fileTypes'), 'rules' => 'required|alpha_numeric'],
         ]);
-        if ($this->validate($valData) === false) return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->validate($valData) === false)
+            return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             $data = explode(',', $this->request->getPost('allowedFiles'));
             setting()->set('Security.allowedFiles', json_encode($data, JSON_UNESCAPED_UNICODE));
@@ -288,7 +305,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             }
 
             // Merge with existing (preserve path, name and any other untouched keys)
-            $current = (array)$this->defData['settings']->templateInfos;
+            $current = (array) $this->defData['settings']->templateInfos;
             $data = array_merge($current, $postSettings);
 
             setting()->set('App.templateInfos', json_encode($data, JSON_UNESCAPED_UNICODE));
@@ -306,20 +323,23 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             $valData = ([
                 'isActive' => ['label' => lang('Backend.status'), 'rules' => 'required|in_list[0,1]']
             ]);
-            if ($this->validate($valData) === false) return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+            if ($this->validate($valData) === false)
+                return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
             try {
-                setting()->set('Elfinder.convertWebp', (bool)$this->request->getPost('isActive'));
+                setting()->set('Elfinder.convertWebp', (bool) $this->request->getPost('isActive'));
                 cache()->delete('settings');
-                return $this->respond(['result' => (bool)$this->request->getPost('isActive')], 200);
+                return $this->respond(['result' => (bool) $this->request->getPost('isActive')], 200);
             } catch (\Exception $e) {
                 return $this->fail(['pr' => false]);
             }
-        } else return $this->failForbidden();
+        } else
+            return $this->failForbidden();
     }
 
     public function checkVersion()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
 
         $result = $this->updateService->checkVersion();
 
@@ -359,12 +379,12 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             }
 
             return $this->respond([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => lang('Backend.updated', [lang('Settings.languageMode')]),
             ]);
         } catch (\Exception $e) {
             return $this->respond([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => lang('Backend.notUpdated', [lang('Settings.languageMode')]) . $e->getMessage(),
             ], 500);
         }
@@ -378,7 +398,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function saveIdleTimeout(): \CodeIgniter\HTTP\ResponseInterface
     {
-        if (! $this->request->isAJAX()) {
+        if (!$this->request->isAJAX()) {
             return $this->failForbidden();
         }
 
@@ -420,6 +440,40 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
+     * Oturum konum takibi (yerel GeoIP lookup) ayarını günceller.
+     * Auth.geoLookupEnabled (bool) — default kapalı; açılırken MMDB dosyası
+     * eksikse yanıtta dbMissing=true dönerek UI'ın uyarı göstermesini sağlar.
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface
+     */
+    public function saveGeoLookup(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->failForbidden();
+        }
+
+        $valRules = [
+            'isActive' => ['label' => lang('Backend.status'), 'rules' => 'required|in_list[0,1]'],
+        ];
+        if ($this->validate($valRules) === false) {
+            return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
+        }
+
+        try {
+            $isActive = (bool) $this->request->getPost('isActive');
+            setting()->set('Auth.geoLookupEnabled', $isActive);
+            cache()->delete('settings');
+
+            return $this->respond([
+                'status'    => 'success',
+                'dbMissing' => $isActive && !is_file(\Modules\Auth\Libraries\GeoLocator::dbPath()),
+            ]);
+        } catch (\Exception $e) {
+            return $this->respond(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Backend bakım modunu kaydeder (tüm backend + tahmini süre (dakika) +
      * modül bazlı bakım map'i: modulAdi => dakika).
      * `App.backendMaintenance = {all, until, modules: map}` yazar
@@ -429,12 +483,12 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function saveBackendMaintenance(): \CodeIgniter\HTTP\ResponseInterface
     {
-        if (! $this->request->isAJAX()) {
+        if (!$this->request->isAJAX()) {
             return $this->failForbidden();
         }
 
         $valData = [
-            'all'     => ['label' => lang('Settings.backendMaintenanceAll'), 'rules' => 'required|in_list[0,1]'],
+            'all' => ['label' => lang('Settings.backendMaintenanceAll'), 'rules' => 'required|in_list[0,1]'],
             'minutes' => ['label' => lang('Settings.backendMaintenanceMinutes'), 'rules' => 'permit_empty|is_natural'],
         ];
         if ($this->validate($valData) === false) {
@@ -442,37 +496,37 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         }
 
         try {
-            $all     = (bool) $this->request->getPost('all');
+            $all = (bool) $this->request->getPost('all');
             $minutes = (int) $this->request->getPost('minutes');
 
             // modules map'i yalnızca gerçekten var olan modüllere göre allowlist'lenir.
             $allowed = $this->backendMaintenanceModules();
-            $posted  = (array) ($this->request->getPost('modules') ?? []);
+            $posted = (array) ($this->request->getPost('modules') ?? []);
             $modules = [];
             foreach ($posted as $name => $moduleMinutes) {
                 $name = (string) $name;
-                if (! in_array($name, $allowed, true)) {
+                if (!in_array($name, $allowed, true)) {
                     continue;
                 }
-                $moduleMinutes  = (int) $moduleMinutes;
+                $moduleMinutes = (int) $moduleMinutes;
                 // dakika > 0 ise bitiş timestamp'i, değilse süresiz (null)
                 $modules[$name] = $moduleMinutes > 0 ? time() + ($moduleMinutes * 60) : null;
             }
 
             setting()->set('App.backendMaintenance', json_encode([
-                'all'     => $all,
-                'until'   => ($all && $minutes > 0) ? time() + ($minutes * 60) : null,
+                'all' => $all,
+                'until' => ($all && $minutes > 0) ? time() + ($minutes * 60) : null,
                 'modules' => $modules,
             ], JSON_UNESCAPED_UNICODE));
             cache()->delete('settings');
 
             return $this->respond([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => lang('Settings.backendMaintenanceUpdated'),
             ], 200);
         } catch (\Exception $e) {
             return $this->respond([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => lang('Backend.notUpdated', [lang('Settings.backendMaintenance')]),
             ], 500);
         }
@@ -489,9 +543,9 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         if ($cached = cache('backend_maintenance_modules')) {
             return $cached;
         }
-        $rows       = $this->commonModel->lists('auth_permissions_pages', 'className');
+        $rows = $this->commonModel->lists('auth_permissions_pages', 'className');
         $classNames = array_map(static fn($row) => $row->className, $rows);
-        $modules    = BackendMaintenance::selectableModules($classNames);
+        $modules = BackendMaintenance::selectableModules($classNames);
         cache()->save('backend_maintenance_modules', $modules, 3600);
         return $modules;
     }
@@ -526,11 +580,12 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             $patchZip->addFromString($path, $content);
         }
 
-        // Removed files listesi ekle
-        $files = $this->updateService->checkVersion()['changed_files'] ?? [];
+        // Removed files listesi ekle (indirilen dosyalarla aynı compare sonucundan)
+        $files = $result['all_files'] ?? [];
         $removed = [];
         foreach ($files as $f) {
-            if ($f['status'] === 'removed') $removed[] = $f['filename'];
+            if ($f['status'] === 'removed')
+                $removed[] = $f['filename'];
         }
         if (!empty($removed)) {
             $patchZip->addFromString('REMOVED_FILES.txt', implode(PHP_EOL, $removed));
@@ -546,7 +601,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function autoUpdate()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
 
         $latestVersion = trim($this->request->getPost('latest') ?? '');
         $currentVersion = (string) env('app.version');
@@ -565,8 +621,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return $this->respond($downloadResult, 500);
         }
 
-        // 2. Uygula
-        $allFiles = $this->updateService->checkVersion()['changed_files'] ?? [];
+        // 2. Uygula (removed listesi, indirilen dosyalarla aynı compare sonucundan)
+        $allFiles = $downloadResult['all_files'] ?? [];
         $applyResult = $this->updateService->applyUpdate($latestVersion, $downloadResult['files'], $allFiles);
 
         if ($applyResult['result'] === true) {
@@ -585,7 +641,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function listBackups()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
 
         $backups = $this->updateService->listBackups();
         return $this->respond(['result' => true, 'backups' => $backups]);
@@ -596,7 +653,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
      */
     public function rollbackUpdate()
     {
-        if (!$this->request->isAJAX()) return $this->failForbidden();
+        if (!$this->request->isAJAX())
+            return $this->failForbidden();
 
         $backupName = $this->request->getPost('backup_name');
         if (empty($backupName)) {
@@ -622,11 +680,13 @@ class Settings extends \Modules\Backend\Controllers\BaseController
 
     private function getRecursiveFiles(string $dir, string $baseDir = ''): array
     {
-        if ($baseDir === '') $baseDir = $dir;
+        if ($baseDir === '')
+            $baseDir = $dir;
         $files = [];
         $items = scandir($dir);
         foreach ($items as $item) {
-            if ($item === '.' || $item === '..') continue;
+            if ($item === '.' || $item === '..')
+                continue;
             $path = $dir . $item;
             if (is_dir($path)) {
                 $files = array_merge($files, $this->getRecursiveFiles($path . '/', $baseDir));

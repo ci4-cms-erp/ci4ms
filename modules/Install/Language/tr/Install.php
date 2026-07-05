@@ -44,4 +44,6 @@ return [
     'password' => 'Şifreniz',
     'foldersWithSameNameListItem' => 'Aynı İsimli Klasörler',
     'invalidNonce' => 'Yükleme oturumu eksik veya süresi dolmuş. Lütfen sayfayı yenileyip formu tekrar gönderin.',
+    'geoLookup' => 'Oturum konum takibini etkinleştir (yerel GeoIP veritabanı)',
+    'geoLookupHint' => 'Login oturumları için yaklaşık şehir/ülke bilgisini yerel olarak türetir — üçüncü taraflara veri gönderilmez. Kurulumdan sonra ücretsiz DB-IP veritabanının indirilmesi gerekir: php spark ci4ms:geoip-update. "IP Geolocation by DB-IP" (CC BY 4.0) kullanır; etkinleştirilirse atıf zorunludur.',
 ];

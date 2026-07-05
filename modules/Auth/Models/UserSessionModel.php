@@ -25,6 +25,7 @@ class UserSessionModel extends Model
         'device_name',
         'country',
         'city',
+        'region',
         'last_activity',
         'locked_at',
         'is_active',
@@ -67,11 +68,11 @@ class UserSessionModel extends Model
             'is_active'       => 1,
         ];
 
-        $geo = @json_decode(file_get_contents("http://ip-api.com/json/{$ip}?fields=city,country,regionName,status"), true);
-        if ($geo && $geo['status'] ?? '' === 'success') {
-            $data['city']    = $geo['city'] ?? null;
-            $data['country'] = $geo['country'] ?? null;
-            $data['region']  = $geo['regionName'] ?? null;
+        $geo = $this->fetchGeoInfo($ip);
+        if ($geo !== null) {
+            $data['city']    = $geo['city'];
+            $data['country'] = $geo['country'];
+            $data['region']  = $geo['region'];
         }
         if ($existing) {
             return $this->update($existing['id'], $data);
@@ -79,6 +80,24 @@ class UserSessionModel extends Model
 
         $data['created_at'] = date('Y-m-d H:i:s');
         return $this->insert($data) !== false;
+    }
+
+    /**
+     * Resolves city/country/region info for the given IP via the local
+     * GeoIP database (see Modules\Auth\Libraries\GeoLocator). Runs only when
+     * the Auth.geoLookupEnabled setting is on (default: off); returns null
+     * otherwise or on any lookup failure — never breaks the login flow.
+     *
+     * @param string $ip User's connecting IP address
+     * @return array{city: string|null, country: string|null, region: string|null}|null
+     */
+    private function fetchGeoInfo(string $ip): ?array
+    {
+        if (! setting('Auth.geoLookupEnabled')) {
+            return null;
+        }
+
+        return (new \Modules\Auth\Libraries\GeoLocator())->lookup($ip);
     }
 
     /**

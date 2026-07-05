@@ -42,6 +42,18 @@ class Auth extends ShieldAuth
 
     /**
      * --------------------------------------------------------------------
+     * Session Geo Lookup (ci4ms)
+     * --------------------------------------------------------------------
+     * When enabled, login sessions are enriched with approximate
+     * city/country/region derived from the LOCAL DB-IP Lite database
+     * (no data leaves the server). Overridable via the settings table
+     * (Auth.geoLookupEnabled); requires the database file downloaded by
+     * `php spark ci4ms:geoip-update`.
+     */
+    public bool $geoLookupEnabled = false;
+
+    /**
+     * --------------------------------------------------------------------
      * View files
      * --------------------------------------------------------------------
      */

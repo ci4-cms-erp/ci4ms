@@ -118,4 +118,8 @@ return [
     'backendMaintenanceUpdated'        => 'Backend maintenance settings updated.',
     'backendMaintenanceMinutes'        => 'Estimated duration (minutes)',
     'backendMaintenanceModuleMinutes'  => 'Duration (min)',
+    'geoLookupEnabled'                 => 'Session Location Tracking',
+    'geoLookupActive'                  => 'Session location tracking enabled.',
+    'geoLookupDisabled'                => 'Session location tracking disabled.',
+    'geoDbMissing'                     => 'Tracking enabled, but the GeoIP database is missing. Run "php spark ci4ms:geoip-update" to download it.',
 ];

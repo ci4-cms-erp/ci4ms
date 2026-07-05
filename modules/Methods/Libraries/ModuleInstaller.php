@@ -131,6 +131,9 @@ class ModuleInstaller
 
         foreach ($files as $file) {
             $content = file_get_contents($file);
+            if ($content === false) {
+                continue;
+            }
             // Catch createTable('table_name' patterns
             if (preg_match_all("/createTable\s*\(\s*['\"]([^'\"]+)['\"]/", $content, $matches)) {
                 foreach ($matches[1] as $tableName) {

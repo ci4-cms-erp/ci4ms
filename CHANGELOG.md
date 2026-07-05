@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [Unreleased]
+
+## [0.34.0.0] - 2026-07-05
+
+### Added
+
+- **Local Session Geo Lookup Subsystem (privacy-first, opt-in):** Login sessions can now be enriched with an approximate city / region / country, derived entirely from a **local** DB-IP City Lite database — the visitor's IP address never leaves the server and no third-party request is made. A new `Modules\Auth\Libraries\GeoLocator` library reads the MMDB file via `maxmind-db/reader`, and a new `Modules\Auth\Commands\GeoIpUpdate` command (`php spark ci4ms:geoip-update`) downloads the DB-IP Lite database, gunzips it, verifies it with a test lookup, and atomically renames it into place; the command is `flock`-guarded against concurrent runs and is designed to be scheduled as a monthly cron job. A new setting `Auth.geoLookupEnabled` (config default `false`) gates the whole feature and is exposed in the backend via a Settings → "Session Location Tracking" toggle (route `saveGeoLookup`; AJAX + `role=update` + CSRF + `in_list` validation, with a UI warning when the toggle is enabled while the database file is still missing) and via an opt-in checkbox in the web installer. Adds the `maxmind-db/reader` Composer dependency. New language keys — `Settings.geoLookupEnabled`, `Settings.geoLookupActive`, `Settings.geoLookupDisabled`, `Settings.geoDbMissing`, `Install.geoLookup`, and `Install.geoLookupHint` — were added in both English and Turkish. DB-IP attribution (CC BY 4.0) is surfaced in the README, the installer hint, and the command output.
+
+### Changed
+
+- **Session geo lookup replaces the previous inline `ip-api.com` HTTP call — BEHAVIOR CHANGE:** After upgrading, existing installations **stop collecting geo data** until an administrator enables the new setting and downloads the local database (privacy-by-default). As part of this change, the visitor's IP address is no longer transmitted to a third party over plain HTTP.
+
+### Fixed
+
+- **Login Crash When `ip-api.com` Was Unreachable (DNS-level blocker such as Pi-hole, or an outage):** `UserSessionModel::recordLogin()` performed `json_decode(file_get_contents("http://ip-api.com/..."))`; under `declare(strict_types=1)` a failed fetch returns `false`, and `json_decode(false)` raised an uncaught `TypeError` that turned **every** login into a 500 (the `@` error-suppression operator does not suppress a `TypeError`). This was reported by a user who hit the Pi-hole scenario. Two adjacent bugs in the same block were corrected as well: an operator-precedence bug (`$geo && $geo['status'] ?? '' === 'success'` — because `??` binds looser than `&&`, the status check never actually executed) and a missing `region` entry in `$allowedFields` (the `region` column was being silently dropped).
+- **Auto-Updater Could Hang Indefinitely:** `Modules\Settings\Libraries\UpdateService` created its cURL client without a timeout (CI4 defaults: 150 s connect, **unlimited** transfer), so an unreachable or slow GitHub could stall the `checkVersion` AJAX call and the update worker for minutes. Requests are now capped at 15 s transfer / 5 s connect.
+- **Auto-Updater 500 on Network Failure:** `fetchAllChangedFiles()` sat outside the surrounding try/catch, so a DNS or connection failure threw an uncaught `HTTPException`. It is now caught and returned as a structured error.
+- **Auto-Updater Silent Partial Update:** `autoUpdate` / `downloadPatch` re-invoked `checkVersion()` and, on error, fell back to an empty `changed_files` list — applying an update with no deleted-file list. The file list is now carried over from the same compare result, which also removes one redundant GitHub round-trip.
+- **`TypeError` Guards on `file_get_contents()` Reads:** `Modules\LanguageManager\Controllers\Translations::import()` (language import) and `Modules\Methods\Libraries\ModuleInstaller::getModuleTables()` could throw a `TypeError` under `strict_types` when `file_get_contents()` returned `false`; both now have explicit `=== false` guards (returning 422 / continuing respectively).
+
 ## [0.33.2.0] - 2026-07-03
 
 ### Fixed

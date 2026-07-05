@@ -228,7 +228,8 @@ class InstallService
                 array('class' => 'Config\\Security', 'key' => 'allowedFiles', 'value' => '["image\\/x-ms-bmp","image\\/gif","image\\/jpeg","image\\/png","image\\/x-icon","text\\/plain","image\\/webp"]', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\Security', 'key' => 'badwords', 'value' => '{"status": 1, "autoReject": 0, "autoAccept": 1, "list": []}', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Elfinder', 'key' => 'convertWebp', 'value' => '1', 'type' => 'boolean', 'context' => NULL),
-                array('class' => 'Config\\App', 'key' => 'defaultLocale', 'value' => 'en', 'type' => 'string', 'context' => NULL)
+                array('class' => 'Config\\App', 'key' => 'defaultLocale', 'value' => 'en', 'type' => 'string', 'context' => NULL),
+                array('class' => 'Modules\\Auth\\Config\\Auth', 'key' => 'geoLookupEnabled', 'value' => $args['geoLookup'] ?? '0', 'type' => 'boolean', 'context' => NULL)
             )
         );
     }

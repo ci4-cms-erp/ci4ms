@@ -167,6 +167,7 @@ See `docs/architecture.md` for deeper architectural notes.
 | `php spark create:route` | Rebuild `app/Config/Routes.php` from the template |
 | `php spark migrate --all` | Run all pending migrations across modules |
 | `php spark cache:clear` | Clear all application caches |
+| `php spark ci4ms:geoip-update` | Download/update the local DB-IP City Lite database for session geo lookup (run monthly via cron) |
 
 Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, etc.) are also available.
 
@@ -186,6 +187,10 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 - The GitHub Actions workflow (`.github/workflows/docker-test.yaml`) automatically builds the Docker image and runs migrations on every push to `master`.
 - **Maintenance mode**: When `settings.maintenanceMode.scalar == 1`, the `Ci4ms` filter redirects visitors to `maintenance-mode`.
 - **Security**: `Fileeditor` enforces `realpath` guards and a dangerous extension blacklist (`.php`, `.phtml`, `.phar`, `.htaccess`) to prevent RCE; destructive operations (`deleteFileOrFolder`, `renameFile`) additionally validate against an extension allowlist to block renaming or deleting critical application files. `Backup` restore uses SQL statement whitelist to block malicious queries (`LOAD_FILE`, `GRANT`, etc.). `HTMLPurifier` config is hardened against XSS bypass (`data:` URIs blocked, `CSS.Trusted` disabled) and `CustomRules::getClean()` output is persisted on every `create` and `update` flow in Blog and Pages controllers to prevent Stored XSS. All `$_SERVER` reads replaced with CI4 `base_url()`/`site_url()` helpers. Configure `App.php::$proxyIPs` if behind Cloudflare/Nginx.
+
+## Third-Party Data Attribution
+
+- **Session geo lookup** (optional, disabled by default) uses the free **DB-IP City Lite** database. If you enable it (Settings → Session Location Tracking, or the installer checkbox) and run `php spark ci4ms:geoip-update`, you must comply with the database license: **IP Geolocation by [DB-IP](https://db-ip.com)**, distributed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Keep this attribution visible in your deployment. No IP data leaves your server — lookups are performed locally against the downloaded database.
 
 ## Additional Docs
 

@@ -22,7 +22,12 @@ class UpdateService
 
     public function __construct()
     {
-        $this->client = Services::curlrequest();
+        $this->client = Services::curlrequest([
+            // CI4 default: connect 150 sn, transfer sınırsız — GitHub erişilemezken
+            // backend AJAX'ı ve update worker'ı asmaması için sınırlandı.
+            'timeout'         => 15,
+            'connect_timeout' => 5,
+        ]);
         $this->lockFile = WRITEPATH . 'ci4ms_update.lock';
         $this->backupBaseDir = WRITEPATH . 'backups/';
     }
@@ -43,7 +48,7 @@ class UpdateService
                 'http_errors' => false,
             ]);
 
-            $release = json_decode($response->getBody());
+            $release = json_decode((string) $response->getBody());
 
             if (empty($release) || !isset($release->tag_name)) {
                 return ['result' => false, 'message' => lang('Settings.noTagsFound')];
@@ -84,7 +89,12 @@ class UpdateService
      */
     public function downloadPatchRaw(string $currentVersion, string $latestVersion): array
     {
-        $files = $this->fetchAllChangedFiles($currentVersion, $latestVersion);
+        try {
+            $files = $this->fetchAllChangedFiles($currentVersion, $latestVersion);
+        } catch (\Exception $e) {
+            return ['result' => false, 'message' => $e->getMessage()];
+        }
+
         if (empty($files)) {
             return ['result' => false, 'message' => lang('Settings.noChangesFound')];
         }
@@ -112,10 +122,11 @@ class UpdateService
         }
 
         return [
-            'result' => empty($failed),
-            'files'  => $downloaded,
-            'failed' => $failed,
-            'total'  => count($files)
+            'result'    => empty($failed),
+            'files'     => $downloaded,
+            'all_files' => $files,
+            'failed'    => $failed,
+            'total'     => count($files)
         ];
     }
 
@@ -265,7 +276,7 @@ class UpdateService
             'http_errors' => false,
         ]);
 
-        $data = json_decode($response->getBody(), true);
+        $data = json_decode((string) $response->getBody(), true);
         if (!isset($data['files'])) return [];
 
         $files = [];
@@ -283,7 +294,7 @@ class UpdateService
                     'headers'     => $headers,
                     'http_errors' => false,
                 ]);
-                $cData = json_decode($cResponse->getBody(), true);
+                $cData = json_decode((string) $cResponse->getBody(), true);
                 if (isset($cData['files'])) {
                     foreach ($cData['files'] as $f) {
                         $files[$f['filename']] = [

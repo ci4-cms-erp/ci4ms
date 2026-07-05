@@ -118,4 +118,8 @@ return [
     'backendMaintenanceUpdated'        => 'Backend bakım ayarları güncellendi.',
     'backendMaintenanceMinutes'        => 'Tahmini süre (dakika)',
     'backendMaintenanceModuleMinutes'  => 'Süre (dk)',
+    'geoLookupEnabled'                 => 'Oturum Konum Takibi',
+    'geoLookupActive'                  => 'Oturum konum takibi açıldı.',
+    'geoLookupDisabled'                => 'Oturum konum takibi kapatıldı.',
+    'geoDbMissing'                     => 'Takip açıldı ancak GeoIP veritabanı eksik. İndirmek için "php spark ci4ms:geoip-update" komutunu çalıştırın.',
 ];

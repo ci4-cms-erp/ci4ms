@@ -66,6 +66,9 @@ writable/debugbar/*
 writable/backups/*
 !writable/backups/index.html
 
+writable/geoip/*
+!writable/geoip/index.html
+
 writable/tmp/*
 !writable/tmp/index.html
 

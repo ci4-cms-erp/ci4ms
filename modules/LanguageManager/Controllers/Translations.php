@@ -131,6 +131,13 @@ class Translations extends \Modules\Backend\Controllers\BaseController
         }
 
         $json = file_get_contents($file->getTempName());
+        if ($json === false) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('LanguageManager.invalidFile')
+            ], 422);
+        }
+
         $data = json_decode($json, true);
 
         if (!is_array($data)) {

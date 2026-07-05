@@ -114,6 +114,13 @@ echo $this->section('content'); ?>
                   <label for=""><?php echo lang('Install.siteSlogan') ?></label>
                   <input type="text" name="slogan" value="<?php echo old('slogan') ?>" class="form-control" placeholder="<?php echo lang('Install.siteSloganPlaceholder') ?>" required>
                 </div>
+                <div class="form-group">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="geoLookup" name="geoLookup" value="1" <?php echo old('geoLookup') ? 'checked' : '' ?>>
+                    <label class="custom-control-label" for="geoLookup"><?php echo lang('Install.geoLookup') ?></label>
+                  </div>
+                  <small class="text-muted"><?php echo lang('Install.geoLookupHint') ?></small>
+                </div>
                 <button class="btn btn-success" type="button" onclick="stepper.previous()"><?php echo lang('Install.previous') ?></button>
                 <button type="submit" class="btn btn-success"><?php echo lang('Install.submit') ?></button>
               </div>
