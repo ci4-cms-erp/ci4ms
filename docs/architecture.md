@@ -40,6 +40,7 @@ Authentication is powered by **CodeIgniter Shield** (`codeigniter4/shield`):
   - `Modules\Methods` manages these tables and can auto-scan routes to populate permissions.
 - Backend activity is logged via `Modules\Backend\Filters\BackendLogFilter` (IP, user agent, action, module) for audit trail purposes.
 - Inactive administrative sessions are secured via `Modules\Auth\Controllers\LockController` which locks the session and sets a `locked_at` timestamp.
+- **Session geo lookup (local, opt-in):** `Modules\Auth\Models\UserSessionModel::recordLogin()` can enrich a session with approximate city/region/country. Lookups run entirely against a **local** DB-IP City Lite database (MMDB) via `Modules\Auth\Libraries\GeoLocator` (`maxmind-db/reader`) — the IP address never leaves the server. The feature is gated by the `Auth.geoLookupEnabled` setting (default `false`) and returns `null` on any failure, so it never breaks login. The database is downloaded/refreshed with `php spark ci4ms:geoip-update` (atomic swap, `flock`-guarded, monthly cron); the file lives outside the web root under `writable/geoip/`. DB-IP data is CC BY 4.0 and requires attribution.
 - Application-wide rate limiting is enforced via `ThrottleFilter` and `Modules\Backend\Filters\BackendThrottleFilter` (HTTP 429).
 - Maintenance mode is gracefully handled by `Modules\Backend\Filters\BackendMaintenanceFilter` and the `BackendMaintenance` library (HTTP 503).
 
@@ -135,6 +136,7 @@ Blog and Pages modules store SEO data as JSON (`coverImage`, `description`, `key
 | `php spark create:route` | Rebuild `app/Config/Routes.php` from the template |
 | `php spark migrate --all` | Run all pending migrations |
 | `php spark cache:clear` | Clear all application caches |
+| `php spark ci4ms:geoip-update` | Download/refresh the local DB-IP City Lite database for session geo lookup (monthly cron) |
 
 `Modules\Methods::moduleScan()` inspects the router to align routes with permission records.
 

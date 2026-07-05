@@ -402,6 +402,21 @@
             <code>Modules\Backend\Filters\BackendLogFilter</code> (IP, user
             agent, action, module).
           </li>
+          <li>
+            <strong>Session geo lookup (local, opt-in):</strong>
+            <code>Modules\Auth\Models\UserSessionModel::recordLogin()</code>
+            can enrich a session with approximate city/region/country, resolved
+            entirely against a <strong>local</strong> DB-IP City Lite database
+            (MMDB) via <code>Modules\Auth\Libraries\GeoLocator</code>
+            (<code>maxmind-db/reader</code>) — the IP address never leaves the
+            server. Gated by the <code>Auth.geoLookupEnabled</code> setting
+            (default <code>false</code>) and returns <code>null</code> on any
+            failure, so it never breaks login. The database is
+            downloaded/refreshed with <code>php spark ci4ms:geoip-update</code>
+            (atomic swap, <code>flock</code>-guarded, monthly cron) and lives
+            outside the web root under <code>writable/geoip/</code>. DB-IP data
+            is CC BY 4.0 and requires attribution.
+          </li>
         </ul>
       </section>
 
@@ -670,6 +685,13 @@
             <tr>
               <td><code>php spark cache:clear</code></td>
               <td>Clear all application caches</td>
+            </tr>
+            <tr>
+              <td><code>php spark ci4ms:geoip-update</code></td>
+              <td>
+                Download/refresh the local DB-IP City Lite database for session
+                geo lookup (monthly cron)
+              </td>
             </tr>
           </tbody>
         </table>
