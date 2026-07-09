@@ -25,7 +25,9 @@ use CodeIgniter\HotReloader\HotReloader;
 
 Events::on('pre_system', static function (): void {
     if (ENVIRONMENT !== 'testing') {
-        if (ini_get('zlib.output_compression')) {
+        $value = ini_get('zlib.output_compression');
+
+        if (filter_var($value, FILTER_VALIDATE_BOOLEAN) || (int) $value > 0) {
             throw FrameworkException::forEnabledZlibOutputCompression();
         }
 
@@ -33,7 +35,7 @@ Events::on('pre_system', static function (): void {
             ob_end_flush();
         }
 
-        ob_start(static fn($buffer) => $buffer);
+        ob_start(static fn ($buffer) => $buffer);
     }
 
     /*
