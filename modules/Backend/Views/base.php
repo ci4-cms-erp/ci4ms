@@ -32,6 +32,10 @@
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
                 </li>
             </ul>
+	    <!-- Right navbar links -->
+	   <ul class="navbar-nav ml-auto">
+		<?php echo view_cell('Modules\Notifications\Cells\BellCell::render', ['user_id' => auth()->id()]); ?>
+	   </ul>
         </nav>
         <!-- /.navbar -->
 

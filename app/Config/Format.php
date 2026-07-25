@@ -61,4 +61,17 @@ class Format extends BaseConfig
         'application/xml'  => 0,
         'text/xml'         => 0,
     ];
+
+    /**
+     * --------------------------------------------------------------------------
+     * JSON encode depth
+     * --------------------------------------------------------------------------
+     *
+     * Maximum nesting depth JSONFormatter passes to json_encode(). CI 4.7.4's
+     * JSONFormatter reads this without a fallback, so the property must exist
+     * or every respond()/setJSON() JSON output throws.
+     *
+     * @var int
+     */
+    public int $jsonEncodeDepth = 512;
 }

@@ -134,12 +134,11 @@ class Filters extends BaseFilters
                 if (empty(cache('settings')) && $this->commonModel->db->tableExists('settings')) {
                     $this->settings = $this->commonModel->lists('settings');
                     $set = [];
-                    $formatRules = new \CodeIgniter\Validation\FormatRules();
                     foreach ($this->settings as $setting) {
-                        if ($formatRules->valid_json($setting->value) === true)
-                            $set[$setting->key] = (object) json_decode($setting->value, JSON_UNESCAPED_UNICODE);
-                        else
-                            $set[$setting->key] = $setting->value;
+                        $decoded = json_decode($setting->value);
+                        $set[$setting->key] = (json_last_error() === JSON_ERROR_NONE && (is_object($decoded) || is_array($decoded)))
+                            ? $decoded
+                            : $setting->value;
                     }
                     cache()->save('settings', $set, 86400);
                     $this->settings = (object) $set;

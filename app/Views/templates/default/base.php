@@ -8,14 +8,14 @@
     <link rel="icon" type="image/x-icon"
         href="<?php echo base_url('templates/default/assets/vendor/modern-business/favicon.ico') ?>" />
 
-    <?php if (!empty($settings->templateInfos->fonts['googleFont'])):
-        $gf = urlencode($settings->templateInfos->fonts['googleFont']);
-        $gw = $settings->templateInfos->fonts['weights'] ?? '400,600,700'; ?>
+    <?php if (!empty($settings->templateInfos->fonts->googleFont)):
+        $gf = urlencode($settings->templateInfos->fonts->googleFont);
+        $gw = $settings->templateInfos->fonts->weights ?? '400,600,700'; ?>
         <link href="https://fonts.googleapis.com/css2?family=<?php echo $gf ?>:wght@<?php echo esc($gw) ?>&display=swap"
             rel="stylesheet">
     <?php endif;
-    if (!empty($settings->templateInfos->theme_assets['styles'])):
-        foreach ($settings->templateInfos->theme_assets['styles'] as $styleUrl):
+    if (!empty($settings->templateInfos->theme_assets->styles)):
+        foreach ($settings->templateInfos->theme_assets->styles as $styleUrl):
             $styleUrl = (str_starts_with($styleUrl, 'http') || str_starts_with($styleUrl, '//')) ? $styleUrl : base_url(ltrim($styleUrl, '/')); ?>
             <link href="<?php echo esc($styleUrl) ?>" rel="stylesheet" />
         <?php endforeach;
@@ -167,8 +167,8 @@
         </div>
     </div>
 
-    <?php if (!empty($settings->templateInfos->theme_assets['scripts'])):
-        foreach ($settings->templateInfos->theme_assets['scripts'] as $scriptUrl):
+    <?php if (!empty($settings->templateInfos->theme_assets->scripts)):
+        foreach ($settings->templateInfos->theme_assets->scripts as $scriptUrl):
             $scriptUrl = (str_starts_with($scriptUrl, 'http') || str_starts_with($scriptUrl, '//')) ? $scriptUrl : base_url(ltrim($scriptUrl, '/')); ?>
             <script src="<?php echo esc($scriptUrl) ?>"></script>
         <?php endforeach;
@@ -178,7 +178,7 @@
         <script src="<?php echo base_url('templates/default/assets/vendor/bootstrap/bootstrap.bundle.min.js') ?>"></script>
     <?php endif;
     echo script_tag('be-assets/plugins/jquery-ui/jquery-ui.min.js');
-    if (!empty($settings->templateInfos->display['backToTop'])): ?>
+    if (!empty($settings->templateInfos->display->backToTop)): ?>
         <button id="back-to-top"
             style="position:fixed;bottom:90px;right:28px;z-index:1040;width:40px;height:40px;border-radius:50%;background:#804f7b;color:#fff;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:18px;"
             title="Üste Dön" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>

@@ -8,6 +8,10 @@ class UsersAddColumns extends Migration
 {
     public function up()
     {
+        if ($this->db->fieldExists('own_language', 'users')) {
+            return;
+        }
+
         $this->forge->addColumn(
             'users',
             [

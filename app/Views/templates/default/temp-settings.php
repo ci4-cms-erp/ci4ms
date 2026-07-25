@@ -69,21 +69,21 @@ echo $this->section('content'); ?>
                                 <div class="form-group">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" name="settings[widgets][sidebar][searchWidget]" value="true" id="searchWidget" class="custom-control-input"
-                                            <?php echo !empty($settings->templateInfos->widgets['sidebar']['searchWidget']) && (bool)$settings->templateInfos->widgets['sidebar']['searchWidget'] === true ? 'checked' : '' ?>>
+                                            <?php echo !empty($settings->templateInfos->widgets->sidebar->searchWidget) && (bool)$settings->templateInfos->widgets->sidebar->searchWidget === true ? 'checked' : '' ?>>
                                         <label class="custom-control-label" for="searchWidget"><i class="fas fa-search text-muted mr-1"></i> Arama Kutusu</label>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" name="settings[widgets][sidebar][categoriesWidget]" value="true" id="categoriesWidget" class="custom-control-input"
-                                            <?php echo !empty($settings->templateInfos->widgets['sidebar']['categoriesWidget']) && (bool)$settings->templateInfos->widgets['sidebar']['categoriesWidget'] === true ? 'checked' : '' ?>>
+                                            <?php echo !empty($settings->templateInfos->widgets->sidebar->categoriesWidget) && (bool)$settings->templateInfos->widgets->sidebar->categoriesWidget === true ? 'checked' : '' ?>>
                                         <label class="custom-control-label" for="categoriesWidget"><i class="fas fa-list text-muted mr-1"></i> Kategori Listesi</label>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" name="settings[widgets][sidebar][archiveWidget]" value="true" id="archiveWidget" class="custom-control-input"
-                                            <?php echo !empty($settings->templateInfos->widgets['sidebar']['archiveWidget']) && (bool)$settings->templateInfos->widgets['sidebar']['archiveWidget'] === true ? 'checked' : '' ?>>
+                                            <?php echo !empty($settings->templateInfos->widgets->sidebar->archiveWidget) && (bool)$settings->templateInfos->widgets->sidebar->archiveWidget === true ? 'checked' : '' ?>>
                                         <label class="custom-control-label" for="archiveWidget"><i class="fas fa-archive text-muted mr-1"></i> Arşiv Listesi</label>
                                     </div>
                                 </div>
@@ -106,21 +106,21 @@ echo $this->section('content'); ?>
                                 <div class="form-group">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" name="settings[display][breadcrumbs]" id="breadcrumbs" value="true" class="custom-control-input"
-                                            <?php echo !empty($settings->templateInfos->display['breadcrumbs']) ? 'checked' : '' ?>>
+                                            <?php echo !empty($settings->templateInfos->display->breadcrumbs) ? 'checked' : '' ?>>
                                         <label class="custom-control-label" for="breadcrumbs"><i class="fas fa-sitemap text-muted mr-1"></i> Breadcrumb (Yol İzi)</label>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" name="settings[display][backToTop]" id="backToTop" value="true" class="custom-control-input"
-                                            <?php echo !empty($settings->templateInfos->display['backToTop']) ? 'checked' : '' ?>>
+                                            <?php echo !empty($settings->templateInfos->display->backToTop) ? 'checked' : '' ?>>
                                         <label class="custom-control-label" for="backToTop"><i class="fas fa-arrow-up text-muted mr-1"></i> Üste Dön Butonu</label>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" name="settings[display][darkModeToggle]" id="darkModeToggle" value="true" class="custom-control-input"
-                                            <?php echo !empty($settings->templateInfos->display['darkModeToggle']) ? 'checked' : '' ?>>
+                                            <?php echo !empty($settings->templateInfos->display->darkModeToggle) ? 'checked' : '' ?>>
                                         <label class="custom-control-label" for="darkModeToggle"><i class="fas fa-moon text-muted mr-1"></i> Karanlık Mod Butonu</label>
                                     </div>
                                 </div>
@@ -148,7 +148,7 @@ echo $this->section('content'); ?>
                             <div class="card-body">
                                 <div id="css-asset-list">
                                     <?php
-                                    $cssAssets = $settings->templateInfos->theme_assets['styles'] ?? [
+                                    $cssAssets = $settings->templateInfos->theme_assets->styles ?? [
                                         '/templates/default/assets/vendor/modern-business/styles.css',
                                         '/templates/default/assets/ci4ms.css',
                                     ];
@@ -189,7 +189,7 @@ echo $this->section('content'); ?>
                             <div class="card-body">
                                 <div id="js-asset-list">
                                     <?php
-                                    $jsAssets = $settings->templateInfos->theme_assets['scripts'] ?? [
+                                    $jsAssets = $settings->templateInfos->theme_assets->scripts ?? [
                                         '/templates/default/assets/vendor/jquery/jquery.min.js',
                                         '/templates/default/assets/vendor/bootstrap/bootstrap.bundle.min.js',
                                     ];
@@ -281,7 +281,7 @@ echo $this->section('content'); ?>
                                     <label class="font-weight-bold"><i class="fas fa-copyright mr-1"></i> Telif Hakkı Metni</label>
                                     <input type="text" class="form-control"
                                         name="settings[footer][copyright]"
-                                        value="<?php echo esc($settings->templateInfos->footer['copyright'] ?? '') ?>"
+                                        value="<?php echo esc($settings->templateInfos->footer->copyright ?? '') ?>"
                                         placeholder="Örn: © 2025 Şirket Adı. Tüm hakları saklıdır.">
                                     <small class="text-muted">Boş bırakırsanız varsayılan site adı kullanılır.</small>
                                 </div>
@@ -289,19 +289,19 @@ echo $this->section('content'); ?>
                                     <label class="font-weight-bold"><i class="fas fa-link mr-1"></i> Footer Linkleri</label>
                                     <div id="footer-links-list">
                                         <?php
-                                        $footerLinks = $settings->templateInfos->footer['links'] ?? [];
+                                        $footerLinks = $settings->templateInfos->footer->links ?? [];
                                         foreach ($footerLinks as $link): ?>
                                             <div class="form-group">
                                                 <div class="input-group">
                                                     <input type="text" class="form-control form-control-sm"
                                                         style="flex:2"
                                                         name="settings[footer][links][][label]"
-                                                        value="<?php echo esc($link['label'] ?? '') ?>"
+                                                        value="<?php echo esc($link->label ?? '') ?>"
                                                         placeholder="Etiket (örn: Gizlilik)">
                                                     <input type="text" class="form-control form-control-sm"
                                                         style="flex:3"
                                                         name="settings[footer][links][][url]"
-                                                        value="<?php echo esc($link['url'] ?? '') ?>"
+                                                        value="<?php echo esc($link->url ?? '') ?>"
                                                         placeholder="URL">
                                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">×</button>
                                                 </div>
@@ -338,7 +338,7 @@ echo $this->section('content'); ?>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="font-name-input"
                                             name="settings[fonts][googleFont]"
-                                            value="<?php echo esc($settings->templateInfos->fonts['googleFont'] ?? '') ?>"
+                                            value="<?php echo esc($settings->templateInfos->fonts->googleFont ?? '') ?>"
                                             placeholder="örn: Roboto, Open Sans, Poppins, Lato">
                                         <div class="input-group-append">
                                             <button type="button" class="btn btn-outline-secondary" id="preview-font-btn">
@@ -354,7 +354,7 @@ echo $this->section('content'); ?>
                                     <label class="font-weight-bold">Font Ağırlıkları</label>
                                     <input type="text" class="form-control"
                                         name="settings[fonts][weights]"
-                                        value="<?php echo esc($settings->templateInfos->fonts['weights'] ?? '400,600,700') ?>"
+                                        value="<?php echo esc($settings->templateInfos->fonts->weights ?? '400,600,700') ?>"
                                         placeholder="400,600,700">
                                     <small class="text-muted">Virgülle ayrılmış ağırlık değerleri.</small>
                                 </div>
@@ -466,7 +466,7 @@ echo script_tag('be-assets/plugins/bs-custom-file-input/bs-custom-file-input.min
     });
 
     // Load existing font on page load
-    const existingFont = '<?php echo esc($settings->templateInfos->fonts['googleFont'] ?? '') ?>';
+    const existingFont = '<?php echo esc($settings->templateInfos->fonts->googleFont ?? '') ?>';
     if (existingFont) loadFontPreview(existingFont);
 </script>
 <?php echo $this->endSection() ?>

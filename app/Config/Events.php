@@ -55,3 +55,22 @@ Events::on('pre_system', static function (): void {
         }
     }
 });
+
+Events::on('ci4ms.audit', static function (array $e) {
+    if (($e['severity'] ?? '') !== 'warning') {
+        return;
+    }
+
+    $group = config('Modules\Notifications\Config\NotificationsConfig')->auditTargetGroup ?? 'superadmin';
+
+    try {
+        service('notifier')?->notify('audit.' . ($e['action'] ?? 'event'))
+            ->severity('warning')
+            ->title($e['message'] ?? '')
+            ->url($e['url'] ?? null)
+            ->toGroup($group)
+            ->dispatch();
+    } catch (\Throwable $ex) {
+        log_message('error', 'ci4ms.audit notifier dispatch failed: ' . $ex->getMessage());
+    }
+});

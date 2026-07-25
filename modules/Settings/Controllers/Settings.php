@@ -4,6 +4,7 @@ namespace Modules\Settings\Controllers;
 
 use Config\Mimes;
 use Modules\Settings\Libraries\UpdateService;
+use Modules\Settings\Libraries\CacheRegistry;
 use Modules\Backend\Libraries\BackendMaintenance;
 
 class Settings extends \Modules\Backend\Controllers\BaseController
@@ -29,6 +30,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             cache('settings')['backendMaintenance'] ?? null
         );
         $this->defData['backendMaintenanceModules'] = $this->backendMaintenanceModules();
+        if (ENVIRONMENT === 'development') $this->defData['clearable'] = CacheRegistry::clearable();
 
         return view('Modules\Settings\Views\settings', $this->defData);
     }
@@ -528,6 +530,60 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return $this->respond([
                 'status' => 'error',
                 'message' => lang('Backend.notUpdated', [lang('Settings.backendMaintenance')]),
+            ], 500);
+        }
+    }
+
+    /**
+     * Hedefli önbellek temizleme (AJAX). CacheRegistry allowlist'indeki mantıksal
+     * id'leri sunucuda sabit anahtar/pattern'lere çözer ve `cache()->delete()` /
+     * `cache()->deleteMatching()` uygular; `all=1` gelirse tüm clearable id'leri
+     * temizler.
+     *
+     * Shield dinamik RBAC config'i (`shield_auth_dynamic_config`) protected'tır ve
+     * hiçbir yoldan silinmez; gerçek `clean()` / `cache:clear` ASLA çağrılmaz.
+     * Glob pattern'ler yalnızca registry'den üretilir, client'tan alınmaz;
+     * allowlist dışı id'ler sessizce düşürülür.
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface
+     */
+    public function clearCache(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->failForbidden();
+        }
+
+        $ids = ((bool) $this->request->getPost('all'))
+            ? CacheRegistry::ids()
+            : array_values(array_filter(
+                (array) ($this->request->getPost('ids') ?? []),
+                static fn($id): bool => is_string($id) && CacheRegistry::isAllowed($id)
+            ));
+
+        if ($ids === []) {
+            return $this->respond(['status' => 'error', 'message' => lang('Settings.cacheNoneSelected')], 422);
+        }
+
+        try {
+            foreach ($ids as $id) {
+                $ops = CacheRegistry::resolve($id);
+                if ($ops === null) {
+                    continue;
+                }
+                foreach ($ops as $op) {
+                    if ($op['type'] === 'exact') {
+                        cache()->delete($op['target']);
+                    } else {
+                        cache()->deleteMatching($op['target']);
+                    }
+                }
+            }
+
+            return $this->respond(['status' => 'success', 'message' => lang('Settings.cacheCleared')], 200);
+        } catch (\Throwable $e) {
+            return $this->respond([
+                'status'  => 'error',
+                'message' => lang('Backend.notUpdated', [lang('Settings.cacheManagement')]),
             ], 500);
         }
     }

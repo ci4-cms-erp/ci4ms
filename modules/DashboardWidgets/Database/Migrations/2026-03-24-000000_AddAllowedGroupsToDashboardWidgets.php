@@ -8,6 +8,10 @@ class AddAllowedGroupsToDashboardWidgets extends Migration
 {
     public function up()
     {
+        if ($this->db->fieldExists('allowed_groups', 'dashboard_widgets')) {
+            return;
+        }
+
         $this->forge->addColumn('dashboard_widgets', [
             'allowed_groups' => [
                 'type' => 'TEXT',

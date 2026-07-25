@@ -112,7 +112,12 @@ class UpdateService
                 ]);
 
                 if ($response->getStatusCode() === 200) {
-                    $downloaded[$file['filename']] = $response->getBody();
+                    $body = (string) $response->getBody();
+                    if (isset($file['sha']) && !hash_equals($file['sha'], $this->gitBlobSha($body))) {
+                        $failed[] = $file['filename'];
+                        continue;
+                    }
+                    $downloaded[$file['filename']] = $body;
                 } else {
                     $failed[] = $file['filename'];
                 }
@@ -283,7 +288,8 @@ class UpdateService
         foreach ($data['files'] as $f) {
             $files[$f['filename']] = [
                 'filename' => $f['filename'],
-                'status'   => $f['status']
+                'status'   => $f['status'],
+                'sha'      => $f['sha'] ?? null,
             ];
         }
 
@@ -299,7 +305,8 @@ class UpdateService
                     foreach ($cData['files'] as $f) {
                         $files[$f['filename']] = [
                             'filename' => $f['filename'],
-                            'status'   => $f['status']
+                            'status'   => $f['status'],
+                            'sha'      => $f['sha'] ?? null,
                         ];
                     }
                 }
@@ -307,6 +314,11 @@ class UpdateService
         }
 
         return array_values($files);
+    }
+
+    private function gitBlobSha(string $content): string
+    {
+        return sha1('blob ' . strlen($content) . "\0" . $content);
     }
 
     private function acquireLock(): bool

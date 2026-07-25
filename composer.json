@@ -32,6 +32,9 @@
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^10.5.16"
     },
+    "suggest": {
+        "ext-redis": "Redis-backed realtime SSE (notificationsconfig.realtimeEnabled)"
+    },
     "autoload": {
         "psr-4": {
             "App\\": "app/",

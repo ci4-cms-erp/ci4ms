@@ -58,8 +58,15 @@ class BaseController extends Controller
         $this->config = new AuthConfig();
         $this->commonModel = new CommonModel();
         if (empty(cache('settings'))) {
-            $settings = $this->commonModel->lists('settings');
-            cache()->save('settings', $settings, 86400);
+            $set = [];
+            foreach ($this->commonModel->lists('settings') as $setting) {
+                $decoded = json_decode($setting->value);
+                $set[$setting->key] = (json_last_error() === JSON_ERROR_NONE && (is_object($decoded) || is_array($decoded)))
+                    ? $decoded
+                    : $setting->value;
+            }
+            cache()->save('settings', $set, 86400);
+            $settings = (object) $set;
         } else $settings = (object)cache()->get('settings');
     }
 }

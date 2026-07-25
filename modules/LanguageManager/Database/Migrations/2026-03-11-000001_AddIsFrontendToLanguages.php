@@ -14,6 +14,10 @@ class AddIsFrontendToLanguages extends Migration
 {
     public function up(): void
     {
+        if ($this->db->fieldExists('is_frontend', 'languages')) {
+            return;
+        }
+
         $this->forge->addColumn('languages', [
             'is_frontend' => [
                 'type'       => 'TINYINT',

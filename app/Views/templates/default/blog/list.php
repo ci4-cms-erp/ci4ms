@@ -33,7 +33,7 @@ echo $this->section('content'); ?>
 <section class="py-5">
     <div class="container">
         <div class="row">
-            <div class="<?php echo (!empty($settings->templateInfos->widgets['sidebar'])) ? 'col-md-9' : 'col-md-12' ?>">
+            <div class="<?php echo (!empty($settings->templateInfos->widgets->sidebar)) ? 'col-md-9' : 'col-md-12' ?>">
                 <div class="px-5">
                     <div class="row gx-5">
                         <?php foreach ($blogs as $blog):
@@ -75,7 +75,7 @@ echo $this->section('content'); ?>
                     </div>
                 </div>
             </div>
-            <?php if (!empty($settings->templateInfos->widgets['sidebar']))
+            <?php if (!empty($settings->templateInfos->widgets->sidebar))
                 echo view('templates/default/widgets/sidebar'); ?>
         </div>
     </div>

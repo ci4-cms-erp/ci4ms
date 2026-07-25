@@ -154,6 +154,7 @@ Key files:
 | Backup           | Database backup manager    | Create, download, and restore with SQL sanitization   |
 | DashboardWidgets | Dashboard statistics       | Modular widget system for admin overview              |
 | LanguageManager  | Language file manager      | Edit and manage translation files from the backend    |
+| Notifications    | In-app admin notifications | Bell dropdown, single-global-row targeting (user / group / broadcast), optional Redis-backed SSE realtime, per-user opt-out screen |
 
 See `docs/architecture.md` for deeper architectural notes.
 

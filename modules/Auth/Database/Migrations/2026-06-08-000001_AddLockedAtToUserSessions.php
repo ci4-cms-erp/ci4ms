@@ -10,6 +10,10 @@ class AddLockedAtToUserSessions extends Migration
 {
     public function up(): void
     {
+        if ($this->db->fieldExists('locked_at', 'user_sessions')) {
+            return;
+        }
+
         // locked_at NULL ise oturum açık; dolu ise o timestamp'ten itibaren kilitli.
         $this->forge->addColumn('user_sessions', [
             'locked_at' => [

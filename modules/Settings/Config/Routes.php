@@ -20,4 +20,5 @@ $routes->group('backend/settings', ['namespace' => 'Modules\Settings\Controllers
     $routes->post('saveIdleTimeout', 'Settings::saveIdleTimeout', ['as' => 'saveIdleTimeout','role'=>'update']);
     $routes->post('saveGeoLookup', 'Settings::saveGeoLookup', ['as' => 'saveGeoLookup','role'=>'update']);
     $routes->post('saveBackendMaintenance', 'Settings::saveBackendMaintenance', ['as' => 'saveBackendMaintenance', 'role' => 'update']);
+    $routes->post('clearCache', 'Settings::clearCache', ['as' => 'clearCache', 'role' => 'update']);
 });

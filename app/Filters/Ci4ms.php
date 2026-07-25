@@ -40,7 +40,7 @@ class Ci4ms implements FilterInterface
             return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install');
 
         }
-        if ((bool) cache()->get('settings')['maintenanceMode']->scalar === true)
+        if ((bool) cache()->get('settings')['maintenanceMode'] === true)
             return redirect()->route('maintenance-mode');
     }
 

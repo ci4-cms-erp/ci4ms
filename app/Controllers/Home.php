@@ -96,7 +96,7 @@ class Home extends BaseController
                         'telephone' => $this->defData['settings']->contact->phone,
                         'contactType' => 'customer support'
                     ],
-                    'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
+                    'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
                 ]
             );
         if (!empty($this->defData['pageInfo']->seo->coverImage))
@@ -113,7 +113,7 @@ class Home extends BaseController
 
     public function maintenanceMode()
     {
-        if ((bool)$this->defData['settings']->maintenanceMode->scalar === false) return redirect()->route('home');
+        if ((bool)($this->defData['settings']->maintenanceMode ?? false) === false) return redirect()->route('home');
         return view('maintenance', $this->defData);
     }
 
@@ -157,7 +157,7 @@ class Home extends BaseController
                         'telephone' => $this->defData['settings']->contact->phone,
                         'contactType' => 'customer support'
                     ],
-                    'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
+                    'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
                 ]
             );
         $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs('/blog/1', 'page')));
@@ -227,7 +227,7 @@ class Home extends BaseController
                             'telephone' => $this->defData['settings']->contact->phone,
                             'contactType' => 'customer support'
                         ],
-                        'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
+                        'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
                     ]
                 ));
             $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs((int)$this->defData['infos']->id, 'blog')));
@@ -276,7 +276,7 @@ class Home extends BaseController
                             'telephone' => $this->defData['settings']->contact->phone,
                             'contactType' => 'customer support'
                         ],
-                        'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
+                        'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
                     ]
                 );
             $this->seo()->addSchema(SchemaPreset::breadcrumbs($this->commonLibrary->get_breadcrumbs($this->defData['tagInfo']->id, 'tag')));
@@ -334,7 +334,7 @@ class Home extends BaseController
                         'telephone' => $this->defData['settings']->contact->phone,
                         'contactType' => 'customer support'
                     ],
-                    'sameAs' => array_map(fn($sN) => $sN['link'], (array)$this->defData['settings']->socialNetwork)
+                    'sameAs' => array_map(fn($sN) => $sN->link, (array)$this->defData['settings']->socialNetwork)
                 ]
             );
         $this->defData['breadcrumbs'] = $this->commonLibrary->get_breadcrumbs((int)$this->defData['category']->id, 'category');

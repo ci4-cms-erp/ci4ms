@@ -173,8 +173,9 @@ Recommended workflow when adding a module:
 Application settings are persisted in the `settings` table and cached for 24 hours.
 
 - Use `cache()->delete('settings')` after updating settings programmatically.
+- **Canonical decode:** The `settings` cache can be warmed by whichever entry point hits it first while the key is cold (`app/Config/Filters.php`, the generated `app/Config/Routes.php`, or `modules/Auth/Controllers/BaseController.php`). Every filler must use the same decode — `json_decode($value)` gated on `json_last_error() === JSON_ERROR_NONE && (is_object($decoded) || is_array($decoded))` — so a cold cache always warms to a consistent `stdClass` shape. Consume nested settings via object access (`$settings->group->key`); only JSON-array levels stay PHP arrays and remain `foreach`-iterable. Do not `(object) json_decode(...)`-cast the top level: that leaves nested levels as arrays and produces a fragile mixed shape.
 - Menu structures are cached as `menus_{locale}` (per locale); cleared automatically via the Menu module, or manually with `cache()->delete('menus_en')` etc.
-- Maintenance mode flag lives under `settings.maintenanceMode`. When set, `App\Filters\Ci4ms` redirects all traffic to `maintenance-mode`.
+- Maintenance mode flag lives under `settings.maintenanceMode`. When set, `App\Filters\Ci4ms` redirects all traffic to `maintenance-mode`. Read it as a raw scalar string (`$settings->maintenanceMode`), not via a `->scalar` wrapper.
 
 ---
 
@@ -235,6 +236,14 @@ Application settings are persisted in the `settings` table and cached for 24 hou
   - Verifies HTTP responses for the homepage and backend.
 - For manual QA, use the maintenance mode toggle to hide changes until they are ready.
 
+### Testing against the live schema without touching it
+
+There is no separate test database: `CommonModel` hardcodes the `default` connection group, so a test that exercises a real query-builder path runs against your development database. Two patterns keep that non-destructive, and new tests should follow whichever fits:
+
+- **Marker-scoped rows.** Write only rows carrying a per-run marker (a random `type` value, a throwaway high user id), assert counts as **deltas** so unrelated existing rows cannot skew them, and delete exactly those rows in `tearDown()`. Never mutate a pre-existing row. See `tests/Modules/Notifications/NotifierTest.php`.
+- **Shadow tables (`CREATE TEMPORARY TABLE`).** When a test needs a schema the development database does not have — e.g. a column or table added by a migration that has not run there — do **not** run the migration: create a `TEMPORARY` table of the same name on the **same** connection the production code uses. In MySQL/MariaDB a temporary table masks a permanent one of the same name for that connection only, so the real schema is never altered, real rows are neither read nor written, and the shadow disappears when the connection closes. `tearDown()` still drops it explicitly, always with the `TEMPORARY` keyword (which makes the statement a no-op against a permanent table). Foreign keys are omitted — temporary tables cannot carry them, which is also what lets such tests address throwaway user ids. If the MySQL user lacks `CREATE TEMPORARY TABLES`, skip the test rather than weakening it. `tests/_support/Notifications/ShadowSchemaTrait.php` implements this (including a pre-migration variant used to assert fail-closed behaviour), and `assertPermanentSchemaIntact()` proves the shadow never leaked into real DDL.
+- Any request-scoped schema memoisation (e.g. `Modules\Notifications\Libraries\SchemaGuard`) must be reset both when a shadow is created and when it is dropped; otherwise a stale `true` leaks into later test classes and they emit SQL for columns the real table does not have.
+
 ---
 
 ## 11. Debugging Tips
@@ -269,6 +278,8 @@ CI4MS implements modern security practices to protect the application and user d
 7. Disable the debug toolbar: set via `app/Config/Toolbar.php` or the environment flag.
 8. Set proper permissions on writable directories (typically `775`/`664` depending on server user).
 9. Back up `public/uploads/`, the database, and `.env` before major upgrades.
+10. **Realtime notifications (optional).** The Redis-backed SSE bell (`Modules\Notifications`) is **self-contained — no external hub, JWT, or nginx config change**. To enable it, ensure `ext-redis` (phpredis) is installed and `Config\Cache::$redis` points at a reachable Redis, set the `notificationsconfig.*` env keys (`realtimeEnabled = true`, plus optional `realtimeStreamTtl` / `realtimeSignalTtl` / `realtimeConnCapDefault` / `realtimeConnCapByGroup.superadmin`), and register the `RealtimeController` stream route as a permission (`notifications.realtimecontroller.read` — the same permission the read endpoints use, no new one) via the Methods module scan, then `php spark cache:clear`. Because each open `backend/notifications/stream` connection holds a short-lived php-fpm worker for up to `realtimeStreamTtl` seconds (120 s ceiling), size `pm.max_children` for concurrent admins and set PHP `max_execution_time` / FPM `request_terminate_timeout` above `realtimeStreamTtl`. Concurrent streams **per identity** are capped (`realtimeConnCapDefault`, default `6`; `superadmin` `10`, highest matching group wins; a **negative** value means unlimited, while `0` is invalid — a non-numeric `.env` value is cast to `0`, so it falls back fail-closed to `6` with a warning), reserved atomically in Redis before the stream opens; over the cap the endpoint returns `429` and the client falls back to polling. The cap is per identity, not global, and it fails **closed** (`429`) when Redis is unreachable — deliberate, since without Redis the stream could not deliver anything anyway. Left disabled (the default), the bell keeps its 60 s polling behaviour. See the Notifications module README for full details.
+11. **Notification targeting & preferences (upgrade step).** After `php spark migrate --all` has added `notifications.exclude_users` and created `notification_preferences`, run the Methods **Module Scan** so `notifications.preferencecontroller.read` / `.update` are registered, grant them to the groups that should manage their own opt-out, then `php spark cache:clear`. Until the scan runs the preference screen is fail-closed `403` for non-superadmins; until the migrations run the module still delivers ordinary notifications, and so does a dispatch whose exclusion was only **derived** from the user↔group overlap narrowing (fail-open, logged at `warning`; at worst the directly targeted user sees it twice) — but a dispatch carrying an **explicit** `exceptUser()` exclusion is **refused** (fail-closed, logged at `critical`) rather than delivered to an excluded user.
 
 ---
 

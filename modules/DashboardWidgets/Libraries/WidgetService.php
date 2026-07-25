@@ -165,9 +165,6 @@ class WidgetService
         if ($this->commonModel->db->tableExists('activity_logs')) {
             $select .= ',(SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'activity_logs WHERE DATE(created_at) = CURDATE()) AS today_logs';
         }
-        if ($this->commonModel->db->tableExists('notifications')) {
-            $select .= ',(SELECT COUNT(*) FROM ' . getenv('database.default.DBPrefix') . 'notifications WHERE user_id = ' . $userId . ' AND is_read = 0) AS unread_notifs';
-        }
         $row = $this->commonModel->lists('users', $select, [], 'id ASC', 0, 0, [], [], [], ['isReset' => true]);
 
         if (!$row) {
@@ -186,8 +183,11 @@ class WidgetService
         if ($this->commonModel->db->tableExists('activity_logs')) {
             $return['today-logs'] = (int) $row->today_logs;
         }
+        // Model B: unread is a relevance-scoped anti-join, not a column — delegate to
+        // the Notifier chokepoint (broadcast + own-user + member-groups, cached) instead
+        // of inlining SQL against the dead notifications.read_at column.
         if ($this->commonModel->db->tableExists('notifications')) {
-            $return['unread-notifs'] = (int) $row->unread_notifs;
+            $return['unread-notifs'] = service('notifier')?->unreadCount($userId) ?? 0;
         }
 
         return $return;
@@ -439,7 +439,7 @@ class WidgetService
     protected function data_unread_notifs(): array
     {
         $userId = auth()->user()->id ?? 0;
-        return ['value' => $this->commonModel->count('notifications', ['user_id' => $userId, 'is_read' => 0]), 'label' => 'Unread'];
+        return ['value' => service('notifier')?->unreadCount((int) $userId) ?? 0, 'label' => 'Unread'];
     }
 
     /**

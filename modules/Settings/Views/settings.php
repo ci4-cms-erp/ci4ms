@@ -7,6 +7,8 @@ echo $this->section('head'); ?>
 <link rel="stylesheet" href="/be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css">
 <link rel="stylesheet" href="/be-assets/plugins/elFinder/css/elfinder.full.css">
 <link rel="stylesheet" href="/be-assets/plugins/elFinder/css/theme.css">
+<link rel="stylesheet" href="/be-assets/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="/be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
 <?php echo $this->endSection();
 echo $this->section('content'); ?>
 <section class="content pt-3">
@@ -60,6 +62,7 @@ echo $this->section('content'); ?>
                         <a class="nav-link" data-toggle="pill" href="#tab-social"><i class="fas fa-share-alt mr-2"></i> <?php echo lang('Settings.socialMedia') ?></a>
                         <a class="nav-link" data-toggle="pill" href="#tab-mail"><i class="fas fa-envelope mr-2"></i> <?php echo lang('Settings.mailSettings') ?></a>
                         <a class="nav-link" data-toggle="pill" href="#tab-media"><i class="fas fa-images mr-2"></i> <?php echo lang('Media.media') ?></a>
+                        <?php if (ENVIRONMENT === 'development') { ?><a class="nav-link" data-toggle="pill" href="#tab-cache"><i class="fas fa-broom mr-2"></i> <?php echo lang('Settings.cacheManagement') ?></a><?php } ?>
                     </div>
                 </div>
                 <div class="col-md-9 p-4">
@@ -218,11 +221,11 @@ echo $this->section('content'); ?>
                                             <div class="row align-items-end mb-3 pb-3 border-bottom" data-repeater-item>
                                                 <div class="col-md-5">
                                                     <label><?php echo lang('Settings.socialNetworkName') ?></label>
-                                                    <input type="text" class="form-control" name="smName" value="<?php echo esc($sn['smName']) ?>" required>
+                                                    <input type="text" class="form-control" name="smName" value="<?php echo esc($sn->smName) ?>" required>
                                                 </div>
                                                 <div class="col-md-5">
                                                     <label><?php echo lang('Settings.socialNetworkLink') ?></label>
-                                                    <input type="url" class="form-control" name="link" value="<?php echo esc($sn['link']) ?>" required>
+                                                    <input type="url" class="form-control" name="link" value="<?php echo esc($sn->link) ?>" required>
                                                 </div>
                                                 <div class="col-md-2">
                                                     <button data-repeater-delete type="button" class="btn btn-outline-danger btn-block"><i class="fas fa-trash"></i></button>
@@ -324,6 +327,24 @@ echo $this->section('content'); ?>
                                 </div>
                             </form>
                         </div>
+
+                        <?php if (ENVIRONMENT === 'development') { ?>
+                        <!-- Cache Management Tab -->
+                        <div class="tab-pane fade" id="tab-cache">
+                            <div class="form-group">
+                                <label><?php echo lang('Settings.cacheManagement') ?></label>
+                                <select id="cache-keys" class="form-control select2-cache" multiple data-placeholder="<?php echo esc(lang('Settings.cacheSelectPlaceholder'), 'attr') ?>">
+                                    <?php foreach (($clearable ?? []) as $cacheId => $cacheLabel): ?>
+                                        <option value="<?php echo esc($cacheId, 'attr') ?>"><?php echo esc($cacheLabel) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" id="cache-clear-all" class="btn btn-outline-danger" style="border-radius:10px"><i class="fas fa-trash-alt mr-1"></i> <?php echo lang('Settings.cacheClearAll') ?></button>
+                                <button type="button" id="cache-clear-selected" class="btn btn-success px-5" style="border-radius:10px"><i class="fas fa-broom mr-1"></i> <?php echo lang('Settings.cacheClearSelected') ?></button>
+                            </div>
+                        </div>
+                        <?php } ?>
                     </div>
                 </div>
             </div>
@@ -338,6 +359,7 @@ echo script_tag("be-assets/plugins/bootstrap-switch/js/bootstrap-switch.min.js")
 echo script_tag("be-assets/plugins/elFinder/js/elfinder.min.js");
 echo script_tag("be-assets/plugins/elFinder/js/i18n/elfinder." . env('app.defaultLocale', 'tr') . ".js");
 echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
+echo script_tag("be-assets/plugins/select2/js/select2.full.min.js");
 echo script_tag("be-assets/js/ci4ms.js") ?>
 <script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     $('.repeater').repeater({
@@ -710,5 +732,58 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             }
         });
     }
+
+    $('.select2-cache').select2({
+        theme: 'bootstrap4',
+        width: '100%'
+    });
+
+    function clearCache(all, ids) {
+        let payload = {
+            [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
+        };
+        if (all) {
+            payload.all = 1;
+        } else {
+            payload.ids = ids;
+        }
+        $.ajax({
+            url: '<?php echo route_to('clearCache') ?>',
+            type: 'POST',
+            data: payload,
+            dataType: 'json'
+        }).done(function(data) {
+            showToast(data.message, 'success');
+            $('#cache-keys').val(null).trigger('change');
+        }).fail(function(e) {
+            showToast(e.responseJSON?.message || '<?php echo lang('Backend.error') ?>', 'error');
+        });
+    }
+
+    function confirmClearCache(onConfirm) {
+        Swal.fire({
+            title: '<?php echo lang('Settings.areYouSure') ?>',
+            text: '<?php echo lang('Settings.cacheClearConfirm') ?>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<?php echo lang('Settings.yes') ?>',
+            cancelButtonText: '<?php echo lang('Settings.cancel') ?>'
+        }).then(res => {
+            if (res.isConfirmed) onConfirm();
+        });
+    }
+
+    $('#cache-clear-selected').on('click', function() {
+        let ids = $('#cache-keys').val() || [];
+        if (ids.length === 0) {
+            showToast('<?php echo lang('Settings.cacheNoneSelected') ?>', 'error');
+            return;
+        }
+        confirmClearCache(() => clearCache(false, ids));
+    });
+
+    $('#cache-clear-all').on('click', function() {
+        confirmClearCache(() => clearCache(true, null));
+    });
 </script>
 <?php echo $this->endSection() ?>
