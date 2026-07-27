@@ -1,4 +1,8 @@
-<?php namespace Modules\Backend\Models;
+<?php
+
+declare(strict_types=1);
+
+namespace Modules\Backend\Models;
 
 use CodeIgniter\Model;
 

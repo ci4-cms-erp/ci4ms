@@ -283,7 +283,7 @@ CI4MS implements modern security practices to protect the application and user d
 
 ---
 
-## 13. Contribution Workflow
+## 14. Contribution Workflow
 
 - **Branching**: feature branches prefixed with module or scope (e.g., `feature/blog-scheduling`).
 - **Commits**: reference modules or issues (e.g., `[Blog] Add scheduling support`).
@@ -293,7 +293,7 @@ CI4MS implements modern security practices to protect the application and user d
 
 ---
 
-## 14. Further Reading & Resources
+## 15. Further Reading & Resources
 
 - [CodeIgniter 4 Documentation](https://codeigniter4.github.io/userguide/)
 - [CodeIgniter Shield Documentation](https://shield.codeigniter.com/)

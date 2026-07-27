@@ -162,6 +162,10 @@
 
     .panel {
       background: #123a49;
+      /* The background is dark in both schemes, so the text colour cannot come
+         from --text: in light mode that resolves to #123a49 and plain (non-link)
+         text renders dark-on-dark. Pinned like .cta does below. */
+      color: #f5faf6;
       border-radius: 20px;
       border: 1px solid rgba(45, 165, 146, 0.18);
       padding: 1.85rem;
@@ -247,17 +251,17 @@
       <div class="grid cards">
         <article class="card">
           <h2>User Guide</h2>
-          <p>Modern, editor-friendly walkthrough covering page publishing, blog workflows, media handling, and quick tips.</p>
+          <p>Modern, editor-friendly walkthrough covering page publishing, blog workflows, media handling, the Notification Center, cache management, and quick tips.</p>
           <a class="cta-link" href="./user-guide.html" target="_blank" rel="noopener">Open User Guide →</a>
         </article>
         <article class="card">
           <h2>Developer Handbook</h2>
-          <p>Environment setup, dependency management, coding standards, module/permission workflow, deployment checklist, and more.</p>
+          <p>Environment setup, dependency management, coding standards, module/permission workflow, the notifier service and its channels, migration guards, testing without a test database, and the deployment checklist.</p>
           <a class="cta-link" href="./developer-handbook.html" target="_blank" rel="noopener">Open Developer Handbook →</a>
         </article>
         <article class="card">
           <h2>Architecture Guide</h2>
-          <p>High-level overview of request lifecycle, module structure, caching, theme/media systems, and CLI automation.</p>
+          <p>High-level overview of request lifecycle, module structure, caching plus the Settings cache-management allowlist, the Notifications module (Model B storage, optional Redis-backed SSE), theme/media systems, and CLI automation.</p>
           <a class="cta-link" href="./architecture.html" target="_blank" rel="noopener">Open Architecture Guide →</a>
         </article>
         <article class="card">
@@ -277,6 +281,7 @@
           <li><a href="https://github.com/ci4-cms-erp/ci4ms/blob/master/docs/developer-handbook.md" target="_blank" rel="noopener">Developer Handbook (Markdown)</a> — plain text version if you prefer.</li>
           <li><a href="https://github.com/ci4-cms-erp/ci4ms/blob/master/docs/architecture.md" target="_blank" rel="noopener">Architecture Guide (Markdown)</a> — raw reference for quick scanning.</li>
           <li><a href="https://github.com/ci4-cms-erp/ci4ms/blob/master/docs/theme_development.md" target="_blank" rel="noopener">Theme Development</a> — frontend customization.</li>
+          <li><a href="https://github.com/ci4-cms-erp/ci4ms/blob/master/modules/Notifications/README.md" target="_blank" rel="noopener">Notifications Module README</a> — Model B storage, channels, realtime SSE, permissions.</li>
           <li><a href="https://github.com/ci4-cms-erp/ci4ms/blob/master/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a> — release notes and dependency callouts.</li>
         </ul>
       </div>

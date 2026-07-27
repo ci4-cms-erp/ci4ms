@@ -373,7 +373,7 @@ class Blog extends \Modules\Backend\Controllers\BaseController
 
     public function badwordList()
     {
-        $this->defData['badwords'] = json_decode($this->commonModel->selectOne('settings', ['key' => 'badwords'], 'value')->value, JSON_UNESCAPED_UNICODE);
+        $this->defData['badwords'] = json_decode($this->commonModel->selectOne('settings', ['key' => 'badwords'], 'value')->value ?? '', true);
         if (empty($this->defData['badwords']))
             $this->defData['badwords'] = null;
         else {

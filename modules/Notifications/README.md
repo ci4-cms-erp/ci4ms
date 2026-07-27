@@ -304,6 +304,7 @@ notificationsconfig.realtimeConnCapByGroup.superadmin = 10
 - **Caveat — `.env` cannot add a new group.** CI4's `BaseConfig::initEnvValue()` only walks keys that already exist, so `.env` can override the shipped entry (`notificationsconfig.realtimeConnCapByGroup.superadmin = 20`) but a group that is not already in the array is not picked up. Adding a new group means editing `Config\NotificationsConfig`.
 - **Redis connection.** There is **no separate connection setting** — `RealtimeSignal` and `RedisConnectionRegistry` both build their connection from `Config\Cache::$redis` (host / port / password / database) through the shared `RedisConnectionTrait`. Point that at your Redis and realtime works.
 - **Extension.** `ext-redis` (phpredis) is required and declared under `composer.json`'s `suggest`. Without it `RealtimeSignal` degrades to a no-op **and** the connection registry cannot reserve a slot, so the stream answers `429` (fail-closed) — either way the bell stays on polling.
+  - **It must be installed for the PHP version that serves the site**, not merely "somewhere on the machine". phpredis is a compiled extension tied to PHP's ABI, so a build for one minor version is invisible to another: the `extension_dir` carries the API number (`.../pecl/20240924` = PHP 8.4, `.../pecl/20250925` = PHP 8.5), and a `redis.so` sitting in the wrong one is simply never loaded. On a multi-version setup (Homebrew, FlyEnv, Valet, Docker images with several PHPs) `pecl install redis` builds against whichever `php-config` happens to be first on the `PATH`, which is easily **not** the version FPM runs — and because everything degrades gracefully, nothing errors to tell you. Verify against the real binary rather than the shell's `php` alias — `/path/to/the/fpm/php -m | grep redis` — and remember the CLI matters too: the Redis-backed tests skip (they do not fail) when the extension is missing from the CLI PHP, so a green suite is **not** evidence that realtime works in the browser.
 
 ### Deployment
 
@@ -316,7 +317,7 @@ There is **no hub to install** and **no nginx config change** required — that 
 
 **Post-deploy checklist.**
 
-1. Ensure `ext-redis` (phpredis) is installed and `Config\Cache::$redis` points at a reachable Redis.
+1. Ensure `ext-redis` (phpredis) is installed **for the PHP version that serves the site** — confirm with `php -m | grep redis` run through *that* binary, not just the shell alias (see the Extension note above) — and that `Config\Cache::$redis` points at a reachable Redis.
 2. Add the `notificationsconfig.*` keys to `.env` (`realtimeEnabled = true`, plus the optional `realtimeStreamTtl` / `realtimeSignalTtl` / `realtimeConnCapDefault` / `realtimeConnCapByGroup.superadmin`).
 3. Confirm PHP `max_execution_time` and FPM `request_terminate_timeout` exceed `realtimeStreamTtl`, and size `pm.max_children` for your concurrent admins **times their connection cap**.
 4. **Register the permission:** run the backend **Module Scan** so `notifications.realtimecontroller.read` lands in `auth_permissions_pages`, grant it to the appropriate roles, then `php spark cache:clear`. Superadmin bypasses the check; other roles without the scanned permission get a fail-closed 403 and the bell silently stays on polling.

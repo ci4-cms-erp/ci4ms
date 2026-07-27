@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Notifications\Libraries;
 
 use Modules\Notifications\Libraries\Channels\ChannelResult;

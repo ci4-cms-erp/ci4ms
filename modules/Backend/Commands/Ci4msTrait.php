@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * This file is part of CodeIgniter 4 framework.
  *
@@ -220,7 +222,8 @@ trait Ci4msTrait
         $class = ltrim(implode('\\', array_map('pascalize', explode('\\', str_replace('/', '\\', trim($class))))), '\\/');
 
         // Gets the namespace from input. Don't forget the ending backslash!
-        $namespace = trim(str_replace('/', '\\', $this->getOption('namespace') ?? APP_NAMESPACE), '\\') . '\\';
+        $option    = $this->getOption('namespace');
+        $namespace = trim(str_replace('/', '\\', is_string($option) ? $option : APP_NAMESPACE), '\\') . '\\';
 
         if (strncmp($class, $namespace, strlen($namespace)) === 0) {
             return $class; // @codeCoverageIgnore
@@ -289,7 +292,8 @@ trait Ci4msTrait
      */
     protected function buildPath(string $class): string
     {
-        $namespace = trim(str_replace('/', '\\', $this->getOption('namespace') ?? APP_NAMESPACE), '\\');
+        $option    = $this->getOption('namespace');
+        $namespace = trim(str_replace('/', '\\', is_string($option) ? $option : APP_NAMESPACE), '\\');
 
         // Check if the namespace is actually defined and we are not just typing gibberish.
         $base = Services::autoloader()->getNamespace($namespace);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Backend\Libraries;
 
 /**
@@ -52,7 +54,7 @@ class BackendMaintenance
     {
         if ($bmSetting instanceof \stdClass) {
             // İç içe stdClass'ları da (modules map'i) diziye çevir.
-            $bmSetting = json_decode(json_encode($bmSetting), true);
+            $bmSetting = json_decode((string) json_encode($bmSetting), true);
         }
         if (! is_array($bmSetting)) {
             $bmSetting = [];

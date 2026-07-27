@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Backend\Libraries;
 
 class CommonBackendLibrary
@@ -25,14 +27,14 @@ class CommonBackendLibrary
             $decoded = json_decode($keywords);
             if (is_array($decoded)) {
                 foreach ($decoded as $key => $keyword) {
-                    $value = strip_tags(trim($keyword->value ?? ''));
+                    $value = strip_tags(trim((string) ($keyword->value ?? '')));
                     if (empty($value)) unset($decoded[$key]);
                 }
                 $seo['keywords'] = array_values($decoded);
             }
         }
 
-        return !empty($seo) ? json_encode($seo,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+        return !empty($seo) ? (json_encode($seo,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: null) : null;
     }
 
     /**

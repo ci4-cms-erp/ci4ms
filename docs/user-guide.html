@@ -286,7 +286,7 @@
       color: var(--muted);
       font-size: 0.9rem;
     }
-  </style></style>
+  </style>
 </head>
 <body>
   <div class="container">
@@ -371,6 +371,59 @@
     </section>
 
     <section>
+      <h2>Stay in the Loop</h2>
+      <div class="card-grid two">
+        <article class="card">
+          <div class="meta">Bell icon → Top bar of every admin page</div>
+          <h3>Check your notifications</h3>
+          <ol>
+            <li>Look at the bell in the admin header—a badge shows how many notifications you have not read yet.</li>
+            <li>Click it to open the dropdown with your ten most recent notifications.</li>
+            <li>Click a notification to jump to the page it refers to, or use <strong>Mark as read</strong> to clear just that one.</li>
+            <li>Use <strong>Mark all as read</strong> to empty the badge in one go, or <strong>View all</strong> to open the full list.</li>
+          </ol>
+          <p>The bell refreshes itself about once a minute. If your administrator has switched on realtime delivery, new notifications appear almost immediately instead.</p>
+        </article>
+
+        <article class="card">
+          <div class="meta">Notifications → Notification Center</div>
+          <h3>Browse the full list</h3>
+          <ul>
+            <li>The list page shows up to fifty of your most recent notifications, newest first.</li>
+            <li>Each entry carries a severity: <strong>Info</strong>, <strong>Warning</strong>, or <strong>Critical</strong>—shown with its own icon and colour.</li>
+            <li>Reading a notification is one-way; there is no “mark as unread”.</li>
+            <li>Buttons on this page take you to your notification preferences and to the send screen.</li>
+          </ul>
+          <p>You only ever see notifications addressed to everyone, to you personally, or to a group you belong to.</p>
+        </article>
+
+        <article class="card">
+          <div class="meta">Notifications → Notification preferences</div>
+          <h3>Choose what you receive</h3>
+          <ol>
+            <li>Open <strong>Notification preferences</strong> from the notification list page.</li>
+            <li>Tick <strong>Muted</strong> next to any notification type you do not want to receive.</li>
+            <li>Click <strong>Save preferences</strong>.</li>
+          </ol>
+          <p>Muting only affects your own account—nobody else is changed. Notifications marked <strong>Critical</strong> are always delivered and cannot be muted, on purpose.</p>
+        </article>
+
+        <article class="card">
+          <div class="meta">Notifications → Send notification</div>
+          <h3>Announce something to the team</h3>
+          <ol>
+            <li>Open <strong>Send notification</strong> from the notification list page.</li>
+            <li>Fill in the <strong>Title</strong>, the <strong>Message</strong>, an optional <strong>Link</strong>, and a <strong>Severity</strong>.</li>
+            <li>Pick the <strong>Audience</strong>: <em>Everyone</em>, or <em>Selected users and groups</em>—you may choose several of each together. Anyone you add to <strong>Excluded users</strong> never receives it.</li>
+            <li>Click <strong>Preview recipients</strong> to see an estimated headcount, then <strong>Send notification</strong>.</li>
+          </ol>
+          <p>Two things to expect: the link must be a path on this site starting with <strong>/</strong> (external addresses are rejected), and the notification is always recorded as sent by your own account.</p>
+          <p>This screen carries its own permission. The button is shown to everyone, so if opening it returns an access error, ask your administrator to grant it—being able to send from here means being able to reach every administrator in the installation.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
       <h2>Fine-Tune Your Site</h2>
       <div class="card-grid three">
         <article class="card">
@@ -406,6 +459,28 @@
             <li><strong>Create Backup:</strong> Generate a full database dump instantly.</li>
             <li><strong>Download:</strong> Save `.zip` archives to your local machine.</li>
             <li><strong>Restore:</strong> Recover from previous states if something goes wrong.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <div class="meta">Settings → Cache Management</div>
+          <h3>Refresh stale screens</h3>
+          <ol>
+            <li>Scroll to <strong>Cache Management</strong> on the Settings page.</li>
+            <li>Pick one or more entries from <strong>Select caches to clear</strong>—for example <em>Site settings</em>, <em>Menus</em>, <em>Permission caches</em>, or <em>Notification caches</em>.</li>
+            <li>Click <strong>Clear Selected</strong>, or <strong>Clear All</strong> to empty every listed cache, and confirm the prompt.</li>
+          </ol>
+          <p>Reach for this when the site still shows an old menu, logo, or permission after you saved a change. Only the entries offered in the list can be cleared—the panel cannot touch anything else.</p>
+        </article>
+
+        <article class="card">
+          <div class="meta">Settings → Session Location Tracking</div>
+          <h3>See where logins come from</h3>
+          <ul>
+            <li>Switch the toggle on to record an approximate city, region, and country alongside each login session.</li>
+            <li>The lookup runs on your own server against a local database—no visitor IP address is ever sent to a third party.</li>
+            <li>It is <strong>off by default</strong>. Existing sites collect nothing until an administrator turns it on.</li>
+            <li>If you enable it and a warning about a missing database appears, ask your administrator to download the location database before the feature can report anything.</li>
           </ul>
         </article>
       </div>

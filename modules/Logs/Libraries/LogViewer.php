@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Logs\Libraries;
 
 class LogViewer
@@ -59,6 +61,10 @@ class LogViewer
         }
 
         $content = file_get_contents($filePath);
+        if ($content === false) {
+            return [];
+        }
+
         $lines = preg_split('/\r\n|\r|\n/', $content);
 
         $parsedLogs = [];

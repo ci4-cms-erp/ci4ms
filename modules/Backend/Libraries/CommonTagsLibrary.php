@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Backend\Libraries;
 
 use ci4commonmodel\CommonModel;
@@ -30,7 +32,7 @@ class CommonTagsLibrary
         $jsons = json_decode($tags);
         foreach ($jsons as $item) {
             if (!empty($item->id)) {
-                $value = strip_tags(trim($item->value));
+                $value = strip_tags(trim((string) ($item->value ?? '')));
 
                 if (!empty($value)) {
                     $tag = $this->commonModel->selectOne('tags', ['tag' => $value]);
@@ -42,7 +44,7 @@ class CommonTagsLibrary
                     }
                 }
             } else {
-                $value = strip_tags(trim($item->value));
+                $value = strip_tags(trim((string) ($item->value ?? '')));
                 if (!empty($value)) {
                     $tag = $this->commonModel->selectOne('tags', ['tag' => $value]);
                     if (empty($tag) || $value != $tag->tag) {

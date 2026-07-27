@@ -446,6 +446,15 @@ docker exec ci4ms_app php spark ci4ms:setup</code></pre>
               <li><code>ci4seopro</code> — SEO, JSON-LD, feeds.</li>
               <li><code>sql2migration</code> — CLI migration tooling.</li>
               <li><code>ext_module_generator</code> — Module scaffolding.</li>
+              <li>
+                <code>maxmind-db/reader</code> — Local MMDB reader behind the
+                opt-in session geo lookup.
+              </li>
+              <li>
+                <code>ext-redis</code> — Declared under
+                <code>suggest</code> (optional); only needed for the
+                Redis-backed realtime notification stream.
+              </li>
             </ul>
             <pre><code>composer install
 composer update vendor/package
@@ -545,6 +554,34 @@ composer outdated</code></pre>
             <strong>Settings:</strong> Stored in the <code>settings</code> table
             and cached for 24h. Clear via
             <code>cache()->delete('settings')</code>.
+          </li>
+          <li>
+            <strong>Canonical decode:</strong> The <code>settings</code> key can
+            be warmed by whichever entry point hits it first while it is cold
+            (<code>app/Config/Filters.php</code>, the generated
+            <code>app/Config/Routes.php</code>, or
+            <code>modules/Auth/Controllers/BaseController.php</code>). Every
+            filler must use the same decode —
+            <code>json_decode($value)</code> gated on
+            <code>json_last_error() === JSON_ERROR_NONE &amp;&amp;
+            (is_object($decoded) || is_array($decoded))</code> — so a cold cache
+            always warms to a consistent <code>stdClass</code> shape. Read nested
+            settings with object access
+            (<code>$settings-&gt;group-&gt;key</code>); only JSON-array levels
+            stay PHP arrays and remain <code>foreach</code>-iterable. Never
+            <code>(object) json_decode(...)</code>-cast the top level: nested
+            levels stay arrays and the mixed shape fatals under PHP 8. Scalar
+            flags such as <code>maintenanceMode</code> and
+            <code>convertWebp</code> are read as raw strings, not through a
+            <code>-&gt;scalar</code> wrapper.
+          </li>
+          <li>
+            <strong>Backend cache panel:</strong> Settings → "Cache Management"
+            clears individual keys through the server-side allowlist
+            <code>Modules\Settings\Libraries\CacheRegistry</code>. Adding a new
+            clearable cache means adding an entry there (logical id, label key,
+            and its exact/glob operations) — the client only ever sends the
+            logical id.
           </li>
           <li>
             <strong>Menus:</strong> Cached as <code>menus_{locale}</code> (per-locale); automatically
@@ -690,6 +727,66 @@ composer outdated</code></pre>
             Use maintenance mode to hide upcoming changes during manual QA.
           </li>
         </ul>
+
+        <h3>Testing against the live schema without touching it</h3>
+        <p>
+          There is <strong>no separate test database</strong>:
+          <code>CommonModel</code> hardcodes the <code>default</code> connection
+          group, so a test that exercises a real query-builder path runs against
+          your development database. Two patterns keep that non-destructive — use
+          whichever fits:
+        </p>
+        <ul>
+          <li>
+            <strong>Marker-scoped rows.</strong> Write only rows carrying a
+            per-run marker (a random <code>type</code> value, a throwaway high
+            user id), assert counts as <em>deltas</em> so unrelated existing rows
+            cannot skew them, and delete exactly those rows in
+            <code>tearDown()</code>. Never mutate a pre-existing row.
+          </li>
+          <li>
+            <strong>Shadow tables
+            (<code>CREATE TEMPORARY TABLE</code>).</strong> When a test needs a
+            schema the development database does not have — a column or table
+            added by a migration that has not run there — do <strong>not</strong>
+            run the migration. Create a <code>TEMPORARY</code> table of the same
+            name on the <em>same</em> connection the production code uses: in
+            MySQL/MariaDB a temporary table masks a permanent one of the same
+            name for that connection only, so the real schema is never altered,
+            real rows are neither read nor written, and the shadow disappears
+            when the connection closes.
+          </li>
+        </ul>
+        <p>Rules that make the shadow safe:</p>
+        <ul>
+          <li>
+            <code>tearDown()</code> still drops it explicitly, always with the
+            <code>TEMPORARY</code> keyword — which makes the statement a no-op
+            against a permanent table.
+          </li>
+          <li>
+            Foreign keys are omitted: temporary tables cannot carry them, which
+            is also what lets such tests address throwaway user ids.
+          </li>
+          <li>
+            If the MySQL user lacks <code>CREATE TEMPORARY TABLES</code>, skip
+            the test rather than weakening it.
+          </li>
+          <li>
+            Any request-scoped schema memoisation (e.g.
+            <code>Modules\Notifications\Libraries\SchemaGuard</code>) must be
+            reset both when a shadow is created <em>and</em> when it is dropped;
+            otherwise a stale <code>true</code> leaks into later test classes and
+            they emit SQL for columns the real table does not have.
+          </li>
+        </ul>
+        <p>
+          <code>tests/_support/Notifications/ShadowSchemaTrait.php</code>
+          implements the technique — including a pre-migration variant used to
+          assert fail-closed behaviour — and
+          <code>assertPermanentSchemaIntact()</code> proves the shadow never
+          leaked into real DDL.
+        </p>
       </section>
 
       <section class="panel">
@@ -734,7 +831,344 @@ composer outdated</code></pre>
       </section>
 
       <section class="panel">
-        <h2>13. Deployment Checklist</h2>
+        <h2>13. Notifications Module (Developer Guide)</h2>
+        <p>
+          <code>Modules\Notifications</code> is a drop-in HMVC module that
+          renders a bell dropdown in the admin header and a list page at
+          <code>backend/notifications</code>. Producing modules never write to
+          the database directly: every notification flows through one service,
+          and every read passes through one relevance chokepoint.
+        </p>
+
+        <h3>13.1 Sending a notification</h3>
+        <p>
+          Resolve the shared service with <code>service('notifier')</code> and
+          use the fluent builder. Nothing else is required — the in-app channel
+          writes the row and invalidates the unread-badge caches.
+        </p>
+        <pre><code>// Notify a single user
+service('notifier')
+    -&gt;notify('comment.new')                // machine-readable event type
+    -&gt;title('New comment awaiting moderation')
+    -&gt;body('A visitor commented on "Hello World".')
+    -&gt;url('/backend/blog/comments')        // site-relative or http(s) only
+    -&gt;severity('info')                     // info | warning | critical
+    -&gt;toUser(5)
+    -&gt;dispatch();
+
+// Notify every member of a Shield group (one row; membership resolved on read)
+service('notifier')
+    -&gt;notify('update.available')
+    -&gt;title('A new platform update is available')
+    -&gt;severity('warning')
+    -&gt;toGroup('superadmin')
+    -&gt;dispatch();</code></pre>
+        <ul>
+          <li>
+            Several <code>toUser()</code> / <code>toGroup()</code> directives may
+            be combined; each survivor becomes one global row and identical
+            directives are deduplicated. <code>broadcast()</code> overrides every
+            other target.
+          </li>
+          <li>
+            <code>exceptUser(int|array)</code> excludes ids from every row of the
+            dispatch, <code>broadcast()</code> included, and wins over
+            <code>toUser()</code>.
+          </li>
+          <li>
+            <code>createdBy(?int)</code> records who <em>produced</em> the
+            notification — pass a server-derived id such as
+            <code>auth()-&gt;id()</code>. It is an audit trail, not a target, so
+            it changes no delivery decision.
+          </li>
+          <li>
+            <code>via(string ...$channels)</code> selects channels; the default
+            is <code>['inapp', 'realtime']</code>.
+          </li>
+          <li>
+            Sanitisation is centralised in the <code>NotificationMessage</code>
+            DTO — do not repeat <code>strip_tags</code> or URL validation in your
+            caller. Lengths are clamped in <strong>characters</strong>
+            (<code>mb_substr</code>) to match the <code>max_length</code>
+            validation rule.
+          </li>
+        </ul>
+
+        <h3>13.2 Was it actually delivered?</h3>
+        <p>
+          <code>dispatch()</code> returns a <code>ChannelResult[]</code>. Do
+          <strong>not</strong> read that array as "any result is <code>ok</code>,
+          therefore it was sent": under Model B only a channel that persists a
+          row has delivered anything. Wrap the results in
+          <code>DispatchOutcome</code> instead.
+        </p>
+        <pre><code>$outcome = DispatchOutcome::fromResults(
+    service('notifier')-&gt;notify('announcement')
+        -&gt;title('Scheduled maintenance')
+        -&gt;toGroup('superadmin')
+        -&gt;dispatch()
+);
+
+$outcome-&gt;attempted();     // durable rows attempted
+$outcome-&gt;stored();        // durable rows actually written
+$outcome-&gt;isComplete();    // every attempted row stored (and at least one was)
+$outcome-&gt;isPartial();     // some stored, some refused
+$outcome-&gt;storedNothing(); // nothing stored, incl. "no durable channel ran"
+$outcome-&gt;refusals();      // ['exclusion-unsupported', 'insert-failed', ...]</code></pre>
+        <p>
+          A <strong>partial</strong> result must never be reported to an operator
+          as success. The back-compat wrappers
+          <code>Notifier::toUser()</code> / <code>toRole()</code> and
+          <code>php spark notifications:test</code> still use the old "any
+          channel ok" predicate — treat their return value as "a delivery was
+          attempted", never as "a row exists".
+        </p>
+
+        <h3>13.3 The <code>applyRelevance()</code> rule</h3>
+        <p>
+          <code>Notifier::applyRelevance()</code> is the single relevance and
+          IDOR chokepoint. It layers three filters in order — target, row-level
+          exclusion, per-user preference — and all four existing read paths
+          (<code>unreadCount</code>, <code>listFor</code>,
+          <code>markAllRead</code>, <code>isRelevant</code>) go through it.
+        </p>
+        <p><strong>If you add a new read path, it must call
+        <code>applyRelevance()</code>.</strong> Do not re-implement any of the
+        three layers in a controller, a view, or a channel:</p>
+        <ul>
+          <li>
+            A hand-written target predicate is an IDOR waiting to happen —
+            group membership is resolved at read time, so a query that forgets
+            the group leg either leaks or silently drops rows.
+          </li>
+          <li>
+            The exclusion filter relies on the sentinel-wrapped CSV shape
+            (<code>,5,12,</code>); a <code>LIKE</code> written by hand without
+            the wrapping commas matches the wrong ids.
+          </li>
+          <li>
+            The preference anti-join keeps
+            <code>n.severity &lt;&gt; 'critical'</code> on the join's
+            <strong>ON</strong> side; moving it into <code>WHERE</code> would
+            make <code>critical</code> notifications mutable and would let
+            <code>countAllResults()</code> be inflated by several matching mute
+            rows.
+          </li>
+        </ul>
+        <p>
+          The same rule holds for the transport:
+          <code>Notifier::topicsFor()</code> is the mirror of
+          <code>applyRelevance()</code> used by the SSE stream, so realtime
+          channels are derived from the session and never from the client.
+        </p>
+
+        <h3>13.4 Adding a channel</h3>
+        <p>
+          A channel is any class implementing
+          <code>Libraries\Channels\ChannelInterface</code>:
+        </p>
+        <pre><code>public function send(NotificationMessage $message): ChannelResult;</code></pre>
+        <p>
+          If your channel <strong>persists</strong> the notification — an
+          <code>ok</code> result means a record will still be there when the user
+          reconnects — implement
+          <code>Libraries\Channels\DurableChannelInterface</code> instead. It
+          extends <code>ChannelInterface</code> and adds no methods; that marker
+          is what <code>DispatchOutcome</code> counts. A channel that forgets it
+          is treated as transient, so the mistake under-reports delivery rather
+          than over-reporting it.
+        </p>
+        <p>
+          Register the channel from your own module the same way
+          <code>Filters.php</code> discovers <code>$csrfExcept</code> — declare
+          it on <code>Config/{Name}Config.php</code>:
+        </p>
+        <pre><code>public array $notificationChannels = [
+    'slack' =&gt; \Modules\MyModule\Libraries\Channels\SlackChannel::class,
+];</code></pre>
+        <p>
+          <code>Notifier::resolveChannels()</code> scans every
+          <code>modules/*/Config/{Module}Config.php</code>, and a
+          module-declared slug overrides the base map. Opt a notification into it
+          with <code>-&gt;via('inapp', 'slack')</code>.
+        </p>
+
+        <h3>13.5 Realtime and the <code>ext-redis</code> version trap</h3>
+        <p>
+          Realtime SSE is optional and disabled by default
+          (<code>notificationsconfig.realtimeEnabled</code>; note the env prefix
+          is the lowercased short class name, so
+          <code>notificationsconfig.</code> and not
+          <code>notifications.</code>). It reuses the Redis connection from
+          <code>Config\Cache::$redis</code> — there is no separate connection
+          setting — and needs <code>ext-redis</code> (phpredis).
+        </p>
+        <p>
+          <strong>phpredis must be installed for the PHP version that actually
+          serves the site</strong>, not merely "somewhere on the machine". This
+          costs more debugging time than anything else in the module:
+        </p>
+        <ul>
+          <li>
+            It is a compiled extension tied to PHP's ABI. The
+            <code>extension_dir</code> carries the API number
+            (<code>.../pecl/20240924</code> = PHP 8.4,
+            <code>.../pecl/20250925</code> = PHP 8.5), and a
+            <code>redis.so</code> in the wrong directory is never loaded.
+          </li>
+          <li>
+            On a multi-version install <code>pecl install redis</code> builds
+            against whichever <code>php-config</code> is first on the
+            <code>PATH</code>, which is easily not the one FPM runs.
+          </li>
+          <li>
+            Nothing errors, because everything degrades gracefully:
+            <code>RealtimeSignal</code> becomes a no-op, the connection registry
+            cannot reserve a slot, the stream answers <code>429</code>
+            (fail-closed), and the bell quietly stays on 60s polling.
+          </li>
+          <li>
+            Verify with the real binary, not the shell's <code>php</code> alias:
+            <code>/path/to/the/fpm/php -m | grep redis</code>. The CLI matters
+            too — the Redis-backed tests <em>skip</em> rather than fail when the
+            extension is absent, so <strong>a green suite is not evidence that
+            realtime works in the browser</strong>.
+          </li>
+        </ul>
+
+        <h3>13.6 Registering the permissions</h3>
+        <p>
+          Permission strings are derived from the route's <code>as</code> name,
+          not from the controller class:
+          <code>Modules\Methods\Libraries\ModuleScanner</code> stores
+          <code>pagename = '{Module}.{route name}'</code> and
+          <code>Ci4MsAuthFilter</code> then checks
+          <code>strtolower(pagename) . '.{action}'</code>. Registration is not a
+          spark command — run Backend → Methods / Modules →
+          <strong>Module Scan</strong>, then
+          <code>php spark cache:clear</code>.
+        </p>
+        <p>
+          Until a route has a record in <code>auth_permissions_pages</code> it is
+          fail-closed <code>403</code> for <strong>everyone, superadmin
+          included</strong> — the superadmin bypass only applies once the page
+          record exists.
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2>14. Session Geo Lookup (Local, Opt-In)</h2>
+        <p>
+          Login sessions can be enriched with an approximate city / region /
+          country resolved entirely against a <strong>local</strong> DB-IP City
+          Lite database (MMDB). The visitor's IP address never leaves the server
+          and no third-party request is made — this replaced an inline
+          <code>ip-api.com</code> HTTP call.
+        </p>
+        <ul>
+          <li>
+            <strong>Library:</strong>
+            <code>Modules\Auth\Libraries\GeoLocator</code> reads the MMDB file
+            through <code>maxmind-db/reader</code>. It returns
+            <code>null</code> on any failure, so a missing or corrupt database
+            can never break login — a lesson from the crash it replaced, where a
+            failed fetch returned <code>false</code> and
+            <code>json_decode(false)</code> raised an uncaught
+            <code>TypeError</code> under <code>declare(strict_types=1)</code>
+            (the <code>@</code> operator does not suppress a
+            <code>TypeError</code>).
+          </li>
+          <li>
+            <strong>Call site:</strong>
+            <code>Modules\Auth\Models\UserSessionModel::recordLogin()</code>.
+          </li>
+          <li>
+            <strong>Gate:</strong> the <code>Auth.geoLookupEnabled</code> setting
+            (config default <code>false</code>), exposed as the Settings →
+            "Session Location Tracking" toggle (route
+            <code>saveGeoLookup</code>; AJAX + <code>role=update</code> + CSRF +
+            <code>in_list</code> validation) and as an opt-in checkbox in the web
+            installer. <strong>Behaviour change on upgrade:</strong> existing
+            installations stop collecting geo data until an administrator enables
+            the setting and downloads the database.
+          </li>
+          <li>
+            <strong>Database file:</strong> lives outside the web root under
+            <code>writable/geoip/</code> and is downloaded or refreshed with
+            <code>php spark ci4ms:geoip-update</code> — the command gunzips,
+            verifies with a test lookup, and atomically renames into place. It is
+            <code>flock</code>-guarded against concurrent runs and is designed to
+            be scheduled as a monthly cron job.
+          </li>
+          <li>
+            <strong>Attribution:</strong> DB-IP data is CC BY 4.0 and requires
+            attribution; the credit is surfaced in the README, the installer
+            hint, and the command output.
+          </li>
+          <li>
+            The UI warns when the toggle is enabled while the database file is
+            still missing.
+          </li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>15. Migrations &amp; Schema Guards</h2>
+        <p>
+          Schema and ledger can drift apart — a partial dump restore, a ledger
+          reset, or a manual <code>ALTER</code> leaves a column present while its
+          row in the <code>migrations</code> table is missing. The runner then
+          sees the migration as pending, re-runs it, and MySQL rejects it
+          (error 1060, <code>Duplicate column name</code>). Because the ledger row
+          can never be written, <strong>every</strong> subsequent run aborts at
+          the same point and every later migration in the batch is blocked.
+        </p>
+        <p><strong>Rules for a schema-altering migration:</strong></p>
+        <ul>
+          <li>
+            Guard <code>addColumn()</code> with <code>fieldExists()</code> and
+            return early when the column is already there, so the run records the
+            migration and moves on.
+          </li>
+          <li>
+            Guard table creation with <code>tableExists()</code>, or use CI4's
+            own <code>createTable($table, true)</code>
+            (<code>CREATE TABLE IF NOT EXISTS</code>).
+          </li>
+          <li>
+            Supply an <code>after</code> clause only when the anchor column
+            actually exists — MySQL rejects the whole <code>ALTER</code> for an
+            unknown anchor.
+          </li>
+          <li>
+            When a foreign-key target may be absent, log a <code>warning</code>
+            and create the object without the constraint rather than failing the
+            run.
+          </li>
+          <li>
+            Keep <code>down()</code> <strong>non-destructive</strong> for objects
+            that carry data: document the reverse <code>ALTER</code> /
+            <code>DROP</code> as a manual step in a comment instead of executing
+            it.
+          </li>
+          <li>
+            Guarded migrations are behaviour-neutral on a consistent database, so
+            there is no downside to adding the check.
+          </li>
+        </ul>
+        <p>
+          For code that must run <em>before</em> its migration has been applied,
+          pair the guard with a runtime capability check. The Notifications
+          module's <code>SchemaGuard</code> memoises per request — keyed by
+          database name plus table prefix, so a second DB group cannot inherit
+          the answer — whether an optional column or table exists, and the
+          dependent SQL is simply not emitted when it does not. Long-running
+          workers must call <code>SchemaGuard::reset()</code> after a migration.
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2>16. Deployment Checklist</h2>
         <ol>
           <li>Switch to <code>CI_ENVIRONMENT=production</code>.</li>
           <li>Set the public <code>app.baseURL</code>.</li>
@@ -759,11 +1193,48 @@ composer outdated</code></pre>
             Back up uploads, database, and <code>.env</code> before major
             upgrades.
           </li>
+          <li>
+            <strong>Realtime notifications (optional).</strong> The Redis-backed
+            SSE bell is self-contained — no external hub, JWT, or nginx config
+            change. To enable it: install <code>ext-redis</code> for the PHP
+            version that serves the site, point <code>Config\Cache::$redis</code>
+            at a reachable Redis, set the <code>notificationsconfig.*</code> env
+            keys (<code>realtimeEnabled = true</code>, plus the optional
+            <code>realtimeStreamTtl</code> / <code>realtimeSignalTtl</code> /
+            <code>realtimeConnCapDefault</code> /
+            <code>realtimeConnCapByGroup.superadmin</code>), register the stream
+            route as a permission
+            (<code>notifications.realtimecontroller.read</code> — the same
+            permission the read endpoints use) via the Methods module scan, then
+            <code>php spark cache:clear</code>. Because each open stream holds a
+            short-lived php-fpm worker for up to <code>realtimeStreamTtl</code>
+            seconds (120s ceiling), size <code>pm.max_children</code> for
+            concurrent admins <em>times their connection cap</em> and keep PHP
+            <code>max_execution_time</code> / FPM
+            <code>request_terminate_timeout</code> above
+            <code>realtimeStreamTtl</code>. Left disabled (the default), the bell
+            keeps its 60s polling behaviour.
+          </li>
+          <li>
+            <strong>Notification upgrade steps.</strong> After
+            <code>php spark migrate --all</code> has added
+            <code>notifications.exclude_users</code> /
+            <code>notifications.created_by</code> and created
+            <code>notification_preferences</code>, run the Methods
+            <strong>Module Scan</strong> so the preference and composer routes
+            land in <code>auth_permissions_pages</code>, grant them deliberately
+            (the send permission is the right to broadcast to the whole
+            installation), then <code>php spark cache:clear</code>. Until the
+            migrations run the module still delivers ordinary notifications, but
+            a dispatch carrying an <strong>explicit</strong>
+            <code>exceptUser()</code> exclusion is refused rather than delivered
+            to an excluded user.
+          </li>
         </ol>
       </section>
 
       <section class="panel">
-        <h2>13. Contribution Workflow</h2>
+        <h2>17. Contribution Workflow</h2>
         <ul>
           <li>
             <strong>Branching:</strong> Prefix with scope (e.g.,
@@ -787,7 +1258,7 @@ composer outdated</code></pre>
       </section>
 
       <section class="panel">
-        <h2>14. Further Reading &amp; Resources</h2>
+        <h2>18. Further Reading &amp; Resources</h2>
         <ul>
           <li>
             <a
@@ -813,6 +1284,14 @@ composer outdated</code></pre>
           <li>
             <a href="./user-guide.html" target="_blank" rel="noopener"
               >CI4MS User Guide (HTML)</a
+            >
+          </li>
+          <li>
+            <a
+              href="../modules/Notifications/README.md"
+              target="_blank"
+              rel="noopener"
+              >Notifications Module README (Markdown)</a
             >
           </li>
         </ul>

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\DashboardWidgets\Libraries;
 
 use ci4commonmodel\CommonModel;

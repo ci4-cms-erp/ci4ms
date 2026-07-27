@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Backend\Commands;
 
 use CodeIgniter\CLI\BaseCommand;
@@ -534,9 +536,9 @@ class Ci4msSetup extends BaseCommand
             // CodeIgniter CLI'da doğrudan gizli input desteği yok;
             // POSIX terminallerinde stty ile gizleme sağlanır.
             if (function_exists('shell_exec') && stripos(PHP_OS, 'win') === false) {
-                CLI::write("{$label}: ", 'white', false);
+                CLI::print("{$label}: ", 'white');
                 system('stty -echo');
-                $value = trim(fgets(STDIN));
+                $value = trim((string) fgets(STDIN));
                 system('stty echo');
                 CLI::write(''); // newline
             } else {

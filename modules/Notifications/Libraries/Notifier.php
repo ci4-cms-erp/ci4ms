@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Notifications\Libraries;
 
 use ci4commonmodel\CommonModel;
@@ -91,7 +93,7 @@ class Notifier
             }
 
             foreach ($instance->notificationChannels as $slug => $class) {
-                if (class_exists($class)) {
+                if (is_string($class) && class_exists($class)) {
                     $map[$slug] = new $class();
                 }
             }

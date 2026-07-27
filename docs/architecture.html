@@ -555,12 +555,77 @@
               <td>Per-user permission flags</td>
               <td>Until invalidated</td>
             </tr>
+            <tr>
+              <td><code>notif_unread_{userId}</code></td>
+              <td>Per-user unread notification count</td>
+              <td>60s</td>
+            </tr>
           </tbody>
         </table>
         <p>
           Clear all caches with <code>php spark cache:clear</code> or
           selectively via <code>cache()->delete($key)</code>.
         </p>
+
+        <h3>Backend cache management (server-side allowlist)</h3>
+        <p>
+          Administrators can also purge caches from the backend Settings page
+          ("Cache Management").
+          <code>Modules\Settings\Libraries\CacheRegistry</code> is a server-side
+          allowlist that maps logical ids to exact keys and glob families
+          (<code>*_permissions</code>, <code>menus_*</code>,
+          <code>notif_unread_*</code>). The
+          <code>backend/settings/clearCache</code> route
+          (<code>role=update</code>) resolves those ids on the server before
+          calling <code>cache()->delete()</code> /
+          <code>cache()->deleteMatching()</code>, so the client only ever sends a
+          logical id and never a raw pattern — glob injection is not possible.
+        </p>
+        <ul>
+          <li>
+            Purges are targeted. The framework-wide
+            <code>php spark cache:clear</code> / <code>cache()->clean()</code> is
+            never invoked by this panel.
+          </li>
+          <li>
+            The Shield dynamic RBAC key
+            (<code>shield_auth_dynamic_config</code>) is a protected entry and
+            can never be cleared through either the "Clear Selected" or the
+            "Clear All" action.
+          </li>
+        </ul>
+
+        <h3>Canonical <code>settings</code> decode</h3>
+        <p>
+          The <code>settings</code> key can be warmed by whichever entry point
+          touches it first while it is cold —
+          <code>app/Config/Filters.php</code>, the generated
+          <code>app/Config/Routes.php</code>, or
+          <code>modules/Auth/Controllers/BaseController.php</code>. All fillers
+          must therefore use byte-identical decode logic:
+          <code>json_decode($value)</code> gated on
+          <code>json_last_error() === JSON_ERROR_NONE &amp;&amp;
+          (is_object($decoded) || is_array($decoded))</code>. A cold cache then
+          always warms to a consistent <code>stdClass</code> shape no matter
+          which path primed it.
+        </p>
+        <ul>
+          <li>
+            Consume nested settings with object access
+            (<code>$settings-&gt;group-&gt;key</code>). Only JSON-array levels
+            stay PHP arrays and remain <code>foreach</code>-iterable.
+          </li>
+          <li>
+            Never <code>(object) json_decode(...)</code>-cast the top level: it
+            leaves every nested level as an array and produces a mixed shape that
+            fatals under PHP 8 when a view reaches into it with array syntax.
+          </li>
+          <li>
+            Scalar flags such as <code>maintenanceMode</code> and
+            <code>convertWebp</code> are read as raw string values, not through a
+            <code>-&gt;scalar</code> wrapper.
+          </li>
+        </ul>
       </section>
 
       <section class="panel">
@@ -653,6 +718,389 @@
       </section>
 
       <section class="panel">
+        <h2>Notifications</h2>
+        <p>
+          <code>Modules\Notifications</code> delivers server-side, in-app
+          notifications to administrators through a bell dropdown in the backend
+          header and a full list page at <code>backend/notifications</code>.
+          Instead of one row per recipient it uses a
+          <strong>Model B</strong> design: a single global row plus per-user read
+          state.
+        </p>
+
+        <h3>Data shape</h3>
+        <ul>
+          <li>
+            <strong>One row per notification.</strong> Each notification is
+            written <em>once</em> to the <code>notifications</code> table as a
+            global row (<code>user_id = null</code>) and addressed only through
+            <code>target_type</code> (<code>broadcast</code> |
+            <code>user</code> | <code>group</code>) and
+            <code>target_value</code>. Sending to a 50-member group still writes
+            exactly one row — there is no fan-out, and
+            <code>toGroup()</code> / <code>toRole()</code> return
+            <code>1</code>/<code>0</code> rather than a recipient count.
+          </li>
+          <li>
+            <strong>Read state lives apart.</strong>
+            <code>notification_reads</code> holds one row per
+            <code>(notification_id, user_id)</code> pair (UNIQUE), with CASCADE
+            foreign keys, so deleting a user or purging a notification clears the
+            matching read rows. "Unread" is an anti-join:
+            <code>notifications LEFT JOIN notification_reads r ON
+            r.notification_id = n.id AND r.user_id = X WHERE r.id IS NULL</code>,
+            cached for 60s under <code>notif_unread_{userId}</code>.
+          </li>
+          <li>
+            <strong>Opt-out state lives apart as well.</strong>
+            <code>notification_preferences</code> stores one row per
+            <code>(user_id, type, channel)</code>. Because the notification row
+            is global there is no per-recipient row to skip at send time, so a
+            mute is applied on the read path.
+          </li>
+        </ul>
+
+        <h3>
+          <code>Notifier::applyRelevance()</code> — the single chokepoint
+        </h3>
+        <p>
+          One method decides what a user may see, and it is the IDOR guard for
+          the feed and for <code>markRead</code> alike. A user sees only
+          broadcast rows, <code>user</code> rows whose <code>target_value</code>
+          is their own id, and <code>group</code> rows for a Shield group they
+          belong to — membership is resolved <strong>at read time</strong> from
+          <code>auth_groups_users</code>. <code>$userId</code> is bound through
+          <code>db->escape()</code> in the join and predicates as defense in
+          depth.
+        </p>
+        <ul>
+          <li>
+            It layers three filters in order: target, row-level exclusion, and
+            per-user preference.
+          </li>
+          <li>
+            All four read paths — <code>unreadCount</code>,
+            <code>listFor</code>, <code>markAllRead</code>,
+            <code>isRelevant</code> — go through it.
+          </li>
+          <li>
+            This is the architectural rule to preserve: a new read path must call
+            <code>applyRelevance()</code> instead of re-implementing any layer in
+            a controller, a view, or a channel.
+          </li>
+        </ul>
+
+        <h3>Targeting, exclusions, and preferences</h3>
+        <ul>
+          <li>
+            <strong>Rich targeting.</strong> One dispatch may carry several
+            <code>toUser()</code> and <code>toGroup()</code> directives;
+            <code>TargetResolver</code> deduplicates identical ones and each
+            survivor becomes one global row. A user&#8596;group overlap is
+            narrowed at send time — <code>toUser(5)</code> together with
+            <code>toGroup('admin')</code> writes both rows, but user 5 lands in
+            the group row's exclusion list, so the notification is seen exactly
+            once. The narrowing costs at most one extra bounded query
+            (<code>Notifier::groupMembersAmong()</code>) and never materializes
+            full group membership. A group&#8745;group overlap is deliberately
+            not collapsed.
+          </li>
+          <li>
+            <strong>Exclusions.</strong>
+            <code>NotificationBuilder::exceptUser(int|array)</code> removes ids
+            from every row of the dispatch, <code>broadcast()</code> included.
+            Storage is <code>notifications.exclude_users</code>
+            (<code>TEXT NULL</code>), a sentinel-wrapped CSV — always
+            comma-wrapped (<code>,5,12,</code>), <code>NULL</code> when empty —
+            so the read-side <code>NOT LIKE '%,1,%'</code> cannot collide with
+            <code>,12,</code>. JSON was avoided for MySQL/MariaDB portability.
+          </li>
+          <li>
+            <strong>An explicit exclusion is fail-closed.</strong>
+            <code>NotificationMessage</code> keeps provenance apart
+            (<code>explicitExcludeUsers</code>,
+            <code>derivedExcludeUsers</code>, and their union
+            <code>excludeUsers</code>). On an unmigrated schema
+            <code>InAppChannel</code> refuses a row carrying an
+            <em>explicit</em> exclusion
+            (<code>skipped('exclusion-unsupported')</code>, logged at
+            <code>critical</code>), because that exclusion is a guarantee; a row
+            whose exclusion is only <em>derived</em> is written anyway
+            (fail-open, logged at <code>warning</code>), since its worst case is
+            a duplicate delivery rather than a leak. The
+            <code>EXCLUDE_USERS_MAX</code> ceiling (500 ids) ignores provenance,
+            and the list is never truncated — the project runs
+            <code>strictOn = false</code>, so an overflowing <code>TEXT</code>
+            value would be cut silently and the broken sentinel would fail open.
+          </li>
+          <li>
+            <strong>Preferences are applied at read time.</strong>
+            <code>applyRelevance()</code> <code>LEFT JOIN</code>s
+            <code>notification_preferences</code> and anti-joins it
+            (<code>p.id IS NULL</code>). A preference <code>type</code> is an
+            exact type or a prefix — <code>audit</code> mutes
+            <code>audit</code> and <code>audit.login</code> through
+            <code>n.type LIKE CONCAT(p.type, '.%')</code>, but never
+            <code>auditor.x</code>. <strong><code>critical</code> notifications
+            cannot be muted</strong>, and
+            <code>n.severity &lt;&gt; 'critical'</code> sits on the join's
+            <strong>ON</strong> side, not in <code>WHERE</code>, so a surviving
+            row matches zero preference rows and neither
+            <code>listFor()</code> nor <code>unreadCount()</code> can be
+            duplicated or inflated.
+          </li>
+          <li>
+            <strong>Schema capability guard.</strong>
+            <code>SchemaGuard</code> memoises per request — keyed by database
+            name plus table prefix, so a second DB group cannot inherit the
+            answer — whether <code>notifications.exclude_users</code>,
+            <code>notification_preferences</code>, and
+            <code>notifications.created_by</code> exist. When they do not, the
+            corresponding SQL is simply not emitted, so a module folder dropped
+            in before <code>php spark migrate --all</code> never fatals.
+          </li>
+        </ul>
+
+        <h3>Channel abstraction</h3>
+        <p>
+          <code>NotificationsConfig::$channels</code> lists
+          <code>inapp</code>, <code>realtime</code>, <code>email</code>, and
+          <code>webhook</code>. Only <code>inapp</code> persists a row;
+          <code>realtime</code> is the optional Redis/SSE signal, and
+          <code>email</code> / <code>webhook</code> are no-op stubs. Another
+          module registers its own channel by declaring
+          <code>public array $notificationChannels</code> on its
+          <code>Config/{Name}Config.php</code> —
+          <code>Notifier::resolveChannels()</code> scans for it the same way
+          <code>Filters.php</code> scans <code>$csrfExcept</code>.
+        </p>
+        <p>
+          Delivery success is judged <strong>only</strong> from channels that
+          persist a row. The marker interface
+          <code>DurableChannelInterface</code> (implemented by
+          <code>InAppChannel</code>) adds no methods, so any new channel counts
+          as transient until it opts in — fail-closed.
+          <code>NotificationBuilder::dispatch()</code> tags every
+          <code>ChannelResult</code> with its slug and durability, and the
+          immutable <code>DispatchOutcome</code> separates three reportable
+          states: complete, <strong>partial</strong> (some rows stored, some
+          refused — surfaced as its own error, never as success), and
+          stored-nothing, which also covers "no durable channel ran at all". The
+          older "any channel returned <code>ok</code>" test was wrong under Model
+          B, because <code>InAppChannel</code> could refuse a durable write for a
+          security reason while <code>RealtimeChannel</code> still emitted its
+          signal.
+        </p>
+
+        <h3>Producers</h3>
+        <ul>
+          <li>
+            <strong>Automatic:</strong> the server-side <code>ci4ms.audit</code>
+            listener in <code>app/Config/Events.php</code>, which fires only for
+            <code>warning</code>-severity audit events and dispatches to the
+            group named by <code>NotificationsConfig::$auditTargetGroup</code>
+            (default <code>superadmin</code>). It is null-safe
+            (<code>service('notifier')?-&gt;…</code>) and wrapped in try/catch,
+            so a notifier failure can never break the audited request.
+          </li>
+          <li>
+            <strong>Human-authored:</strong> <code>ComposerController</code> +
+            <code>Views/compose.php</code> serve a "Send notification" screen at
+            <code>backend/notifications/compose</code>. Both audience pickers are
+            server-fed and server-revalidated — group names against
+            <code>config('AuthGroups')-&gt;groups</code>, user ids against the
+            <code>users</code> table in a single <code>whereIn</code> query —
+            and <code>Notifier::scopeAddressableUsers()</code> is the single
+            filter source that drops soft-deleted and <code>banned</code>
+            accounts from the picker, the validation, and the count alike.
+            <code>TARGETS_MAX</code> (200) caps users + groups per publication,
+            checked before the existence query and fail-closed: over the cap the
+            publication is refused, never trimmed. Sender identity is always
+            <code>auth()-&gt;id()</code>, there is no mass assignment, the
+            notification <code>type</code> is stamped server-side as the fixed
+            slug <code>announcement</code> (so a sender cannot mint a fresh slug
+            per send and step around existing mutes), and delivery goes
+            exclusively through the <code>service('notifier')</code> builder with
+            no direct <code>INSERT</code>. The screen's link field is narrowed to
+            a site-relative path, because an unmutable <code>critical</code>
+            notification addressed to superadmins reads as coming from "the
+            system" and an external link would carry that borrowed trust into a
+            phishing page.
+          </li>
+          <li>
+            <strong>Recipient preview.</strong>
+            <code>Notifier::recipientCount()</code> derives the audience size
+            from the publication definition alone — it never touches the
+            <code>notifications</code> table, makes no relevance decision, and
+            its query budget is flat in the input size. Its route is bound to the
+            <strong>send</strong> permission rather than <code>read</code>: the
+            number it returns is a membership/existence oracle, while
+            <code>read</code> is in practice held by every backend user so the
+            bell works.
+          </li>
+          <li>
+            <strong>Accountability.</strong>
+            <code>notifications.created_by</code> records who produced a row (not
+            a recipient), written only from <code>auth()-&gt;id()</code> and
+            <code>NULL</code> for programmatic/audit output. It carries no
+            foreign key on purpose — a CASCADE would delete an account's
+            notifications with the account and a SET NULL would erase the trail.
+            Its schema guard is fail-open: on an unmigrated schema the row is
+            still written and only the trail is lost.
+          </li>
+        </ul>
+
+        <h3>Realtime delivery (Redis-backed SSE) — optional, off by default</h3>
+        <p>
+          With <code>NotificationsConfig::$realtimeEnabled</code> off (the
+          default) the bell polls the <code>feed</code> endpoint every 60s and
+          nothing else happens. Switched on, notifications also push over
+          Server-Sent Events. The transport is <strong>self-contained</strong> —
+          no external hub, no JWT, no message broker — reusing the Redis +
+          nginx + PHP-FPM stack already in place.
+        </p>
+        <ul>
+          <li>
+            <strong>In-app stays the source of truth.</strong>
+            <code>RealtimeChannel</code> emits only <em>after</em>
+            <code>InAppChannel</code> commits the durable row, and it is
+            best-effort: a Redis outage yields a <code>skipped</code> result,
+            never a throw.
+          </li>
+          <li>
+            <strong>Signal path.</strong> Dispatch bumps a per-channel Redis
+            counter (<code>INCR notif:sig:{channel}</code> plus
+            <code>EXPIRE</code> to <code>realtimeSignalTtl</code>, default 300s).
+            <code>{channel}</code> is always <code>Notifier::topicFor()</code>
+            output — <code>broadcast</code>, <code>user/{id}</code>,
+            <code>group/{name}</code> — derived server-side, so the signal store
+            is IDOR-safe by construction.
+          </li>
+          <li>
+            <strong>The client does not trust the payload.</strong> Every event
+            is a nudge that triggers a reconcile against <code>feed</code>, which
+            reads the database. On disconnect the bell degrades to the 60s poll
+            and stays in sync across tabs over a <code>BroadcastChannel</code>.
+          </li>
+          <li>
+            <strong>Stream endpoint.</strong>
+            <code>GET backend/notifications/stream</code>
+            (<code>RealtimeController::stream</code>) runs behind
+            <code>backendGuard</code> with <code>role = read</code> — the same
+            permission the read endpoints already use, so no new permission is
+            introduced. It closes the session write lock and the default DB
+            connection immediately (critical under the
+            <code>FileHandler</code> session driver, which would otherwise block
+            every other backend request from that user), reads the authorized
+            channels with a single Redis <code>MGET</code> about once a second,
+            and caps each connection at <code>realtimeStreamTtl</code> (default
+            30s, clamped to a 120s ceiling) so <code>EventSource</code>
+            reconnects cleanly.
+          </li>
+          <li>
+            <strong>Connection cap (per identity, role-aware).</strong> Every
+            open stream occupies a PHP-FPM worker for its whole lifetime, so
+            <code>stream()</code> reserves a slot <em>before</em> opening the
+            stream. Slots live in a Redis sorted set per user,
+            <code>notif:conn:{userId}</code> (member = a server-generated random
+            connection id, score = expiry), reached only through
+            <code>ConnectionRegistryInterface</code> /
+            <code>RedisConnectionRegistry</code>. Acquiring one is a
+            <strong>single atomic Lua <code>EVAL</code></strong> — prune expired
+            → reject if <code>ZCARD &gt;= cap</code> → <code>ZADD</code> →
+            <code>EXPIRE</code> — because a split check/insert lets concurrent
+            requests race past the limit (a measured 30-request burst against
+            <code>cap = 5</code> admitted six times the cap). The effective cap
+            comes from the caller's Shield groups
+            (<code>$realtimeConnCapByGroup</code>, highest match wins), falling
+            back to <code>$realtimeConnCapDefault</code> (6). A negative value
+            means unlimited; <code>0</code> is invalid, not unlimited, and falls
+            back fail-closed to <code>CONN_CAP_FALLBACK</code> (6).
+          </li>
+          <li>
+            <strong>Redis unreachable → fail-closed <code>429</code>.</strong>
+            This is the deliberate opposite of the best-effort
+            <code>RealtimeSignal</code>: without Redis the signal store returns
+            <code>0</code> for every channel, so the stream has nothing to
+            deliver and holding a worker for the full TTL would burn exactly the
+            resource the cap protects. The client falls back to polling, so there
+            is no loss of functionality.
+          </li>
+        </ul>
+
+        <h3>Operational note: <code>ext-redis</code> and the PHP version trap</h3>
+        <p>
+          <code>ext-redis</code> (phpredis) is declared under
+          <code>composer.json</code>'s <code>suggest</code> and is required for
+          realtime. It must be installed for
+          <strong>the PHP version that actually serves the site</strong>, not
+          merely "somewhere on the machine":
+        </p>
+        <ul>
+          <li>
+            phpredis is a compiled extension tied to PHP's ABI, so a build for
+            one minor version is invisible to another. The
+            <code>extension_dir</code> carries the API number
+            (<code>.../pecl/20240924</code> = PHP 8.4,
+            <code>.../pecl/20250925</code> = PHP 8.5), and a
+            <code>redis.so</code> sitting in the wrong one is simply never
+            loaded.
+          </li>
+          <li>
+            On a multi-version setup <code>pecl install redis</code> builds
+            against whichever <code>php-config</code> happens to be first on the
+            <code>PATH</code>, which is easily not the version FPM runs.
+          </li>
+          <li>
+            Nothing errors, because every layer degrades gracefully: the signal
+            store becomes a no-op, the connection registry cannot reserve a slot,
+            the stream answers <code>429</code>, and the bell quietly stays on
+            polling.
+          </li>
+          <li>
+            Verify against the real binary rather than the shell's
+            <code>php</code> alias:
+            <code>/path/to/the/fpm/php -m | grep redis</code>. A green test suite
+            is <strong>not</strong> evidence — the Redis-backed tests skip (they
+            do not fail) when the extension is missing from the CLI PHP.
+          </li>
+        </ul>
+
+        <h3>Deployment &amp; upgrade notes</h3>
+        <ul>
+          <li>
+            <strong>Permission registration is mandatory.</strong> Backend →
+            Methods / Modules → <strong>Module Scan</strong> inserts the module's
+            routes into <code>auth_permissions_pages</code>; until a route has a
+            record there it is fail-closed <code>403</code> for everyone,
+            superadmin included, because the superadmin bypass only applies once
+            the page record exists. Follow the scan with
+            <code>php spark cache:clear</code>.
+          </li>
+          <li>
+            Grant <code>notifications.notifcomposesend.create</code>
+            deliberately rather than by ticking every box in the module: the bell
+            permissions have to be held by every backend user, whereas the send
+            permission is the right to broadcast to the whole installation.
+          </li>
+          <li>
+            No nginx configuration change is required — SSE buffering is disabled
+            per-response through the <code>X-Accel-Buffering: no</code> header.
+            Size <code>pm.max_children</code> for the concurrent-admin count
+            times their connection cap, and keep PHP
+            <code>max_execution_time</code> / FPM
+            <code>request_terminate_timeout</code> above
+            <code>realtimeStreamTtl</code>.
+          </li>
+          <li>
+            Retention is indefinite and there is no cron:
+            <code>php spark notifications:purge</code> is the manual cleanup
+            path.
+          </li>
+        </ul>
+      </section>
+
+      <section class="panel">
         <h2>CLI &amp; Automation</h2>
         <table>
           <thead>
@@ -692,6 +1140,17 @@
                 Download/refresh the local DB-IP City Lite database for session
                 geo lookup (monthly cron)
               </td>
+            </tr>
+            <tr>
+              <td><code>php spark notifications:purge</code></td>
+              <td>
+                Manually delete read notifications (retention cleanup; dry-run
+                unless <code>--force</code>, no cron installed)
+              </td>
+            </tr>
+            <tr>
+              <td><code>php spark notifications:test</code></td>
+              <td>Emit a test notification to verify the Model B dispatch path</td>
             </tr>
           </tbody>
         </table>
@@ -738,7 +1197,9 @@
           <code>pages</code>, <code>blog</code>,
           <code>blog_categories_pivot</code>, <code>tags</code>,
           <code>tags_pivot</code>, <code>menu</code>, <code>settings</code>,
-          <code>login_rules</code>, etc.
+          <code>login_rules</code>, <code>notifications</code>,
+          <code>notification_reads</code>,
+          <code>notification_preferences</code>, etc.
         </p>
         <p>Consult module migrations for schema details.</p>
       </section>

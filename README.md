@@ -35,6 +35,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - Composer 2.5+
 - MySQL / MariaDB (or any CodeIgniter 4-supported driver)
 - Writable directories: `writable/`, `public/uploads/`, optionally `public/templates/`
+- *Optional:* Redis + `ext-redis` (phpredis) — only for realtime notifications, which are off by default. The extension must be built for **the PHP version that serves the site**; on a multi-version setup `pecl install redis` easily targets the wrong one, and the feature then degrades silently to 60 s polling. See the [Notifications module README](modules/Notifications/README.md#realtime-notifications-redis-backed-sse).
 
 See `composer.json` for the full dependency list (e.g. `bertugfahriozer/ci4commonmodel`, `bertugfahriozer/sql2migration`, `ci4-cms-erp/ext_module_generator`, `claviska/simpleimage`, `gregwar/captcha`, `studio-42/elfinder`).
 

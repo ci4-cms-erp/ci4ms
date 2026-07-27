@@ -73,7 +73,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
         }
         $methodsModel = new \Modules\Methods\Models\MethodsModel();
         $this->defData['modules'] = $methodsModel->getActiveModules();
-        return view('Modules\\Users\\Views\\permGroup\\create', $this->defData);
+        return view('Modules\Users\Views\permGroup\create', $this->defData);
 
     }
 
@@ -123,8 +123,8 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
         $methodsModel = new \Modules\Methods\Models\MethodsModel();
         $this->defData['modules'] = $methodsModel->getActiveModules();
         $this->defData['group_name'] = $this->commonModel->selectOne('auth_groups', ['id' => $id]);
-        $this->defData['perms'] = json_decode($this->defData['group_name']->permissions, JSON_UNESCAPED_UNICODE);
-        return view('Modules\\Users\\Views\\permGroup\\update', $this->defData);
+        $this->defData['perms'] = json_decode($this->defData['group_name']->permissions ?? '', true) ?? [];
+        return view('Modules\Users\Views\permGroup\update', $this->defData);
 
     }
 
