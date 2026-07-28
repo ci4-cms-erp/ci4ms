@@ -8,6 +8,11 @@ class CreatePagesLangsTable extends Migration
 {
     public function up()
     {
+        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
+        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
+        // söylemesin diye önce sıfırlanır.
+        $this->db->resetDataCache();
+
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
@@ -79,6 +84,8 @@ class CreatePagesLangsTable extends Migration
 
     public function down()
     {
+        $this->db->resetDataCache();
+
         // Re-add dropped columns individually to avoid duplicate column errors
         if (!$this->db->fieldExists('title', 'pages')) {
             $this->forge->addColumn('pages', [

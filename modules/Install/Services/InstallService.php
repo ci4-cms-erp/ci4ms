@@ -211,9 +211,8 @@ class InstallService
         ]);
 
         $encrypter = \Config\Services::encrypter();
-        $commonModel->createMany(
-            'settings',
-            array(
+        $now       = date('Y-m-d H:i:s');
+        $settings  = array(
                 array('class' => 'Config\\App', 'key' => 'templateInfos', 'value' => '{"path":"default","name":null,"widgets":{"sidebar":{"searchWidget":"true","categoriesWidget":"true"}}}', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'siteName', 'value' => $args['siteName'], 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'logo', 'value' => '/media/logo.webp', 'type' => 'string', 'context' => NULL),
@@ -230,7 +229,15 @@ class InstallService
                 array('class' => 'Elfinder', 'key' => 'convertWebp', 'value' => '1', 'type' => 'boolean', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'defaultLocale', 'value' => 'en', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Modules\\Auth\\Config\\Auth', 'key' => 'geoLookupEnabled', 'value' => $args['geoLookup'] ?? '0', 'type' => 'boolean', 'context' => NULL)
-            )
         );
+
+        // settings.created_at/updated_at NOT NULL ve default'suz gelir
+        // (codeigniter4/settings migration'ı). Strict mode açık bir sunucuda
+        // eksik değer kurulumu tamamen durdurur; kapalıyken sessizce
+        // '0000-00-00 00:00:00' yazar. İkisi de istenmiyor.
+        $commonModel->createMany('settings', array_map(
+            static fn (array $row): array => $row + ['created_at' => $now, 'updated_at' => $now],
+            $settings
+        ));
     }
 }

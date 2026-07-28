@@ -38,6 +38,33 @@ class Media extends \Modules\Backend\Controllers\BaseController
     ];
 
     /**
+     * Extensions that may never be written into the media tree.
+     *
+     * The MIME allowlist alone does not cover this: elFinder only maps `php` to
+     * text/x-php internally, so every other script extension falls through to
+     * text/plain — which `settings.allowedFiles` permits — and .phtml, .php5,
+     * .pht and .phar are accepted. They are not executable under the current
+     * nginx location (`[^/]\.php(/|$)`) plus PHP-FPM's default
+     * security.limit_extensions, but neither of those lives in this repository,
+     * and .phtml is a stock PHP handler extension on Apache. Blocking the write
+     * keeps a dormant payload off disk instead of relying on server config.
+     *
+     * Mirrors the FilesMatch list in public/media/.htaccess deliberately.
+     *
+     * @var list<string>
+     */
+    private const DENIED_EXTENSIONS = [
+        'php', 'php0', 'php1', 'php2', 'php3', 'php4', 'php5', 'php6', 'php7', 'php8', 'php9',
+        'phtml', 'phar', 'phps', 'pht', 'inc', 'cgi', 'pl', 'py', 'jsp', 'asp', 'aspx',
+        'sh', 'bat', 'exe', 'htaccess', 'htpasswd', 'ini',
+    ];
+
+    /**
+     * Largest single upload elFinder will accept.
+     */
+    private const UPLOAD_MAX_SIZE = '32M';
+
+    /**
      * Renders the media manager (elFinder) backend page.
      *
      * @return string The rendered media view.
@@ -71,8 +98,10 @@ class Media extends \Modules\Backend\Controllers\BaseController
         $this->mediaCanWrite = $isSuperadmin || $user->can('media.media.create');
 
         // ── Layer 2: Blocking write commands at the Controller level ──────
-        // elFinder's disabled/accessControl mechanisms can be bypassed
-        // (uploadDeny is only valid for the upload command, not for mkfile/put).
+        // Defense-in-depth ahead of elFinder's own gates. (The MIME allowlist
+        // does reach mkfile in this elFinder version — elFinderVolumeDriver
+        // calls allowPutMime() at mkfile() — but it only stops `.php`; see
+        // DENIED_EXTENSIONS for why that is not enough.)
         // Therefore, we check the cmd parameter BEFORE reaching elFinder.
         // getPost('cmd') is intentional: the route is POST-only and elFinder
         // reads the command from the POST body. Do NOT switch to getVar() —
@@ -98,13 +127,8 @@ class Media extends \Modules\Backend\Controllers\BaseController
                     'URL' => site_url('media/'), // URL to files (REQUIRED)
                     'trashHash' => 't1_Lw',                     // elFinder's hash of trash folder
                     'winHashFix' => DIRECTORY_SEPARATOR !== '/', // to make hash same to Linux one on windows too
-                    'uploadDeny' => array('all'),                // All Mimetypes not allowed to upload
-                    'uploadAllow' => (array)$allowedFiles, // Mimetype `image` and `text/plain` allowed to upload
-                    'uploadOrder' => array('deny', 'allow'),      // allowed Mimetype `image` and `text/plain` only
-                    'accessControl' => array($this, 'elfinderAccess'), // disable and hide dot starting files (OPTIONAL)
-                    'disabled' => $disabled,
                     'dirrm' => true
-                ),
+                ) + $this->volumeSecurityOptions($allowedFiles, $disabled),
                 // Trash volume
                 array(
                     'id' => '1',
@@ -112,12 +136,7 @@ class Media extends \Modules\Backend\Controllers\BaseController
                     'path' => ROOTPATH . '/public/media/.trash/',
                     'tmbURL' => site_url('media/.trash/.tmb/'),
                     'winHashFix' => DIRECTORY_SEPARATOR !== '/', // to make hash same to Linux one on windows too
-                    'uploadDeny' => array('all'),                // Recomend the same settings as the original volume that uses the trash
-                    'uploadAllow' => (array)$allowedFiles, // Same as above
-                    'uploadOrder' => array('deny', 'allow'),      // Same as above
-                    'accessControl' => array($this, 'elfinderAccess'),                   // Same as above
-                    'disabled' => $disabled
-                )
+                ) + $this->volumeSecurityOptions($allowedFiles, $disabled)
             ),
             'bind' => array(
                 'upload.presave' => array(function (&$thash, &$name, $tmpname, $elfinder, $volume) {
@@ -169,6 +188,63 @@ class Media extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
+     * Decides whether a file name may never be written into the media tree.
+     *
+     * Every dot-separated segment is checked, not just the last one, so
+     * `shell.php.jpg` is refused as well: which segment a web server treats as
+     * the handler depends on its configuration, and this gate must not depend
+     * on that. Trailing dots and spaces are stripped first because Windows and
+     * some upload paths silently drop them.
+     *
+     * Pure and side-effect free so it can be unit-tested without the elFinder
+     * connector, whose output routine calls exit().
+     *
+     * @param string $basename File or directory name, without its directory.
+     */
+    /**
+     * Upload-security options shared by every elFinder volume.
+     *
+     * Extracted so the settings can be asserted without booting the connector.
+     * `uploadOrder` must stay deny-first: with allow-first an entry missing from
+     * the allowlist would be permitted by default.
+     *
+     * @param mixed        $allowedFiles Permitted MIME types from settings.
+     * @param list<string> $disabled     elFinder commands to switch off.
+     *
+     * @return array<string, mixed>
+     */
+    protected function volumeSecurityOptions($allowedFiles, array $disabled): array
+    {
+        return array(
+            'uploadDeny'    => array('all'),
+            'uploadAllow'   => (array) $allowedFiles,
+            'uploadOrder'   => array('deny', 'allow'),
+            'uploadMaxSize' => self::UPLOAD_MAX_SIZE,
+            'accessControl' => array($this, 'elfinderAccess'),
+            'disabled'      => $disabled,
+        );
+    }
+
+    protected function isDeniedName(string $basename): bool
+    {
+        $normalized = strtolower(rtrim(trim($basename), '. '));
+        if ($normalized === '') {
+            return false;
+        }
+
+        $segments = explode('.', $normalized);
+        array_shift($segments);
+
+        foreach ($segments as $segment) {
+            if (in_array($segment, self::DENIED_EXTENSIONS, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * elFinder access-control callback — the authoritative server-side guarantee.
      *
      * Denies every `write` attribute for users without write permission
@@ -194,6 +270,11 @@ class Media extends \Modules\Backend\Controllers\BaseController
         }
 
         $basename = basename($path);
+
+        if ($attr === 'write' && $this->isDeniedName($basename)) {
+            return false;
+        }
+
         return $basename[0] === '.'                  // if file/folder begins with '.' (dot)
             && strlen($relpath) !== 1           // but with out volume root
             ? !($attr == 'read' || $attr == 'write') // set read+write to false, other (locked+hidden) set to true

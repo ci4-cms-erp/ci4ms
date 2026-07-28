@@ -14,6 +14,11 @@ class AddIsFrontendToLanguages extends Migration
 {
     public function up(): void
     {
+        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
+        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
+        // söylemesin diye önce sıfırlanır.
+        $this->db->resetDataCache();
+
         if ($this->db->fieldExists('is_frontend', 'languages')) {
             return;
         }
@@ -32,6 +37,8 @@ class AddIsFrontendToLanguages extends Migration
 
     public function down(): void
     {
+        $this->db->resetDataCache();
+
         $this->forge->dropColumn('languages', 'is_frontend');
     }
 }

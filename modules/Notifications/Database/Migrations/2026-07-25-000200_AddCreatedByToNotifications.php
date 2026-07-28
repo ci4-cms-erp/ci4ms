@@ -31,6 +31,11 @@ class AddCreatedByToNotifications extends Migration
 {
     public function up()
     {
+        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
+        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
+        // söylemesin diye önce sıfırlanır.
+        $this->db->resetDataCache();
+
         $table = 'notifications';
 
         if ($this->db->fieldExists('created_by', $table)) {
@@ -56,6 +61,8 @@ class AddCreatedByToNotifications extends Migration
 
     public function down()
     {
+        $this->db->resetDataCache();
+
         // Geri alma ELLE yapılır — bu kolon denetim verisi taşır, otomatik DROP veri kaybıdır.
         // Manuel adım (gerekirse):
         //   ALTER TABLE `{prefix}notifications` DROP COLUMN `created_by`;

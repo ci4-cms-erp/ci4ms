@@ -8,6 +8,11 @@ class AddAllowedGroupsToDashboardWidgets extends Migration
 {
     public function up()
     {
+        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
+        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
+        // söylemesin diye önce sıfırlanır.
+        $this->db->resetDataCache();
+
         if ($this->db->fieldExists('allowed_groups', 'dashboard_widgets')) {
             return;
         }
@@ -23,6 +28,8 @@ class AddAllowedGroupsToDashboardWidgets extends Migration
 
     public function down()
     {
+        $this->db->resetDataCache();
+
         $this->forge->dropColumn('dashboard_widgets', 'allowed_groups');
     }
 }

@@ -194,15 +194,15 @@ echo $this->section('content'); ?>
                                         $isActive = ($settings->templateInfos->path == $data->slug); ?>
                                         <div class="col-md-4 mb-4">
                                             <div class="card h-100 <?php echo $isActive ? 'border-primary shadow' : 'border-0 bg-light' ?>" style="border-radius:12px; overflow:hidden">
-                                                <img class="card-img-top" src="<?php echo site_url('templates/' . $data->screenshotPNG) ?>" style="height: 150px; object-fit: cover;">
+                                                <img class="card-img-top" src="<?php echo esc(site_url('templates/' . (string) $data->screenshotPNG), 'attr') ?>" style="height: 150px; object-fit: cover;">
                                                 <div class="card-body p-3">
-                                                    <h6 class="font-weight-bold mb-1"><?php echo $data->name ?></h6>
-                                                    <p class="small text-muted mb-3">By <?php echo $data->author ?></p>
-                                                    <p class="small text-muted mb-3"><?php echo $data->description ?></p>
-                                                    <p class="small text-muted mb-3">Version <?php echo $data->version ?></p>
+                                                    <h6 class="font-weight-bold mb-1"><?php echo esc((string) $data->name) ?></h6>
+                                                    <p class="small text-muted mb-3">By <?php echo esc((string) $data->author) ?></p>
+                                                    <p class="small text-muted mb-3"><?php echo esc((string) $data->description) ?></p>
+                                                    <p class="small text-muted mb-3">Version <?php echo esc((string) $data->version) ?></p>
                                                     <?php if (!$isActive): ?>
-                                                        <button type="button" class="btn btn-sm btn-primary btn-block mb-2" onclick="chooseTemplate('<?php echo $data->slug ?>','<?php echo $data->name ?>')"><?php echo lang('Settings.activate') ?></button>
-                                                        <a href="<?php echo route_to('deleteThemeConfirm', $data->slug) ?>" class="btn btn-sm btn-outline-danger btn-block"><i class="fas fa-trash mr-1"></i> <?php echo lang('Backend.delete') ?></a>
+                                                        <button type="button" class="btn btn-sm btn-primary btn-block mb-2 ci4ms-choose-template" data-slug="<?php echo esc((string) $data->slug, 'attr') ?>" data-name="<?php echo esc((string) $data->name, 'attr') ?>"><?php echo lang('Settings.activate') ?></button>
+                                                        <a href="<?php echo esc((string) route_to('deleteThemeConfirm', (string) $data->slug), 'attr') ?>" class="btn btn-sm btn-outline-danger btn-block"><i class="fas fa-trash mr-1"></i> <?php echo lang('Backend.delete') ?></a>
                                                     <?php else: ?>
                                                         <a href="<?php echo route_to('templateSettings') ?>" class="btn btn-sm btn-outline-primary btn-block"><i class="fas fa-sliders-h mr-1"></i> <?php echo lang('Settings.settings') ?></a>
                                                     <?php endif; ?>
@@ -362,6 +362,43 @@ echo script_tag("be-assets/plugins/elFinder/js/extras/editors.default.js");
 echo script_tag("be-assets/plugins/select2/js/select2.full.min.js");
 echo script_tag("be-assets/js/ci4ms.js") ?>
 <script type="text/javascript" <?php echo csp_script_nonce(); ?>>
+    const CI4MS_UPDATE_KEYS = <?php echo json_encode($trustedUpdateKeys ?? [], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    const CI4MS_UPDATE_KEYS_ACTIVE = CI4MS_UPDATE_KEYS.filter(k => k.status === 'active').length;
+
+    // SweetAlert2'nin html: parametresi DOMParser + appendChild kullanır ve hiçbir şeyi
+    // temizlemez. GitHub'dan gelen her değer (tag, dosya adı, url) buradan geçmek zorunda.
+    const CI4MS_HTML_ENTITIES = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    };
+
+    function escHtml(value) {
+        return String(value === null || value === undefined ? '' : value)
+            .replace(/[&<>"']/g, c => CI4MS_HTML_ENTITIES[c]);
+    }
+
+    // Sunucu bu adresleri doğrulanmış sürümden kurar; yine de yalnızca github.com
+    // üzerindeki mutlak https adresleri render edilir (javascript:, data: vb. kapalı).
+    function githubUrl(value) {
+        const url = String(value === null || value === undefined ? '' : value);
+
+        return url.startsWith('https://github.com/') ? url : '';
+    }
+
+    function updateTrustedKeysHtml() {
+        if (CI4MS_UPDATE_KEYS.length === 0) {
+            return `<div class="mt-3 text-left small text-danger"><?php echo lang('Settings.noTrustedUpdateKeys') ?></div>`;
+        }
+        const rows = CI4MS_UPDATE_KEYS.map(k => `<li><code>${escHtml(k.key_id)}</code> · <code>${escHtml(k.short)}</code> · ${k.status === 'active' ? '<?php echo lang('Settings.keyStatusActive') ?>' : '<?php echo lang('Settings.keyStatusRevoked') ?>'}</li>`).join('');
+        return `<div class="mt-3 text-left small">
+            <strong><?php echo lang('Settings.trustedUpdateKeys') ?>:</strong>
+            <ul class="mb-0 pl-3">${rows}</ul>
+        </div>`;
+    }
+
     $('.repeater').repeater({
         isFirstItemUndeletable: true,
         show: function() {
@@ -503,9 +540,16 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         });
     });
 
+    // Tema adı/slug'ı info.xml'den, yani yüklenen ZIP'ten gelir. Değerler
+    // attribute interpolasyonu yerine data-* üzerinden taşınır.
+    $('.ci4ms-choose-template').on('click', function() {
+        chooseTemplate(this.dataset.slug, this.dataset.name);
+    });
+
     function chooseTemplate(path, templateName) {
         Swal.fire({
-            title: '<?php echo lang('Settings.changeToTheme') ?>'.replace('{0}', templateName),
+            // Swal'ın title'ı HTML olarak ayrıştırılır; düz metin için escHtml şart.
+            title: '<?php echo lang('Settings.changeToTheme') ?>'.replace('{0}', escHtml(templateName)),
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: '<?php echo lang('Settings.yes') ?>',
@@ -551,38 +595,67 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             Swal.close();
             if (r.result) {
                 if (r.update_available) {
+                    const newVersion = escHtml(r.new_version);
+                    const downloadUrl = githubUrl(r.download_url);
+                    const compareUrl = githubUrl(r.compare_url);
+                    const changedCount = parseInt(r.changed_count, 10) || 0;
+
                     let filesList = '';
-                    if (r.changed_count > 0) {
+                    if (changedCount > 0) {
                         filesList = `<div class="mt-2 text-left small" style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9;">
-                            <strong><?php echo lang('Settings.changedFiles') ?> (${r.changed_count}):</strong><br>
-                            ${r.changed_files.slice(0, 10).map(f => `• ${f.filename}`).join('<br>')}
-                            ${r.changed_count > 10 ? '<br>... <?php echo lang('Settings.andMore') ?>' : ''}
+                            <strong><?php echo lang('Settings.changedFiles') ?> (${changedCount}):</strong><br>
+                            ${(r.changed_files || []).slice(0, 10).map(f => `• ${escHtml(f.filename)}`).join('<br>')}
+                            ${changedCount > 10 ? '<br>... <?php echo lang('Settings.andMore') ?>' : ''}
                         </div>`;
                     }
 
+                    // Doğrulanabilir bir imza yoksa güncelleme yolu tamamen kapalıdır.
+                    const verifiable = r.signed === true && CI4MS_UPDATE_KEYS_ACTIVE > 0;
+                    const signatureBlock = r.signed === true
+                        ? `<div class="mt-2"><span class="badge badge-success"><i class="fas fa-shield-alt mr-1"></i> <?php echo lang('Settings.updateSignedRelease') ?></span></div>`
+                        : `<div class="alert alert-danger mt-2 mb-0 text-left small"><i class="fas fa-exclamation-triangle mr-1"></i> <?php echo lang('Settings.updateUnsignedRelease') ?></div>`;
+                    const keyringBlock = CI4MS_UPDATE_KEYS_ACTIVE === 0
+                        ? `<div class="alert alert-danger mt-2 mb-0 text-left small"><i class="fas fa-key mr-1"></i> <?php echo lang('Settings.updateNoTrustedKeys') ?></div>`
+                        : '';
+                    const disabled = verifiable ? '' : 'disabled';
+
                     Swal.fire({
                         title: '<?php echo lang('Settings.updateAvailableTitle') ?>',
-                        html: `<?php echo lang('Settings.currentVersion') ?>: <b>${r.current_version}</b><br>
-                               <?php echo lang('Settings.newVersion') ?>: <span class="badge badge-success" style="font-size: 1.1em">${r.new_version}</span><br>
+                        html: `<?php echo lang('Settings.currentVersion') ?>: <b>${escHtml(r.current_version)}</b><br>
+                               <?php echo lang('Settings.newVersion') ?>: <span class="badge badge-success" style="font-size: 1.1em">${newVersion}</span>
+                               ${signatureBlock}
+                               ${keyringBlock}
                                ${filesList}
                                 <div class="mt-4 d-flex flex-column gap-2">
-                                   <button type="button" class="btn btn-primary mb-2" onclick="autoUpdate('${r.new_version}')">
+                                   <button type="button" class="btn btn-primary mb-2" id="ci4ms-auto-update" ${disabled}>
                                        <i class="fas fa-magic mr-1"></i> <?php echo lang('Settings.autoUpdate') ?>
                                    </button>
-                                   <button type="button" class="btn btn-success mb-2" onclick="downloadPatch('${r.new_version}')">
+                                   <button type="button" class="btn btn-success mb-2" id="ci4ms-download-patch" ${disabled}>
                                        <i class="fas fa-file-archive mr-1"></i> <?php echo lang('Settings.downloadOnlyChanges') ?>
                                    </button>
-                                   <button type="button" class="btn btn-outline-success mb-2" onclick="window.location.href='${r.download_url}'">
+                                   ${downloadUrl === '' ? '' : `<button type="button" class="btn btn-outline-success mb-2" id="ci4ms-download-all">
                                        <i class="fas fa-download mr-1"></i> <?php echo lang('Settings.downloadAll') ?>
-                                   </button>
-                                   <button type="button" class="btn btn-info mb-2" onclick="window.open('${r.compare_url}', '_blank')">
+                                   </button>`}
+                                   ${compareUrl === '' ? '' : `<button type="button" class="btn btn-info mb-2" id="ci4ms-view-changes">
                                        <i class="fas fa-external-link-alt mr-1"></i> <?php echo lang('Settings.viewChanges') ?>
-                                   </button>
-                               </div>`,
+                                   </button>`}
+                               </div>
+                               ${updateTrustedKeysHtml()}`,
                         icon: 'info',
                         showConfirmButton: false,
                         showCancelButton: true,
                         cancelButtonText: '<?php echo lang('Backend.close') ?>',
+                        didOpen: () => {
+                            // Sürüm ve adresler attribute interpolasyonu yerine closure ile taşınır.
+                            document.getElementById('ci4ms-auto-update')
+                                ?.addEventListener('click', () => autoUpdate(String(r.new_version)));
+                            document.getElementById('ci4ms-download-patch')
+                                ?.addEventListener('click', () => downloadPatch(String(r.new_version)));
+                            document.getElementById('ci4ms-download-all')
+                                ?.addEventListener('click', () => { window.location.href = downloadUrl; });
+                            document.getElementById('ci4ms-view-changes')
+                                ?.addEventListener('click', () => window.open(compareUrl, '_blank'));
+                        }
                     });
                 } else {
                     Swal.fire('<?php echo lang('Backend.success') ?>', r.message, 'success');
@@ -636,14 +709,22 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                     [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
                 }).done(r => {
                     if (r.result) {
-                        Swal.fire('<?php echo lang('Backend.success') ?>', r.message, 'success').then(() => {
+                        const signer = r.key_id
+                            ? `<br><span class="badge badge-success mt-2"><i class="fas fa-shield-alt mr-1"></i> <?php echo lang('Settings.updateSignedBy') ?></span>`
+                                .replace('{0}', escHtml(r.key_id)).replace('{1}', escHtml(String(r.fingerprint || '').substring(0, 16)))
+                            : '';
+                        Swal.fire({
+                            title: '<?php echo lang('Backend.success') ?>',
+                            html: `${escHtml(r.message)}${signer}`,
+                            icon: 'success'
+                        }).then(() => {
                             location.reload();
                         });
                     } else {
                         Swal.fire('<?php echo lang('Backend.error') ?>', r.message, 'error');
                     }
                 }).fail(e => {
-                    Swal.fire('<?php echo lang('Backend.error') ?>', e.responseJSON?.message || 'Update failed', 'error');
+                    Swal.fire('<?php echo lang('Backend.error') ?>', e.responseJSON?.message || '<?php echo lang('Settings.updateFailedGeneric') ?>', 'error');
                 });
             }
         });
@@ -672,10 +753,10 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                         <tbody>
                             ${r.backups.map(b => `
                                 <tr>
-                                    <td><small>${b.name}</small></td>
-                                    <td><small>${b.date}</small></td>
+                                    <td><small>${escHtml(b.name)}</small></td>
+                                    <td><small>${escHtml(b.date)}</small></td>
                                     <td class="text-right">
-                                        <button class="btn btn-xs btn-danger" onclick="rollbackUpdate('${b.name}')">
+                                        <button class="btn btn-xs btn-danger ci4ms-rollback" data-backup="${escHtml(b.name)}">
                                             <i class="fas fa-undo mr-1"></i> <?php echo lang('Settings.rollback') ?>
                                         </button>
                                     </td>
@@ -691,7 +772,12 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                     width: '600px',
                     showConfirmButton: false,
                     showCancelButton: true,
-                    cancelButtonText: '<?php echo lang('Backend.close') ?>'
+                    cancelButtonText: '<?php echo lang('Backend.close') ?>',
+                    didOpen: () => {
+                        // Yedek adı dosya sisteminden gelir; attribute'a değil closure'a taşınır.
+                        Swal.getHtmlContainer()?.querySelectorAll('.ci4ms-rollback')
+                            .forEach(btn => btn.addEventListener('click', () => rollbackUpdate(btn.dataset.backup)));
+                    }
                 });
             } else {
                 Swal.fire('<?php echo lang('Settings.noBackupsFound') ?>', '', 'info');

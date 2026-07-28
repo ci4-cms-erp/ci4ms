@@ -152,6 +152,26 @@ composer.lock.json
 CLAUDE.md
 ci4ms-specs
 tests/*
+# Release manifest signing tests: tests/* stops git descending, so each level is
+# re-opened explicitly and re-narrowed immediately after.
+!tests/Modules/
+tests/Modules/*
+!tests/Modules/Settings/
+tests/Modules/Settings/*
+!tests/Modules/Settings/Update*Test.php
+!tests/Modules/Settings/ManifestVerifier*Test.php
+!tests/Modules/Settings/ReleaseManifest*Test.php
+# Media upload gate regression locks.
+!tests/Modules/Media/
+tests/Modules/Media/*
+!tests/Modules/Media/*Test.php
+!tests/_support/
+tests/_support/*
+!tests/_support/Settings/
+# Only the PHP helpers are tracked: a keyfile or passphrase dropped here while
+# debugging must never become committable.
+tests/_support/Settings/*
+!tests/_support/Settings/*.php
 phpunit.xml.dist
 node_modules
 .security-audit

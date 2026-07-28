@@ -8,6 +8,11 @@ class CreateUsersTable extends Migration
 {
     public function up()
     {
+        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
+        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
+        // söylemesin diye önce sıfırlanır.
+        $this->db->resetDataCache();
+
         $columns = [
             'firstname' => [
                 'type' => 'VARCHAR',
@@ -43,6 +48,8 @@ class CreateUsersTable extends Migration
 
     public function down()
     {
+        $this->db->resetDataCache();
+
         foreach (['firstname', 'surname', 'profileIMG', 'who_created'] as $col) {
             try {
                 if ($this->db->fieldExists($col, 'users')) {

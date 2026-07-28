@@ -199,6 +199,13 @@ class Database extends Config
         // we don't overwrite live data on accident.
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
+
+            // defaultGroup yalnızca connect() argümansız çağrıldığında devreye
+            // girer. ci4commonmodel'in CommonModel'i grubu adıyla ister
+            // (connect('default')), böylece korumayı atlayıp test koşusunda
+            // CANLI veritabanına yazar. Grubun verisini de test grubuna
+            // eşitlemek, grubu adıyla isteyen her çağrıyı da kapsar.
+            $this->default = $this->tests;
         }
     }
 }

@@ -168,6 +168,98 @@ Config constants live in `NotificationsConfig`: `UNREAD_CACHE_TTL = 60`, `TYPE_M
 - `InAppChannel::invalidateUnreadCaches()` runs once per stored row rather than once per dispatch, so a maximum-size publication performs 200 `deleteMatching('notif_unread_*')` calls. This is the main cost `TARGETS_MAX` exists to bound; collapsing it to one sweep per dispatch is the obvious follow-up.
 - `Notifier::toUser()` / `toRole()` and `php spark notifications:test` still use the pre-`DispatchOutcome` "any channel returned ok" predicate. Their docblocks were corrected to state this; the behaviour was left unchanged for back-compat, and new call sites should use `DispatchOutcome`.
 
+## Auto-Update & Release Signing
+
+`Modules\Settings\Libraries\UpdateService` drives the backend one-click updater. It is **fail-closed**: every file it writes must appear in a `manifest.json` carrying a detached **Ed25519** signature made by a key the installation already trusts. The threat model this is built for is a full supply-chain compromise — the GitHub account, the release, and the CDN serving its assets all in hostile hands. Under that model the updater still writes **zero bytes** of code, because the one thing the attacker does not have is the publisher's **offline** private key.
+
+### Verification pipeline
+
+1. `GET /releases/latest` — the release `tag_name` is validated against `/^v?\d+(?:\.\d+){1,3}$/` before it is used anywhere.
+2. `manifest.json` and `manifest.json.sig` are fetched through that release's `assets[].browser_download_url`.
+3. `Modules\Settings\Libraries\ManifestVerifier` checks the detached signature with `sodium_crypto_sign_verify_detached()` against every `active` key in the keyring.
+4. Version binding (below) is enforced.
+5. Every downloaded file is checked against its **SHA-256** entry in the manifest.
+6. Only then does `applyUpdate()` touch the filesystem.
+
+**Verification runs on the raw HTTP response body.** Re-serialising the payload — `json_encode(json_decode($body))` — before checking the signature is forbidden: canonicalization drift in key order, slash escaping, unicode escaping or a trailing newline will silently invalidate a valid signature, and can normalise away an attacker's edit. `ManifestVerifierTest::testReserialisedManifestFailsSignature()` pins this as a regression test, because it is the kind of "harmless cleanup" a future refactor invites.
+
+### The gates
+
+All of the following must hold; none is advisory and there is **no "continue anyway" escape hatch** — not in the backend view, not in the API, not in the CLI.
+
+- The signature verifies under at least one `active` keyring entry.
+- `manifest.version` equals both the requested version **and** the release `tag_name`.
+- `manifest.repo` equals the configured repository.
+- `version_compare(manifest.version, app.version, '>')` — **the updater cannot downgrade an installation**. The supported way back is the existing `rollback()` path, which restores the automatic pre-update backup.
+- A file listed as changed by the compare API but **absent from the manifest aborts the whole update**. There is no fallback to the compare API's SHA-1 blob hash, which is unsigned and therefore worthless as an integrity check here.
+- A file the compare API reports as `removed` while the signed manifest still lists it is a contradiction and aborts (`removed_but_signed`).
+- An empty apply set aborts (`empty_apply_set`).
+- `.env` is raised to the new version **only** when every expected file was actually written.
+
+The last three exist because the compare response is *not* covered by the manifest signature. Without them, an attacker able to alter that response could serve a genuine signed manifest, mark every file `removed`, apply an update that changes nothing, bump `.env`, and thereby pin the installation to its vulnerable build forever — it would consider itself up to date and never fetch that release again.
+
+### Failure classification
+
+Failures are separated rather than collapsed into one message, because "GitHub is unreachable" and "someone tampered with this release" demand opposite reactions from an operator. All four abort.
+
+| Condition | Message key | Log level |
+|---|---|---|
+| Asset unreachable / network failure | `Settings.updateManifestUnreachable` | `warning` |
+| Signature or version/repo binding failure | `Settings.updateSignatureInvalid` | `critical` |
+| Keyring empty — nothing to trust | `Settings.updateNoTrustedKeys` | `critical` |
+| Asset over the 8 MB download ceiling | `Settings.updateAssetTooLarge` | `critical` |
+
+### Trusted keyring
+
+`Modules\Settings\Config\UpdateKeys` holds a set keyed by `key_id`; each entry carries `public_key` (base64), `status` (`active` | `revoked`), `added`, and `fingerprint` (hex SHA-256 of the public key). The surrounding rules are what make rotation and compromise survivable:
+
+- At least one **`active`** key must verify the signature.
+- If the signature carrier references a **`revoked`** `key_id`, the **entire manifest is rejected** — even if another signature on the same carrier is valid and made by an active key. A revoked key appearing on a release is evidence that the release was produced by, or passed through, a compromised signer, so no partial trust is extended.
+- An **unknown** `key_id` is silently ignored. This is precisely what makes **dual signing** work: during a rotation window the publisher signs with both the old and the new key, old installations verify through the old one, updated installations through the new one, and nobody is stranded.
+- A repeated `key_id` within one carrier is rejected.
+
+The repository **ships with `$keys = []`**, so **auto-update is disabled out of the box**. This is a deliberate fail-closed default rather than an oversight: a keyring shipped with a key that no operator ever verified out of band would be trust theatre. Until the publisher pastes in their own public key block, the updater reports `Settings.updateNoTrustedKeys` and applies nothing.
+
+### Key management (entirely offline)
+
+The private key **never enters GitHub or CI in any form**. `php spark ci4ms:release:keygen` seals it into a keyfile with `sodium_crypto_pwhash` (argon2id) + `sodium_crypto_secretbox`, created via `fopen('xb')` inside a `umask(0077)` window — so it is never even briefly world-readable — and left at mode `0600`. The keyfile must live **outside `ROOTPATH` and outside `public/`**; the command refuses to write inside either, rejecting symlinks and comparing paths case-insensitively so a case-flipped path cannot slip past on a case-insensitive filesystem. The password is read only through a hidden terminal prompt (`stty -echo`), never from argv, an environment variable, or shell history, and is wiped with `sodium_memzero()` after use. The command prints the public key, its fingerprint, and a ready-to-paste `UpdateKeys.php` block — never the private key.
+
+### Manifest format
+
+`manifest.json` is **the exact byte string that gets signed**: `json_encode(..., JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)`, **no trailing newline**, with `files` ordered by `ksort(..., SORT_STRING)` for determinism.
+
+```json
+{"schema":1,"repo":"ci4-cms-erp/ci4ms","version":"0.35.0.0","generated_at":"2026-07-27T11:36:12+00:00","algo":"sha256","files":{"app/Config/App.php":"<64 hex>"}}
+```
+
+`manifest.json.sig` is only a carrier — it is **not** part of the signed payload:
+
+```json
+{"schema":1,"signatures":[{"key_id":"ci4ms-2026-a","alg":"ed25519","sig":"<base64 64-byte detached sig>"}]}
+```
+
+### Publishing a release (the order is load-bearing)
+
+1. Tag the release and `git checkout v<x.y.z.w>`. The working tree must be clean — `ci4ms:release:manifest` refuses to run on a dirty tree, since a manifest generated from uncommitted state would describe a build nobody can reproduce.
+2. `php spark ci4ms:release:manifest --keyfile <path outside ROOTPATH> --version <x.y.z.w>` — builds **and signs** in one step, so an unsigned manifest never exists as an intermediate artifact. It enumerates tracked files via `git ls-files`, serialises deterministically, signs, then **self-checks the output with its own `ManifestVerifier`** and deletes both files if that check fails. Output: `writable/release/manifest.json` + `manifest.json.sig`.
+3. Create a **draft** release on GitHub and upload both assets under exactly the names `manifest.json` and `manifest.json.sig`.
+4. `php spark ci4ms:release:verify --remote --tag v<x.y.z.w>` — downloads the published assets and verifies them from the outside, exactly as an installation would.
+5. Only now publish (`--draft=false`).
+
+**Step 3 is mandatory, not tidiness.** `checkVersion()` reads `/releases/latest`, which does not see drafts. Publishing first and uploading the assets afterwards would open a window in which every installation sees a new version whose signature assets do not yet exist, and all of them report `updateManifestUnreachable`.
+
+### Network layer note
+
+CI4's `CURLRequest` **does not follow redirects by default** — when the `allow_redirects` key is absent from the options, `CURLOPT_FOLLOWLOCATION` is never set at all. Since `browser_download_url` answers with a `302` to a CDN host, the manifest and signature downloads must pass `'allow_redirects' => ['protocols' => ['https'], 'max' => 3, 'strict' => true]` **explicitly**; without it the response body is simply empty and the failure looks like a missing asset. The GitHub `Authorization` token is deliberately **not** attached to asset (CDN) requests.
+
+### Cost
+
+The manifest for the current tree covers **4,677 tracked files** at **627,193 bytes (612.5 KB)**, of which **1,969 entries (42%) sit under `public/be-assets/`**. That directory is **deliberately in scope**: it is the JS/CSS served into an authenticated administrator's browser, so excluding it to shrink the manifest would leave an unsigned XSS / browser-RCE surface. The download is gzip-compressed in transit (`decode_content => true`).
+
+### Contract & permissions
+
+No new route and no new `Modules\Methods` permission record were introduced — `autoUpdate`, `downloadPatch`, `listBackups` and `rollbackUpdate` are already registered with `role => 'update'`, so **no module scan is needed after upgrading**. The flat array contract (`['result' => bool, 'message' => …]`) was kept rather than replaced with a DTO, and `checkVersion()`'s ten existing keys are unchanged; it only gained a `signed` flag, which reports the **presence** of the signature assets on the release and never their validity — the real verification happens at download time.
+
 ## CLI & Automation
 
 | Command | Purpose |
@@ -181,6 +273,9 @@ Config constants live in `NotificationsConfig`: `UNREAD_CACHE_TTL = 60`, `TYPE_M
 | `php spark ci4ms:geoip-update` | Download/refresh the local DB-IP City Lite database for session geo lookup (monthly cron) |
 | `php spark notifications:purge` | Manually delete read notifications (retention cleanup; no cron installed) |
 | `php spark notifications:test` | Emit a test notification to verify the Model B dispatch path |
+| `php spark ci4ms:release:keygen` | Generate an Ed25519 release signing keypair into a password-sealed keyfile (publisher only) |
+| `php spark ci4ms:release:manifest` | Build **and** sign `writable/release/manifest.json` + `.sig` from the tracked tree (clean tree required) |
+| `php spark ci4ms:release:verify` | Verify a local manifest/signature pair, or the published assets with `--remote --tag v<x.y.z.w>` |
 
 `Modules\Methods::moduleScan()` inspects the router to align routes with permission records.
 

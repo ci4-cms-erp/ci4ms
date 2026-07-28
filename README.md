@@ -22,6 +22,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - **Flexible content management:** Page and blog entries include SEO metadata, categories, tags, and full comment workflows.
 - **Media & files:** Includes elFinder-powered media management, a built-in file editor, and an in-panel log viewer.
 - **Automatic Updates:** Modernized `UpdateService` provides a "One-Click Update" system with atomic file operations, automated GitHub version discovery (bypassing 300-file limits), and secure rollback management.
+- **Signed Updates (fail-closed):** Every file an update writes must appear in a `manifest.json` carrying a detached **Ed25519** signature from a key your installation already trusts, with a per-file SHA-256 check on top. A compromise of the GitHub account, the release, or the CDN is not enough to push code — the publisher's **offline** private key is required. There is no "continue anyway" option, downgrades through the updater are refused, and the shipped keyring is **empty on purpose**, so auto-update stays off until you add a key you have verified. See [Release Signing & Trusted Keys](#release-signing--trusted-keys).
 - **Security Architecture:** Global CSRF protection across all AJAX endpoints, strict HTTP security headers (CSP, HSTS, X-Frame-Options), executable file upload blacklists, and HTMLPurifier sanitization to prevent XSS and RCE attacks.
 - **Backup Support:** Updates automatically trigger a full backup of modified files before applying patches, with a dedicated management interface for restores.
 - **Theme system:** The `public/templates/*` structure and the `Modules\Theme` module enable installing or upgrading themes from ZIP packages.
@@ -170,6 +171,9 @@ See `docs/architecture.md` for deeper architectural notes.
 | `php spark migrate --all` | Run all pending migrations across modules |
 | `php spark cache:clear` | Clear all application caches |
 | `php spark ci4ms:geoip-update` | Download/update the local DB-IP City Lite database for session geo lookup (run monthly via cron) |
+| `php spark ci4ms:release:keygen` | *(publisher only)* Generate an Ed25519 release signing keypair into a password-sealed keyfile |
+| `php spark ci4ms:release:manifest` | *(publisher only)* Build and sign `writable/release/manifest.json` + `.sig` from the tracked tree |
+| `php spark ci4ms:release:verify` | Verify a local manifest/signature pair, or a published release with `--remote --tag v<x.y.z.w>` |
 
 Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, etc.) are also available.
 
@@ -190,6 +194,28 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 - **Maintenance mode**: When `settings.maintenanceMode.scalar == 1`, the `Ci4ms` filter redirects visitors to `maintenance-mode`.
 - **Security**: `Fileeditor` enforces `realpath` guards and a dangerous extension blacklist (`.php`, `.phtml`, `.phar`, `.htaccess`) to prevent RCE; destructive operations (`deleteFileOrFolder`, `renameFile`) additionally validate against an extension allowlist to block renaming or deleting critical application files. `Backup` restore uses SQL statement whitelist to block malicious queries (`LOAD_FILE`, `GRANT`, etc.). `HTMLPurifier` config is hardened against XSS bypass (`data:` URIs blocked, `CSS.Trusted` disabled) and `CustomRules::getClean()` output is persisted on every `create` and `update` flow in Blog and Pages controllers to prevent Stored XSS. All `$_SERVER` reads replaced with CI4 `base_url()`/`site_url()` helpers. Configure `App.php::$proxyIPs` if behind Cloudflare/Nginx.
 
+## Release Signing & Trusted Keys
+
+The auto-updater verifies a detached **Ed25519** signature over the release manifest before it writes a single file, and then checks every downloaded file against its SHA-256 entry in that manifest. Because the trust decision is made against a key list stored **inside your installation**, an attacker who takes over the GitHub account, the release, or the CDN still cannot push code to you.
+
+**Auto-update is off until you configure trust.** The repository ships with an empty keyring (`Modules\Settings\Config\UpdateKeys::$keys = []`), which is deliberate: a key shipped in the same repository it is supposed to protect proves nothing. Until you add a public key, the updater refuses every update and reports `Settings.updateNoTrustedKeys`.
+
+### Published signing key fingerprints
+
+Before adding a key to your keyring, confirm its `key_id` and full hex SHA-256 fingerprint against the table below **and** against at least one channel that is not this repository (release announcement, project website, maintainer's own key publication). If the two do not match, do not add the key and open a security report.
+
+| `key_id` | SHA-256 fingerprint (hex) | Status | Added |
+| :--- | :--- | :--- | :--- |
+| _not yet published_ | _not yet published_ | — | — |
+
+> **Publisher:** replace the placeholder row with the real `key_id` and fingerprint printed by `php spark ci4ms:release:keygen`. Publish the **full** hex fingerprint, never a truncated one, and add a new row (rather than editing the old one) when rotating — during a rotation window both keys are listed, the old one moving to `revoked` once the transition is complete. A `revoked` key causes the **entire** manifest to be rejected, even if a valid active signature is present alongside it.
+
+### Checking what your own installation trusts
+
+The backend **Settings** page lists the release signing keys your installation currently trusts, with each entry's `key_id`, fingerprint, and status (`active` / `revoked`). Compare that list against the published fingerprints above; anything present there that is not published here did not come from the publisher. The keyring itself is a plain PHP config file — `modules/Settings/Config/UpdateKeys.php` — so it can also be reviewed directly and kept under your own change control.
+
+Private keys are never held by the application, never committed, and never present in CI: signing happens offline via `php spark ci4ms:release:keygen` / `ci4ms:release:manifest` against a password-sealed keyfile stored outside `ROOTPATH` and `public/`. Anyone can independently verify a published release with `php spark ci4ms:release:verify --remote --tag v<x.y.z.w>`. The full pipeline, gates, and release ritual are documented in [`docs/architecture.md`](docs/architecture.md#auto-update--release-signing).
+
 ## Third-Party Data Attribution
 
 - **Session geo lookup** (optional, disabled by default) uses the free **DB-IP City Lite** database. If you enable it (Settings → Session Location Tracking, or the installer checkbox) and run `php spark ci4ms:geoip-update`, you must comply with the database license: **IP Geolocation by [DB-IP](https://db-ip.com)**, distributed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Keep this attribution visible in your deployment. No IP data leaves your server — lookups are performed locally against the downloaded database.
@@ -199,6 +225,7 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 - `docs/architecture.md` — Architecture, flow, permissions, and extension guidance.
 - `docs/developer-handbook.md` — Environment setup, coding standards, deployment checklist.
 - `docs/theme_development.md` — Theme folder structure, routing, and `base.php` variables.
+- `docs/web-server-hardening.md` — Apache/nginx rules that stop uploaded files from executing. **Read this if you deploy on anything other than Apache** — `.htaccess` is ignored by nginx, Caddy and FrankenPHP.
 - `DOCKER_SETUP.md` — Docker environment configuration and usage.
 - `CHANGELOG.md` — Full release history.
 

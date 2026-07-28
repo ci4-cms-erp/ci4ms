@@ -61,7 +61,7 @@ class MagicLinkController extends BaseController
         }
 
         if (auth()->loggedIn()) {
-            return redirect()->to(config('Auth')->loginRedirect());
+            return redirect()->to(config('Auth')->loginRedirect())->withCookies();
         }
 
         return $this->view(setting('Auth.views')['magic-link-login']);

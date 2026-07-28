@@ -3,6 +3,8 @@
 namespace Modules\Settings\Controllers;
 
 use Config\Mimes;
+use Modules\Settings\Config\UpdateKeys;
+use Modules\Settings\Libraries\ManifestVerifier;
 use Modules\Settings\Libraries\UpdateService;
 use Modules\Settings\Libraries\CacheRegistry;
 use Modules\Backend\Libraries\BackendMaintenance;
@@ -11,9 +13,12 @@ class Settings extends \Modules\Backend\Controllers\BaseController
 {
     protected UpdateService $updateService;
 
-    public function __construct()
+    /**
+     * @param UpdateService|null $updateService Test enjeksiyonu; null ise üretilir
+     */
+    public function __construct(?UpdateService $updateService = null)
     {
-        $this->updateService = new UpdateService();
+        $this->updateService = $updateService ?? new UpdateService();
     }
     /**
      * @return string
@@ -30,6 +35,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             cache('settings')['backendMaintenance'] ?? null
         );
         $this->defData['backendMaintenanceModules'] = $this->backendMaintenanceModules();
+        $this->defData['trustedUpdateKeys'] = $this->trustedUpdateKeys();
         if (ENVIRONMENT === 'development') $this->defData['clearable'] = CacheRegistry::clearable();
 
         return view('Modules\Settings\Views\settings', $this->defData);
@@ -612,16 +618,21 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     public function downloadPatch()
     {
         $currentVersion = (string) env('app.version');
-        $latestVersion = $this->request->getPost('latest');
+        $latestVersion = trim((string) ($this->request->getPost('latest') ?? ''));
 
         if (empty($latestVersion)) {
             return $this->response->setStatusCode(400)->setBody(lang('Settings.newVersionRequired'));
         }
 
+        // Sürüm dizesi zip adına ve indirme yoluna giriyor; autoUpdate() ile aynı kapı.
+        if (!$this->validateVersionString($latestVersion)) {
+            return $this->response->setStatusCode(422)->setBody(lang('Settings.invalidVersionFormat'));
+        }
+
         $result = $this->updateService->downloadPatchRaw($currentVersion, $latestVersion);
 
         if ($result['result'] === false) {
-            return $this->response->setStatusCode(500)->setBody($result['message'] ?? 'Download failed');
+            return $this->response->setStatusCode(500)->setBody($result['message'] ?? lang('Settings.updateFailedGeneric'));
         }
 
         $patchZip = new \ZipArchive();
@@ -671,7 +682,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return $this->respond(['result' => false, 'message' => lang('Settings.invalidVersionFormat')], 422);
         }
 
-        // 1. Dosyaları çek
+        // 1. İmzalı manifest kapısı + dosyaları çek (kapı kapalıysa hiçbir dosya inmez)
         $downloadResult = $this->updateService->downloadPatchRaw($currentVersion, $latestVersion);
         if ($downloadResult['result'] === false) {
             return $this->respond($downloadResult, 500);
@@ -679,13 +690,20 @@ class Settings extends \Modules\Backend\Controllers\BaseController
 
         // 2. Uygula (removed listesi, indirilen dosyalarla aynı compare sonucundan)
         $allFiles = $downloadResult['all_files'] ?? [];
-        $applyResult = $this->updateService->applyUpdate($latestVersion, $downloadResult['files'], $allFiles);
+        $applyResult = $this->updateService->applyUpdate(
+            $latestVersion,
+            $downloadResult['files'],
+            $allFiles,
+            $downloadResult['signed_hashes'] ?? []
+        );
 
         if ($applyResult['result'] === true) {
             return $this->respond([
                 'result' => true,
                 'message' => lang('Settings.updateSuccess', [$latestVersion]),
-                'removed_files' => $applyResult['removed_files']
+                'removed_files' => $applyResult['removed_files'],
+                'key_id' => $downloadResult['key_id'] ?? '',
+                'fingerprint' => $downloadResult['fingerprint'] ?? ''
             ]);
         }
 
@@ -712,14 +730,18 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         if (!$this->request->isAJAX())
             return $this->failForbidden();
 
-        $backupName = $this->request->getPost('backup_name');
-        if (empty($backupName)) {
+        $backupName = trim((string) $this->request->getPost('backup_name'));
+        if ($backupName === '') {
             return $this->respond(['result' => false, 'message' => lang('Settings.backupNameRequired')], 400);
         }
 
-        $backupDir = WRITEPATH . 'backups/' . $backupName . '/';
-        if (!is_dir($backupDir)) {
-            return $this->respond(['result' => false, 'message' => lang('Settings.noBackupsFound')], 404);
+        // Yedek adı doğrudan bir yola giriyordu; çözümleme UpdateService'te,
+        // gerçek yedek listesine karşı yapılır (bkz. UpdateRollbackPathTest).
+        $backupDir = $this->updateService->resolveBackupDir($backupName);
+        if ($backupDir === null) {
+            log_message('warning', 'Rollback rejected an unknown backup name: ' . $backupName);
+
+            return $this->respond(['result' => false, 'message' => lang('Settings.invalidBackupName')], 404);
         }
 
         // Tüm dosyaları listeleyelim (basitleştirilmiş: backup içindeki her şeyi geri atıyor)
@@ -756,5 +778,31 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     private function validateVersionString(string $version): bool
     {
         return (bool) preg_match('/^\d+\.\d+\.\d+\.\d+$/', $version);
+    }
+
+    /**
+     * Güvenilen release imzalama anahtarlarını görünüm için özetler.
+     *
+     * Parmak izi config'te saklanan değerden değil, public key'den yeniden
+     * hesaplanır; böylece elle düzenlenmiş bir fingerprint alanı yanıltamaz.
+     *
+     * @return list<array{key_id: string, status: string, fingerprint: string, short: string}>
+     */
+    private function trustedUpdateKeys(): array
+    {
+        $keys = [];
+
+        foreach (config(UpdateKeys::class)->keys as $keyId => $entry) {
+            $fingerprint = ManifestVerifier::fingerprint((string) ($entry['public_key'] ?? ''));
+
+            $keys[] = [
+                'key_id'      => (string) $keyId,
+                'status'      => (string) ($entry['status'] ?? 'revoked'),
+                'fingerprint' => $fingerprint,
+                'short'       => substr($fingerprint, 0, 16),
+            ];
+        }
+
+        return $keys;
     }
 }

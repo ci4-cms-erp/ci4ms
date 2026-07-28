@@ -16,6 +16,11 @@ class AddModelBColumnsToNotifications extends Migration
 {
     public function up()
     {
+        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
+        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
+        // söylemesin diye önce sıfırlanır.
+        $this->db->resetDataCache();
+
         $table = 'notifications';
 
         if (! $this->db->fieldExists('severity', $table)) {
@@ -89,6 +94,8 @@ class AddModelBColumnsToNotifications extends Migration
 
     public function down()
     {
+        $this->db->resetDataCache();
+
         $table = 'notifications';
 
         foreach (['severity', 'target_type', 'target_value', 'channel'] as $column) {

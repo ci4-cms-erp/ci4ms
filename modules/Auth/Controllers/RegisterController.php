@@ -55,7 +55,7 @@ class RegisterController extends BaseController
     public function registerView()
     {
         if (auth()->loggedIn()) {
-            return redirect()->to(config('Auth')->registerRedirect());
+            return redirect()->to(config('Auth')->registerRedirect())->withCookies();
         }
 
         // Check if registration is allowed
@@ -81,7 +81,7 @@ class RegisterController extends BaseController
     public function registerAction(): RedirectResponse
     {
         if (auth()->loggedIn()) {
-            return redirect()->to(config('Auth')->registerRedirect());
+            return redirect()->to(config('Auth')->registerRedirect())->withCookies();
         }
 
         // Check if registration is allowed

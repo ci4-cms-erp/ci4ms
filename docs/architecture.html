@@ -1101,6 +1101,220 @@
       </section>
 
       <section class="panel">
+        <h2>Auto-Update &amp; Release Signing</h2>
+        <p>
+          <code>Modules\Settings\Libraries\UpdateService</code> drives the
+          backend one-click updater. It is <strong>fail-closed</strong>: every
+          file it writes must appear in a <code>manifest.json</code> carrying a
+          detached <strong>Ed25519</strong> signature made by a key the
+          installation already trusts. The threat model is a full supply-chain
+          compromise — GitHub account, release and CDN all hostile. Under that
+          model the updater still writes <strong>zero bytes</strong>, because the
+          attacker does not hold the publisher's <strong>offline</strong> private
+          key.
+        </p>
+
+        <h3>Verification pipeline</h3>
+        <ol>
+          <li>
+            <code>GET /releases/latest</code> — the release
+            <code>tag_name</code> is validated against
+            <code>/^v?\d+(?:\.\d+){1,3}$/</code> before it is used anywhere.
+          </li>
+          <li>
+            <code>manifest.json</code> and <code>manifest.json.sig</code> are
+            fetched through that release's
+            <code>assets[].browser_download_url</code>.
+          </li>
+          <li>
+            <code>ManifestVerifier</code> checks the detached signature with
+            <code>sodium_crypto_sign_verify_detached()</code> against every
+            <code>active</code> key in the keyring.
+          </li>
+          <li>Version and repository binding are enforced.</li>
+          <li>
+            Every downloaded file is checked against its <strong>SHA-256</strong>
+            entry in the manifest.
+          </li>
+          <li>Only then does <code>applyUpdate()</code> touch the filesystem.</li>
+        </ol>
+        <p>
+          <strong>Verification runs on the raw HTTP response body.</strong>
+          Re-serialising the payload
+          (<code>json_encode(json_decode($body))</code>) before checking the
+          signature is forbidden: canonicalization drift in key order, slash
+          escaping, unicode escaping or a trailing newline silently invalidates a
+          valid signature and can normalise away an attacker's edit. It is pinned
+          by <code>ManifestVerifierTest::testReserialisedManifestFailsSignature()</code>,
+          because it is exactly the "harmless cleanup" a future refactor invites.
+        </p>
+
+        <h3>The gates</h3>
+        <p>
+          All of the following must hold. None is advisory and there is
+          <strong>no "continue anyway" escape hatch</strong> — not in the backend
+          view, not in the API, not in the CLI.
+        </p>
+        <ul>
+          <li>The signature verifies under at least one <code>active</code> keyring entry.</li>
+          <li>
+            <code>manifest.version</code> equals both the requested version
+            <strong>and</strong> the release <code>tag_name</code>; and
+            <code>manifest.repo</code> equals the configured repository.
+          </li>
+          <li>
+            <code>version_compare(manifest.version, app.version, '&gt;')</code> —
+            <strong>the updater cannot downgrade an installation.</strong> The
+            supported way back is the existing <code>rollback()</code> path.
+          </li>
+          <li>
+            A file listed as changed by the compare API but absent from the
+            manifest aborts the whole update. There is no fallback to the compare
+            API's unsigned SHA-1 blob hash.
+          </li>
+          <li>
+            A file reported <code>removed</code> while the signed manifest still
+            lists it is a contradiction and aborts
+            (<code>removed_but_signed</code>); an empty apply set aborts
+            (<code>empty_apply_set</code>).
+          </li>
+          <li>
+            <code>.env</code> is raised to the new version <strong>only</strong>
+            when every expected file was actually written.
+          </li>
+        </ul>
+        <p>
+          The last three exist because the compare response is <em>not</em>
+          covered by the manifest signature. Without them an attacker able to
+          alter that response could serve a genuine signed manifest, mark every
+          file <code>removed</code>, apply an update that changes nothing, bump
+          <code>.env</code>, and pin the installation to its vulnerable build
+          forever — it would consider itself up to date and never fetch that
+          release again.
+        </p>
+
+        <h3>Failure classification</h3>
+        <p>
+          Failures are separated rather than collapsed into one message, because
+          "GitHub is unreachable" and "someone tampered with this release" demand
+          opposite reactions from an operator. All four abort.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Condition</th>
+              <th>Message key</th>
+              <th>Log level</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Asset unreachable / network failure</td>
+              <td><code>Settings.updateManifestUnreachable</code></td>
+              <td><code>warning</code></td>
+            </tr>
+            <tr>
+              <td>Signature or version/repo binding failure</td>
+              <td><code>Settings.updateSignatureInvalid</code></td>
+              <td><code>critical</code></td>
+            </tr>
+            <tr>
+              <td>Keyring empty — nothing to trust</td>
+              <td><code>Settings.updateNoTrustedKeys</code></td>
+              <td><code>critical</code></td>
+            </tr>
+            <tr>
+              <td>Asset over the 8 MB download ceiling</td>
+              <td><code>Settings.updateAssetTooLarge</code></td>
+              <td><code>critical</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Trusted keyring</h3>
+        <p>
+          <code>Modules\Settings\Config\UpdateKeys</code> holds a set keyed by
+          <code>key_id</code>; each entry carries <code>public_key</code>
+          (base64), <code>status</code> (<code>active</code> |
+          <code>revoked</code>), <code>added</code> and <code>fingerprint</code>.
+        </p>
+        <ul>
+          <li>At least one <code>active</code> key must verify the signature.</li>
+          <li>
+            A signature carrier referencing a <code>revoked</code>
+            <code>key_id</code> rejects the <strong>entire manifest</strong>,
+            even when another signature on it is valid and active — a revoked key
+            on a release is evidence the release passed through a compromised
+            signer, so no partial trust is extended.
+          </li>
+          <li>
+            An <strong>unknown</strong> <code>key_id</code> is silently ignored.
+            That is what makes <strong>dual signing</strong> work during a
+            rotation window: old installations verify through the old key, new
+            ones through the new key, nobody is stranded.
+          </li>
+          <li>A repeated <code>key_id</code> within one carrier is rejected.</li>
+        </ul>
+        <p>
+          The repository <strong>ships with <code>$keys = []</code></strong>, so
+          <strong>auto-update is disabled out of the box</strong>. This is a
+          deliberate fail-closed default: a keyring shipped with a key no
+          operator ever verified out of band would be trust theatre. Until the
+          publisher pastes in their own public key block, the updater reports
+          <code>Settings.updateNoTrustedKeys</code> and applies nothing.
+        </p>
+
+        <h3>Key management (entirely offline)</h3>
+        <p>
+          The private key <strong>never enters GitHub or CI in any form</strong>.
+          <code>php spark ci4ms:release:keygen</code> seals it into a keyfile with
+          <code>sodium_crypto_pwhash</code> (argon2id) +
+          <code>sodium_crypto_secretbox</code>, created via
+          <code>fopen('xb')</code> inside a <code>umask(0077)</code> window — so
+          it is never even briefly world-readable — and left at mode
+          <code>0600</code>. The keyfile must live <strong>outside
+          <code>ROOTPATH</code> and outside <code>public/</code></strong>; the
+          command refuses to write inside either, rejecting symlinks and
+          comparing paths case-insensitively. The password is read only through a
+          hidden terminal prompt (<code>stty -echo</code>) and wiped with
+          <code>sodium_memzero()</code>. The command prints the public key, its
+          fingerprint and a ready-to-paste <code>UpdateKeys.php</code> block —
+          never the private key.
+        </p>
+
+        <h3>Publishing a release (the order is load-bearing)</h3>
+        <ol>
+          <li>Tag and check out the release with a clean working tree.</li>
+          <li>
+            <code>php spark ci4ms:release:manifest --keyfile &lt;path outside
+            ROOTPATH&gt; --version &lt;x.y.z.w&gt;</code> — builds and signs in
+            one step, then self-checks the result with its own
+            <code>ManifestVerifier</code> and deletes both files if that check
+            fails.
+          </li>
+          <li>
+            Create a <strong>draft</strong> release and upload both assets under
+            exactly the names <code>manifest.json</code> and
+            <code>manifest.json.sig</code>.
+          </li>
+          <li>
+            <code>php spark ci4ms:release:verify --remote --tag
+            v&lt;x.y.z.w&gt;</code> — verifies the published assets from the
+            outside, exactly as an installation would.
+          </li>
+          <li>Only now publish (<code>--draft=false</code>).</li>
+        </ol>
+        <p>
+          The draft step is mandatory rather than tidy:
+          <code>checkVersion()</code> reads <code>/releases/latest</code>, which
+          does not see drafts. Publishing first and uploading assets afterwards
+          opens a window in which every installation sees a new version whose
+          signature assets do not exist yet and reports
+          <code>updateManifestUnreachable</code>.
+        </p>
+      </section>
+
+      <section class="panel">
         <h2>CLI &amp; Automation</h2>
         <table>
           <thead>
@@ -1151,6 +1365,27 @@
             <tr>
               <td><code>php spark notifications:test</code></td>
               <td>Emit a test notification to verify the Model B dispatch path</td>
+            </tr>
+            <tr>
+              <td><code>php spark ci4ms:release:keygen</code></td>
+              <td>
+                Generate an Ed25519 signing keypair into a password-sealed
+                keyfile and print the pasteable <code>UpdateKeys.php</code> block
+              </td>
+            </tr>
+            <tr>
+              <td><code>php spark ci4ms:release:manifest</code></td>
+              <td>
+                Build <em>and</em> sign <code>manifest.json</code> for a release;
+                refuses a dirty working tree and self-checks the result
+              </td>
+            </tr>
+            <tr>
+              <td><code>php spark ci4ms:release:verify</code></td>
+              <td>
+                Verify a local or (with <code>--remote --tag</code>) a published
+                manifest exactly as an installation would
+              </td>
             </tr>
           </tbody>
         </table>

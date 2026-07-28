@@ -16,6 +16,11 @@ class AddLocaleToContentTables extends Migration
 
     public function up(): void
     {
+        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
+        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
+        // söylemesin diye önce sıfırlanır.
+        $this->db->resetDataCache();
+
         foreach ($this->tables as $table) {
             if ($this->db->tableExists($table) && !$this->db->fieldExists('locale', $table)) {
                 $this->forge->addColumn($table, [
@@ -37,6 +42,8 @@ class AddLocaleToContentTables extends Migration
 
     public function down(): void
     {
+        $this->db->resetDataCache();
+
         foreach ($this->tables as $table) {
             if ($this->db->tableExists($table) && $this->db->fieldExists('locale', $table)) {
                 $this->forge->dropColumn($table, 'locale');

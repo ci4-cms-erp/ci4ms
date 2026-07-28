@@ -2,6 +2,13 @@
 # Defense-in-depth: even if a malicious upload slips past the validation
 # in modules/Users/, modules/Media/, or theme upload, the web server must
 # never execute anything in this tree as code.
+#
+# APACHE ONLY. nginx, Caddy and FrankenPHP ignore .htaccess entirely, so on
+# those servers NOTHING below is in force and this file is not protection.
+# Mirror the rules in the vhost: refuse to route /media/ to the PHP handler,
+# and keep `try_files $uri =404;` enabled inside the nginx php location.
+# The application-side gate that does not depend on server config is
+# Modules\Media\Controllers\Media::DENIED_EXTENSIONS.
 
 # Disable PHP if the module is loaded.
 <IfModule mod_php.c>

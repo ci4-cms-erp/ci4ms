@@ -43,6 +43,43 @@ add_header X-Content-Type-Options nosniff always;
 
 Place the deny-block BEFORE the catch-all `location ~ \.php$ { fastcgi_pass ...; }` so the deny rule matches first.
 
+### Check the PHP location itself
+
+Several local-development stacks (FlyEnv/PhpWebStudy among them) generate a PHP
+block that looks like this:
+
+```nginx
+location ~ [^/]\.php(/|$) {
+    ## try_files $uri =404;          # <-- commented out by the generator
+    fastcgi_pass unix:/tmp/php-cgi-84.sock;
+    fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+}
+```
+
+Two problems: the location matches `.php` anywhere in the path (not just at the
+end), and with `try_files` disabled nginx forwards requests for files that do not
+exist. Combined with PHP's default `cgi.fix_pathinfo=1`, a request such as
+`/media/photo.jpg/x.php` makes PHP walk back and try to execute `photo.jpg`.
+
+What stops it is PHP-FPM's `security.limit_extensions`, which defaults to
+`.php .phar` and refuses anything else — a single pool setting outside this
+repository. Do not rely on it alone:
+
+* **Uncomment `try_files $uri =404;`** inside the PHP location. This closes the
+  whole path-info class on its own.
+* Keep `security.limit_extensions = .php` in the FPM pool (drop `.phar`).
+* Leave `cgi.fix_pathinfo=0` in `php.ini` unless an application needs it.
+
+### Application-side gate
+
+Server configuration is not the only layer. `Modules\Media\Controllers\Media`
+refuses to *write* script extensions into the media tree at all — every
+dot-separated segment is checked, so `shell.php.jpg` is rejected as well. That
+gate travels with the code and holds regardless of web server, which matters
+because the MIME allowlist alone only catches `.php` (see
+[developer-handbook.md](developer-handbook.md#media-modulesmedia)).
+
 ## Verification
 
 After deploy, test that a renamed payload cannot execute:

@@ -30,7 +30,11 @@ class LoginController extends BaseController
     public function loginView()
     {
         if (auth()->loggedIn()) {
-            return redirect()->to(config('Auth')->loginRedirect());
+            // withCookies() is required: restoring the session from a remember-me
+            // cookie rotates the token and queues the replacement cookie, which a
+            // bare redirect drops — leaving the new token in the DB and the old one
+            // in the browser, silently invalidating "remember me".
+            return redirect()->to(config('Auth')->loginRedirect())->withCookies();
         }
 
         /** @var Session $authenticator */

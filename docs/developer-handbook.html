@@ -614,8 +614,40 @@ composer outdated</code></pre>
                 Optional WebP conversion via <code>claviska/simpleimage</code>.
               </li>
               <li>
+                <strong>Who may write</strong> is gated by
+                <code>Media::WRITE_COMMANDS</code> — one constant feeding both
+                the controller-level 403 gate (<code>isWriteBlocked()</code>) and
+                elFinder's disabled list — with
+                <code>elfinderAccess()</code> as the authoritative server-side
+                guarantee.
+              </li>
+              <li>
+                <strong>What may be written</strong> is a separate gate. The MIME
+                allowlist alone is porous: elFinder maps only <code>php</code> to
+                <code>text/x-php</code>, so <code>.phtml</code>,
+                <code>.php5</code>, <code>.pht</code> and <code>.phar</code> fall
+                through to <code>text/plain</code>, which
+                <code>settings.allowedFiles</code> permits.
+                <code>Media::DENIED_EXTENSIONS</code> refuses them on the
+                <code>write</code> attribute, checking
+                <strong>every dot-separated segment</strong> so
+                <code>shell.php.jpg</code> is rejected as well. Reads are
+                untouched, so an administrator can still see and delete anything
+                already present.
+              </li>
+              <li>
+                Upload options live in <code>volumeSecurityOptions()</code>:
+                <code>uploadDeny =&gt; ['all']</code>, allowlist from settings,
+                <code>uploadOrder =&gt; ['deny','allow']</code> (must stay
+                deny-first) and <code>uploadMaxSize</code> 32M. Pinned by
+                <code>tests/Modules/Media/MediaUploadGateTest.php</code>.
+              </li>
+              <li>
                 Storage: <code>public/media/</code> (ensure writable, include
                 <code>.trash</code> folder).
+                <code>public/media/.htaccess</code> blocks execution there — but
+                <strong>Apache only</strong>; nginx/Caddy/FrankenPHP ignore it and
+                must mirror the rules in the vhost.
               </li>
             </ul>
           </div>

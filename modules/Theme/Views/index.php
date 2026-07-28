@@ -42,7 +42,7 @@ echo $this->section('content'); ?>
             <?php if (session()->has('log')) : ?>
                 <ul class="alert alert-info list-unstyled">
                     <?php foreach (session('log') as $log) : ?>
-                        <li><?php echo $log ?></li>
+                        <li><?php echo esc($log) ?></li>
                     <?php endforeach ?>
                 </ul>
             <?php endif ?>

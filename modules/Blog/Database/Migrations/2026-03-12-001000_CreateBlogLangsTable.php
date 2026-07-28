@@ -8,6 +8,11 @@ class CreateBlogLangsTable extends Migration
 {
     public function up()
     {
+        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
+        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
+        // söylemesin diye önce sıfırlanır.
+        $this->db->resetDataCache();
+
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
@@ -79,6 +84,8 @@ class CreateBlogLangsTable extends Migration
 
     public function down()
     {
+        $this->db->resetDataCache();
+
         // Re-add dropped columns
         if (!$this->db->fieldExists('title', 'blog')) {
             $this->forge->addColumn('blog', [
