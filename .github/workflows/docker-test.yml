@@ -121,8 +121,7 @@ jobs:
 
       - name: 🧪 Run PHPUnit tests (if available)
         run: |
-          docker exec ci4ms_app vendor/bin/phpunit --no-coverage 2>/dev/null \
-            || echo "⚠️ No tests defined or tests skipped."
+          docker exec ci4ms_app vendor/bin/phpunit --no-coverage
 
       - name: 📋 Show container logs on failure
         if: failure()

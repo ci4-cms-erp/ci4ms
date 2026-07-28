@@ -81,6 +81,16 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         return $this->response->setJSON(['content' => file_get_contents($fullPath)]);
     }
 
+    private function triggerFileevent($path, $action)
+    {
+        \CodeIgniter\Events\Events::trigger('ci4ms.audit', [
+            'severity' => 'warning',
+            'action' => 'fileeditor.' . $action,
+            'message' => sprintf('%s dosyası %s tarafından düzenlendi', $path, auth()->user()->username),
+            'url' => base_url('backend/fileeditor'),
+        ]);
+    }
+
     public function saveFile()
     {
         $valData = ([
@@ -106,6 +116,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
         if (file_put_contents($fullPath, $content) === false)
             return $this->response->setJSON(['error' => lang('Backend.notUpdated', [''])])->setStatusCode(500);
+        $this->triggerFileevent($fullPath, 'write');
         return $this->response->setJSON(['success' => true]);
     }
 
@@ -142,10 +153,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
         if (!$fullPath || !file_exists($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
-        if (rename($fullPath, $newPath))
+        if (rename($fullPath, $newPath)) {
+            $this->triggerFileevent($newPath, 'rename');
             return $this->response->setJSON(['success' => true]);
-        else
-            return $this->response->setJSON(['error' => lang('Fileeditor.renameFailed')])->setStatusCode(500);
+        }
+        return $this->response->setJSON(['error' => lang('Fileeditor.renameFailed')])->setStatusCode(500);
     }
 
     public function createFile()
@@ -178,10 +190,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if (file_exists($newFilePath))
             return $this->response->setJSON(['error' => lang('Fileeditor.fileAlreadyExists')])->setStatusCode(409);
 
-        if (file_put_contents($newFilePath, '') !== false)
+        if (file_put_contents($newFilePath, '') !== false) {
+            $this->triggerFileevent($newFilePath, 'create');
             return $this->response->setJSON(['success' => true]);
-        else
-            return $this->response->setJSON(['error' => lang('Backend.notCreated', [''])])->setStatusCode(500);
+        }
+        return $this->response->setJSON(['error' => lang('Backend.notCreated', [''])])->setStatusCode(500);
     }
 
     public function createFolder()
@@ -202,10 +215,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
 
         $newFolderPath = $fullPath . DIRECTORY_SEPARATOR . $name;
 
-        if (mkdir($newFolderPath))
+        if (mkdir($newFolderPath)) {
+            $this->triggerFileevent($newFolderPath, 'create');
             return $this->response->setJSON(['success' => true]);
-        else
-            return $this->response->setJSON(['error' => lang('Backend.notCreated', [$newFolderPath])])->setStatusCode(500);
+        }
+        return $this->response->setJSON(['error' => lang('Backend.notCreated', [$newFolderPath])])->setStatusCode(500);
     }
 
     public function deleteFileOrFolder()
@@ -235,10 +249,11 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
             $result = unlink($fullPath);
         }
 
-        if ($result)
+        if ($result) {
+            $this->triggerFileevent($fullPath, 'delete');
             return $this->response->setJSON(['success' => true]);
-        else
-            return $this->response->setJSON(['error' => lang('Fileeditor.folderNotEmpty')])->setStatusCode(500);
+        }
+        return $this->response->setJSON(['error' => lang('Fileeditor.folderNotEmpty')])->setStatusCode(500);
     }
 
     private function allowedFileTypes(string $file): bool
