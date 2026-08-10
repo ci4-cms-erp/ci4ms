@@ -72,6 +72,8 @@ writable/geoip/*
 writable/tmp/*
 !writable/tmp/index.html
 
+writable/locks/*
+
 php_errors.log
 
 #-------------------------
@@ -165,6 +167,34 @@ tests/Modules/Settings/*
 !tests/Modules/Media/
 tests/Modules/Media/*
 !tests/Modules/Media/*Test.php
+# Fileeditor write-allowlist (BLOKER-2) regression locks.
+!tests/Modules/Fileeditor/
+tests/Modules/Fileeditor/*
+!tests/Modules/Fileeditor/*Test.php
+# Users permgroup privilege-escalation (BLOKER-1) regression locks.
+!tests/Modules/Users/
+tests/Modules/Users/*
+!tests/Modules/Users/*Test.php
+# Methods ModuleInstaller namespace regression locks.
+!tests/Modules/Methods/
+tests/Modules/Methods/*
+!tests/Modules/Methods/*Test.php
+# Notifications realtime/composer/preference test-infrastructure locks.
+!tests/Modules/Notifications/
+tests/Modules/Notifications/*
+!tests/Modules/Notifications/*Test.php
+# MigrationManager modul/seed regression locks.
+!tests/Modules/MigrationManager/
+tests/Modules/MigrationManager/*
+!tests/Modules/MigrationManager/*Test.php
+# Auth unique-key migration (IP-3/Gorev 10) regression locks.
+!tests/Modules/Auth/
+tests/Modules/Auth/*
+!tests/Modules/Auth/*Test.php
+# ci4ms:migrate command regression locks.
+!tests/Modules/Backend/
+tests/Modules/Backend/*
+!tests/Modules/Backend/*Test.php
 !tests/_support/
 tests/_support/*
 !tests/_support/Settings/
@@ -172,6 +202,28 @@ tests/_support/*
 # debugging must never become committable.
 tests/_support/Settings/*
 !tests/_support/Settings/*.php
+!tests/_support/Fileeditor/
+tests/_support/Fileeditor/*
+!tests/_support/Fileeditor/*.php
+!tests/_support/Methods/
+tests/_support/Methods/*
+!tests/_support/Methods/*.php
+!tests/_support/Methods/FixtureModule/
+tests/_support/Methods/FixtureModule/*
+!tests/_support/Methods/FixtureModule/Database/
+tests/_support/Methods/FixtureModule/Database/*
+!tests/_support/Methods/FixtureModule/Database/Migrations/
+tests/_support/Methods/FixtureModule/Database/Migrations/*
+!tests/_support/Methods/FixtureModule/Database/Migrations/*.php
+!tests/_support/Notifications/
+tests/_support/Notifications/*
+!tests/_support/Notifications/*.php
+# Feature-level regression suites (Install/Security/Media) were pre-existing
+# on disk but never whitelisted since tests/* was added: entire directory was
+# git-invisible (git ls-files returned empty), same defect class as BLOKER-A.
+!tests/Feature/
+tests/Feature/*
+!tests/Feature/*Test.php
 phpunit.xml.dist
 node_modules
 .security-audit

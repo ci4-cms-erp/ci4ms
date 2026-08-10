@@ -6,70 +6,124 @@ use CodeIgniter\Shield\Entities\User;
 
 class InstallService
 {
+    /**
+     * Kurulumda eksik olan varsayılan veriyi tamamlar (idempotent, "eksik
+     * olanı tamamla" semantiği).
+     *
+     * Eski tasarımda TEK bir `count('pages') > 0` kapısı hem İÇERİK
+     * (pages/pages_langs/blog/menu/languages/settings) hem KİMLİK
+     * (auth_groups/auth_groups_users) yazımını aynı anda atlıyordu; içerik
+     * zaten varken kimlik eksikse hiç kurulmuyordu. Bu metotta her blok
+     * KENDİ tablosuna bakan ayrı bir guard ile korunur:
+     *
+     * - superadmin grubu    -> `auth_groups`      (group=superadmin)
+     * - superadmin kullanıcı-> `auth_groups_users` (group=superadmin), ayrı
+     *   guard -- grup bloğuyla birleştirilmez (biri var diye diğeri
+     *   atlanırsa kimlik yarım kalır veya unique(group) ihlali riski doğar)
+     * - izin taraması       -> yukarıdaki iki bloktan biri bu çağrıda
+     *   GERÇEKTEN yeni satır yazdıysa tetiklenir (`ModuleScanner::runScan()`
+     *   `auth_permissions_pages`'i silip yeniden dolduruyor; zaten kurulu
+     *   bir kimliğe karşı gereksiz/riskli tam-tarama yapılmaz)
+     * - diller              -> `languages`
+     * - sayfalar+sayfa dili -> `pages` (TEK guard; `pages_langs` FK'lı
+     *   insertId'lerle bağlı olduğu için ayrıştırılmaz)
+     * - blog                -> `blog`
+     * - menü                -> `menu` (+ null id guard'ı)
+     * - ayarlar             -> `settings`
+     *
+     * `pages` zaten doluyken (sayfa bloğu atlanınca) `$homePageId`/
+     * `$contactPageId` `resolveExistingPageIds()` ile çözülür; `menu` ve
+     * `settings` blokları bu değerlere ihtiyaç duyar.
+     *
+     * @param array $args Kurulum formu/CLI alanları: `fname`, `sname`,
+     *                     `username`, `email`, `password`, `siteName`,
+     *                     `slogan` (opsiyonel), `geoLookup` (opsiyonel).
+     *
+     * @return void
+     */
     public function createDefaultData(array $args)
     {
         $commonModel = new \ci4commonmodel\CommonModel();
-        $commonModel->create('auth_groups', [
-            "group" => "superadmin",
-            "description" => "superadmin"
-        ]);
 
-        $users = auth()->getProvider();
-        $user = new User([
-            'firstname' => $args['fname'],
-            'surname'   => $args['sname'],
-            'username'  => $args['username'],
-            'email'     => $args['email'],
-            'password'  => $args['password'],
-            'active'    => 1
-        ]);
-
-        if ($users->save($user)) {
-            $userId = $users->getInsertID();
-            $commonModel->create('auth_groups_users', [
-                'user_id'    => $userId,
-                'group'      => 'superadmin',
-                'created_at' => date('Y-m-d H:i:s')
+        // Kimlik -- superadmin grubu.
+        $superadminGroupExists = $commonModel->count('auth_groups', ['group' => 'superadmin']) > 0;
+        if (!$superadminGroupExists) {
+            $commonModel->create('auth_groups', [
+                "group" => "superadmin",
+                "description" => "superadmin"
             ]);
         }
 
-        // Modülleri ve sistem rotalarını dinamik olarak klasör ve Config yapılarından tara
-        $scanner = new \Modules\Methods\Libraries\ModuleScanner();
-        $scanner->runScan();
+        // Kimlik -- superadmin kullanıcı bağlantısı. Grup bloğundan AYRI
+        // guard'lı: biri eksikken diğeri sessizce atlanmasın.
+        $superadminUserLinked = $commonModel->count('auth_groups_users', ['group' => 'superadmin']) > 0;
+        if (!$superadminUserLinked) {
+            $users = auth()->getProvider();
+            $user = new User([
+                'firstname' => $args['fname'],
+                'surname'   => $args['sname'],
+                'username'  => $args['username'],
+                'email'     => $args['email'],
+                'password'  => $args['password'],
+                'active'    => 1
+            ]);
 
-        $commonModel->createMany('languages',[
-            [
-                'code'        => 'tr',
-                'name'        => 'Türkçe',
-                'native_name' => 'tr',
-                'flag'        => 'fi fi-tr',
-                'direction'   => 'ltr',
-                'is_default'  => 0,
-                'is_active'   => 1,
-                'is_frontend' => 1,
-                'sort_order'  => 1
-            ],
-            [
-                'code'        => 'en',
-                'name'        => 'English',
-                'native_name' => 'gb',
-                'flag'        => 'fi fi-gb',
-                'direction'   => 'ltr',
-                'is_default'  => 1,
-                'is_active'   => 1,
-                'is_frontend' => 1,
-                'sort_order'  => 0
-            ],
-        ]);
+            if ($users->save($user)) {
+                $userId = $users->getInsertID();
+                $commonModel->create('auth_groups_users', [
+                    'user_id'    => $userId,
+                    'group'      => 'superadmin',
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+        }
 
-        $commonModel->createMany('pages', [
-            ['id' => 1, 'isActive' => 1, 'inMenu' => 1],
-            ['id' => 2, 'isActive' => 1, 'inMenu' => 1],
-        ]);
+        // İzin taraması -- yalnız yukarıdaki iki bloktan biri bu çağrıda
+        // GERÇEKTEN yeni bir satır yazdıysa tetiklenir. Modülleri ve sistem
+        // rotalarını dinamik olarak klasör ve Config yapılarından tarar.
+        if (!$superadminGroupExists || !$superadminUserLinked) {
+            $scanner = new \Modules\Methods\Libraries\ModuleScanner();
+            $scanner->runScan();
+        }
+
+        // İçerik -- diller.
+        if ($commonModel->count('languages') === 0) {
+            $commonModel->createMany('languages',[
+                [
+                    'code'        => 'tr',
+                    'name'        => 'Türkçe',
+                    'native_name' => 'tr',
+                    'flag'        => 'fi fi-tr',
+                    'direction'   => 'ltr',
+                    'is_default'  => 0,
+                    'is_active'   => 1,
+                    'is_frontend' => 1,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'en',
+                    'name'        => 'English',
+                    'native_name' => 'gb',
+                    'flag'        => 'fi fi-gb',
+                    'direction'   => 'ltr',
+                    'is_default'  => 1,
+                    'is_active'   => 1,
+                    'is_frontend' => 1,
+                    'sort_order'  => 0
+                ],
+            ]);
+        }
+
+        // İçerik -- sayfalar + sayfa dilleri. TEK guard: `pages_langs`
+        // ayrıştırılırsa `$homePageId`/`$contactPageId` insertId'leriyle
+        // FK bağlantısı yarım/eşleşmeyen dil satırı riski doğurur.
+        if ($commonModel->count('pages') === 0) {
+        $homePageId    = $commonModel->create('pages', ['isActive' => 1, 'inMenu' => 1]);
+        $contactPageId = $commonModel->create('pages', ['isActive' => 1, 'inMenu' => 1]);
 
         $commonModel->createMany('pages_langs', [
             [
-                'pages_id' => 1,
+                'pages_id' => $homePageId,
                 'lang' => 'en',
                 'title' => 'The Future of Modular Management',
                 'seflink' => 'homepage',
@@ -102,7 +156,7 @@ class InstallService
                 'seo' => json_encode(['description' => 'CI4MS Homepage'])
             ],
             [
-                'pages_id' => 1,
+                'pages_id' => $homePageId,
                 'lang' => 'tr',
                 'title' => 'Modüler Yönetimin Geleceği',
                 'seflink' => 'anasayfa',
@@ -135,7 +189,7 @@ class InstallService
                 'seo' => json_encode(['description' => 'CI4MS Anasayfa'])
             ],
             [
-                'pages_id' => 2,
+                'pages_id' => $contactPageId,
                 'lang' => 'en',
                 'title' => 'Contact Us',
                 'seflink' => 'contact',
@@ -151,7 +205,7 @@ class InstallService
                 'seo' => json_encode(['description' => 'Contact CI4MS'])
             ],
             [
-                'pages_id' => 2,
+                'pages_id' => $contactPageId,
                 'lang' => 'tr',
                 'title' => 'İletişim',
                 'seflink' => 'iletisim',
@@ -167,8 +221,12 @@ class InstallService
                 'seo' => json_encode(['description' => 'CI4MS İletişim'])
             ]
         ]);
+        } else {
+            [$homePageId, $contactPageId] = $this->resolveExistingPageIds($commonModel);
+        }
 
-        // 5. Blog Posts
+        // İçerik -- blog.
+        if ($commonModel->count('blog') === 0) {
         $blogs = [
             [
                 'en' => ['title' => 'Why Modular Architecture is the Future', 'slug' => 'modular-architecture-future', 'summary' => 'Explore the benefits of modular design in software development.'],
@@ -203,13 +261,20 @@ class InstallService
                 'seo' => json_encode(['description' => $b['tr']['summary']])
             ]);
         }
+        }
 
+        // İçerik -- menü. `$homePageId`/`$contactPageId` çözülemediyse
+        // (aşırı uç, savunma) bozuk FK yazılmaz.
+        if ($commonModel->count('menu') === 0 && $homePageId !== null && $contactPageId !== null) {
         $commonModel->createMany('menu', [
-            ['title' => 'Frontend.home', 'seflink' => '/',       'queue' => 1, 'urlType' => 'pages', 'pages_id' => 1],
+            ['title' => 'Frontend.home', 'seflink' => '/',       'queue' => 1, 'urlType' => 'pages', 'pages_id' => $homePageId],
             ['title' => 'Frontend.blog', 'seflink' => 'blog',    'queue' => 2, 'urlType' => 'url',   'pages_id' => null],
-            ['title' => 'Frontend.contact', 'seflink' => 'contact', 'queue' => 3, 'urlType' => 'pages', 'pages_id' => 2]
+            ['title' => 'Frontend.contact', 'seflink' => 'contact', 'queue' => 3, 'urlType' => 'pages', 'pages_id' => $contactPageId]
         ]);
+        }
 
+        // İçerik -- ayarlar.
+        if ($commonModel->count('settings') === 0) {
         $encrypter = \Config\Services::encrypter();
         $now       = date('Y-m-d H:i:s');
         $settings  = array(
@@ -222,7 +287,7 @@ class InstallService
                 array('class' => 'Gmap', 'key' => 'map_iframe', 'value' => NULL, 'type' => 'NULL', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'slogan', 'value' => $args['slogan']??'My First Ci4MS Project', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'maintenanceMode', 'value' => '0', 'type' => 'boolean', 'context' => NULL),
-                array('class' => 'Config\\App', 'key' => 'homePage', 'value' => 1, 'type' => 'integer', 'context' => NULL),
+                array('class' => 'Config\\App', 'key' => 'homePage', 'value' => $homePageId, 'type' => 'integer', 'context' => NULL),
                 array('class' => 'Config\\App', 'key' => 'siteLanguageMode', 'value' => 'single', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\Security', 'key' => 'allowedFiles', 'value' => '["image\\/x-ms-bmp","image\\/gif","image\\/jpeg","image\\/png","image\\/x-icon","text\\/plain","image\\/webp"]', 'type' => 'string', 'context' => NULL),
                 array('class' => 'Config\\Security', 'key' => 'badwords', 'value' => '{"status": 1, "autoReject": 0, "autoAccept": 1, "list": []}', 'type' => 'string', 'context' => NULL),
@@ -239,5 +304,38 @@ class InstallService
             static fn (array $row): array => $row + ['created_at' => $now, 'updated_at' => $now],
             $settings
         ));
+        }
+    }
+
+    /**
+     * `pages` tablosu zaten doluyken (sayfa bloğu atlandığında) ana sayfa /
+     * iletişim sayfası ID'lerini çözer. `menu` ve `settings` blokları bu
+     * ID'lere ihtiyaç duyar.
+     *
+     * Önce `menu` tablosundaki bilinen başlıkları (`Frontend.home` /
+     * `Frontend.contact`) dener; bulunamazsa `pages_langs.seflink`
+     * (`homepage`/`anasayfa`, `contact`/`iletisim`) üzerinden fallback yapar.
+     * İkisi de bulunamazsa `null` döner -- çağıran taraf (menü/ayarlar
+     * blokları) buna göre davranır, bu yeni bir regresyon değildir: eski
+     * davranışta da bu ID'lerin var olduğu varsayılıyordu.
+     *
+     * @param \ci4commonmodel\CommonModel $commonModel
+     *
+     * @return array{0: int|null, 1: int|null} [$homePageId, $contactPageId]
+     */
+    private function resolveExistingPageIds(\ci4commonmodel\CommonModel $commonModel): array
+    {
+        $homePageId = $commonModel->selectOne('menu', ['title' => 'Frontend.home'])?->pages_id
+            ?? $commonModel->selectOne('pages_langs', ['seflink' => 'homepage'])?->pages_id
+            ?? $commonModel->selectOne('pages_langs', ['seflink' => 'anasayfa'])?->pages_id;
+
+        $contactPageId = $commonModel->selectOne('menu', ['title' => 'Frontend.contact'])?->pages_id
+            ?? $commonModel->selectOne('pages_langs', ['seflink' => 'contact'])?->pages_id
+            ?? $commonModel->selectOne('pages_langs', ['seflink' => 'iletisim'])?->pages_id;
+
+        return [
+            $homePageId !== null ? (int) $homePageId : null,
+            $contactPageId !== null ? (int) $contactPageId : null,
+        ];
     }
 }

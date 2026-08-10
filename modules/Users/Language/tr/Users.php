@@ -68,4 +68,8 @@
     'cannotDeleteSuperadmin' => 'Superadmin kullanıcıları silinemez.',
     'currentPassword' => 'Mevcut Şifre',
     'currentPasswordWrong' => 'Girdiğiniz mevcut şifre hatalı.',
+    'superadminGroupProtected' => 'Superadmin grubu yeniden adlandırılamaz veya değiştirilemez.',
+    'groupNameConflict' => 'Bu grup adı zaten kullanılıyor.',
+    'cannotEditOwnGroupName' => 'Şu anda içinde bulunduğunuz grubun adını değiştiremezsiniz.',
+    'permsExceedOwnGrant' => 'Kendinizde olmayan bir izni başka bir gruba veremezsiniz.',
 ];

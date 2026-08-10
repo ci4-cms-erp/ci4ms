@@ -32,6 +32,17 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
         return view('Modules\Users\Views\permGroup\list', $this->defData);
     }
 
+    /**
+     * Creates a new permission group from POST data, or renders the create form on GET.
+     *
+     * `is_unique[auth_groups.group]` in $valData only validates the raw POST
+     * value; the persisted value is esc(seflink($groupName)), so a raw value
+     * that does not collide can still collide once transformed. Both the
+     * "superadmin" name and post-transform uniqueness are re-checked here
+     * against the transformed value before the row is written.
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface|string Redirect on POST, rendered view on GET
+     */
     public function group_create()
     {
         if ($this->request->is('post')) {
@@ -45,14 +56,31 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             if ($this->validate($valData) === false)
                 return redirect()->route('group_create')->withInput()->with('errors', $this->validator->getErrors());
 
+            $newGroup = esc(seflink($this->request->getPost('groupName')));
+
+            if ($newGroup === 'superadmin')
+                return redirect()->route('group_create')->withInput()->with('errors', lang('Users.superadminGroupProtected'));
+
+            if ($this->commonModel->count('auth_groups', ['group' => $newGroup]) > 0)
+                return redirect()->route('group_create')->withInput()->with('errors', lang('Users.groupNameConflict'));
+
             $data = [
-                'group' => esc(seflink($this->request->getPost('groupName'))),
+                'group' => $newGroup,
                 'description' => esc($this->request->getPost('description')),
                 'redirect' => esc($this->request->getPost('seflink')),
                 'who_created' => user_id()
             ];
 
+            $pageMap = $this->getPageNameMap();
+
+            if (!auth()->user()->inGroup('superadmin') && !$this->actorGrantsSubsetOfOwnPermissions($pageMap, $this->request->getPost('perms')))
+                return redirect()->route('group_create')->withInput()->with('errors', lang('Users.permsExceedOwnGrant'));
+
+            $permissions = [];
             foreach ($this->request->getPost('perms') as $key => $perm) {
+                if (!isset($pageMap[$key]))
+                    continue;
+
                 $roles = explode('|', $perm['roles']);
                 $permissions[] = [
                     'page_id' => $key,
@@ -77,6 +105,21 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
 
     }
 
+    /**
+     * Updates an existing permission group from POST data, or renders the update form on GET.
+     *
+     * Guards (in order) close BLOKER-1 (privilege escalation via group
+     * rename): the target group must exist (G1), neither the target group
+     * nor the transformed new name may be/become "superadmin" (G2/G3), a
+     * genuine rename may not collide with another group's transformed name
+     * (G4), and an actor may not rename a group they currently belong to
+     * (G5). G4/G5 are gated on the name actually changing so that editing a
+     * group's description/permissions without renaming it never trips them.
+     *
+     * @param int $id auth_groups.id of the group being updated
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface|string Redirect on POST, rendered view on GET
+     */
     public function group_update($id)
     {
         if ($this->request->is('post')) {
@@ -89,18 +132,36 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
 
             if ($this->validate($valData) === false)
                 return redirect()->route('group_update', [$id])->withInput()->with('errors', $this->validator->getErrors());
-            $oldGroupName = $this->commonModel->selectOne('auth_groups', ['id' => $id], 'group')->group;
-            if (esc(seflink($this->request->getPost('groupName'))) != $oldGroupName) {
-                $this->commonModel->edit('auth_groups_users', ['group' => esc(seflink($this->request->getPost('groupName')))], ['group' => $oldGroupName]);
-            }
-            $data = [
-                'group' => esc(seflink($this->request->getPost('groupName'))),
-                'description' => esc($this->request->getPost('description')),
-                'redirect' => esc($this->request->getPost('seflink')),
-                'who_created' => user_id()
-            ];
 
+            $group = $this->commonModel->selectOne('auth_groups', ['id' => $id]);
+            if ($group === null)
+                return $this->showError(404);
+
+            if ($group->group === 'superadmin')
+                return $this->failForbidden(lang('Users.superadminGroupProtected'));
+
+            $oldGroupName = $group->group;
+            $newGroup = esc(seflink($this->request->getPost('groupName')));
+
+            if ($newGroup === 'superadmin')
+                return $this->failForbidden(lang('Users.superadminGroupProtected'));
+
+            if ($newGroup !== $oldGroupName && $this->commonModel->count('auth_groups', ['group' => $newGroup]) > 0)
+                return $this->failForbidden(lang('Users.groupNameConflict'));
+
+            if ($newGroup !== $oldGroupName && auth()->user()->inGroup($oldGroupName))
+                return $this->failForbidden(lang('Users.cannotEditOwnGroupName'));
+
+            $pageMap = $this->getPageNameMap();
+
+            if (!auth()->user()->inGroup('superadmin') && !$this->actorGrantsSubsetOfOwnPermissions($pageMap, $this->request->getPost('perms')))
+                return $this->failForbidden(lang('Users.permsExceedOwnGrant'));
+
+            $permissions = [];
             foreach ($this->request->getPost('perms') as $key => $perm) {
+                if (!isset($pageMap[$key]))
+                    continue;
+
                 $roles = explode('|', $perm['roles']);
                 $permissions[] = [
                     'page_id' => $key,
@@ -113,9 +174,37 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
                 ];
             }
 
-            $data['permissions'] = json_encode($permissions, JSON_UNESCAPED_UNICODE);
-            if ($this->commonModel->edit('auth_groups', $data, ['id' => $id])) {
+            $data = [
+                'group' => $newGroup,
+                'description' => esc($this->request->getPost('description')),
+                'redirect' => esc($this->request->getPost('seflink')),
+                'who_created' => user_id(),
+                'permissions' => json_encode($permissions, JSON_UNESCAPED_UNICODE)
+            ];
+
+            // BLOKER-B: the perms[] subset guard above must run before any
+            // write -- it used to run after the auth_groups_users rename
+            // below, so a request it went on to reject had already relinked
+            // real members of this group to a name auth_groups never got
+            // (see context.md BLOKER-B). The rename and the auth_groups
+            // update are wrapped in one transaction so a mid-way failure
+            // can't leave members pointed at a group row that was never
+            // written either.
+            $this->commonModel->db->transStart();
+
+            if ($newGroup !== $oldGroupName) {
+                $this->commonModel->edit('auth_groups_users', ['group' => $newGroup], ['group' => $oldGroupName]);
+            }
+            $editResult = $this->commonModel->edit('auth_groups', $data, ['id' => $id]);
+
+            $this->commonModel->db->transComplete();
+
+            if ($editResult && $this->commonModel->db->transStatus()) {
                 cache()->delete("shield_auth_dynamic_config");
+                foreach ($this->commonModel->lists('users', 'id') as $u) {
+                    cache()->delete("{$u->id}_permissions");
+                }
+                cache()->deleteMatching('backend_page_info_*');
                 return redirect()->route('groupList')->with('message', lang('Backend.updated', [$this->request->getPost('groupName')]));
             } else
                 return redirect()->route('group_update', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('groupName')]));
@@ -126,6 +215,75 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
         $this->defData['perms'] = json_decode($this->defData['group_name']->permissions ?? '', true) ?? [];
         return view('Modules\Users\Views\permGroup\update', $this->defData);
 
+    }
+
+    /**
+     * Builds an auth_permissions_pages.id => lowercase pagename map.
+     *
+     * Single source of truth for "which page_ids currently exist", shared by
+     * actorGrantsSubsetOfOwnPermissions() and the perms[] write loops in
+     * group_create()/group_update(). Before this method existed, the write
+     * loops persisted every posted page_id unconditionally regardless of
+     * whether actorGrantsSubsetOfOwnPermissions() recognized it, so an
+     * unknown (not-yet-existing) page_id sailed through the subset guard
+     * (nothing to check against) and was written to auth_groups.permissions
+     * anyway -- see context.md F-1. Callers must call this once per request
+     * and pass the result to both the guard and the write loop; it must not
+     * be queried again inside a loop (N+1).
+     *
+     * @return array<int, string> auth_permissions_pages.id => lowercase pagename
+     */
+    private function getPageNameMap(): array
+    {
+        $pageMap = [];
+        foreach ($this->commonModel->lists('auth_permissions_pages') as $page) {
+            $pageMap[$page->id] = strtolower($page->pagename);
+        }
+
+        return $pageMap;
+    }
+
+    /**
+     * Checks that every page-permission the actor posted in perms[] is a
+     * subset of the actor's own effective permission set.
+     *
+     * Closes the HIGH-severity gap left after BLOKER-1 (superadmin rename
+     * guard, see FAZ2-K2 in context.md): without this, an actor holding only
+     * users.group_create.create / users.group_update.update could grant any
+     * page permission -- including ones they do not themselves hold -- to
+     * any group. Callers must skip this check for superadmin (superadmin is
+     * exempt from the subset rule and may grant anything); this method does
+     * not check inGroup('superadmin') itself. Uses auth()->user()->can(),
+     * not getPermissions(), because most actors' access comes from their
+     * group's permission matrix rather than a direct per-user grant --
+     * getPermissions() alone would reject legitimate subset submissions.
+     * Unknown page_id keys (not present in $pageMap) are skipped silently,
+     * mirroring user_perms():~256-257 -- the perms[] write loops in
+     * group_create()/group_update() apply the identical skip against the
+     * same $pageMap so an unknown page_id can never be persisted either
+     * (see context.md F-1; getPageNameMap()'s docblock).
+     *
+     * @param array<int, string>                      $pageMap     auth_permissions_pages.id => lowercase pagename, from getPageNameMap()
+     * @param array<int|string, array{roles: string}> $postedPerms Raw perms[] POST payload (page_id => ['roles' => 'role_r|role_r'])
+     *
+     * @return bool True if every requested action maps to a permission string the actor already has
+     */
+    private function actorGrantsSubsetOfOwnPermissions(array $pageMap, array $postedPerms): bool
+    {
+        $roleActionMap = ['create_r' => 'create', 'read_r' => 'read', 'update_r' => 'update', 'delete_r' => 'delete'];
+
+        foreach ($postedPerms as $key => $perm) {
+            if (!isset($pageMap[$key]))
+                continue;
+
+            $roles = explode('|', $perm['roles']);
+            foreach ($roleActionMap as $roleKey => $action) {
+                if (in_array($roleKey, $roles, true) && !auth()->user()->can($pageMap[$key] . '.' . $action))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     public function user_perms(int $id)
