@@ -202,7 +202,7 @@
     echo script_tag("be-assets/js/adminlte.min.js");
     echo script_tag("be-assets/plugins/sweetalert2/sweetalert2.min.js"); ?>
     <script type="text/javascript" <?php echo csp_script_nonce(); ?>>
-        window.CI4MS_LOCALE = '<?php echo env('app.defaultLocale', 'tr') ?>';
+        window.CI4MS_LOCALE = '<?php echo service('language')->getLocale() ?>';
         window.CI4MS_IDLE_ENABLED = <?php echo (setting('Auth.idleTimeoutEnabled') !== false) ? 'true' : 'false' ?>;
         window.CI4MS_IDLE_MINUTES = <?php echo (int) (setting('Auth.idleTimeoutMinutes') ?: 15) ?>;
     </script>

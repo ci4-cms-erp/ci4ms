@@ -20,6 +20,9 @@ class ModuleInstaller
     /**
      * Run pending migrations for a specific module.
      *
+     * `migrated` reflects migrations actually applied — a getHistory() diff
+     * taken before/after latest() — not the on-disk migration file count.
+     *
      * @param string $moduleName The module folder name (e.g. 'Cronjobs', 'Blog')
      *
      * @return array{success: bool, migrated: int, error: string|null}
@@ -33,18 +36,31 @@ class ModuleInstaller
         }
 
         try {
+            // Non-shared instance: Services::migrations() defaults to a shared
+            // MigrationRunner, and setNamespace() would leak into every other
+            // caller of that shared instance. rollbackModuleMigrations() below
+            // works around this with a finally-block reset; a fresh instance
+            // here avoids needing the same workaround.
             /** @var MigrationRunner $migrate */
-            $migrate = Services::migrations();
+            $migrate = Services::migrations(null, null, false);
 
-            // Add the module's migration namespace so the runner can discover it
-            $namespace = 'Modules\\' . $moduleName . '\\Database\\Migrations';
+            // The PSR-4 prefix actually registered for every module is
+            // `Modules\{Name}` (app/Config/Autoload.php:106) — not a
+            // `\Database\Migrations`-suffixed string. FileLocator's namespace
+            // lookup is an exact-key match, so the wrong prefix silently
+            // discovers zero migrations.
+            $namespace = 'Modules\\' . $moduleName;
 
-            // Run migrations for this specific namespace
-            $migrate->setNamespace($namespace)->latest();
+            $migrate->setNamespace($namespace);
 
-            // Count how many migration files exist
-            $files = glob($migrationPath . '/*.php');
-            $migrated = is_array($files) ? count($files) : 0;
+            // latest() itself resolves "already applied" via getHistory('')
+            // (group-agnostic, namespace-scoped — MigrationRunner::latest()
+            // passes (string) null through). Mirror that here so the
+            // before/after diff reflects what was genuinely applied instead
+            // of an on-disk file count.
+            $before  = count($migrate->getHistory(''));
+            $migrate->latest();
+            $migrated = count($migrate->getHistory('')) - $before;
 
             return ['success' => true, 'migrated' => $migrated, 'error' => null];
         } catch (\Throwable $e) {
@@ -187,7 +203,7 @@ class ModuleInstaller
 
         /** @var \CodeIgniter\Database\MigrationRunner $migrate */
         $migrate = Services::migrations();
-        $namespace = 'Modules\\' . $moduleName . '\\Database\\Migrations';
+        $namespace = 'Modules\\' . $moduleName;
 
         try {
             $migrate->setNamespace($namespace);

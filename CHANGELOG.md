@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) conventions adapted to the existing four-component version numbers.
 
+## [Unreleased]
+
+### Fixed
+
+- **`ci4ms:migrate` Retained and Hardened (Non-Shared Runner, Non-Zero Exit, Audit Trail):** A review flagged `php spark ci4ms:migrate` (`modules/Backend/Commands/Ci4msMigrate.php`) as redundant with the stock `migrate --all` and proposed removing it; that proposal was rejected and the command was fixed instead. It now builds its own non-shared `MigrationRunner` (`Services::migrations(null, null, false)`) instead of mutating the shared instance other callers (`ci4ms:setup`, the web `MigrationManager`) rely on, blocks SIGINT/SIGTERM/SIGHUP for the duration of the run (`withSignalsBlocked()`, matching the stock command's behavior), reports what was actually applied by diffing `getHistory()` before/after `latest()` instead of assuming success, surfaces the framework's automatic `regress(-1)` rollback on failure explicitly instead of leaving it implicit, and now returns `EXIT_ERROR` on failure instead of always exiting `0`. Every run also writes an audit row to `migration_runs` (`run_source='cli'`, sentinel `target='*'` for the whole-namespace run), so command-line migrations show up in the same superadmin run history as web-panel runs. `migration_runs` gained a `run_source ENUM('web','cli') NOT NULL DEFAULT 'web'` column so those CLI rows render as "Command line (CLI)" in the panel instead of the misleading "Deleted user" label a bare NULL `run_by` previously produced.
+
+- **CI No Longer Masks a Failed `ci4ms:setup`:** `ci4ms:setup` (`modules/Backend/Commands/Ci4msSetup.php`) returned no exit code on any of its error branches, so a failed setup (bad `.env` write, migration error, seed failure, …) still exited `0`. `.github/workflows/docker-test.yml` compounded this by printing an unconditional "✅ Setup completed." after the `docker exec` call regardless of its result. `run()` now returns `EXIT_ERROR` on every failure branch and `EXIT_SUCCESS` at the end, and the workflow step checks the exit code before printing success, `exit 1`-ing on failure — a broken setup now fails the CI job instead of reporting green.
+
 ## [0.35.0.0] - 2026-07-28
 
 ### Added

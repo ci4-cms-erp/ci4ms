@@ -169,6 +169,7 @@ See `docs/architecture.md` for deeper architectural notes.
 | `php spark make:abview dashboard` | Generate a backend view from the AdminLTE template |
 | `php spark create:route` | Rebuild `app/Config/Routes.php` from the template |
 | `php spark migrate --all` | Run all pending migrations across modules |
+| `php spark ci4ms:migrate` | Same as `migrate --all`, plus a `migration_runs` audit row (`run_source='cli'`) for the superadmin panel's run history |
 | `php spark cache:clear` | Clear all application caches |
 | `php spark ci4ms:geoip-update` | Download/update the local DB-IP City Lite database for session geo lookup (run monthly via cron) |
 | `php spark ci4ms:release:keygen` | *(publisher only)* Generate an Ed25519 release signing keypair into a password-sealed keyfile |

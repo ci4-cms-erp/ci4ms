@@ -39,7 +39,17 @@ class Ci4msSetup extends BaseCommand
      */
     private bool $nonInteractive = false;
 
-    public function run(array $params)
+    /**
+     * CI4MS kurulum sihirbazını uçtan uca çalıştırır (kullanıcı bilgileri,
+     * veritabanı bağlantısı, migration + seed, admin hesabı, `.env`/routes
+     * yazımı).
+     *
+     * @param array<int|string, string|null> $params
+     *
+     * @return int EXIT_SUCCESS (0) tam kurulum başarılıysa; EXIT_ERROR (1)
+     *              herhangi bir adım başarısız olursa.
+     */
+    public function run(array $params): int
     {
         CLI::write('');
         CLI::write('╔══════════════════════════════════════════╗', 'green');
@@ -52,7 +62,7 @@ class Ci4msSetup extends BaseCommand
         // ─────────────────────────────────────────────────────────────
         if (file_exists(WRITEPATH . 'install.lock')) {
             CLI::error('CI4MS is already installed. Setup aborted.');
-            return;
+            return EXIT_ERROR;
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -166,7 +176,7 @@ class Ci4msSetup extends BaseCommand
             $confirm = CLI::prompt('Everything looks correct? Proceed with installation?', ['y', 'n']);
             if (strtolower($confirm) !== 'y') {
                 CLI::write('Setup cancelled by user.', 'red');
-                return;
+                return EXIT_ERROR;
             }
         }
 
@@ -180,7 +190,7 @@ class Ci4msSetup extends BaseCommand
         if (!file_exists(ROOTPATH . '.env')) {
             if (!$this->copyEnvFile()) {
                 CLI::error('Could not copy env → .env. Aborting.');
-                return;
+                return EXIT_ERROR;
             }
         }
 
@@ -227,7 +237,7 @@ class Ci4msSetup extends BaseCommand
 
         if (!$this->updateEnvSettings($updates)) {
             CLI::error('Failed to update .env settings. Aborting.');
-            return;
+            return EXIT_ERROR;
         }
 
         $this->generateEncryptionKey();
@@ -241,12 +251,28 @@ class Ci4msSetup extends BaseCommand
 
         try {
             $migrate = \Config\Services::migrations();
-            $migrate->setNamespace(null)->latest();
+            $result  = $migrate->setNamespace(null)->latest();
+
+            // Defensive branch: MigrationRunner::latest() only returns
+            // `false` when its internal `$silent` flag is `true`
+            // (vendor/codeigniter4/framework/system/Database/MigrationRunner.php:215-218),
+            // and nothing in this codebase calls `setSilent()`
+            // (`grep -rn "setSilent" modules app tests` -> zero matches).
+            // With the current default (`$silent = false`), `latest()`
+            // instead throws on failure, which the `catch` below already
+            // handles. This check is unreachable today; it stays as a
+            // guard against a future call site enabling `$silent`.
+            if ($result === false) {
+                log_message('error', '[ci4ms:setup] Migration failed: latest() returned false (framework automatically regressed/rolled back the previous batch).');
+                CLI::error('Migration failed: the framework automatically regressed (rolled back) the previous migration batch — schema may now be at an earlier state than before this run.');
+                return EXIT_ERROR;
+            }
+
             CLI::write('  ✓ Migrations completed successfully.', 'green');
         } catch (\Throwable $e) {
             log_message('error', '[ci4ms:setup] Migration failed: ' . $e->getMessage());
             CLI::error('Migration failed: ' . $e->getMessage());
-            return;
+            return EXIT_ERROR;
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -276,7 +302,7 @@ class Ci4msSetup extends BaseCommand
         } catch (\Throwable $e) {
             log_message('error', '[ci4ms:setup] Seed failed: ' . $e->getMessage());
             CLI::error('Default data creation failed: ' . $e->getMessage());
-            return;
+            return EXIT_ERROR;
         }
 
         // ─────────────────────────────────────────────────────────────
@@ -290,7 +316,7 @@ class Ci4msSetup extends BaseCommand
         // ─────────────────────────────────────────────────────────────
         if (!$this->writeRoutesFile()) {
             CLI::error('Failed to write App/Config/Routes.php. Please check permissions.');
-            return;
+            return EXIT_ERROR;
         }
         CLI::write('  ✓ Routes.php updated.', 'green');
 
@@ -308,6 +334,8 @@ class Ci4msSetup extends BaseCommand
         CLI::write("  → Visit your site: {$baseUrl}", 'cyan');
         CLI::write("  → Admin panel  : {$baseUrl}/backend", 'cyan');
         CLI::write('');
+
+        return EXIT_SUCCESS;
     }
 
     // ═════════════════════════════════════════════════════════════════

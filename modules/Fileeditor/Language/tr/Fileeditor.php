@@ -28,4 +28,5 @@ return [
     'fileTypeEditNotAllowed' => 'Bu dosya tipini düzenleyemezsiniz!',
     'confirmDelete' => 'Silme işlemini onaylıyor musunuz?',
     'cspWarning' => 'CodeIgniter 4 CSP (Content Security Policy) açıksa editör düzgün çalışmayabilir.',
+    'writeNotAllowed' => 'Bu konuma yazma işlemine izin verilmiyor. Yalnızca public/templates/ düzenlenebilir.',
 ];

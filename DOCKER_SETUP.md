@@ -130,7 +130,7 @@ docker exec -it ci4ms_app bash
 php spark cache:clear
 
 # Run migrations
-php spark migrate
+php spark migrate --all
 
 # Clear logs
 php spark log:clear

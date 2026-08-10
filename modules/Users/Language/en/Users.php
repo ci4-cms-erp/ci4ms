@@ -69,4 +69,8 @@
     'cannotDeleteSuperadmin' => 'Superadmin users cannot be deleted.',
     'currentPassword' => 'Current Password',
     'currentPasswordWrong' => 'The current password you entered is incorrect.',
+    'superadminGroupProtected' => 'The superadmin group cannot be renamed or reassigned.',
+    'groupNameConflict' => 'This group name is already in use.',
+    'cannotEditOwnGroupName' => 'You cannot rename the group you currently belong to.',
+    'permsExceedOwnGrant' => 'You cannot grant a permission you do not have yourself.',
 ];

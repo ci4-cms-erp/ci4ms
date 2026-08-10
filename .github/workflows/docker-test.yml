@@ -71,15 +71,19 @@ jobs:
 
       - name: 🗄️ Run migrations & seed default data
         run: |
-          docker exec ci4ms_app php spark ci4ms:setup \
+          if docker exec ci4ms_app php spark ci4ms:setup \
             --fname=CI \
             --sname=Test \
             --username=admin \
             --email=admin@ci4ms.test \
             --password=Test1234! \
             --baseUrl=http://localhost/ \
-            --siteName="CI4MS Test"
-          echo "✅ Setup completed."
+            --siteName="CI4MS Test"; then
+            echo "✅ Setup completed."
+          else
+            echo "❌ Setup failed."
+            exit 1
+          fi
 
       - name: 🧹 PHP syntax check
         run: |

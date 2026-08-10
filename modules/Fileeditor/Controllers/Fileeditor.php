@@ -8,10 +8,18 @@ use DirectoryIterator;
 class Fileeditor extends \Modules\Backend\Controllers\BaseController
 {
     protected $allowedExtensions = ['css', 'js', 'html', 'txt', 'json', 'sql', 'md'];
-    protected $coreItems = ['app', 'modules', 'public', 'system', 'vendor', 'index.php', 'spark', 'composer.json', 'composer.lock', '.env', 'env'];
     protected $dangerousExtensionsAllowed = false;
     protected $dangerousExtensions = ['php', 'phtml', 'phar', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'cgi', 'pl', 'asp', 'aspx', 'jsp', 'sh', 'bat', 'exe', 'htaccess'];
     protected $hiddenItems = ['.git', '.github', '.idea', '.vscode', 'node_modules', 'vendor', 'writable', '.env', 'env', 'composer.json', 'composer.lock', 'tests', 'spark', 'phpunit.xml.dist', 'preload.php'];
+
+    /**
+     * The only location content-writing/structural methods (saveFile,
+     * createFile, renameFile, createFolder, deleteFileOrFolder) may target.
+     * Scoped explicitly to public/templates/ — theme editing is Fileeditor's
+     * one legitimate write use case; nothing else under public/ (index.php,
+     * .htaccess, be-assets/js/ci4ms.js, etc.) may be touched.
+     */
+    private const WRITABLE_ROOT = 'public/templates/';
 
     public function index()
     {
@@ -38,7 +46,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         }
         $fullPath = realpath(ROOTPATH . $path);
 
-        if (!$fullPath || strpos($fullPath, realpath(ROOTPATH)) !== 0) {
+        if (!$fullPath || !$this->isInsideProject($fullPath)) {
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
         }
         $iterator = new DirectoryIterator($fullPath);
@@ -73,10 +81,15 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $path = $this->request->getVar('path');
         if ($this->isHiddenPath($path))
             return $this->failForbidden();
+        // An attacker-planted symlink under a non-hidden, non-core location
+        // (e.g. docs/) would otherwise let readFile() disclose whatever the
+        // link points to, regardless of the target's real location.
+        if ($this->pathContainsSymlink($path))
+            return $this->failForbidden();
         $fullPath = realpath(ROOTPATH . $path);
         if (!$this->allowedFileTypes($fullPath))
             return $this->failForbidden();
-        if (!$fullPath || !is_file($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
+        if (!$fullPath || !is_file($fullPath) || !$this->isInsideProject($fullPath))
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
         return $this->response->setJSON(['content' => file_get_contents($fullPath)]);
     }
@@ -108,8 +121,12 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $fullPath = realpath(ROOTPATH . $path);
         if (!$this->allowedFileTypes($fullPath))
             return $this->failForbidden();
-        if (!$fullPath || !is_file($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
+        if (!$fullPath || !is_file($fullPath) || !$this->isInsideProject($fullPath))
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+        // isWritableTarget() scopes writes to public/templates/ only —
+        // theme editing is Fileeditor's one legitimate write use case.
+        if (!$this->isWritableTarget($path))
+            return $this->failForbidden(lang('Fileeditor.writeNotAllowed'));
         // Block writing to dangerous file types (defense-in-depth)
         $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
         if (!$this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions, true))
@@ -126,7 +143,10 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
-        if ($this->isHiddenPath($path) || $this->isCorePath($path))
+        // isWritableTarget() (below) scopes renames to public/templates/
+        // only — theme renaming is one of Fileeditor's legitimate write use
+        // cases.
+        if ($this->isHiddenPath($path))
             return $this->failForbidden();
         if ($this->pathContainsSymlink($path))
             return $this->failForbidden();
@@ -140,19 +160,32 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
 
         $fullPath = realpath(ROOTPATH . $path);
+        // Resolve and bound-check the source before deriving anything from
+        // it: realpath() returns false for a nonexistent path, and
+        // dirname(false) throws a TypeError under this file's
+        // declare(strict_types=1) (:2) rather than letting the request fail
+        // gracefully — this check must run before dirname($fullPath) is
+        // ever called.
+        if (!$fullPath || !file_exists($fullPath) || !$this->isInsideProject($fullPath))
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
         $newPath = dirname($fullPath) . DIRECTORY_SEPARATOR . $newName;
 
-        // Verify the rename target stays within ROOTPATH
+        // Verify the rename target's directory stays within ROOTPATH.
+        // $newName cannot contain a path separator (enforced by the
+        // 'newName' regex above), so checking $realNewDir alone is
+        // sufficient — there is no traversal component left in $newName to
+        // escape it with.
         $realNewDir = realpath(dirname($fullPath));
-        if (!$realNewDir || strpos($realNewDir . DIRECTORY_SEPARATOR . $newName, realpath(ROOTPATH)) !== 0)
+        if (!$realNewDir || !$this->isInsideProject($realNewDir))
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+
+        if (!$this->isWritableTarget($path))
+            return $this->failForbidden(lang('Fileeditor.writeNotAllowed'));
 
         // Block renaming to dangerous extensions (defense-in-depth alongside the allowlist above)
         $ext = strtolower(pathinfo($newName, PATHINFO_EXTENSION));
         if (!$this->dangerousExtensionsAllowed && in_array($ext, $this->dangerousExtensions, true))
             return $this->failForbidden(lang('Fileeditor.dangerousFileType'));
-        if (!$fullPath || !file_exists($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
-            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
         if (rename($fullPath, $newPath)) {
             $this->triggerFileevent($newPath, 'rename');
             return $this->response->setJSON(['success' => true]);
@@ -171,13 +204,21 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $path = $this->request->getVar('path');
         if ($this->isHiddenPath($path))
             return $this->failForbidden();
+        // Same rationale as readFile()/saveFile(): a symlinked directory under
+        // path could otherwise redirect the write outside the intended target.
+        if ($this->pathContainsSymlink($path))
+            return $this->failForbidden();
         $name = $this->request->getVar('name');
         $fullPath = realpath(ROOTPATH . $path);
 
         if (!$this->allowedFileTypes($name))
             return $this->failForbidden();
-        if (!$fullPath || !is_dir($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
+        if (!$fullPath || !is_dir($fullPath) || !$this->isInsideProject($fullPath))
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+        // isWritableTarget() scopes writes to public/templates/ only — same
+        // reasoning as saveFile().
+        if (!$this->isWritableTarget($path))
+            return $this->failForbidden(lang('Fileeditor.writeNotAllowed'));
 
         // Block creating dangerous file types
         $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
@@ -206,12 +247,24 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+        // isWritableTarget() (below) scopes writes to public/templates/
+        // only — theme folder creation is createFolder()'s one legitimate
+        // use case.
         if ($this->isHiddenPath($path))
             return $this->failForbidden();
+        if ($this->pathContainsSymlink($path))
+            return $this->failForbidden();
         $name = $this->request->getVar('name');
+        // The name regex above (allowed-character class) has no special
+        // handling for '..' and accepts it; reject it explicitly instead of
+        // widening the regex.
+        if (str_contains($name, '..'))
+            return $this->failForbidden();
         $fullPath = realpath(ROOTPATH . $path);
-        if (!$fullPath || !is_dir($fullPath) || strpos($fullPath, realpath(ROOTPATH)) !== 0)
+        if (!$fullPath || !is_dir($fullPath) || !$this->isInsideProject($fullPath))
             return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+        if (!$this->isWritableTarget($path))
+            return $this->failForbidden(lang('Fileeditor.writeNotAllowed'));
 
         $newFolderPath = $fullPath . DIRECTORY_SEPARATOR . $name;
 
@@ -230,13 +283,18 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
-        if ($this->isHiddenPath($path) || $this->isCorePath($path))
+        // isWritableTarget() (below) scopes deletes to public/templates/
+        // only — theme file/folder deletion is one of Fileeditor's
+        // legitimate write use cases.
+        if ($this->isHiddenPath($path))
             return $this->failForbidden();
         if ($this->pathContainsSymlink($path))
             return $this->failForbidden();
         $fullPath = realpath(ROOTPATH . $path);
-        if (!$fullPath || strpos($fullPath, realpath(ROOTPATH)) !== 0)
+        if (!$fullPath || !$this->isInsideProject($fullPath))
             return $this->response->setJSON(['error' => lang('Fileeditor.invalidFileOrFolder')])->setStatusCode(400);
+        if (!$this->isWritableTarget($path))
+            return $this->failForbidden(lang('Fileeditor.writeNotAllowed'));
 
         if (is_dir($fullPath)) {
             $result = rmdir($fullPath);
@@ -274,17 +332,54 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         return false;
     }
 
-    private function isCorePath(string $path): bool
+    /**
+     * Returns true only when $fullPath is realpath(ROOTPATH) itself, or lies
+     * strictly inside it. Replaces the repeated
+     * `strpos($fullPath, realpath(ROOTPATH)) !== 0` pattern, which has no
+     * notion of a path boundary: realpath(ROOTPATH) carries no trailing
+     * separator, so a sibling of ROOTPATH whose name happens to start with
+     * ROOTPATH's own basename (e.g. a real "ci4ms-evil" or "ci4ms_x.txt" next
+     * to a project rooted at ".../ci4ms") is wrongly treated as inside. The
+     * trailing DIRECTORY_SEPARATOR appended to $root below is what makes the
+     * boundary check exact.
+     *
+     * @param string $fullPath Absolute, realpath()-resolved path to check
+     *
+     * @return bool
+     */
+    private function isInsideProject(string $fullPath): bool
     {
-        // Walk every segment so that traversal tricks like 'evil/../public/x'
-        // cannot bypass the gate by hiding a core segment behind '..'.
-        $pathParts = explode('/', trim($path, '/'));
-        foreach ($pathParts as $part) {
-            if (in_array($part, $this->coreItems, true)) {
-                return true;
-            }
+        $root = realpath(ROOTPATH);
+        if ($root === false) {
+            return false;
         }
-        return false;
+        return $fullPath === $root || str_starts_with($fullPath, $root . DIRECTORY_SEPARATOR);
+    }
+
+    /**
+     * Returns true only when $path resolves strictly inside self::WRITABLE_ROOT
+     * (public/templates/), the sole location content-writing/structural
+     * methods may target. This is a sequential prefix match: the path's
+     * first two segments must be exactly ['public', 'templates'], in that
+     * order — a "segment contains 'templates' somewhere" check would wrongly
+     * allow app/templates/evil.php. Any '..' segment fails the check
+     * outright, so a path like public/templates/../../etc/passwd cannot
+     * satisfy the prefix test and then escape it via a later traversal
+     * segment.
+     *
+     * @param string $path Raw, slash-normalized path as submitted by the client
+     *
+     * @return bool
+     */
+    private function isWritableTarget(string $path): bool
+    {
+        $pathParts = explode('/', trim($path, '/'));
+        if (in_array('..', $pathParts, true)) {
+            return false;
+        }
+        $writableParts = explode('/', trim(self::WRITABLE_ROOT, '/'));
+
+        return array_slice($pathParts, 0, count($writableParts)) === $writableParts;
     }
 
     /**
