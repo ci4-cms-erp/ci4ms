@@ -27,7 +27,7 @@ return [
     'path' => 'Yol',
     'firstName' => 'Ad',
     'lastName' => 'Soyadı',
-    'userName' => 'Kullanıcı Adı',
+    'username' => 'Kullanıcı Adı',
     'password' => 'Şifre',
     'start' => 'Başlangıç',
     'expire' => 'Bitiş',
@@ -107,6 +107,7 @@ return [
     'noRecords' => 'Eşleşen kayıt bulunamadı',
     'loadingRecords' => 'Yükleniyor...',
     'processing' => 'İşleniyor...',
+    'dtSearch' => 'Ara:',
     'first' => 'İlk',
     'last' => 'Son',
     'next' => 'Sonraki',
@@ -205,4 +206,9 @@ return [
     'errExcNo'                 => 'Hayır',
     'errExcPath'               => 'Yol',
     'errExcUserAgent'          => 'Tarayıcı',
+
+    // Consolidated from other modules
+    'totalPages' => 'Toplam Sayfa',
+    'siteName' => 'Site Adı',
+    'date' => 'Tarih',
 ];

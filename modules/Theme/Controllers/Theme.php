@@ -329,7 +329,7 @@ class Theme extends \Modules\Backend\Controllers\BaseController
             $forge = \Config\Database::forge();
             $db = \Config\Database::connect();
             foreach ($tablesToDrop as $table) {
-                // Sadece izin verilen (temaya ait) tabloları sil
+                // Only delete tables that are allowed (belong to the theme)
                 if (in_array($table, $allowedTables) && $db->tableExists($table)) {
                     $forge->dropTable($table, true);
                     $log[] = "🗑️ " . lang('Theme.tableDeleted', [$table]);

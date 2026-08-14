@@ -8,9 +8,9 @@ class AddAllowedGroupsToDashboardWidgets extends Migration
 {
     public function up()
     {
-        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
-        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
-        // söylemesin diye önce sıfırlanır.
+        // fieldExists() caches its result on the connection and goes stale if
+        // the schema changes within this process (migrate:refresh /
+        // rollback+migrate). Reset it first so the guard doesn't lie.
         $this->db->resetDataCache();
 
         if ($this->db->fieldExists('allowed_groups', 'dashboard_widgets')) {

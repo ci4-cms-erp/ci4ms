@@ -1,27 +1,29 @@
 <?php
 
 /**
- * Bildirim Merkezi rotaları.
+ * Notification Center routes.
  *
- * `role` bayrakları (read|create|update|delete) sayesinde bu uçlar
- * Methods::moduleScan() çalıştırıldığında otomatik olarak auth_permissions_pages'e
- * izin kaydı olarak düşer. İzin dizesi ROTA ADINDAN türetilir
- * ({@see \Modules\Methods\Libraries\ModuleScanner}: pagename = '{Modül}.{rota adı}',
- * {@see \Modules\Auth\Filters\Ci4MsAuthFilter}: strtolower(pagename) . '.{eylem}'),
- * yani her rotanın 'as' adı kendi izin kaydını belirler:
+ * Thanks to the `role` flags (read|create|update|delete), these endpoints are
+ * automatically dropped into auth_permissions_pages as permission records when
+ * Methods::moduleScan() runs. The permission string is derived FROM THE ROUTE NAME
+ * ({@see \Modules\Methods\Libraries\ModuleScanner}: pagename = '{Module}.{route name}',
+ * {@see \Modules\Auth\Filters\Ci4MsAuthFilter}: strtolower(pagename) . '.{action}'),
+ * meaning each route's 'as' name determines its own permission record:
  *   notifications.notifications / notiffeed / notifstream / notifprefs → .read
  *   notifications.notifprefssave / notifread / notifreadall            → .update
  *   notifications.notifcompose / notifcomposeusers                     → .read
  *   notifications.notifcomposepreview / notifcomposesend               → .create
  *
- * ÖNİZLEME 'create' İZNİNDEDİR (bilerek): preview() bir alıcı SAYISI döndürür ve o sayı
- * bir üyelik/varlık oracle'ıdır — `groups[]=superadmin` seçimine bir kimlik ekleyip
- * sayının değişip değişmediğine bakan biri, o kimliğin superadmin olup olmadığını ve
- * genel olarak var olup olmadığını öğrenir. '.read' izni üst çubuk çanı için pratikte
- * her backend kullanıcısına verildiğinden, önizleme gönderme yetkisiyle aynı kovadadır.
+ * PREVIEW IS UNDER THE 'create' PERMISSION (deliberately): preview() returns a
+ * recipient COUNT, and that count is a membership/existence oracle — someone who adds
+ * an identity to a `groups[]=superadmin` selection and watches whether the count
+ * changes learns whether that identity is a superadmin and, in general, whether it
+ * exists at all. Since the '.read' permission is effectively granted to every backend
+ * user for the top bar bell, preview is bucketed with the send permission instead.
  *
- * Yeni uç eklendikten sonra izinlerin tanınması için Methods taraması çalıştırılmalı,
- * ardından ilgili kullanıcıların '{userId}_permissions' cache'i düşürülmelidir.
+ * After a new endpoint is added, the Methods scan must be run for permissions to be
+ * recognized, and then the '{userId}_permissions' cache of the relevant users must be
+ * cleared.
  */
 $routes->group('backend/notifications', ['namespace' => 'Modules\Notifications\Controllers'], function ($routes) {
     $routes->get('/', 'NotificationController::index', ['as' => 'notifications', 'role' => 'read']);

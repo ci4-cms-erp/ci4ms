@@ -5,20 +5,20 @@ namespace Modules\Notifications\Database\Migrations;
 use CodeIgniter\Database\Migration;
 
 /**
- * Model B (küresel kayıt + per-user okundu-durumu) için `notifications` tablosunu
- * additive (DROP'suz) genişletir: severity/target_type/target_value/channel kolonları,
- * legacy user_id'nin nullable'a çekilmesi ve (target_type,target_value) indeksi.
+ * Extends the `notifications` table additively (without DROP) for Model B (global
+ * record + per-user read status): severity/target_type/target_value/channel columns,
+ * making legacy user_id nullable, and the (target_type,target_value) index.
  *
- * up() tüm adımlarda fieldExists/index guard'lıdır (mevcut veriyi ve tekrar çalıştırmayı
- * korur). down() yalnız dosya bütünlüğü içindir; rollback ELLE ÇALIŞTIRILMAZ.
+ * up() is guarded by fieldExists/index checks at every step (protects existing data and
+ * re-running). down() exists only for file completeness; rollback is NOT RUN MANUALLY.
  */
 class AddModelBColumnsToNotifications extends Migration
 {
     public function up()
     {
-        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
-        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
-        // söylemesin diye önce sıfırlanır.
+        // The fieldExists() result is cached on the connection and goes stale if the
+        // schema changes within this process (migrate:refresh / rollback+migrate). Reset
+        // first so the guard doesn't lie.
         $this->db->resetDataCache();
 
         $table = 'notifications';
@@ -71,7 +71,7 @@ class AddModelBColumnsToNotifications extends Migration
             ]);
         }
 
-        // Legacy user_id artık zorunlu değil (Model B satırları user_id=null yazar).
+        // Legacy user_id is no longer required (Model B rows write user_id=null).
         $this->forge->modifyColumn($table, [
             'user_id' => [
                 'name'       => 'user_id',
@@ -83,8 +83,8 @@ class AddModelBColumnsToNotifications extends Migration
             ],
         ]);
 
-        // (target_type, target_value) indeksi — Forge addColumn indeks eklemediğinden
-        // ham ALTER ile eklenir; SHOW INDEX guard'ıyla tekrar çalıştırmaya karşı korunur.
+        // (target_type, target_value) index — added via a raw ALTER since Forge's
+        // addColumn doesn't add an index; guarded against re-running with a SHOW INDEX check.
         $prefixed = $this->db->prefixTable($table);
         $existing = $this->db->query("SHOW INDEX FROM `{$prefixed}` WHERE Key_name = 'notif_target'")->getResultArray();
         if ($existing === []) {

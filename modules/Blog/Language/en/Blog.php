@@ -30,4 +30,5 @@ return [
     'searchPlaceholder' => 'Search blogs...',
     'searchComments' => 'Search comments...',
     'relatedPost' => 'Related Post',
+    'seflinkConflict' => 'This blog seflink address has already been used. Please check and try creating a different one. Seflink: {0}',
 ];

@@ -7,43 +7,44 @@ use Modules\Notifications\Libraries\Notifier;
 use Modules\Notifications\Libraries\SchemaGuard;
 
 /**
- * Bildirim tercihleri (opt-out) — backend controller.
+ * Notification preferences (opt-out) — backend controller.
  *
- * Uçlar (bkz. Config/Routes.php):
- *   GET  backend/notifications/preferences  index() — susturma matrisi (role: read)
- *   POST backend/notifications/preferences  save()  — matrisi kaydet (role: update)
+ * Endpoints (see Config/Routes.php):
+ *   GET  backend/notifications/preferences  index() — mute matrix (role: read)
+ *   POST backend/notifications/preferences  save()  — save the matrix (role: update)
  *
- * GÜVENLİK: `user_id` DAİMA `auth()->id()`'den okunur, istemciden ASLA alınmaz.
- * Kabul edilen `type`/`channel` değerleri NotificationsConfig::$preferenceTypes ve
- * $preferenceChannels whitelist'lerinden gelir; POST dizisi üzerinde değil, whitelist
- * üzerinde dönülür — böylece bilinmeyen anahtar satır kurulumuna hiç giremez
- * (mass-assignment kapalı). Whitelist matrisi TEK yerde ({@see whitelistKeys()})
- * kurulur ve okuma, yazma, arayüz aynı matrisi kullanır: matriste olmayan bir satır
- * ne gösterilir ne de DOKUNULUR. Global CSRF aktiftir; bu uçlar $csrfExcept'e EKLENMEZ.
+ * SECURITY: `user_id` is ALWAYS read from `auth()->id()`, NEVER taken from the client.
+ * Accepted `type`/`channel` values come from the NotificationsConfig::$preferenceTypes
+ * and $preferenceChannels whitelists; iteration happens over the whitelist, not the
+ * POST array — this way an unknown key can never enter the row setup (mass-assignment
+ * is off). The whitelist matrix is built in ONE place ({@see whitelistKeys()}) and
+ * reading, writing, and the UI all use the same matrix: a row not in the matrix is
+ * neither shown nor TOUCHED. Global CSRF is active; these endpoints are NOT added to $csrfExcept.
  *
- * Model B gereği tercih GÖNDERİM anında değil, OKUMA anında uygulanır
- * ({@see Notifier::applyRelevance()}); burada yalnız susturma satırları tutulur.
+ * Per Model B, preferences are applied at READ time, not SEND time
+ * ({@see Notifier::applyRelevance()}); only mute rows are kept here.
  */
 class PreferenceController extends \Modules\Backend\Controllers\BaseController
 {
-    /** Tercihlerin tutulduğu tablo. */
+    /** The table preferences are kept in. */
     private const TABLE = 'notification_preferences';
 
     /**
-     * Whitelist değerlerinde YASAK karakterler: LIKE joker'leri ve kaçış karakteri.
+     * FORBIDDEN characters in whitelist values: LIKE wildcards and the escape character.
      *
-     * Okuma yolu tercih tipini `n.type LIKE CONCAT(p.type, '.%')` ile karşılaştırır;
-     * `%` ya da `_` taşıyan bir `type` orada joker gibi davranıp satır SAHİBİNİN tüm
-     * bildirimlerini susturabilir. Bugün whitelist yüzünden böyle bir değer yazılamaz,
-     * bu guard onu whitelist'in KENDİSİ için de garanti eder (seed/import/restore ile
-     * gelecek bir yapılandırma hatası sessizce silahlanmasın).
+     * The read path compares the preference type with `n.type LIKE CONCAT(p.type, '.%')`;
+     * a `type` carrying `%` or `_` would behave as a wildcard there and could mute ALL
+     * of the row OWNER's notifications. Today such a value can't be written because of
+     * the whitelist; this guard also guarantees that for the whitelist ITSELF (so that a
+     * future configuration mistake coming via seed/import/restore doesn't silently
+     * become a weapon).
      */
     private const LIKE_WILDCARDS = '%_\\';
 
     /**
-     * Susturma matrisini render eder (satır: tip, sütun: kanal).
+     * Renders the mute matrix (row: type, column: channel).
      *
-     * @return string Render edilmiş tercih görünümü.
+     * @return string The rendered preferences view.
      */
     public function index(): string
     {
@@ -54,8 +55,8 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
         $muted = [];
         if ($ready) {
             foreach ($this->existingRows((int) auth()->id()) as $key => $row) {
-                // Matris dışı satır arayüzde YOKTUR; gösterilseydi kapatılamayan
-                // (ve save() tarafından da dokunulmayan) ölü bir kutu olurdu.
+                // A row outside the matrix DOES NOT EXIST in the UI; if shown it would
+                // be a dead checkbox that can't be unchecked (and that save() also never touches).
                 if (isset($whitelist[$key]) && (int) $row->enabled === 0) {
                     $muted[] = $key;
                 }
@@ -73,11 +74,11 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Susturma matrisini kaydeder (oturum sahibinin kendi tercihleri).
+     * Saves the mute matrix (the session owner's own preferences).
      *
-     * İşaretli kutu = SUSTUR (`enabled = 0`); işaretsiz = varsayılan (`enabled = 1`).
-     * Yazımdan sonra kullanıcının okunmamış-rozet cache'i düşürülür, çünkü susturma
-     * okuma-zamanı filtresidir ve sayıyı anında değiştirir.
+     * A checked box = MUTE (`enabled = 0`); unchecked = default (`enabled = 1`). After
+     * writing, the user's unread-badge cache is cleared, because muting is a read-time
+     * filter and changes the count instantly.
      *
      * @return \CodeIgniter\HTTP\RedirectResponse
      */
@@ -97,9 +98,9 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Tercih tablosu migrate edilmiş mi (istek ömrü boyunca hafızalanır).
+     * Whether the preferences table has been migrated (memoized for the request's lifetime).
      *
-     * @return bool Tablo varsa true.
+     * @return bool True if the table exists.
      */
     private function tableReady(): bool
     {
@@ -107,11 +108,11 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Kullanıcının mevcut tercih satırlarını TEK sorguda okur.
+     * Reads the user's existing preference rows in a SINGLE query.
      *
-     * @param int $userId Oturum sahibinin kimliği.
+     * @param int $userId Session owner's id.
      *
-     * @return array<string, \stdClass> '{type}|{channel}' => satır (id, type, channel, enabled).
+     * @return array<string, \stdClass> '{type}|{channel}' => row (id, type, channel, enabled).
      */
     private function existingRows(int $userId): array
     {
@@ -126,12 +127,12 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Yapılandırmanın, LIKE joker'i taşımayan tip ve kanal whitelist'leri.
+     * The configuration's type and channel whitelists, stripped of any carrying a LIKE wildcard.
      *
-     * Elenen değer için sessiz kalmak yerine `warning` loglanır: arayüzde görünmeyen
-     * bir tip, kaybolduğu fark edilmeyen bir yapılandırma hatasıdır.
+     * A `warning` is logged instead of staying silent for a filtered-out value: a type
+     * not shown in the UI is a configuration mistake that goes unnoticed once it disappears.
      *
-     * @return array{0: array<string, string>, 1: list<string>} [tip => lang anahtarı, kanal listesi].
+     * @return array{0: array<string, string>, 1: list<string>} [type => lang key, channel list].
      */
     private function safeWhitelist(): array
     {
@@ -145,11 +146,11 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Bir whitelist değerinin LIKE joker'i / kaçış karakteri taşıyıp taşımadığı.
+     * Whether a whitelist value carries a LIKE wildcard / escape character.
      *
-     * @param string $value Yapılandırmadan gelen tip ya da kanal.
+     * @param string $value Type or channel coming from configuration.
      *
-     * @return bool Güvenliyse true; joker taşıyorsa (loglanarak) false.
+     * @return bool True if safe; false (and logged) if it carries a wildcard.
      */
     private static function isSafeKeyPart(string $value): bool
     {
@@ -167,13 +168,13 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Kabul edilen '{tip}|{kanal}' anahtarlarının matrisi (TEK whitelist kaynağı).
+     * The matrix of accepted '{type}|{channel}' keys (the ONE whitelist source).
      *
-     * POST okuma ({@see postedMutes()}), yazma ({@see persist()}) ve arayüz
-     * ({@see index()}) aynı matristen beslenir; bir anahtarın burada olmaması, o
-     * satırın hiçbir yolda okunmadığı VE yazılmadığı anlamına gelir.
+     * POST reading ({@see postedMutes()}), writing ({@see persist()}), and the UI
+     * ({@see index()}) are all fed from this same matrix; a key not being here means
+     * that row is neither read NOR written on any path.
      *
-     * @return array<string, array{0:string, 1:string}> '{type}|{channel}' => [tip, kanal].
+     * @return array<string, array{0:string, 1:string}> '{type}|{channel}' => [type, channel].
      */
     private function whitelistKeys(): array
     {
@@ -190,12 +191,12 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * POST'tan istenen susturma kümesini whitelist üzerinden çıkarır.
+     * Derives the requested mute set from POST via the whitelist.
      *
-     * POST dizisi üzerinde DEĞİL, whitelist matrisi üzerinde dönülür: whitelist dışı
-     * bir tip/kanal sessizce yok sayılır ve hiçbir yazma yoluna ulaşamaz.
+     * Iteration happens over the whitelist matrix, NOT the POST array: a type/channel
+     * outside the whitelist is silently ignored and never reaches any write path.
      *
-     * @return array<string, array{0:string, 1:string}> '{type}|{channel}' => [tip, kanal].
+     * @return array<string, array{0:string, 1:string}> '{type}|{channel}' => [type, channel].
      */
     private function postedMutes(): array
     {
@@ -216,20 +217,20 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * İstenen durumu diske yazar: yeni susturmalar tek batch, değişenler tek tek.
+     * Writes the requested state to disk: new mutes as a single batch, changes one by one.
      *
-     * Döngüler whitelist matrisi (tip × kanal) ve kullanıcının kendi satırlarıyla
-     * SINIRLIDIR — büyüyen bir veri kümesi üzerinde N+1 değildir; ayrıca yalnız
-     * DEĞİŞEN satır için sorgu açılır (tipik kayıtta 0-2 sorgu).
+     * The loops are BOUNDED by the whitelist matrix (type × channel) and the user's own
+     * rows — it's not N+1 over a growing dataset; also a query is only opened for a row
+     * that CHANGED (0-2 queries in a typical run).
      *
-     * Susturmayı KALDIRMA döngüsü yalnız matristeki anahtarlara dokunur: kullanıcının
-     * whitelist DIŞI bir satırı (eski bir sürümden kalan ya da elle/seed ile yazılmış)
-     * arayüzde hiç görünmediği için "kullanıcı kutuyu boşalttı" diye yorumlanamaz —
-     * yorumlansaydı sahibinin hiç istemediği bir susturma sessizce AÇILIRDI.
+     * The mute-REMOVAL loop only touches keys within the matrix: a row of the user's
+     * that is OUTSIDE the whitelist (left over from an old version, or written manually
+     * or via seed) never appears in the UI, so it can't be interpreted as "the user
+     * unchecked the box" — if it were, an owner's never-requested mute would silently be TURNED ON.
      *
-     * @param int                                      $userId   Oturum sahibinin kimliği.
-     * @param array<string, \stdClass>                 $existing {@see existingRows()} çıktısı.
-     * @param array<string, array{0:string, 1:string}> $desired  {@see postedMutes()} çıktısı.
+     * @param int                                      $userId   Session owner's id.
+     * @param array<string, \stdClass>                 $existing Output of {@see existingRows()}.
+     * @param array<string, array{0:string, 1:string}> $desired  Output of {@see postedMutes()}.
      *
      * @return void
      */
@@ -265,26 +266,25 @@ class PreferenceController extends \Modules\Backend\Controllers\BaseController
         }
 
         if ($inserts !== []) {
-            // INSERT IGNORE: UNIQUE(user_id,type,channel) iki eşzamanlı kayıtta
-            // çakışabilir; ignore olmadan DatabaseException batch'in TAMAMINI
-            // (çakışmayan satırlar dahil) kaybettirirdi. Notifier::markAllRead()
-            // ile aynı kalıp.
+            // INSERT IGNORE: UNIQUE(user_id,type,channel) can conflict on two concurrent
+            // requests; without ignore, a DatabaseException would lose the ENTIRE batch
+            // (including the non-conflicting rows). Same pattern as Notifier::markAllRead().
             $this->commonModel->db->table(self::TABLE)->ignore(true)->insertBatch($inserts);
         }
     }
 
     /**
-     * Tek bir tercih satırının açık/kapalı durumunu günceller (sahiplik WHERE'de).
+     * Updates a single preference row's enabled/disabled state (ownership is in the WHERE).
      *
-     * `user_id` koşulu savunma derinliğidir: `$id` yalnız
-     * {@see existingRows()}'un oturum sahibi için okuduğu satırlardan gelir, ama
-     * sahiplik sorgunun KENDİSİNDE de durursa, o okumaya eklenecek tek satırlık bir
-     * regresyon burayı tam bir IDOR'a çeviremez.
+     * The `user_id` condition is defense in depth: `$id` only comes from rows
+     * {@see existingRows()} read for the session owner, but if ownership also lives IN
+     * THE QUERY ITSELF, a one-line regression added to that read can't turn this into a
+     * full IDOR.
      *
-     * @param int    $id      Tercih satırı kimliği.
-     * @param int    $userId  Satırın sahibi olması gereken kullanıcı (oturum sahibi).
-     * @param int    $enabled 0 = susturuldu, 1 = varsayılan.
-     * @param string $now     Yazım zamanı (Y-m-d H:i:s).
+     * @param int    $id      Preference row id.
+     * @param int    $userId  User the row must belong to (the session owner).
+     * @param int    $enabled 0 = muted, 1 = default.
+     * @param string $now     Write timestamp (Y-m-d H:i:s).
      *
      * @return void
      */

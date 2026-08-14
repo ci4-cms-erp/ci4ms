@@ -34,20 +34,20 @@ class Ci4msSetup extends BaseCommand
     ];
 
     /**
-     * Non-interactive modda mı çalışıyoruz?
-     * Tüm zorunlu argümanlar CLI'dan verilmişse interaktif prompt atlanır.
+     * Are we running in non-interactive mode?
+     * If all required arguments are supplied via CLI, the interactive prompt is skipped.
      */
     private bool $nonInteractive = false;
 
     /**
-     * CI4MS kurulum sihirbazını uçtan uca çalıştırır (kullanıcı bilgileri,
-     * veritabanı bağlantısı, migration + seed, admin hesabı, `.env`/routes
-     * yazımı).
+     * Runs the CI4MS setup wizard end to end (user information,
+     * database connection, migration + seed, admin account, `.env`/routes
+     * writing).
      *
      * @param array<int|string, string|null> $params
      *
-     * @return int EXIT_SUCCESS (0) tam kurulum başarılıysa; EXIT_ERROR (1)
-     *              herhangi bir adım başarısız olursa.
+     * @return int EXIT_SUCCESS (0) if the full setup succeeds; EXIT_ERROR (1)
+     *              if any step fails.
      */
     public function run(array $params): int
     {
@@ -58,7 +58,7 @@ class Ci4msSetup extends BaseCommand
         CLI::write('');
 
         // ─────────────────────────────────────────────────────────────
-        // GUARD: Zaten kurulmuşsa devam etme
+        // GUARD: Do not continue if already installed
         // ─────────────────────────────────────────────────────────────
         if (file_exists(WRITEPATH . 'install.lock')) {
             CLI::error('CI4MS is already installed. Setup aborted.');
@@ -66,7 +66,7 @@ class Ci4msSetup extends BaseCommand
         }
 
         // ─────────────────────────────────────────────────────────────
-        // CLI argümanlarını oku — non-interactive mod kontrolü
+        // Read CLI arguments — check for non-interactive mode
         // ─────────────────────────────────────────────────────────────
         $cliArgs = $this->parseCliOptions();
         $this->nonInteractive = $this->hasAllRequired($cliArgs);
@@ -77,7 +77,7 @@ class Ci4msSetup extends BaseCommand
         }
 
         // ─────────────────────────────────────────────────────────────
-        // 1. KULLANICI BİLGİLERİ
+        // 1. ADMIN USER INFORMATION
         // ─────────────────────────────────────────────────────────────
         CLI::write('[ Step 1/6 ] Admin User Information', 'yellow');
         CLI::write('─────────────────────────────────────', 'dark_gray');
@@ -97,14 +97,14 @@ class Ci4msSetup extends BaseCommand
         });
 
         // ─────────────────────────────────────────────────────────────
-        // 2. VERİTABANI BİLGİLERİ
+        // 2. DATABASE INFORMATION
         // ─────────────────────────────────────────────────────────────
         CLI::write('');
         CLI::write('[ Step 2/6 ] Database Configuration', 'yellow');
         CLI::write('─────────────────────────────────────', 'dark_gray');
 
         if ($this->nonInteractive) {
-            // Non-interactive: .env'deki mevcut DB ayarlarını kullan veya CLI argümanlarını al
+            // Non-interactive: use existing DB settings from .env or take CLI arguments
             $dbHost     = $cliArgs['dbHost']   ?? $this->getEnvValue('database.default.hostname', 'localhost');
             $dbName     = $cliArgs['dbName']   ?? $this->getEnvValue('database.default.database', 'ci4ms');
             $dbUsername = $cliArgs['dbUser']    ?? $this->getEnvValue('database.default.username', 'root');
@@ -133,7 +133,7 @@ class Ci4msSetup extends BaseCommand
         }
 
         // ─────────────────────────────────────────────────────────────
-        // 3. SİTE BİLGİLERİ
+        // 3. SITE INFORMATION
         // ─────────────────────────────────────────────────────────────
         CLI::write('');
         CLI::write('[ Step 3/6 ] Site Information', 'yellow');
@@ -160,7 +160,7 @@ class Ci4msSetup extends BaseCommand
         }
 
         // ─────────────────────────────────────────────────────────────
-        // ÖZET — Devam mı?
+        // SUMMARY — Proceed?
         // ─────────────────────────────────────────────────────────────
         CLI::write('');
         CLI::write('[ Summary ]', 'cyan');
@@ -181,12 +181,12 @@ class Ci4msSetup extends BaseCommand
         }
 
         // ─────────────────────────────────────────────────────────────
-        // 4. .ENV DOSYASI
+        // 4. .ENV FILE
         // ─────────────────────────────────────────────────────────────
         CLI::write('');
         CLI::write('[ Step 4/6 ] Writing .env file...', 'yellow');
 
-        // Non-interactive modda .env zaten mevcutsa kopyalama atla
+        // Skip copying in non-interactive mode if .env already exists
         if (!file_exists(ROOTPATH . '.env')) {
             if (!$this->copyEnvFile()) {
                 CLI::error('Could not copy env → .env. Aborting.');
@@ -194,10 +194,27 @@ class Ci4msSetup extends BaseCommand
             }
         }
 
+        // Mirrors Install.php's web-installer logic: derive the HTTPS
+        // posture from the operator-supplied baseUrl instead of hardcoding
+        // insecure defaults, so a CLI install over https:// ends up as
+        // secure-by-default as the web installer does.
+        $isHttps            = stripos($baseUrl, 'https://') === 0;
+        $cookieSecureValue  = $isHttps
+            ? 'true'
+            : 'false #Set this to true after enabling HTTPS in production.';
+        $forceSecureValue   = $isHttps
+            ? 'true'
+            : 'false #Set to true after enabling HTTPS.';
+        // CSP is not itself an HTTPS requirement, but tying it to the same
+        // isHttps signal is a reasonable production-hardening default: an
+        // operator installing over https:// is treating this as a real
+        // deployment, not a local dev box.
+        $cspEnabledValue = $isHttps ? 'true' : 'false #Content Security Policy';
+
         $updates = [
-            'CI_ENVIRONMENT'                     => 'development',
-            'app.forceGlobalSecureRequests'      => 'false #Use this only when SSL is enabled.',
-            'app.CSPEnabled'                     => 'false #Content Security Policy',
+            'CI_ENVIRONMENT'                     => 'production',
+            'app.forceGlobalSecureRequests'      => $forceSecureValue,
+            'app.CSPEnabled'                     => $cspEnabledValue,
             'app.baseURL'                        => '\'' . $baseUrl . '\'',
             'database.default.hostname'          => $dbHost,
             'database.default.database'          => $dbName,
@@ -210,7 +227,7 @@ class Ci4msSetup extends BaseCommand
             'cookie.expires'                     => 0,
             'cookie.path'                        => '\'/\'',
             'cookie.domain'                      => '\'\'',
-            'cookie.secure'                      => 'false #Don\'t forget to set it to true when buying production mode.',
+            'cookie.secure'                      => $cookieSecureValue,
             'cookie.httponly'                     => 'true',
             'cookie.samesite'                    => '\'Lax\'',
             'cookie.raw'                         => 'false',
@@ -244,7 +261,7 @@ class Ci4msSetup extends BaseCommand
         CLI::write('  ✓ .env file written and encryption key generated.', 'green');
 
         // ─────────────────────────────────────────────────────────────
-        // 5. MİGRATION
+        // 5. MIGRATION
         // ─────────────────────────────────────────────────────────────
         CLI::write('');
         CLI::write('[ Step 5/6 ] Running Migrations...', 'yellow');
@@ -276,7 +293,7 @@ class Ci4msSetup extends BaseCommand
         }
 
         // ─────────────────────────────────────────────────────────────
-        // 6. SEED VERİLERİ
+        // 6. SEED DATA
         // ─────────────────────────────────────────────────────────────
         CLI::write('');
         CLI::write('[ Step 6/6 ] Creating Default Data...', 'yellow');
@@ -295,9 +312,23 @@ class Ci4msSetup extends BaseCommand
             ]);
             CLI::write('  ✓ Default data created (user, pages, blog, menus, settings).', 'green');
 
-            // Update DevGate credentials
-            if ($this->updateDevGateConfig($username, $password)) {
-                CLI::write('  ✓ DevGate configuration updated with admin credentials.', 'green');
+            // Provision an independent DevGate credential (never the admin
+            // password — see updateDevGateConfig() docblock). This is the
+            // only chance to show the generated password: it is hashed
+            // before being written to disk and cannot be recovered after.
+            $devGatePassword = $this->updateDevGateConfig($username);
+            if ($devGatePassword !== null) {
+                CLI::write('  ✓ DevGate configuration updated with a freshly generated password.', 'green');
+                CLI::write('');
+                CLI::write('  ┌─────────────────────────────────────────────────────────┐', 'yellow');
+                CLI::write('  │ DevGate credentials (development Basic-Auth gate)         │', 'yellow');
+                CLI::write('  │ Shown ONCE — cannot be recovered after this. Save it now.  │', 'yellow');
+                CLI::write('  └─────────────────────────────────────────────────────────┘', 'yellow');
+                CLI::write("    Username: {$username}", 'white');
+                CLI::write("    Password: {$devGatePassword}", 'white');
+                CLI::write('');
+            } else {
+                CLI::write('  ! DevGate configuration was not updated (file missing or not writable).', 'yellow');
             }
         } catch (\Throwable $e) {
             log_message('error', '[ci4ms:setup] Seed failed: ' . $e->getMessage());
@@ -306,13 +337,13 @@ class Ci4msSetup extends BaseCommand
         }
 
         // ─────────────────────────────────────────────────────────────
-        // KLASÖRLER
+        // DIRECTORIES
         // ─────────────────────────────────────────────────────────────
         $this->ensureDirectories();
         CLI::write('  ✓ Required directories verified.', 'green');
 
         // ─────────────────────────────────────────────────────────────
-        // ROUTES DOSYASI
+        // ROUTES FILE
         // ─────────────────────────────────────────────────────────────
         if (!$this->writeRoutesFile()) {
             CLI::error('Failed to write App/Config/Routes.php. Please check permissions.');
@@ -324,7 +355,7 @@ class Ci4msSetup extends BaseCommand
         chmod(WRITEPATH . 'install.lock', 0444);
 
         // ─────────────────────────────────────────────────────────────
-        // TAMAMLANDI
+        // COMPLETED
         // ─────────────────────────────────────────────────────────────
         CLI::write('');
         CLI::write('╔══════════════════════════════════════════╗', 'green');
@@ -343,9 +374,9 @@ class Ci4msSetup extends BaseCommand
     // ═════════════════════════════════════════════════════════════════
 
     /**
-     * $_SERVER['argv'] üzerinden --key=value formatındaki argümanları parse et.
-     * CI4'ün BaseCommand::$params dizisi bu formatta çalışmadığı için
-     * doğrudan argv'den okuyoruz.
+     * Parses --key=value formatted arguments from $_SERVER['argv'].
+     * CI4's BaseCommand::$params array doesn't work with this format,
+     * so we read directly from argv.
      */
     private function parseCliOptions(): array
     {
@@ -363,7 +394,7 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
-     * Non-interactive mod için gerekli tüm zorunlu argümanlar var mı?
+     * Are all required arguments present for non-interactive mode?
      */
     private function hasAllRequired(array $args): bool
     {
@@ -379,16 +410,16 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
-     * Mevcut .env dosyasından bir değer oku
+     * Read a value from the existing .env file
      */
     private function getEnvValue(string $key, string $default = ''): string
     {
-        // Önce $_ENV / $_SERVER dene (CI4 .env loader tarafından yüklenmiş olabilir)
+        // Try $_ENV / $_SERVER first (may have been loaded by CI4's .env loader)
         $envKey = str_replace('.', '_', $key);
         if (!empty($_ENV[$key])) return $_ENV[$key];
         if (!empty($_SERVER[$key])) return $_SERVER[$key];
 
-        // .env dosyasından doğrudan oku
+        // Read directly from the .env file
         $envPath = ROOTPATH . '.env';
         if (!file_exists($envPath)) return $default;
 
@@ -407,7 +438,7 @@ class Ci4msSetup extends BaseCommand
     // ═════════════════════════════════════════════════════════════════
 
     /**
-     * env → .env kopyala
+     * Copy env → .env
      */
     private function copyEnvFile(): bool
     {
@@ -428,7 +459,7 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
-     * .env dosyasındaki key=value çiftlerini güncelle / ekle
+     * Update / add key=value pairs in the .env file
      */
     private function updateEnvSettings(array $updates): bool
     {
@@ -457,7 +488,7 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
-     * Encryption key üret ve .env'e yaz
+     * Generate an encryption key and write it to .env
      */
     private function generateEncryptionKey(): bool
     {
@@ -483,7 +514,7 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
-     * Gerekli klasörleri oluştur (yoksa)
+     * Create required directories (if missing)
      */
     private function ensureDirectories(): void
     {
@@ -501,7 +532,7 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
-     * Backend tpl şablonundan App/Config/Routes.php yaz
+     * Write App/Config/Routes.php from the Backend tpl template
      */
     private function writeRoutesFile(): bool
     {
@@ -522,11 +553,11 @@ class Ci4msSetup extends BaseCommand
     }
 
     // ═════════════════════════════════════════════════════════════════
-    // CLI PROMPT HELPERS (sadece interaktif modda kullanılır)
+    // CLI PROMPT HELPERS (used only in interactive mode)
     // ═════════════════════════════════════════════════════════════════
 
     /**
-     * Boş geçilemeyen basit prompt
+     * Simple prompt that cannot be left empty
      */
     private function promptRequired(string $label): string
     {
@@ -538,8 +569,8 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
-     * Callback ile validate edilen prompt.
-     * $validator(string $val): ?string  →  null = geçerli, string = hata mesajı
+     * Prompt validated via a callback.
+     * $validator(string $val): ?string  →  null = valid, string = error message
      */
     private function promptValidated(string $label, callable $validator, string $default = ''): string
     {
@@ -555,14 +586,14 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
-     * Şifre gibi gizli değerler için prompt (girdi ekranda görünmez)
+     * Prompt for secret values like passwords (input is not shown on screen)
      * $validator(string $val): ?string
      */
     private function promptSecret(string $label, callable $validator): string
     {
         while (true) {
-            // CodeIgniter CLI'da doğrudan gizli input desteği yok;
-            // POSIX terminallerinde stty ile gizleme sağlanır.
+            // CodeIgniter CLI has no built-in hidden-input support;
+            // on POSIX terminals, hiding is done via stty.
             if (function_exists('shell_exec') && stripos(PHP_OS, 'win') === false) {
                 CLI::print("{$label}: ", 'white');
                 system('stty -echo');
@@ -570,7 +601,7 @@ class Ci4msSetup extends BaseCommand
                 system('stty echo');
                 CLI::write(''); // newline
             } else {
-                // Windows veya stty yoksa normal prompt
+                // Normal prompt on Windows or when stty is unavailable
                 $value = CLI::prompt($label);
             }
 
@@ -581,49 +612,83 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
-     * Updates DevGate configuration with the initial admin credentials.
+     * Generates a fresh, independent DevGate credential and persists it hashed.
+     *
+     * DevGate is a separate development-only Basic-Auth gate
+     * (see modules/DevGate/Filters/DevGateFilter.php) unrelated to the admin
+     * account created by this command. Reusing the admin password here would
+     * mean a DevGate credential leak also compromises the admin account, so a
+     * random password is generated instead. It is stored hashed
+     * (PASSWORD_BCRYPT) and returned once in plaintext; it cannot be
+     * recovered from the config file after this call.
+     *
+     * @param string $username DevGate username (reuses the installed admin
+     *                         username for convenience only).
+     *
+     * @return string|null Generated plaintext password, or null if the
+     *                      DevGate config file could not be updated.
      */
-    private function updateDevGateConfig(string $username, string $password): bool
+    private function updateDevGateConfig(string $username): ?string
     {
         $configPath = ROOTPATH . 'modules/DevGate/Config/DevGate.php';
 
         if (!file_exists($configPath) || !is_writable($configPath)) {
-            return false;
+            return null;
         }
 
         try {
             $content = file_get_contents($configPath);
 
-            // Detection of useHashedPasswords
-            $useHashed = false;
-            if (preg_match('/public\s+bool\s+\$useHashedPasswords\s*=\s*(true|1)/i', $content)) {
-                $useHashed = true;
-            }
+            $generatedPassword = bin2hex(random_bytes(16));
+            $hashedPassword    = password_hash($generatedPassword, PASSWORD_BCRYPT);
 
-            // Prepare credentials
-            $finalPass = $useHashed ? password_hash($password, PASSWORD_BCRYPT) : $password;
             $userKey = var_export($username, true);
-            $passVal = var_export($finalPass, true);
+            $passVal = var_export($hashedPassword, true);
 
             // Prepare the new users array string
             $usersArray = "public array \$users = [" . PHP_EOL .
                 "        {$userKey} => {$passVal}," . PHP_EOL .
                 "    ];";
 
-            // Update the users array in the file content
-            $newContent = preg_replace(
+            // Update the users array in the file content.
+            // preg_replace_callback (not preg_replace) is required here: a
+            // bcrypt hash always starts with "$2y$12$..." and a plain
+            // preg_replace() replacement string treats "$2"/"$12" as
+            // backreferences (silently dropped, since this pattern has no
+            // capture groups), corrupting every generated hash. The
+            // callback's return value is inserted verbatim, with no
+            // backreference parsing.
+            $newContent = preg_replace_callback(
                 '/public\s+array\s+\$users\s*=\s*\[.*?\];/s',
-                $usersArray,
+                static fn () => $usersArray,
                 $content
             );
 
             if ($newContent === null || $newContent === $content) {
-                return false;
+                return null;
             }
 
-            return file_put_contents($configPath, $newContent) !== false;
+            // The value just written is a bcrypt hash, never the plaintext —
+            // force hashed comparison in DevGateFilter. $matchCount confirms
+            // the property was found and replaced exactly once; otherwise a
+            // renamed/missing property would silently leave
+            // $useHashedPasswords=false while $users holds a hash, locking
+            // DevGate out entirely.
+            $newContent = preg_replace(
+                '/public\s+bool\s+\$useHashedPasswords\s*=\s*(?:true|false);/i',
+                'public bool $useHashedPasswords = true;',
+                $newContent,
+                -1,
+                $matchCount
+            );
+
+            if ($newContent === null || $matchCount !== 1) {
+                return null;
+            }
+
+            return file_put_contents($configPath, $newContent) !== false ? $generatedPassword : null;
         } catch (\Throwable $e) {
-            return false;
+            return null;
         }
     }
 }

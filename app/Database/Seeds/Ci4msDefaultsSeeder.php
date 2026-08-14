@@ -5,28 +5,30 @@ namespace App\Database\Seeds;
 use CodeIgniter\Database\Seeder;
 
 /**
- * ARTIK NO-OP: bu seeder eskiden `CLI::prompt()` ile isim/e-posta/parola
- * isteyip `InstallService::createDefaultData()`'yı çağırarak superadmin
- * hesabı oluşturuyordu. Web bağlamında STDIN yoktur
+ * NOW A NO-OP: this seeder used to prompt for name/e-mail/password via
+ * `CLI::prompt()` and create a superadmin account by calling
+ * `InstallService::createDefaultData()`. There is no STDIN in a web context
  * (`vendor/codeigniter4/framework/system/CLI/CLI.php` -- `fgets(STDIN)`
- * okunamadığında `false`, `CLI::prompt()` bunu `''`'e çevirir), bu yüzden
- * `php spark db:seed Ci4msDefaultsSeeder` web'den (ör. bu görevle eklenen
- * `MigrationManager` seed ekranından) tetiklenirse boş isim/e-posta/parola
- * ile bir superadmin hesabı yaratıyordu -- sessiz veri bozulması. Hesap
- * yaratma artık hiçbir web-runnable seeder'da yok: bu sınıf
- * `Modules\MigrationManager\Contracts\WebRunnableSeeder` implement ETMEZ,
- * bu yüzden `Modules\MigrationManager\Libraries\SeederScanner::discover()`
- * tarafından hiç keşfedilmez ve backend arayüzünde hiç görünmez.
+ * returns `false` when it can't be read, and `CLI::prompt()` turns that into
+ * `''`), so triggering `php spark db:seed Ci4msDefaultsSeeder` from the web
+ * (e.g. from the `MigrationManager` seed screen added by this task) used to
+ * create a superadmin account with an empty name/e-mail/password -- a silent
+ * data corruption. Account creation no longer exists in any web-runnable
+ * seeder: this class does NOT implement
+ * `Modules\MigrationManager\Contracts\WebRunnableSeeder`, so it is never
+ * discovered by `Modules\MigrationManager\Libraries\SeederScanner::discover()`
+ * and never shows up in the backend UI.
  *
- * Sınıf üçüncü parti doküman/muscle-memory riskine karşı SİLİNMEDİ; `run()`
- * gövdesiz bir no-op'tur, `php spark db:seed Ci4msDefaultsSeeder` hâlâ
- * hatasız/asılı kalmadan döner, yalnızca hiçbir şey yapmaz.
+ * The class was NOT deleted, due to the risk of third-party docs/muscle
+ * memory; `run()` is a no-op with an empty body, so
+ * `php spark db:seed Ci4msDefaultsSeeder` still returns without erroring or
+ * hanging, it just does nothing.
  */
 class Ci4msDefaultsSeeder extends Seeder
 {
     /**
-     * No-op. Eski CLI-prompt + hesap oluşturma davranışı kaldırıldı (bkz.
-     * sınıf docblock'u).
+     * No-op. The old CLI-prompt + account creation behavior was removed
+     * (see the class docblock).
      *
      * @return void
      */

@@ -83,7 +83,6 @@ return [
     'password' => 'Password',
     'repeatPassword' => 'Repeat Password',
     'emailOrUsername' => 'Email or username',
-    'username' => 'Username',
     'register' => 'Register',
     'signIn' => 'Sign In',
     'alreadyRegistered' => 'Already registered?',

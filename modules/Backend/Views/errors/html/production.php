@@ -1,5 +1,5 @@
 <?php
-// production.php — yalnızca production ortamında kullanılır, detay gösterilmez.
+// production.php — used only in the production environment, no details are shown.
 ob_start();
 ?>
 <div class="error-card">

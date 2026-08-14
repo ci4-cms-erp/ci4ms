@@ -146,7 +146,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             })
             .always(function() {
                 btn.prop('disabled', false).html('<i class="fas fa-plus-circle mr-2"></i> <?php echo lang('Backup.createNow') ?>');
-                // complete() meta tag'i güncelledikten SONRA çalışsın diye setTimeout kullanılır.
+                // setTimeout is used so this runs AFTER complete() has updated the meta tag.
                 setTimeout(function() { table.ajax.reload(); }, 0);
             });
         });
@@ -158,7 +158,7 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#e53e3e',
-            confirmButtonText: '<?php echo lang('Backup.deleteConfirmBtn') ?>',
+            confirmButtonText: '<?php echo lang('Backend.deleteConfirmBtn') ?>',
             cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
         }).then((result) => {
             if (result.isConfirmed) {

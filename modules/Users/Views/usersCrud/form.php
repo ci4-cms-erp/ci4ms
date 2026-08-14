@@ -60,7 +60,7 @@ $formAction  = $isEdit
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for=""><?php echo lang('Auth.username') ?> <?php echo lang('Backend.required') ?></label>
+                        <label for=""><?php echo lang('Backend.username') ?> <?php echo lang('Backend.required') ?></label>
                         <input type="text" class="form-control" name="username" minlength="3" maxlength="30"
                             value="<?php echo old('username', esc($userInfo->username??'')) ?>" required>
                     </div>

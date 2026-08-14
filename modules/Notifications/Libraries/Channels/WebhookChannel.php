@@ -7,19 +7,19 @@ namespace Modules\Notifications\Libraries\Channels;
 use Modules\Notifications\Libraries\NotificationMessage;
 
 /**
- * Webhook kanalı — henüz uygulanmadı; teslimi atlar (no-op stub).
+ * Webhook channel — not implemented yet; skips delivery (no-op stub).
  *
- * Kanal keşfi ve builder `via('webhook')` yolu bu stub sayesinde bugünden çalışır;
- * gerçek HTTP teslimi ileride burada uygulanacaktır.
+ * Channel discovery and the builder's `via('webhook')` path already work today
+ * thanks to this stub; the actual HTTP delivery will be implemented here later.
  */
 final class WebhookChannel implements ChannelInterface
 {
     /**
-     * Mesajı işlemeden atlar.
+     * Skips the message without processing it.
      *
-     * @param NotificationMessage $message Mesaj (kullanılmaz).
+     * @param NotificationMessage $message The message (unused).
      *
-     * @return ChannelResult Her zaman skipped('not-implemented').
+     * @return ChannelResult Always skipped('not-implemented').
      */
     public function send(NotificationMessage $message): ChannelResult
     {

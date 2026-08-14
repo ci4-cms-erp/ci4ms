@@ -8,37 +8,40 @@ use Config\Cache;
 use Redis;
 
 /**
- * Modülün phpredis bağlantı kurulumunun TEK kaynağı (RealtimeSignal + RedisConnectionRegistry).
+ * The SOLE source of the module's phpredis connection setup (RealtimeSignal + RedisConnectionRegistry).
  *
- * İki depo sınıfı da aynı lazy bağlantıyı kurar; kopya kurulum kodu tutulursa biri
- * sertleştirilip diğeri unutulur (timeout ayarı tam olarak böyle kaçmıştı). Bağlantı
- * parametreleri `config('Cache')->redis` (host/port/password/database) dizisinden gelir —
- * yeni bir bağlantı anahtarı icat edilmez.
+ * Both store classes set up the same lazy connection; if the setup code were
+ * duplicated, one would get hardened while the other is forgotten (that's
+ * exactly how the timeout setting slipped through before). Connection
+ * parameters come from the `config('Cache')->redis` (host/port/password/database)
+ * array — no new connection key is invented.
  *
- * ZAMAN AŞIMI SÖZLEŞMESİ: hem connect hem de READ timeout kısadır. Redis bağlantıyı
- * kabul edip yanıt vermezse (paket düşüren firewall, BGSAVE stall) read timeout olmadan
- * komutlar `default_socket_timeout` (tipik 60 sn) boyunca bloklar; bu, worker havuzunu
- * korumak için var olan bağlantı cap'ini havuzu kilitleyen bir amplifikasyona çevirir.
- * Ext yüklü değilse ya da connect başarısız/zaman aşımına uğrarsa bağlantı bir kez
- * `connectionFailed` işaretlenir ve aynı istek boyunca yeniden denenmez.
+ * TIMEOUT CONTRACT: both the connect and READ timeout are short. If Redis
+ * accepts the connection but doesn't respond (a packet-dropping firewall, a
+ * BGSAVE stall), commands would block for `default_socket_timeout`
+ * (typically 60s) without a read timeout; that turns the connection cap that
+ * exists to protect the worker pool into an amplification that locks up the
+ * pool instead. If the extension isn't loaded, or the connect fails/times
+ * out, the connection is marked `connectionFailed` once and isn't retried for
+ * the rest of the request.
  */
 trait RedisConnectionTrait
 {
-    /** Lazy bağlantı kurulum zaman aşımı (sn) — Redis down iken çağrıyı çabuk serbest bırakır. */
+    /** Lazy connection setup timeout (s) — releases the caller quickly while Redis is down. */
     private const CONNECT_TIMEOUT_SECONDS = 0.5;
 
-    /** Komut yanıtı bekleme zaman aşımı (sn) — hung Redis worker'ı dakikalarca tutmasın. */
+    /** Command response wait timeout (s) — so a hung Redis worker isn't held for minutes. */
     private const READ_TIMEOUT_SECONDS = 0.5;
 
     private ?Redis $redis = null;
 
-    /** Bir kez başarısız olan bağlantı aynı istek boyunca yeniden denenmez. */
+    /** A connection that has failed once isn't retried for the rest of the request. */
     private bool $connectionFailed = false;
 
     /**
-     * Lazy phpredis bağlantısı; Cache config'inden okur, hata → null.
+     * Lazy phpredis connection; reads from the Cache config, error -> null.
      *
-     * @return Redis|null Kullanıma hazır bağlantı ya da null.
+     * @return Redis|null Ready-to-use connection, or null.
      */
     private function connection(): ?Redis
     {
@@ -71,8 +74,8 @@ trait RedisConnectionTrait
                 return null;
             }
 
-            // connect()'in read_timeout parametresi yalnız kurulum anına uygulanır;
-            // sonraki her komut için de aynı sınır geçerli olsun.
+            // connect()'s read_timeout parameter only applies at setup time;
+            // make sure the same limit applies to every subsequent command too.
             $redis->setOption(Redis::OPT_READ_TIMEOUT, self::READ_TIMEOUT_SECONDS);
 
             if (! empty($conf['password'])) {
@@ -87,7 +90,7 @@ trait RedisConnectionTrait
 
             return $this->redis;
         } catch (\Throwable $e) {
-            // Bağlantı kurulamadı ya da zaman aşımına uğradı; aynı istekte tekrar denenmez.
+            // Connection couldn't be established or timed out; not retried within this request.
             $this->connectionFailed = true;
 
             return null;

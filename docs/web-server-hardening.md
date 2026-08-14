@@ -106,4 +106,80 @@ Beyond the directory-level rules:
 * Restrict `writable/`, `app/`, `system/`, `tests/`, `vendor/`, `.env` from web access entirely — they should not be inside the document root, but a `deny from all` / `return 404;` is still good defense.
 * Set strict filesystem permissions on `.env` (`chmod 600`, owned by the web user).
 
+## Closing the open `/backend/register` endpoint
+
+**Status:** left open by product decision. `ci4ms-security-reports-2026-08-13.md`
+(Finding 3, CWE-306, CVSS 3.7) documents that `/backend/register` accepts
+requests from unauthenticated visitors and lets them create an active
+account in the backend user table with no email verification. The account
+lands in Shield's default group, which ships with zero permissions, so it
+cannot reach any `backend/*` screen behind the permission filter — but it is
+still an unauthenticated write to the `users`/`auth_identities` tables and a
+spam/foothold surface. Nothing in this repository implements either option
+below; this section exists so an operator who wants to close it anyway knows
+exactly what to change and what each change actually does.
+
+Two independent ways to close it, verified against source. **They solve
+different problems — read the comparison before picking one.**
+
+### Option 1 — `Auth.allowRegistration = false` (functional kill-switch)
+
+File: `modules/Auth/Config/Auth.php:172`
+
+```php
+public bool $allowRegistration = false;
+```
+
+Verified against source: the route resolves to this project's own
+`modules/Auth/Controllers/RegisterController.php` (not the vendor one),
+because `Routes.php:4` passes `'namespace' => 'Modules\Auth\Controllers'`.
+Both `registerView()` (GET, line 62) and `registerAction()` (POST, line 88)
+open with `if (! setting('Auth.allowRegistration')) { return
+redirect()->back()->withInput()->with('error', lang('Auth.registerDisabled'));
+}`. So the real effect is a **302 redirect with a flash error, not a 403 or a
+404** — the route still exists and still responds, on both verbs, but no row
+is ever written to `users`. The check lives inside the controller, so it
+holds regardless of how the controller is reached: this route, a future
+route pointing at the same controller, a CLI trigger, anything.
+
+### Option 2 — remove the route (`routes($routes, ['except' => ['register']])`)
+
+File: `modules/Auth/Config/Routes.php:4`
+
+```php
+service('auth')->routes($routes, ['namespace' => 'Modules\Auth\Controllers', 'except' => ['register']]);
+```
+
+Verified against `vendor/codeigniter4/shield/src/Auth.php:134-166` and
+`vendor/codeigniter4/shield/src/Config/AuthRoutes.php:20-33`: Shield's route
+table is keyed by group name, and `register` is **one key covering both
+rows** — the GET `register` route and the POST `registerAction` route.
+`except => ['register']` drops both in the same pass; `login`, `logout`,
+`magic-link`, and `auth-actions` sit under different keys and are untouched.
+A request to `/backend/register` then hits no route at all — a plain 404,
+before the controller (and therefore before the `allowRegistration` check)
+ever runs.
+
+This is **route-table-only**: it does not touch `Auth.php:172`, so
+`allowRegistration` stays `true`. If any later change adds another route
+pointing at `RegisterController::registerView`/`registerAction`, or calls
+those methods directly (a CLI command, another controller), registration
+works again on that new path — the removed route is the only thing blocked.
+As of this writing no other route in the repo targets `RegisterController`
+(only the class declaration and the two Shield-managed rows reference it).
+
+### Comparison
+
+| | Option 1 — `allowRegistration = false` | Option 2 — `except => ['register']` |
+|---|---|---|
+| Enforced where | Inside the controller | Route table only |
+| `/backend/register` response | 302 + flash error, both verbs | 404, both verbs |
+| Survives a new route added later that targets `RegisterController` | Yes | No — bypasses this control entirely |
+| Depends on | Shield's internal check staying in `RegisterController` (vendor behavior) | This project's own `Routes.php` (fully under project control) |
+| Use when | Registration must stay off everywhere, permanently | `/backend/register` must 404 specifically, and `allowRegistration` will be kept in sync manually |
+
+Applying both is belt-and-suspenders: the route 404s directly, and even if a
+route to the controller reappears later, `allowRegistration = false` still
+blocks it.
+
 See [SECURITY.md](../SECURITY.md) for the responsible-disclosure policy.

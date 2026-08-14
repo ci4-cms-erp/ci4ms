@@ -5,35 +5,38 @@ namespace Modules\Notifications\Database\Migrations;
 use CodeIgniter\Database\Migration;
 
 /**
- * Hesap verebilirlik izi için `notifications` tablosuna additive (DROP'suz)
- * `created_by` kolonunu ekler.
+ * Adds an additive (no-DROP) `created_by` column to the `notifications` table
+ * for accountability tracing.
  *
- * ANLAM: satırı ÜRETEN kullanıcının kimliği — alıcısı DEĞİL. Model B satırları
- * küreseldir (`user_id` daima NULL, hedef `target_type`/`target_value` ile taşınır),
- * bu yüzden "kim gönderdi" sorusunun cevabı için ayrı bir kolon gerekir. Yalnız
- * insan eliyle üretilen yayınlarda (FAZ 3 composer) dolar; olay/CLI kaynaklı
- * bildirimlerde NULL kalır ve bu ayrım kasıtlıdır: NULL = "sistem üretti".
- * Yazan TEK yer: InAppChannel::buildRow(); değer DAİMA sunucuda `auth()->id()`'den
- * gelir, istemciden ASLA okunmaz.
+ * MEANING: the identity of the user who PRODUCED the row — not its recipient.
+ * Model B rows are global (`user_id` is always NULL, the target is carried via
+ * `target_type`/`target_value`), so a separate column is needed to answer "who
+ * sent it". It is only populated for human-authored broadcasts (PHASE 3
+ * composer); for event/CLI-originated notifications it stays NULL, and this
+ * distinction is deliberate: NULL = "produced by the system".
+ * The ONLY place that writes it: InAppChannel::buildRow(); the value ALWAYS
+ * comes from `auth()->id()` on the server, NEVER read from the client.
  *
- * FOREIGN KEY YOK — bilerek: bu bir denetim izidir. `users`'a CASCADE bir FK
- * takılsaydı bir hesabın silinmesi onun gönderdiği bildirimleri de silerdi, SET NULL
- * ise izin kendisini yok ederdi; ikisi de izin var olma amacını bozar. Kullanıcı
- * silindikten sonra kalan kimlik, çözülemeyen bir referans olarak korunur
- * (okuma yolu bu kolona hiç bakmaz, dolayısıyla JOIN maliyeti de yoktur).
+ * NO FOREIGN KEY — deliberately: this is an audit trail. A CASCADE FK to
+ * `users` would delete a user's sent notifications along with their account,
+ * while SET NULL would destroy the trail itself; either would defeat the
+ * purpose of having a trail. After a user is deleted, the remaining identity
+ * is preserved as an unresolved reference (the read path never looks at this
+ * column, so there is no JOIN cost either).
  *
- * up() fieldExists guard'lıdır (tekrar çalıştırılabilir) ve `after` yalnız dayanak
- * kolonun VARLIĞI doğrulandığında verilir: modül klasörü, FAZ 2 migration'ı henüz
- * koşmamış bir veritabanına da bırakılabilir. down() yalnız dosya bütünlüğü içindir:
- * kolon veri taşır, otomatik DROP veri kaybı olurdu.
+ * up() is fieldExists-guarded (safe to re-run), and `after` is only given once
+ * the anchor column's PRESENCE is confirmed: the module folder may also be
+ * dropped onto a database where the PHASE 2 migration has not run yet. down()
+ * exists only for file integrity: the column carries data, so an automatic
+ * DROP would be data loss.
  */
 class AddCreatedByToNotifications extends Migration
 {
     public function up()
     {
-        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
-        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
-        // söylemesin diye önce sıfırlanır.
+        // The fieldExists() result is cached on the connection and goes stale if
+        // the schema changes within this process (migrate:refresh / rollback+migrate).
+        // Reset it first so the guard doesn't lie.
         $this->db->resetDataCache();
 
         $table = 'notifications';
@@ -50,8 +53,8 @@ class AddCreatedByToNotifications extends Migration
             'default'    => null,
         ];
 
-        // `after` yalnız dayanak kolon gerçekten varsa verilir; yoksa MySQL
-        // "Unknown column in 'notifications'" ile ALTER'ı tamamen reddeder.
+        // `after` is only given if the anchor column actually exists; otherwise
+        // MySQL rejects the ALTER entirely with "Unknown column in 'notifications'".
         if ($this->db->fieldExists('exclude_users', $table)) {
             $definition['after'] = 'exclude_users';
         }
@@ -63,8 +66,8 @@ class AddCreatedByToNotifications extends Migration
     {
         $this->db->resetDataCache();
 
-        // Geri alma ELLE yapılır — bu kolon denetim verisi taşır, otomatik DROP veri kaybıdır.
-        // Manuel adım (gerekirse):
+        // Rollback is done MANUALLY — this column carries audit data, so an automatic DROP would be data loss.
+        // Manual step (if needed):
         //   ALTER TABLE `{prefix}notifications` DROP COLUMN `created_by`;
     }
 }

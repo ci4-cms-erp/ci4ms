@@ -8,44 +8,45 @@ use Modules\Notifications\Libraries\Notifier;
 use Modules\Notifications\Libraries\SignalStoreInterface;
 
 /**
- * Bildirim Merkezi — Redis destekli kendi PHP SSE (Server-Sent Events) ucu.
+ * Notification Center — our own Redis-backed PHP SSE (Server-Sent Events) endpoint.
  *
- * Uç (bkz. Config/Routes.php):
- *   GET backend/notifications/stream  stream()  — text/event-stream akışı (role: read)
+ * Endpoint (see Config/Routes.php):
+ *   GET backend/notifications/stream  stream()  — text/event-stream stream (role: read)
  *
- * GÜVENLİK (IDOR gate): Dinlenecek kanallar KATI biçimde oturumdaki kullanıcıdan
- * `Notifier::topicsFor()` ile türetilir (applyRelevance'ın transport aynası). İstemci
- * hiçbir kanal/topic parametresi göndermez; kanallar yalnız sunucu tarafında session'dan
- * çözülür. Payload minimal bir "nudge"tır — istemci feed ucundan DB'yi yeniden okuyarak
- * reconcile eder. Kalıcı kaynak InAppChannel'ın DB yazımıdır; bu akış best-effort sinyaldir.
+ * SECURITY (IDOR gate): the channels to listen on are STRICTLY derived from the session
+ * user via `Notifier::topicsFor()` (the transport mirror of applyRelevance). The client
+ * never sends any channel/topic parameter; channels are resolved server-side from the
+ * session only. The payload is a minimal "nudge" — the client reconciles by re-reading
+ * the DB from the feed endpoint. The persistent source of truth is InAppChannel's DB
+ * write; this stream is a best-effort signal.
  *
- * KAYNAK KORUMASI (bağlantı cap'i): Her açık akış TTL'i boyunca bir PHP-FPM worker'ını
- * meşgul eder, bu yüzden kimlik başına eşzamanlı bağlantı sayısı rol bazlı cap'lenir
- * (NotificationsConfig::$realtimeConnCapDefault / $realtimeConnCapByGroup). Yuvalar
- * ConnectionRegistryInterface üzerinden ayrılır; kapasite dolu ise akış hiç açılmaz,
- * istemci 429 alıp polling'e düşer.
+ * RESOURCE PROTECTION (connection cap): every open stream occupies a PHP-FPM worker for
+ * the duration of its TTL, so the number of concurrent connections per identity is
+ * capped on a role basis (NotificationsConfig::$realtimeConnCapDefault /
+ * $realtimeConnCapByGroup). Slots are allocated via ConnectionRegistryInterface; if
+ * capacity is full, the stream never opens, and the client gets 429 and falls back to polling.
  */
 class RealtimeController extends \Modules\Backend\Controllers\BaseController
 {
-    /** Redis sinyal sayaçlarını yoklama aralığı (mikrosaniye) — Redis GET sub-ms olduğundan ucuz. */
+    /** Polling interval for the Redis signal counters (microseconds) — cheap since Redis GET is sub-ms. */
     private const STREAM_POLL_US = 1_000_000;
 
-    /** İki heartbeat comment'i arası saniye (idle proxy/tarayıcı zaman aşımlarını canlı tutar). */
+    /** Seconds between two heartbeat comments (keeps idle proxy/browser timeouts alive). */
     private const HEARTBEAT_SECONDS = 15;
 
-    /** Bir SSE bağlantısının izin verilen en uzun ömrü (sn) — .env TTL bunun üstüne çıkamaz. */
+    /** Max allowed lifetime of an SSE connection (sec) — the .env TTL cannot exceed this. */
     private const STREAM_TTL_CAP_SECONDS = 120;
 
     /**
-     * Bağlantı yuvası TTL'ine eklenen tampon (sn) — release() hiç çalışmasa da yuva kesin düşer.
+     * Buffer added to the connection slot TTL (sec) — guarantees the slot expires even if release() never runs.
      *
-     * Kısa tutulur: yuva akış bittikten sonra ne kadar ayakta kalırsa, yetim yuva o kadar
-     * uzun süre kullanıcının kendi cap'ini yer.
+     * Kept short: the longer a slot stays alive after the stream ends, the longer an
+     * orphaned slot eats into the user's own cap.
      */
     private const CONN_TTL_BUFFER_SECONDS = 5;
 
     /**
-     * Paylaşımlı Notifier servis örneği.
+     * Shared Notifier service instance.
      *
      * @return Notifier
      */
@@ -58,7 +59,7 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Paylaşımlı eşzamanlı bağlantı defteri servis örneği.
+     * Shared concurrent connection registry service instance.
      *
      * @return ConnectionRegistryInterface
      */
@@ -70,33 +71,36 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
         return $registry;
     }
 
-    /** Geçersiz cap default'u için süreç başına tek uyarı — bkz. warnAboutInvalidCapDefault(). */
+    /** One warning per process for an invalid cap default — see warnAboutInvalidCapDefault(). */
     private static bool $capFallbackWarned = false;
 
     /**
-     * Kullanıcının gruplarından etkin SSE bağlantı cap'ini çözer.
+     * Resolves the effective SSE connection cap from the user's groups.
      *
-     * SENTİNEL SEMANTİĞİ — sınırsız için NEGATİF, 0 DEĞİL. Cap değerleri `int` bildirimli
-     * olduğundan CI4 (`BaseConfig::initEnvValue()`) `.env`'deki sayısal olmayan her değeri
-     * `resolveConnectionCap()`'e ulaşmadan ÖNCE 0'a cast eder; yani `... = ten` gibi tek
-     * harflik bir yazım hatası 0 üretir. 0 bu yüzden "korumayı kapat" anlamına GELEMEZ:
-     * geçersiz sayılır ve `NotificationsConfig::CONN_CAP_FALLBACK`'e fail-closed düşülür.
-     * Negatif bir değer bir typo'nun cast'inden asla çıkmayacağı için kaçış valfi odur.
+     * SENTINEL SEMANTICS — NEGATIVE for unlimited, NOT 0. Since cap values are declared
+     * `int`, CI4 (`BaseConfig::initEnvValue()`) casts every non-numeric `.env` value to 0
+     * BEFORE it reaches `resolveConnectionCap()`; meaning a one-letter typo like
+     * `... = ten` produces 0. 0 therefore CANNOT mean "turn off protection": it's
+     * treated as invalid and falls back fail-closed to
+     * `NotificationsConfig::CONN_CAP_FALLBACK`. A negative value is the escape valve
+     * because it can never come out of a typo's cast.
      *
-     * `$realtimeConnCapDefault` NEGATİF ise özellik GLOBAL olarak sınırsızdır ve by-group
-     * tablosuna hiç bakılmaz: kaçış valfini açan operatör, ürünle gelen `['superadmin' => 10]`
-     * satırının hâlâ eşleşmesini beklemez. Aksi halde eşleşen grup yoksa default; birden çok
-     * eşleşme varsa EN YÜKSEK cap uygulanır. Eşleşenlerden biri bile NEGATİF (SINIRSIZ)
-     * tanımlıysa sınırsız kazanır — kaçış valfi daraltılmamalıdır.
+     * If `$realtimeConnCapDefault` is NEGATIVE, the feature is GLOBALLY unlimited and
+     * the by-group table is never consulted: an operator opening the escape valve
+     * doesn't expect the product's built-in `['superadmin' => 10]` row to still apply.
+     * Otherwise, the default applies if no group matches; if multiple match, the
+     * HIGHEST cap applies. If even one match is defined NEGATIVE (UNLIMITED), unlimited
+     * wins — the escape valve must not be narrowed.
      *
-     * Grup tablosunda 0 ya da sayısal OLMAYAN değerler YOK SAYILIR, o grup hiç eşleşmemiş
-     * gibi davranılır. `is_numeric()` filtresi `.env` yolunda ölüdür (değer oraya zaten int
-     * olarak gelir) ama property'ye doğrudan string atayan çağrı yollarını korur.
+     * 0 or NON-NUMERIC values in the group table are IGNORED, treated as if that group
+     * never matched. The `is_numeric()` filter is dead on the `.env` path (the value
+     * already arrives as int there) but protects call paths that assign a string
+     * directly to the property.
      *
-     * @param NotificationsConfig $config Cap tablosunu taşıyan modül yapılandırması.
-     * @param string[]            $groups Kullanıcının üye olduğu Shield grupları.
+     * @param NotificationsConfig $config Module configuration carrying the cap table.
+     * @param string[]            $groups Shield groups the user is a member of.
      *
-     * @return int Uygulanacak cap; yalnız 0 SINIRSIZ demektir (dönüş değeri asla negatif olmaz).
+     * @return int The cap to apply; only 0 means UNLIMITED (the return value is never negative).
      */
     private function resolveConnectionCap(NotificationsConfig $config, array $groups): int
     {
@@ -129,11 +133,12 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Geçersiz (0) cap default'unun fail-closed karşılandığını loglar.
+     * Logs that an invalid (0) cap default was handled fail-closed.
      *
-     * Süreç başına yalnız BİR kez yazar: stream ucu her sekmeden TTL'de bir yeniden
-     * bağlandığı için koşulsuz loglamak yanlış yapılandırma süresince log'u boğardı.
-     * FPM'de her worker kendi uyarısını yazacağından kayıt yine de görünür kalır.
+     * Writes only ONCE per process: since the stream endpoint reconnects from every tab
+     * once per TTL, logging unconditionally would flood the log for the duration of the
+     * misconfiguration. In FPM each worker will write its own warning, so the record
+     * still stays visible.
      */
     private function warnAboutInvalidCapDefault(): void
     {
@@ -153,30 +158,34 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * SSE akışını açar: kullanıcının yetkili kanallarının Redis sinyalini yoklar,
-     * değişimde minimal bir "notification" nudge event'i gönderir.
+     * Opens the SSE stream: polls the Redis signal of the user's authorized channels,
+     * and sends a minimal "notification" nudge event on change.
      *
-     * Akış ömrü `NotificationsConfig::$realtimeStreamTtl` (sn) ile CAP'lidir; süre
-     * dolunca temiz `return` ile kapanır ve tarayıcı EventSource otomatik reconnect eder.
+     * Stream lifetime is CAPPED by `NotificationsConfig::$realtimeStreamTtl` (sec); when
+     * the time expires it closes with a clean `return`, and the browser's EventSource
+     * reconnects automatically.
      *
-     * KISIT (session kilidi): userId + kanallar çözüldükten HEMEN sonra `session()->close()`
-     * ile oturum yazma kilidi serbest bırakılır. FileHandler driver'da kilit açık kalırsa
-     * aynı kullanıcının TÜM backend istekleri bu uzun-ömürlü bağlantı boyunca bloke olur.
+     * CONSTRAINT (session lock): IMMEDIATELY after userId + channels are resolved,
+     * `session()->close()` releases the session write lock. If the lock stayed open
+     * under the FileHandler driver, ALL of that user's backend requests would block for
+     * the duration of this long-lived connection.
      *
-     * KISIT (CI4 çıktı pipeline'ı): Header'lar `$this->response`'a set edilip döngüden
-     * ÖNCE bir kez `sendHeaders()` ile gönderilir; framework'ün istek sonu `send()`'i
-     * `headers_sent()` true olduğundan tekrar göndermez (test `pretend()` modunda no-op).
-     * Gövde echo+flush ile stream edilir; metot `$this->response->setBody('')` döndürür.
-     * Proje kuralı gereği exit;/die; KULLANILMAZ — döngü cap'li süre sonunda normal biter.
+     * CONSTRAINT (CI4 output pipeline): headers are set on `$this->response` and sent
+     * once via `sendHeaders()` BEFORE the loop; the framework's end-of-request `send()`
+     * won't send them again since `headers_sent()` is true (a no-op in `pretend()` mode
+     * during tests). The body is streamed via echo+flush; the method returns
+     * `$this->response->setBody('')`. Per project convention, exit;/die; is NOT USED —
+     * the loop ends normally once the capped duration elapses.
      *
-     * KAYNAK KORUMASI: Akış açılmadan önce kimlik başına bir bağlantı yuvası ayrılır;
-     * cap doluysa (ya da cap uygulanamıyorsa) 429 ile hiç açılmaz. Yuva iki yoldan geri
-     * verilir: döngü normal bittiğinde hızlı yol, HER durumda ise `register_shutdown_function`.
-     * İkincisi zorunludur — `ignore_user_abort(false)` altında PHP kopmayı bir yazma
-     * sırasında fark edip script'i zend_bailout ile sonlandırır, yani döngüden SONRAKİ
-     * kod hiç çalışmaz; shutdown fonksiyonu bailout/fatal ve `max_execution_time`
-     * sonrasında da koşar (FPM `request_terminate_timeout`'unda KOŞMAZ, orada yuvayı
-     * yalnız slot TTL'i düşürür).
+     * RESOURCE PROTECTION: before the stream opens, a connection slot is allocated per
+     * identity; if the cap is full (or the cap can't be enforced), the stream never
+     * opens and returns 429. The slot is released two ways: the fast path when the loop
+     * ends normally, and `register_shutdown_function` in EVERY case. The latter is
+     * mandatory — under `ignore_user_abort(false)`, PHP detects a client disconnect
+     * during a write and terminates the script via zend_bailout, meaning code AFTER the
+     * loop never runs; the shutdown function also runs after a bailout/fatal and after
+     * `max_execution_time` (it does NOT run under FPM's `request_terminate_timeout`,
+     * where the slot only expires via its TTL).
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -190,22 +199,23 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
         $config = config(NotificationsConfig::class);
 
         if (! $config->realtimeEnabled) {
-            // İstemci polling'e düşsün diye boş 204.
+            // Empty 204 so the client falls back to polling.
             return $this->response->setStatusCode(204);
         }
 
         $userId   = (int) auth()->id();
         $notifier = $this->notifier();
 
-        // Cap politikası DB hâlâ açıkken çözülür.
+        // Cap policy is resolved while the DB is still open.
         $groups = $notifier->groupsFor($userId);
 
-        // Operatör .env'de aşırı büyük TTL verirse worker'ı uzun süre tutmasın: üst sınıra
-        // clamp'la. Alt sınır 0 (0 = döngü hiç çalışmaz; test seam'i bunu kullanır).
+        // Don't let the worker be held for too long if the operator sets an excessively
+        // large TTL in .env: clamp to the upper bound. Lower bound is 0 (0 = the loop
+        // never runs; the test seam uses this).
         $ttl = max(0, min($config->realtimeStreamTtl, self::STREAM_TTL_CAP_SECONDS));
 
-        // cap 0 = SINIRSIZ (yalnız NEGATİF yapılandırmanın açtığı kaçış valfi): defter hiç
-        // devreye girmez, Redis'e yazılmaz.
+        // cap 0 = UNLIMITED (only the escape valve opened by a NEGATIVE configuration):
+        // the registry is never engaged, nothing is written to Redis.
         $cap      = $this->resolveConnectionCap($config, $groups);
         $registry = null;
         $connId   = null;
@@ -217,11 +227,12 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
             $connId   = $registry->acquire($userId, $cap, $slotTtl);
 
             if ($connId === null) {
-                // Kapasite dolu ya da defter erişilemez. Reddedilen istek mümkün olduğunca
-                // ucuz olmalı: buraya kadar yalnız TEK grup sorgusu yapıldı, kanal listesi
-                // (topicsFor) hiç türetilmedi. Kısa düz metin gövde: istemcinin tek ihtiyacı
-                // 2xx-olmayan durumdur (EventSource kalıcı kapanır), cap/rol ayrıntısı
-                // sızdırılmaz. Retry-After = yuva ömrü, yani en erken boşalma anı.
+                // Capacity is full, or the registry is unreachable. A rejected request
+                // should be as cheap as possible: only a SINGLE group query has run up
+                // to this point, the channel list (topicsFor) was never derived. Short
+                // plain-text body: the client's only need is a non-2xx status
+                // (EventSource closes permanently), no cap/role detail is leaked.
+                // Retry-After = slot lifetime, i.e. the earliest it could free up.
                 return $this->response
                     ->setStatusCode(429)
                     ->setContentType('text/plain')
@@ -230,13 +241,14 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
                     ->setBody(lang('Notifications.realtimeConnLimit'));
             }
 
-            // Yuvayı bırakmanın TEK güvenilir yolu: ignore_user_abort(false) altında PHP,
-            // istemci kopmasını bir yazma sırasında fark edip script'i zend_bailout ile
-            // sonlandırır ve döngüden sonraki hızlı yol ÇALIŞMAZ. Shutdown fonksiyonları
-            // istemci kopmasından ve max_execution_time fatal'ından sonra da koşar; $released
-            // bayrağı hızlı yolla çift release'i engeller. KAPSAM DIŞI: FPM'in
-            // request_terminate_timeout'u child sürecin kendisini öldürür, shutdown
-            // fonksiyonları KOŞMAZ — o senaryoda yuvayı yalnız slot TTL'i düşürür.
+            // The ONLY reliable way to release the slot: under ignore_user_abort(false),
+            // PHP detects a client disconnect during a write and terminates the script
+            // via zend_bailout, so the fast path after the loop DOES NOT RUN. Shutdown
+            // functions also run after a client disconnect and after a
+            // max_execution_time fatal; the $released flag prevents a double release
+            // with the fast path. OUT OF SCOPE: FPM's request_terminate_timeout kills
+            // the child process itself, shutdown functions DO NOT RUN — in that
+            // scenario the slot only expires via its TTL.
             register_shutdown_function(static function () use ($registry, $userId, $connId, &$released): void {
                 if (! $released) {
                     $released = true;
@@ -245,17 +257,18 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
             });
         }
 
-        // Kanallar (grup üyeliği dahil) yalnız yuva ayrıldıktan sonra türetilir. topicsFor()
-        // grupları kendi içinde yeniden sorgular; imzası IDOR kapısı olduğu için dışarıdan
-        // hazır grup listesi ALMAZ — tek implementasyon, iki sorgu.
+        // Channels (including group membership) are only derived after the slot is
+        // allocated. topicsFor() re-queries the groups itself; because its signature is
+        // the IDOR gate, it does NOT ACCEPT a ready-made group list from outside — a
+        // single implementation, two queries.
         $channels = $notifier->topicsFor($userId);
 
-        // Kanallar çözüldü; oturum yazma kilidini hemen bırak.
+        // Channels resolved; release the session write lock right away.
         session()->close();
 
-        // Poll döngüsü yalnız Redis'e dokunur; BaseController bootstrap'ının (CommonModel)
-        // açtığı default DB bağlantısını burada kapat ki worker TTL boyunca idle bir bağlantı
-        // tutmasın. Döngü sonrası DB'ye erişilmediğinden sonraki erişim yoktur.
+        // The poll loop only touches Redis; close the default DB connection opened by
+        // BaseController's bootstrap (CommonModel) here so the worker doesn't hold an
+        // idle connection for the duration of the TTL. There's no further DB access after the loop.
         db_connect('default')->close();
 
         /** @var SignalStoreInterface $signal */
@@ -297,8 +310,8 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
             usleep(self::STREAM_POLL_US);
         }
 
-        // Hızlı yol: döngü normal bittiyse yuvayı beklemeden geri ver. Buraya hiç
-        // düşülmezse (kopma/fatal) aynı işi shutdown fonksiyonu yapar.
+        // Fast path: if the loop ended normally, release the slot without waiting. If
+        // execution never reaches here (disconnect/fatal), the shutdown function does the same job.
         if ($registry !== null && $connId !== null && ! $released) {
             $released = true;
             $registry->release($userId, $connId);
@@ -308,7 +321,7 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Açık çıktı tamponlarını istemciye boşaltır (SSE her event sonrası).
+     * Flushes open output buffers to the client (after every SSE event).
      */
     private function flushBuffers(): void
     {

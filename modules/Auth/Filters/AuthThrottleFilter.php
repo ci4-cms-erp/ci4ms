@@ -7,17 +7,17 @@ namespace Modules\Auth\Filters;
 use CodeIgniter\HTTP\RequestInterface;
 
 /**
- * Shield auth route'ları (login/register/forgot vb.) için rate-limit.
+ * Rate-limit for Shield auth routes (login/register/forgot, etc.).
  *
- * `auth-rates` alias'ı bu sınıfa yönlendirilir (bkz. Config\Filters).
- * Shield'in çıplak 429'u yerine, her zaman 'auth' profili ile çalışıp
- * markalı error_429 sayfasını GERÇEK geri sayımla gösterir.
+ * The `auth-rates` alias is routed to this class (see Config\Filters).
+ * Instead of Shield's bare 429, it always runs with the 'auth' profile and
+ * shows the branded error_429 page with a REAL countdown.
  */
 class AuthThrottleFilter extends \App\Filters\ThrottleFilter
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Argüman ne olursa olsun 'auth' profilini zorla.
+        // Force the 'auth' profile regardless of the argument passed in.
         return parent::before($request, ['auth']);
     }
 }

@@ -16,7 +16,6 @@ return [
     'yourName' => 'Your Name',
     'surname' => 'Surname',
     'email' => 'E-mail',
-    'username' => 'Username',
     'passwordMinLength' => 'Password (min 8 characters)',
     'generatePassword' => 'Generate Password',
 
@@ -30,7 +29,6 @@ return [
     'databasePort' => 'Database Port',
 
     // Site Information
-    'siteName' => 'Site Name',
     'siteUrl' => 'Site URL',
     'siteSlogan' => 'Site Slogan',
 
@@ -46,4 +44,12 @@ return [
     'invalidNonce' => 'The install session is missing or expired. Reload this page and submit the form again.',
     'geoLookup' => 'Enable session location tracking (local GeoIP database)',
     'geoLookupHint' => 'Derives approximate city/country for login sessions locally — no data is sent to third parties. Requires downloading the free DB-IP database after install: php spark ci4ms:geoip-update. Uses "IP Geolocation by DB-IP" (CC BY 4.0); attribution required if enabled.',
+
+    // DevGate one-time credential disclosure
+    'devGateCredentialsTitle' => 'DevGate Access Credentials',
+    'devGateCredentialsWarning' => 'This password is shown once and cannot be recovered. Save it now.',
+    'devGateCredentialsNote' => 'DevGate is a separate development Basic-Auth gate and is unrelated to your admin account password.',
+    'devGateCredentialsUsername' => 'Username',
+    'devGateCredentialsPassword' => 'Password',
+    'devGateCredentialsContinue' => 'Continue to site',
 ];

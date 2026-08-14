@@ -286,25 +286,56 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
         return true;
     }
 
+    /**
+     * Updates a single user's direct (non-group) permissions from POST data,
+     * or renders the special-permission form on GET.
+     *
+     * Closes the user-level counterpart of BLOKER-1/FAZ2-K2 (see
+     * actorGrantsSubsetOfOwnPermissions()'s docblock): the only guard used to
+     * be on the *target* being superadmin, so any actor reaching this method
+     * could self-target to grant themselves permissions they did not
+     * otherwise hold, or grant a peer more than the actor's own effective
+     * permission set. The self-target and subset guards below must run
+     * before any write, including the empty-perms path that wipes all of the
+     * target's direct permissions via syncPermissions() with no arguments.
+     *
+     * @param int $id users.id of the account whose direct permissions are being edited
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface|string Redirect on POST, rendered view on GET
+     */
     public function user_perms(int $id)
     {
         if ($this->request->is('post')) {
+            // An actor may not edit their own direct permissions -- doing so
+            // from this screen would let them self-escalate outside of the
+            // subset guard below (which compares against the actor's *own*
+            // current permissions, not a snapshot from before the write).
+            if ($id === (int) auth()->id())
+                return $this->failForbidden(lang('Users.cannotEditOwnPermissions'));
+
             $user = auth()->getProvider()->findById($id);
             if ($user->inGroup('superadmin'))
-                return redirect()->to('403');
-            try {
-                $perms = [];
-                $pageMap = [];
+                return $this->failForbidden();
 
-                $pages = $this->commonModel->lists('auth_permissions_pages');
-                foreach ($pages as $page) {
-                    $pageMap[$page->id] = strtolower($page->pagename);
-                }
-                if (empty($this->request->getPost('perms'))) {
+            try {
+                $pageMap = $this->getPageNameMap();
+                $postedPerms = $this->request->getPost('perms') ?? [];
+
+                // Delegation ceiling: a non-superadmin actor may only grant
+                // permissions that are a subset of their own effective
+                // permissions. Must run before any write, including the
+                // empty-perms wipe path below.
+                if (!auth()->user()->inGroup('superadmin') && !$this->actorGrantsSubsetOfOwnPermissions($pageMap, $postedPerms))
+                    return $this->failForbidden(lang('Users.permsExceedOwnGrant'));
+
+                if (empty($postedPerms)) {
                     $user->syncPermissions();
+                    cache()->delete("{$id}_permissions");
                     return redirect()->route('users')->with('message', lang('Backend.updated', [$user->username]));
                 }
-                foreach ($this->request->getPost('perms') as $key => $perm) {
+
+                $perms = [];
+                foreach ($postedPerms as $key => $perm) {
                     if (!isset($pageMap[$key]))
                         continue;
 
@@ -317,6 +348,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
                     if (in_array('delete_r', $roles)) $perms[] = $pagename . '.delete';
                 }
                 $user->syncPermissions(...$perms);
+                cache()->delete("{$id}_permissions");
 
                 return redirect()->route('users')->with('message', lang('Backend.updated', [$user->username]));
             } catch (\Exception $e) {

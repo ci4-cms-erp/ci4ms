@@ -7,37 +7,38 @@ use CodeIgniter\Shield\Entities\User;
 class InstallService
 {
     /**
-     * Kurulumda eksik olan varsayılan veriyi tamamlar (idempotent, "eksik
-     * olanı tamamla" semantiği).
+     * Fills in the default data missing at setup time (idempotent, "fill in
+     * what's missing" semantics).
      *
-     * Eski tasarımda TEK bir `count('pages') > 0` kapısı hem İÇERİK
-     * (pages/pages_langs/blog/menu/languages/settings) hem KİMLİK
-     * (auth_groups/auth_groups_users) yazımını aynı anda atlıyordu; içerik
-     * zaten varken kimlik eksikse hiç kurulmuyordu. Bu metotta her blok
-     * KENDİ tablosuna bakan ayrı bir guard ile korunur:
+     * In the old design a SINGLE `count('pages') > 0` gate skipped both
+     * CONTENT (pages/pages_langs/blog/menu/languages/settings) and IDENTITY
+     * (auth_groups/auth_groups_users) writes at once; if content already
+     * existed but identity was missing, it never got set up. In this method
+     * each block is protected by its OWN guard that checks its OWN table:
      *
-     * - superadmin grubu    -> `auth_groups`      (group=superadmin)
-     * - superadmin kullanıcı-> `auth_groups_users` (group=superadmin), ayrı
-     *   guard -- grup bloğuyla birleştirilmez (biri var diye diğeri
-     *   atlanırsa kimlik yarım kalır veya unique(group) ihlali riski doğar)
-     * - izin taraması       -> yukarıdaki iki bloktan biri bu çağrıda
-     *   GERÇEKTEN yeni satır yazdıysa tetiklenir (`ModuleScanner::runScan()`
-     *   `auth_permissions_pages`'i silip yeniden dolduruyor; zaten kurulu
-     *   bir kimliğe karşı gereksiz/riskli tam-tarama yapılmaz)
-     * - diller              -> `languages`
-     * - sayfalar+sayfa dili -> `pages` (TEK guard; `pages_langs` FK'lı
-     *   insertId'lerle bağlı olduğu için ayrıştırılmaz)
-     * - blog                -> `blog`
-     * - menü                -> `menu` (+ null id guard'ı)
-     * - ayarlar             -> `settings`
+     * - superadmin group     -> `auth_groups`      (group=superadmin)
+     * - superadmin user link -> `auth_groups_users` (group=superadmin), a
+     *   guard SEPARATE from the group block -- not merged with it (if one
+     *   is skipped because the other exists, identity setup stays
+     *   half-done or risks a unique(group) violation)
+     * - permission scan      -> triggered only if one of the two blocks
+     *   above ACTUALLY wrote a new row in this call (`ModuleScanner::runScan()`
+     *   deletes and refills `auth_permissions_pages`; an unnecessary/risky
+     *   full scan is not run against an identity that's already set up)
+     * - languages            -> `languages`
+     * - pages + page language -> `pages` (SINGLE guard; not split further
+     *   because `pages_langs` is linked via FK insertIds)
+     * - blog                 -> `blog`
+     * - menu                 -> `menu` (+ null id guard)
+     * - settings             -> `settings`
      *
-     * `pages` zaten doluyken (sayfa bloğu atlanınca) `$homePageId`/
-     * `$contactPageId` `resolveExistingPageIds()` ile çözülür; `menu` ve
-     * `settings` blokları bu değerlere ihtiyaç duyar.
+     * When `pages` is already populated (page block skipped), `$homePageId`/
+     * `$contactPageId` are resolved via `resolveExistingPageIds()`; the
+     * `menu` and `settings` blocks need these values.
      *
-     * @param array $args Kurulum formu/CLI alanları: `fname`, `sname`,
+     * @param array $args Setup form/CLI fields: `fname`, `sname`,
      *                     `username`, `email`, `password`, `siteName`,
-     *                     `slogan` (opsiyonel), `geoLookup` (opsiyonel).
+     *                     `slogan` (optional), `geoLookup` (optional).
      *
      * @return void
      */
@@ -45,7 +46,7 @@ class InstallService
     {
         $commonModel = new \ci4commonmodel\CommonModel();
 
-        // Kimlik -- superadmin grubu.
+        // Identity -- superadmin group.
         $superadminGroupExists = $commonModel->count('auth_groups', ['group' => 'superadmin']) > 0;
         if (!$superadminGroupExists) {
             $commonModel->create('auth_groups', [
@@ -54,8 +55,8 @@ class InstallService
             ]);
         }
 
-        // Kimlik -- superadmin kullanıcı bağlantısı. Grup bloğundan AYRI
-        // guard'lı: biri eksikken diğeri sessizce atlanmasın.
+        // Identity -- superadmin user link. Guarded SEPARATELY from the
+        // group block: if one is missing, the other must not be silently skipped.
         $superadminUserLinked = $commonModel->count('auth_groups_users', ['group' => 'superadmin']) > 0;
         if (!$superadminUserLinked) {
             $users = auth()->getProvider();
@@ -78,15 +79,15 @@ class InstallService
             }
         }
 
-        // İzin taraması -- yalnız yukarıdaki iki bloktan biri bu çağrıda
-        // GERÇEKTEN yeni bir satır yazdıysa tetiklenir. Modülleri ve sistem
-        // rotalarını dinamik olarak klasör ve Config yapılarından tarar.
+        // Permission scan -- triggered only if one of the two blocks above
+        // ACTUALLY wrote a new row in this call. Dynamically scans modules
+        // and system routes from folder and Config structures.
         if (!$superadminGroupExists || !$superadminUserLinked) {
             $scanner = new \Modules\Methods\Libraries\ModuleScanner();
             $scanner->runScan();
         }
 
-        // İçerik -- diller.
+        // Content -- languages.
         if ($commonModel->count('languages') === 0) {
             $commonModel->createMany('languages',[
                 [
@@ -114,9 +115,9 @@ class InstallService
             ]);
         }
 
-        // İçerik -- sayfalar + sayfa dilleri. TEK guard: `pages_langs`
-        // ayrıştırılırsa `$homePageId`/`$contactPageId` insertId'leriyle
-        // FK bağlantısı yarım/eşleşmeyen dil satırı riski doğurur.
+        // Content -- pages + page languages. SINGLE guard: splitting
+        // `pages_langs` out risks a half-linked FK connection or a
+        // mismatched language row via the `$homePageId`/`$contactPageId` insertIds.
         if ($commonModel->count('pages') === 0) {
         $homePageId    = $commonModel->create('pages', ['isActive' => 1, 'inMenu' => 1]);
         $contactPageId = $commonModel->create('pages', ['isActive' => 1, 'inMenu' => 1]);
@@ -225,7 +226,7 @@ class InstallService
             [$homePageId, $contactPageId] = $this->resolveExistingPageIds($commonModel);
         }
 
-        // İçerik -- blog.
+        // Content -- blog.
         if ($commonModel->count('blog') === 0) {
         $blogs = [
             [
@@ -263,8 +264,8 @@ class InstallService
         }
         }
 
-        // İçerik -- menü. `$homePageId`/`$contactPageId` çözülemediyse
-        // (aşırı uç, savunma) bozuk FK yazılmaz.
+        // Content -- menu. If `$homePageId`/`$contactPageId` could not be
+        // resolved (edge case, defensive), no broken FK is written.
         if ($commonModel->count('menu') === 0 && $homePageId !== null && $contactPageId !== null) {
         $commonModel->createMany('menu', [
             ['title' => 'Frontend.home', 'seflink' => '/',       'queue' => 1, 'urlType' => 'pages', 'pages_id' => $homePageId],
@@ -273,7 +274,7 @@ class InstallService
         ]);
         }
 
-        // İçerik -- ayarlar.
+        // Content -- settings.
         if ($commonModel->count('settings') === 0) {
         $encrypter = \Config\Services::encrypter();
         $now       = date('Y-m-d H:i:s');
@@ -296,10 +297,10 @@ class InstallService
                 array('class' => 'Modules\\Auth\\Config\\Auth', 'key' => 'geoLookupEnabled', 'value' => $args['geoLookup'] ?? '0', 'type' => 'boolean', 'context' => NULL)
         );
 
-        // settings.created_at/updated_at NOT NULL ve default'suz gelir
-        // (codeigniter4/settings migration'ı). Strict mode açık bir sunucuda
-        // eksik değer kurulumu tamamen durdurur; kapalıyken sessizce
-        // '0000-00-00 00:00:00' yazar. İkisi de istenmiyor.
+        // settings.created_at/updated_at come as NOT NULL with no default
+        // (the codeigniter4/settings migration). On a server with strict
+        // mode on, a missing value halts setup entirely; with it off, it
+        // silently writes '0000-00-00 00:00:00'. Neither is wanted.
         $commonModel->createMany('settings', array_map(
             static fn (array $row): array => $row + ['created_at' => $now, 'updated_at' => $now],
             $settings
@@ -308,16 +309,16 @@ class InstallService
     }
 
     /**
-     * `pages` tablosu zaten doluyken (sayfa bloğu atlandığında) ana sayfa /
-     * iletişim sayfası ID'lerini çözer. `menu` ve `settings` blokları bu
-     * ID'lere ihtiyaç duyar.
+     * Resolves the home page / contact page IDs when the `pages` table is
+     * already populated (page block skipped). The `menu` and `settings`
+     * blocks need these IDs.
      *
-     * Önce `menu` tablosundaki bilinen başlıkları (`Frontend.home` /
-     * `Frontend.contact`) dener; bulunamazsa `pages_langs.seflink`
-     * (`homepage`/`anasayfa`, `contact`/`iletisim`) üzerinden fallback yapar.
-     * İkisi de bulunamazsa `null` döner -- çağıran taraf (menü/ayarlar
-     * blokları) buna göre davranır, bu yeni bir regresyon değildir: eski
-     * davranışta da bu ID'lerin var olduğu varsayılıyordu.
+     * First tries the known titles in the `menu` table (`Frontend.home` /
+     * `Frontend.contact`); if not found, falls back via `pages_langs.seflink`
+     * (`homepage`/`anasayfa`, `contact`/`iletisim`). If neither is found,
+     * returns `null` -- the caller (menu/settings blocks) handles this
+     * accordingly, and this is not a new regression: the old behavior also
+     * assumed these IDs existed.
      *
      * @param \ci4commonmodel\CommonModel $commonModel
      *

@@ -5,21 +5,22 @@ declare(strict_types=1);
 namespace Modules\Notifications\Libraries;
 
 /**
- * Builder hedef direktiflerini normalize edilmiş satır-tanımlarına çevirir.
+ * Converts builder target directives into normalized row definitions.
  *
- * Model B'de fan-out YOKTUR: her direktif tek bir küresel satıra karşılık gelir ve
- * grup üyeliği okuma-zamanında çözülür (bu sınıf `auth_groups_users`'a DOKUNMAZ).
- * `broadcast` diğer tüm direktiflere baskındır (tek bir 'broadcast' satırı üretir).
+ * There is NO fan-out in Model B: each directive corresponds to a single
+ * global row, and group membership is resolved at read time (this class
+ * DOES NOT TOUCH `auth_groups_users`). `broadcast` overrides all other
+ * directives (produces a single 'broadcast' row).
  */
 final class TargetResolver
 {
     /**
-     * Hedef direktiflerini `[[target_type, target_value], ...]` satır-tanımlarına indirger.
+     * Reduces target directives to `[[target_type, target_value], ...]` row definitions.
      *
-     * @param array<int, array{0:string, 1:?string}> $targets   Toplanmış [tip, değer] direktifleri.
-     * @param bool                                    $broadcast broadcast() çağrıldı mı.
+     * @param array<int, array{0:string, 1:?string}> $targets   Collected [type, value] directives.
+     * @param bool                                    $broadcast Whether broadcast() was called.
      *
-     * @return array<int, array{0:string, 1:?string}> Yinelenenler ayıklanmış satır-tanımları.
+     * @return array<int, array{0:string, 1:?string}> Row definitions with duplicates removed.
      */
     public function resolve(array $targets, bool $broadcast): array
     {

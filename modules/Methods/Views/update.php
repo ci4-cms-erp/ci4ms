@@ -40,7 +40,7 @@ echo $this->section('content'); ?>
                     <input type="text" name="pagename" class="form-control" value="<?php echo $method->pagename ?>" required>
                 </div>
                 <div class="form-group col-md-4">
-                    <label for=""><?php echo lang('Methods.description') ?></label>
+                    <label for=""><?php echo lang('Backend.description') ?></label>
                     <input type="text" name="description" class="form-control" value="<?php echo $method->description ?>">
                 </div>
                 <div class="form-group col-md-4">

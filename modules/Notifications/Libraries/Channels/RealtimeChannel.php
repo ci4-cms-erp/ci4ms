@@ -10,14 +10,15 @@ use Modules\Notifications\Libraries\Notifier;
 use Modules\Notifications\Libraries\SignalStoreInterface;
 
 /**
- * Realtime kanal — mesaj için Redis'te bir SSE "nudge" sinyali bump'lar.
+ * Realtime channel — bumps an SSE "nudge" signal in Redis for the message.
  *
- * KALICILIK BURADA DEĞİLDİR: notifications satırını InAppChannel yazar. Bu kanal
- * yalnızca "yeni bir şey var, reconcile et" sinyalini `notif:sig:{channel}` sayacında
- * artırır; istemci payload'a güvenmez, feed ucundan DB'yi source-of-truth olarak
- * yeniden okur. Bu yüzden Redis down / hata → daima ChannelResult::skipped, asla throw.
- * Kanal sırası dispatch() tarafından belirlenir; varsayılan ['inapp','realtime'] ile
- * inapp (DB commit) bu sinyalden ÖNCE çalışır.
+ * PERSISTENCE IS NOT HERE: InAppChannel writes the notifications row. This
+ * channel only increments the "something new, reconcile" signal in the
+ * `notif:sig:{channel}` counter; the client doesn't trust the payload and
+ * re-reads the DB as the source of truth from the feed end. That's why Redis
+ * being down / erroring → always ChannelResult::skipped, never throw. Channel
+ * order is decided by dispatch(); with the default ['inapp','realtime'],
+ * inapp (the DB commit) runs BEFORE this signal.
  */
 final class RealtimeChannel implements ChannelInterface
 {
@@ -25,8 +26,8 @@ final class RealtimeChannel implements ChannelInterface
     private SignalStoreInterface $signalStore;
 
     /**
-     * @param NotificationsConfig|null    $config      Enjekte edilmezse global config çözülür.
-     * @param SignalStoreInterface|null   $signalStore Enjekte edilmezse service('signalStore') çözülür.
+     * @param NotificationsConfig|null    $config      Resolves the global config if not injected.
+     * @param SignalStoreInterface|null   $signalStore Resolves service('signalStore') if not injected.
      */
     public function __construct(?NotificationsConfig $config = null, ?SignalStoreInterface $signalStore = null)
     {
@@ -41,12 +42,12 @@ final class RealtimeChannel implements ChannelInterface
     }
 
     /**
-     * Mesajın yetkili kanalında Redis sinyalini bump'lar; realtime kapalı ya da
-     * sinyal başarısızsa atlar.
+     * Bumps the Redis signal on the message's authoritative channel; skips if
+     * realtime is disabled or the signal fails.
      *
-     * @param NotificationMessage $message Temizlenmiş, tek-hedefli mesaj.
+     * @param NotificationMessage $message Sanitized, single-target message.
      *
-     * @return ChannelResult Sinyal bump edilirse ok, aksi halde skipped (asla throw etmez).
+     * @return ChannelResult ok if the signal was bumped, skipped otherwise (never throws).
      */
     public function send(NotificationMessage $message): ChannelResult
     {

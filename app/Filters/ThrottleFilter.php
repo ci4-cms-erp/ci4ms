@@ -10,22 +10,22 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
- * Genel amaçlı, profil tabanlı rate-limit filtresi.
+ * General-purpose, profile-based rate-limit filter.
  *
- * Kullanım (route / grup):
+ * Usage (route / group):
  *   ['filter' => 'throttle:backend']   // Config\Throttle::$profiles['backend']
  *   ['filter' => 'throttle:api']
  *
- * Limit aşılınca:
- *   - Web isteği   → markalı error_429 sayfası, sayaç GERÇEK kalan süreyle (Retry-After)
+ * When the limit is exceeded:
+ *   - Web request  → branded error_429 page, counter with the ACTUAL remaining time (Retry-After)
  *   - API / AJAX   → JSON { status:429, retry_after:N }
- * Her iki durumda da HTTP 429 + `Retry-After` header'ı set edilir.
+ * In both cases HTTP 429 + a `Retry-After` header is set.
  */
 class ThrottleFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // CLI / non-HTTP istekleri atla
+        // Skip CLI / non-HTTP requests
         if (! $request instanceof IncomingRequest) {
             return;
         }
@@ -48,7 +48,7 @@ class ThrottleFilter implements FilterInterface
     }
 
     /**
-     * Bucket anahtarı: profil + IP (+ giriş yapan kullanıcı).
+     * Bucket key: profile + IP (+ logged-in user).
      */
     protected function buildKey(IncomingRequest $request, string $profile): string
     {
@@ -58,7 +58,7 @@ class ThrottleFilter implements FilterInterface
     }
 
     /**
-     * 429 yanıtını üret (içerik tipine göre HTML veya JSON).
+     * Build the 429 response (HTML or JSON depending on content type).
      */
     protected function reject(IncomingRequest $request, int $retryAfter): ResponseInterface
     {
@@ -80,7 +80,7 @@ class ThrottleFilter implements FilterInterface
     }
 
     /**
-     * İstek JSON mı bekliyor? (AJAX, Accept: application/json veya API path öneki)
+     * Does the request expect JSON? (AJAX, Accept: application/json, or an API path prefix)
      */
     protected function wantsJson(IncomingRequest $request): bool
     {

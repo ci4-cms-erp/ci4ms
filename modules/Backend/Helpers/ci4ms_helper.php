@@ -79,7 +79,7 @@ if (!function_exists('showError')) {
         $viewBase = 'Modules\\Backend\\Views\\errors\\html\\';
         $viewFile = $viewBase . 'error_' . $statusCode;
 
-        // Belirtilen status code için view yoksa fallback
+        // Fallback when no view exists for the given status code
         if (!is_file(ROOTPATH . 'modules/Backend/Views/errors/html/error_' . $statusCode . '.php')) {
             $viewFile = (ENVIRONMENT === 'production')
                 ? $viewBase . 'production'

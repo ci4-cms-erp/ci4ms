@@ -8,17 +8,17 @@ use Modules\Notifications\Libraries\Channels\ChannelResult;
 use Modules\Notifications\Libraries\Channels\DurableChannelInterface;
 
 /**
- * Bildirim yayınının akıcı (fluent) kurucusu.
+ * Fluent builder for a notification broadcast.
  *
- * Kullanım:
+ * Usage:
  *   service('notifier')->notify('comment.new')
- *       ->severity('info')->title('Yeni yorum')->body('...')->url('/backend/blog/comments')
+ *       ->severity('info')->title('New comment')->body('...')->url('/backend/blog/comments')
  *       ->toUser(5)->via('inapp')->dispatch();
  *
- * Birden çok hedef direktifi (toUser/toGroup) ayrı küresel satırlar üretir;
- * broadcast() diğer tüm direktiflere baskındır. Kanal keşfi Notifier'a delege edilir.
- * exceptUser() ile verilen kimlikler her satırın `exclude_users` alanına düşer ve
- * okuma yolunda (applyRelevance) elenir.
+ * Multiple target directives (toUser/toGroup) each produce a separate global row;
+ * broadcast() overrides all other directives. Channel discovery is delegated to Notifier.
+ * IDs passed to exceptUser() land in each row's `exclude_users` field and are
+ * filtered out on the read path (applyRelevance).
  */
 final class NotificationBuilder
 {
@@ -32,27 +32,28 @@ final class NotificationBuilder
     /** @var array<int, array{0:string, 1:?string}> */
     private array $targets = [];
 
-    /** @var list<int> exceptUser() ile biriken, hedeften çıkarılacak kullanıcı kimlikleri. */
+    /** @var list<int> User IDs accumulated via exceptUser() to be excluded from the target. */
     private array $excludeUsers = [];
 
-    /** Yayını üreten kullanıcının kimliği; null = sistem (olay/CLI) üretimi. */
+    /** ID of the user who produced the broadcast; null = produced by the system (event/CLI). */
     private ?int $createdBy = null;
 
     private bool $broadcastFlag = false;
 
     /**
-     * Varsayılan teslim kanalları: önce inapp (kalıcı DB kaydı), sonra realtime
-     * (Redis-destekli SSE best-effort emit). Sıra önemli — realtime, inapp commit'inden
-     * SONRA çalışmalı ki emit anında satır zaten yazılmış olsun (dispatch() bu
-     * diziyi sırayla işler). `via(...)` bu varsayılanı ezerek açık kanal seçimi verir.
+     * Default delivery channels: inapp first (durable DB row), then realtime
+     * (Redis-backed best-effort SSE emit). Order matters — realtime must run
+     * AFTER the inapp commit so the row already exists at emit time (dispatch()
+     * processes this array in sequence). `via(...)` overrides this default with
+     * an explicit channel selection.
      *
      * @var string[]
      */
     private array $channels = ['inapp', 'realtime'];
 
     /**
-     * @param Notifier $notifier Kanal haritasını çözecek servis.
-     * @param string   $type     Makine-okunur olay tipi.
+     * @param Notifier $notifier Service that resolves the channel map.
+     * @param string   $type     Machine-readable event type.
      */
     public function __construct(Notifier $notifier, string $type)
     {
@@ -61,7 +62,7 @@ final class NotificationBuilder
     }
 
     /**
-     * Önem seviyesini ayarlar (geçersiz değer 'info'ya düşürülür).
+     * Sets the severity level (an invalid value falls back to 'info').
      *
      * @param string $level info|warning|critical.
      *
@@ -75,9 +76,9 @@ final class NotificationBuilder
     }
 
     /**
-     * Başlığı ayarlar (temizleme mesaj yapımında yapılır).
+     * Sets the title (sanitization happens during message construction).
      *
-     * @param string $title Görünen başlık.
+     * @param string $title Display title.
      *
      * @return self
      */
@@ -89,9 +90,9 @@ final class NotificationBuilder
     }
 
     /**
-     * Gövdeyi ayarlar.
+     * Sets the body.
      *
-     * @param string|null $body Görünen gövde ya da null.
+     * @param string|null $body Display body or null.
      *
      * @return self
      */
@@ -103,9 +104,9 @@ final class NotificationBuilder
     }
 
     /**
-     * Tıklama hedefini ayarlar (doğrulama mesaj yapımında yapılır).
+     * Sets the click target (validation happens during message construction).
      *
-     * @param string|null $url Site-içi '/...' ya da http(s) URL.
+     * @param string|null $url In-site '/...' or http(s) URL.
      *
      * @return self
      */
@@ -117,9 +118,9 @@ final class NotificationBuilder
     }
 
     /**
-     * Tek bir kullanıcıyı hedefe ekler (küresel 'user' satırı).
+     * Adds a single user to the target (global 'user' row).
      *
-     * @param int $userId Alıcı kullanıcı kimliği.
+     * @param int $userId Recipient user ID.
      *
      * @return self
      */
@@ -131,9 +132,9 @@ final class NotificationBuilder
     }
 
     /**
-     * Bir Shield grubunu hedefe ekler (küresel 'group' satırı).
+     * Adds a Shield group to the target (global 'group' row).
      *
-     * @param string $group Grup adı.
+     * @param string $group Group name.
      *
      * @return self
      */
@@ -145,15 +146,16 @@ final class NotificationBuilder
     }
 
     /**
-     * Bir ya da daha çok kullanıcıyı hedefin DIŞINDA bırakır (birikimli).
+     * Leaves one or more users OUT of the target (cumulative).
      *
-     * Hedef ne olursa olsun (broadcast dahil) geçerlidir ve toUser() ile verilen
-     * doğrudan hedefi de ezer: hariç tutma HER ZAMAN kazanır. Kimlikler int'e cast
-     * edilir, 0/negatif olanlar atılır, liste tekilleştirilip sıralanır. Filtre
-     * okuma zamanında `Notifier::applyRelevance()` içinde uygulanır; bu sayede
-     * markRead() de hariç tutulan kullanıcıya 404 döner.
+     * Applies regardless of the target (broadcast included) and also overrides
+     * a direct target given via toUser(): exclusion ALWAYS wins. IDs are cast
+     * to int, 0/negative ones are dropped, and the list is deduplicated and
+     * sorted. The filter is applied on the read path inside
+     * `Notifier::applyRelevance()`; that's why markRead() also returns 404 for
+     * an excluded user.
      *
-     * @param int|array<int, mixed> $userIds Tek kimlik ya da kimlik listesi.
+     * @param int|array<int, mixed> $userIds Single ID or list of IDs.
      *
      * @return self
      */
@@ -167,19 +169,19 @@ final class NotificationBuilder
     }
 
     /**
-     * Yayını ÜRETEN kullanıcıyı işaretler (hesap verebilirlik izi, hedefleme DEĞİL).
+     * Marks the user who PRODUCED the broadcast (an accountability trail, NOT targeting).
      *
-     * Yalnız `notifications.created_by` alanına düşer; hiçbir teslim kararını
-     * (relevans, hariç tutma, tercih) etkilemez — gönderen kendi yayınını da görür,
-     * görmesin isteniyorsa ayrıca {@see exceptUser()} çağrılmalıdır. Çağıran, kimliği
-     * SUNUCUDAN (`auth()->id()`) vermek zorundadır; istemciden gelen bir değer burada
-     * kabul edilirse iz sahteleşir. 0/negatif değer {@see NotificationMessage} içinde
-     * null'a indirgenir.
+     * Only lands in the `notifications.created_by` field; it has no effect on any
+     * delivery decision (relevance, exclusion, preferences) — the sender also sees
+     * their own broadcast, and {@see exceptUser()} must be called separately if
+     * that's not desired. The caller MUST supply the ID from the SERVER
+     * (`auth()->id()`); accepting a value from the client here would forge the
+     * trail. A 0/negative value is reduced to null inside {@see NotificationMessage}.
      *
-     * Kolon henüz migrate edilmemişse satır YİNE yazılır, yalnız iz kaybolur
-     * (fail-open — gerekçe: {@see \Modules\Notifications\Libraries\Channels\InAppChannel::buildRow()}).
+     * If the column hasn't been migrated yet, the row is STILL written, only the
+     * trail is lost (fail-open — rationale: {@see \Modules\Notifications\Libraries\Channels\InAppChannel::buildRow()}).
      *
-     * @param int|null $userId Yayını üreten kullanıcının kimliği ya da null (sistem).
+     * @param int|null $userId ID of the user who produced the broadcast, or null (system).
      *
      * @return self
      */
@@ -191,7 +193,7 @@ final class NotificationBuilder
     }
 
     /**
-     * Yayını tüm kullanıcılara işaretler (tek 'broadcast' satırı; diğer hedeflere baskın).
+     * Marks the broadcast for all users (a single 'broadcast' row; overrides other targets).
      *
      * @return self
      */
@@ -203,9 +205,9 @@ final class NotificationBuilder
     }
 
     /**
-     * Teslim kanallarını belirler (boş bırakılırsa varsayılan ['inapp','realtime']).
+     * Sets the delivery channels (left empty falls back to the default ['inapp','realtime']).
      *
-     * @param string ...$channels Kanal slug'ları.
+     * @param string ...$channels Channel slugs.
      *
      * @return self
      */
@@ -219,34 +221,38 @@ final class NotificationBuilder
     }
 
     /**
-     * Yayını çözer, her hedef için mesaj üretir ve her kanaldan teslim eder.
+     * Resolves the broadcast, builds a message per target, and delivers it through each channel.
      *
-     * Hiç hedef yoksa (ve broadcast çağrılmadıysa) hiçbir şey gönderilmez.
+     * If there are no targets at all (and broadcast() wasn't called), nothing is sent.
      *
-     * ÇİFT GÖRÜNME (dedup): TargetResolver aynı [tip|değer] direktifini tekilleştirir,
-     * ama `toUser(5)` + `toGroup('admin')` (5 numaralı kullanıcı admin üyesi) iki AYRI
-     * satır üretir ve okuma yolunda İKİSİ de kullanıcı 5'e ilgilidir. Bu örtüşme
-     * {@see coveredUserTargets()} ile TEK sorguda çözülür ve kullanıcı, GRUP satırının
-     * `exclude_users` alanına yazılarak elenir: kendi 'user' satırını görür, grup
-     * satırını görmez. Doğrudan hedef korunduğu için kullanıcı sonradan gruptan
-     * çıksa bile bildirimi kaybetmez.
+     * DOUBLE VISIBILITY (dedup): TargetResolver deduplicates identical [type|value]
+     * directives, but `toUser(5)` + `toGroup('admin')` (where user 5 is an admin
+     * member) produces two SEPARATE rows, and on the read path BOTH are relevant
+     * to user 5. This overlap is resolved in a SINGLE query via
+     * {@see coveredUserTargets()}, and the user is filtered out by being written
+     * into the GROUP row's `exclude_users` field: they see their own 'user' row
+     * but not the group row. Because the direct target is preserved, the user
+     * doesn't lose the notification even if they later leave the group.
      *
-     * Bu daraltma mesaja AÇIK dışlamalardan AYRI alanda taşınır
-     * ({@see NotificationMessage::$derivedExcludeUsers}), çünkü teslim garantisi
-     * farklıdır: `exceptUser()` bir GARANTİdir — uygulanamıyorsa kanal satırı hiç
-     * yazmaz. Örtüşme daraltması ise yalnız bir OPTİMİZASYONdur; uygulanamadığında
-     * satır yine yazılır ve kullanıcı bildirimi iki kez görür. Bildirimin tamamen
-     * kaybolması, iki kez görünmesinden daha kötü bir sonuçtur.
+     * This narrowing is carried in a field SEPARATE from the message's explicit
+     * exclusions ({@see NotificationMessage::$derivedExcludeUsers}), because the
+     * delivery guarantee differs: `exceptUser()` is a GUARANTEE — if it can't be
+     * applied, the channel row is never written. The overlap narrowing is only an
+     * OPTIMIZATION; when it can't be applied, the row is still written and the
+     * user sees the notification twice. Losing the notification entirely is a
+     * worse outcome than seeing it twice.
      *
-     * SINIR: iki GRUP hedefinin kesişimi (`toGroup('a')` + `toGroup('b')`, kullanıcı
-     * ikisinde birden) çözülmez — bu, gönderim anında grup üyeliğinin tümünü
-     * materyalize etmeyi (Model B'nin kaçındığı fan-out) ve `exclude_users` metnini
-     * grup boyunda büyütmeyi gerektirirdi. O senaryoda kullanıcı iki satır görür.
+     * LIMIT: the intersection of two GROUP targets (`toGroup('a')` + `toGroup('b')`,
+     * a user in both) is not resolved — that would require materializing the
+     * entire group membership at send time (the fan-out Model B avoids) and
+     * growing the `exclude_users` text with the group size. In that scenario the
+     * user sees two rows.
      *
-     * @return ChannelResult[] Her (hedef × kanal) için bir sonuç; her sonuç onu üreten
-     *                         kanalın slug'ı ve kalıcılık bayrağıyla etiketlidir, yani
-     *                         çağıran "kaç satır GERÇEKTEN yazıldı" sorusunu
-     *                         {@see DispatchOutcome} ile cevaplayabilir.
+     * @return ChannelResult[] One result per (target x channel); each result is
+     *                         tagged with the slug and durability flag of the
+     *                         channel that produced it, so the caller can answer
+     *                         "how many rows were ACTUALLY written" via
+     *                         {@see DispatchOutcome}.
      */
     public function dispatch(): array
     {
@@ -280,10 +286,10 @@ final class NotificationBuilder
                     continue;
                 }
 
-                // Etiketi BURADA takıyoruz: slug ile sınıf eşlemesinin tek sahibi kanal
-                // haritasıdır, kanalın kendisi hangi slug'a bağlandığını bilmez. Etiketsiz
-                // bir sonuçtan "gerçekten yazıldı mı" sorusu ancak insertId gibi tesadüfi
-                // ipuçlarıyla cevaplanabilirdi ({@see ChannelResult}).
+                // We tag it HERE: the channel map is the sole owner of the slug-to-class
+                // mapping, the channel itself doesn't know which slug it's bound to. An
+                // untagged result could only answer "was it really written" via
+                // incidental hints like insertId ({@see ChannelResult}).
                 $results[] = $channel->send($message)
                     ->forChannel($slug, $channel instanceof DurableChannelInterface);
             }
@@ -293,14 +299,15 @@ final class NotificationBuilder
     }
 
     /**
-     * Aynı yayında hem doğrudan hem grup üzerinden hedeflenen kullanıcıları grup grup toplar.
+     * Groups together, per group, users targeted both directly and via a group in the same broadcast.
      *
-     * Tek bir toplu sorgudur (N+1 yok) ve yalnız her iki hedef türü de varken çalışır;
-     * grup üyeliği bilgisi Notifier'da (tek grup-sorgusu sahibi) kalır.
+     * A single batch query (no N+1), and it only runs when both target types are
+     * present; group membership knowledge stays in Notifier (the sole owner of
+     * the group query).
      *
-     * @param array<int, array{0:string, 1:?string}> $rows Çözülmüş satır tanımları.
+     * @param array<int, array{0:string, 1:?string}> $rows Resolved row definitions.
      *
-     * @return array<string, list<int>> Grup adı => o grupta ayrıca doğrudan hedeflenen kimlikler.
+     * @return array<string, list<int>> Group name => IDs in that group that are also targeted directly.
      */
     private function coveredUserTargets(array $rows): array
     {
@@ -323,17 +330,18 @@ final class NotificationBuilder
     }
 
     /**
-     * Tek bir satırın TÜRETİLMİŞ hariç tutma listesi: yalnız grup satırlarında örtüşen hedefler.
+     * The DERIVED exclusion list for a single row: only targets that overlap in group rows.
      *
-     * Açık exceptUser() listesi burada birleştirilmez; mesaja ayrı alan olarak geçer
-     * ki kanal, uygulanamayan bir dışlamanın garanti mi yoksa optimizasyon mu
-     * olduğunu ayırt edebilsin ({@see dispatch()}).
+     * The explicit exceptUser() list is not merged in here; it's passed to the
+     * message as a separate field so the channel can distinguish whether an
+     * exclusion that couldn't be applied was a guarantee or an optimization
+     * ({@see dispatch()}).
      *
      * @param string                   $targetType  'broadcast' | 'user' | 'group'.
-     * @param string|null              $targetValue Hedef değeri.
-     * @param array<string, list<int>> $covered     {@see coveredUserTargets()} çıktısı.
+     * @param string|null              $targetValue Target value.
+     * @param array<string, list<int>> $covered     Output of {@see coveredUserTargets()}.
      *
-     * @return list<int> Bu satırda ayrıca doğrudan hedeflenmiş kimlikler (grup değilse boş).
+     * @return list<int> IDs also targeted directly in this row (empty if not a group).
      */
     private function derivedExcludesFor(string $targetType, ?string $targetValue, array $covered): array
     {

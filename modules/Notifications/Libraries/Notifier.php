@@ -11,24 +11,27 @@ use Modules\Notifications\Libraries\Channels\ChannelInterface;
 use Modules\Notifications\Libraries\Channels\ChannelResult;
 
 /**
- * Bildirim Merkezi'nin merkezî servisi (Model B: küresel kayıt + per-user okundu-durumu).
+ * The central service of the Notification Center (Model B: global rows + per-user read status).
  *
- * Uygulamanın hiçbir yeri `notifications` tablosuna doğrudan yazmaz; her üretim
- * `notify()` builder'ından ya da geriye-uyum wrapper'larından (toUser/toRole) geçer.
- * Okuma tarafında `applyRelevance()` TEK relevans chokepoint'idir (IDOR kapısı):
- * bir kullanıcı yalnız broadcast, kendi 'user' hedefi ve üye olduğu 'group' hedefi
- * bildirimlerini görebilir; ayrıca satırın hariç tuttuğu (`exclude_users`) ve kullanıcının
- * susturduğu (`notification_preferences`) kayıtlar burada elenir. Okundu-durumu ayrı
- * `notification_reads` tablosunda tutulur; `notifications` satırları kullanıcıya özel
- * değildir (user_id = null).
+ * No part of the application writes directly to the `notifications` table;
+ * every write goes through the `notify()` builder or its backward-compat
+ * wrappers (toUser/toRole). On the read path, `applyRelevance()` is the SOLE
+ * relevance chokepoint (the IDOR gate): a user can only see broadcast
+ * notifications, notifications targeting their own 'user', and notifications
+ * targeting a 'group' they're a member of; rows excluded by the row itself
+ * (`exclude_users`) and rows the user has muted (`notification_preferences`)
+ * are also filtered out here. Read status is kept in a separate
+ * `notification_reads` table; `notifications` rows are not user-specific
+ * (user_id = null).
  *
- * REALTIME: SSE ucu yalnızca içeriksiz bir "nudge" (`{"t":...}`) yayar, istemci feed
- * ucundan reconcile eder → feed listFor() → applyRelevance(). Bu yüzden hariç tutma ve
- * tercih filtreleri anlık teslime de kendiliğinden yansır; ayrı bir realtime filtresi
- * YOKTUR (hariç tutulan kullanıcı yalnız boşa bir reconcile yapar, içerik sızmaz).
+ * REALTIME: the SSE endpoint only emits a content-free "nudge" (`{"t":...}`),
+ * and the client reconciles from the feed endpoint -> feed listFor() ->
+ * applyRelevance(). This means exclusion and preference filters automatically
+ * apply to realtime delivery too; there is NO separate realtime filter (an
+ * excluded user just performs a wasted reconcile, no content leaks).
  *
- * Kullanım:
- *   service('notifier')->notify('comment.new')->title('Yeni yorum')->toUser(5)->dispatch();
+ * Usage:
+ *   service('notifier')->notify('comment.new')->title('New comment')->toUser(5)->dispatch();
  *   service('notifier')->notify('update.available')->severity('warning')->broadcast()->dispatch();
  */
 class Notifier
@@ -41,9 +44,9 @@ class Notifier
     }
 
     /**
-     * Yeni bir yayın kurucusu (fluent builder) başlatır.
+     * Starts a new broadcast builder (fluent builder).
      *
-     * @param string $type Makine-okunur olay tipi ('comment.new' ...).
+     * @param string $type Machine-readable event type ('comment.new' ...).
      *
      * @return NotificationBuilder
      */
@@ -53,14 +56,15 @@ class Notifier
     }
 
     /**
-     * Taban kanal haritasını modül taramasıyla birleştirip döndürür.
+     * Merges the base channel map with a module scan and returns it.
      *
-     * Taban NotificationsConfig::$channels'tan gelir; her modülün
-     * `Config\{Name}Config::$notificationChannels` property'si (Filters $csrfExcept
-     * tarama kalıbıyla) scandir → class_exists → property_exists ile taranıp
-     * merge edilir. Aynı slug'ı sonradan tanımlayan modül tabanı geçersiz kılar.
+     * The base comes from NotificationsConfig::$channels; each module's
+     * `Config\{Name}Config::$notificationChannels` property is scanned (using
+     * the Filters $csrfExcept scan pattern) via scandir -> class_exists ->
+     * property_exists and merged in. A module that later defines the same slug
+     * overrides the base.
      *
-     * @return array<string, ChannelInterface> slug => kanal örneği.
+     * @return array<string, ChannelInterface> slug => channel instance.
      */
     public function resolveChannels(): array
     {
@@ -103,14 +107,15 @@ class Notifier
     }
 
     /**
-     * Kullanıcının okunmamış (ilgili + okunmamış) bildirim sayısı.
+     * Number of unread (relevant + unread) notifications for the user.
      *
-     * `notif_unread_{userId}` anahtarıyla NotificationsConfig::UNREAD_CACHE_TTL sn
-     * cache'lenir — polling DB'yi yormasın. Tablolar hazır değilse rozet 0'dır.
+     * Cached for NotificationsConfig::UNREAD_CACHE_TTL seconds under the key
+     * `notif_unread_{userId}` — so polling doesn't wear out the DB. The badge
+     * is 0 if the tables aren't ready.
      *
-     * @param int $userId Oturumdaki kullanıcının kimliği.
+     * @param int $userId ID of the user in session.
      *
-     * @return int Okunmamış bildirim sayısı.
+     * @return int Number of unread notifications.
      */
     public function unreadCount(int $userId): int
     {
@@ -136,14 +141,14 @@ class Notifier
     }
 
     /**
-     * Kullanıcı için ilgili bildirim akışı (en yeniden eskiye).
+     * The relevant notification feed for a user (newest first).
      *
-     * Her satırda `read_at` NULL ise okunmamış demektir (view sözleşmesi).
+     * A NULL `read_at` on a row means unread (the view contract).
      *
-     * @param int $userId Oturumdaki kullanıcının kimliği.
-     * @param int $limit  Döndürülecek en fazla satır sayısı.
+     * @param int $userId ID of the user in session.
+     * @param int $limit  Maximum number of rows to return.
      *
-     * @return list<\stdClass> id,type,severity,title,body,url,created_at,read_at içeren satırlar.
+     * @return list<\stdClass> Rows containing id,type,severity,title,body,url,created_at,read_at.
      */
     public function listFor(int $userId, int $limit): array
     {
@@ -163,15 +168,16 @@ class Notifier
     }
 
     /**
-     * Tek bir bildirimi kullanıcı için okundu işaretler (IDOR-safe + idempotent).
+     * Marks a single notification as read for the user (IDOR-safe + idempotent).
      *
-     * Kayıt yoksa ya da kullanıcıya ilgili değilse false döner (controller → 404).
-     * Zaten okunmuşsa yeniden yazmaz. Başarıda okunmamış cache'i düşürülür.
+     * Returns false if the record doesn't exist or isn't relevant to the user
+     * (controller -> 404). Doesn't rewrite if already read. On success, the
+     * unread cache is invalidated.
      *
-     * @param int $id     Bildirim kimliği.
-     * @param int $userId Oturumdaki kullanıcının kimliği.
+     * @param int $id     Notification ID.
+     * @param int $userId ID of the user in session.
      *
-     * @return bool İşaretlenebildiyse (ya da zaten işaretliyse) true; yoksa/ilgisizse false.
+     * @return bool True if it could be marked (or was already marked); false if missing/irrelevant.
      */
     public function markRead(int $id, int $userId): bool
     {
@@ -202,13 +208,13 @@ class Notifier
     }
 
     /**
-     * Kullanıcının tüm ilgili + okunmamış bildirimlerini tek batch'te okundu işaretler.
+     * Marks all of the user's relevant + unread notifications as read in a single batch.
      *
-     * `INSERT IGNORE` ile UNIQUE(notification_id,user_id) çakışmaları atlanır; idempotent.
+     * `INSERT IGNORE` skips UNIQUE(notification_id,user_id) collisions; idempotent.
      *
-     * @param int $userId Oturumdaki kullanıcının kimliği.
+     * @param int $userId ID of the user in session.
      *
-     * @return int Okundu olarak eklenen satır sayısı.
+     * @return int Number of rows inserted as read.
      */
     public function markAllRead(int $userId): int
     {
@@ -245,25 +251,29 @@ class Notifier
     }
 
     /**
-     * Tek bir kullanıcıya bildirim gönderir (geriye-uyum wrapper'ı; builder'a delege eder).
+     * Sends a notification to a single user (backward-compat wrapper; delegates to the builder).
      *
-     * Model B semantiği: user_id'li satır yerine target_type='user' küresel satır yazar.
+     * Model B semantics: instead of a row with user_id, writes a single global
+     * row with target_type='user'.
      *
-     * DÖNÜŞ DEĞERİNİN ANLAMI (teknik borç, bilerek kayıt altında): dönüş HERHANGİ bir
-     * kanalın ok demesidir ({@see anyOk()}), "satır yazıldı" DEĞİLDİR. Realtime kanal
-     * açıkken kalıcı yazım reddedilse bile (hariç tutma uygulanamadı, tablo yok, insert
-     * başarısız) bu metot true döner. Doğru ölçü {@see DispatchOutcome}'dur; composer
-     * yolu ({@see \Modules\Notifications\Controllers\ComposerController::send()}) onu
-     * kullanır. Bu iki wrapper'ın davranışı geriye-uyum için OLDUĞU GİBİ bırakılmıştır;
-     * çağıranları dönüşü bir teslim garantisi sayamaz.
+     * MEANING OF THE RETURN VALUE (a knowingly-recorded technical debt): the
+     * return means ANY channel returned ok ({@see anyOk()}), it does NOT mean
+     * "a row was written". While the realtime channel is on, even if the
+     * durable write was rejected (exclusion couldn't be applied, table
+     * missing, insert failed), this method returns true. The correct measure
+     * is {@see DispatchOutcome}; the composer path
+     * ({@see \Modules\Notifications\Controllers\ComposerController::send()})
+     * uses it. This wrapper's behavior (and toRole()'s) is left AS-IS for
+     * backward compatibility; callers must not treat the return value as a
+     * delivery guarantee.
      *
-     * @param int         $userId Alıcı kullanıcı kimliği.
-     * @param string      $type   Olay tipi.
-     * @param string      $title  Başlık.
-     * @param string|null $body   Gövde ya da null.
-     * @param string|null $url    Tıklama hedefi ya da null.
+     * @param int         $userId Recipient user ID.
+     * @param string      $type   Event type.
+     * @param string      $title  Title.
+     * @param string|null $body   Body or null.
+     * @param string|null $url    Click target or null.
      *
-     * @return bool Kanallardan en az biri ok döndüyse true (satır yazıldığının GARANTİSİ DEĞİL).
+     * @return bool True if at least one channel returned ok (NOT A GUARANTEE the row was written).
      */
     public function toUser(int $userId, string $type, string $title, ?string $body = null, ?string $url = null): bool
     {
@@ -276,22 +286,24 @@ class Notifier
     }
 
     /**
-     * Bir Shield grubuna bildirim gönderir (geriye-uyum wrapper'ı; builder'a delege eder).
+     * Sends a notification to a Shield group (backward-compat wrapper; delegates to the builder).
      *
-     * Model B semantiği: ARTIK fan-out YOK — üye başına satır açmaz, tek bir küresel
-     * 'group' satırı yazar ve dönüş 1/0'dır (üye sayısı değil, teslim denemesi ok mu).
-     * Grup üyeliği okuma-zamanında relevans sorgusuyla çözülür.
+     * Model B semantics: there is NO MORE fan-out — doesn't open a row per
+     * member, writes a single global 'group' row, and the return is 1/0 (not
+     * a member count, whether the delivery attempt was ok). Group membership
+     * is resolved at read time via the relevance query.
      *
-     * DÖNÜŞ DEĞERİNİN ANLAMI: {@see toUser()} ile aynı teknik borç geçerlidir — 1,
-     * "herhangi bir kanal ok döndü" demektir, "satır yazıldı" demek DEĞİLDİR.
+     * MEANING OF THE RETURN VALUE: the same technical debt as {@see toUser()}
+     * applies — 1 means "any channel returned ok", it does NOT mean "a row
+     * was written".
      *
-     * @param string      $groupName Grup adı.
-     * @param string      $type      Olay tipi.
-     * @param string      $title     Başlık.
-     * @param string|null $body      Gövde ya da null.
-     * @param string|null $url       Tıklama hedefi ya da null.
+     * @param string      $groupName Group name.
+     * @param string      $type      Event type.
+     * @param string      $title     Title.
+     * @param string|null $body      Body or null.
+     * @param string|null $url       Click target or null.
      *
-     * @return int Kanallardan en az biri ok döndüyse 1, aksi halde 0 (satır garantisi DEĞİL).
+     * @return int 1 if at least one channel returned ok, 0 otherwise (NOT a row guarantee).
      */
     public function toRole(string $groupName, string $type, string $title, ?string $body = null, ?string $url = null): int
     {
@@ -304,11 +316,11 @@ class Notifier
     }
 
     /**
-     * Okunmamış-rozet cache anahtarı.
+     * The unread-badge cache key.
      *
-     * @param int $userId Kullanıcı kimliği.
+     * @param int $userId User ID.
      *
-     * @return string Cache anahtarı ('notif_unread_{userId}').
+     * @return string Cache key ('notif_unread_{userId}').
      */
     public static function cacheKey(int $userId): string
     {
@@ -316,16 +328,17 @@ class Notifier
     }
 
     /**
-     * Kullanıcının YETKİLİ kanal (Redis-destekli SSE) listesi — IDOR kapısı.
+     * The AUTHORIZED channel (Redis-backed SSE) list for the user — the IDOR gate.
      *
-     * `applyRelevance()` ile TAM tutarlı olmalıdır: bir kullanıcı yalnız 'broadcast',
-     * kendi 'user/{id}' ve üye olduğu 'group/{name}' kanallarını dinleyebilir.
-     * RealtimeController::stream() dinlenecek kanalları YALNIZ bu server-side
-     * topicsFor() okumasından türetir; istemci hiçbir kanal göndermez (IDOR koruması burada).
+     * Must be FULLY consistent with `applyRelevance()`: a user may only listen
+     * on 'broadcast', their own 'user/{id}', and the 'group/{name}' channels
+     * they're a member of. RealtimeController::stream() derives the channels
+     * to listen on ONLY from this server-side topicsFor() read; the client
+     * never sends a channel (the IDOR protection lives here).
      *
-     * @param int $userId Oturumdaki kullanıcının kimliği.
+     * @param int $userId ID of the user in session.
      *
-     * @return list<string> Yetkili topic adları.
+     * @return list<string> Authorized topic names.
      */
     public function topicsFor(int $userId): array
     {
@@ -342,16 +355,16 @@ class Notifier
     }
 
     /**
-     * Bir hedeften (target_type/target_value) Redis-destekli SSE kanal adını türetir (tek kaynak).
+     * Derives the Redis-backed SSE channel name from a target (target_type/target_value) (single source).
      *
-     * Hem yayın (bump, RealtimeChannel) hem yetkilendirme (dinleme, topicsFor)
-     * aynı şemadan gelsin diye buradadır: 'user' → user/{id}, 'group' → group/{name},
-     * diğer her şey (broadcast dahil) → 'broadcast'.
+     * Lives here so both publishing (bump, RealtimeChannel) and authorization
+     * (listening, topicsFor) use the same scheme: 'user' -> user/{id},
+     * 'group' -> group/{name}, everything else (including broadcast) -> 'broadcast'.
      *
      * @param string      $targetType  'broadcast' | 'user' | 'group'.
-     * @param string|null $targetValue Hedef değeri (user id / grup adı) ya da null.
+     * @param string|null $targetValue Target value (user id / group name) or null.
      *
-     * @return string Kanal adı.
+     * @return string Channel name.
      */
     public static function topicFor(string $targetType, ?string $targetValue): string
     {
@@ -363,18 +376,19 @@ class Notifier
     }
 
     /**
-     * Relevans filtresini query builder'a uygular (TEK relevans chokepoint — IDOR kapısı).
+     * Applies the relevance filter to the query builder (the SOLE relevance chokepoint — the IDOR gate).
      *
-     * Üç katman sırayla uygulanır ve DÖRT okuma yolu da (unreadCount, listFor,
-     * markAllRead, isRelevant) bu tek metottan geçer:
-     *   1. HEDEF: broadcast + kendi 'user' hedefi + üye olunan 'group' hedefi.
-     *   2. HARİÇ TUTMA: satırın `exclude_users` listesinde olan kullanıcı elenir.
-     *   3. TERCİH: kullanıcının susturduğu tip/kanal elenir (kritik hariç).
-     * Bu yüzden markRead() de hariç tutulan/susturulmuş kayda 404 döner (isRelevant).
+     * Three layers are applied in sequence, and all FOUR read paths
+     * (unreadCount, listFor, markAllRead, isRelevant) go through this single
+     * method:
+     *   1. TARGET: broadcast + own 'user' target + membered 'group' target.
+     *   2. EXCLUSION: a user in the row's `exclude_users` list is filtered out.
+     *   3. PREFERENCES: a type/channel the user has muted is filtered out (critical excepted).
+     * That's why markRead() also returns 404 for an excluded/muted row (isRelevant).
      *
-     * @param BaseBuilder $builder Üzerine WHERE eklenecek builder.
-     * @param int         $userId  Kullanıcı kimliği.
-     * @param string[]    $groups  Kullanıcının üye olduğu gruplar.
+     * @param BaseBuilder $builder Builder to add WHERE clauses to.
+     * @param int         $userId  User ID.
+     * @param string[]    $groups  Groups the user is a member of.
      */
     private function applyRelevance(BaseBuilder $builder, int $userId, array $groups): void
     {
@@ -397,15 +411,16 @@ class Notifier
     }
 
     /**
-     * Satır bazlı hariç tutma filtresini ekler (`exclude_users` sentinel-CSV'si).
+     * Adds the row-level exclusion filter (`exclude_users` sentinel CSV).
      *
-     * Depolanan biçim daima virgülle sarmalıdır (`,5,12,`), bu yüzden `,1,` kalıbı
-     * `,12,` değerine YANLIŞ eşleşmez ({@see NotificationMessage::encodeExcludeUsers()}).
-     * Kimlik metotta int'e cast edilmiş olarak gelir ve kalıp ayrıca `escape()` ile
-     * kaçırılır (iki katman). Kolon henüz migrate edilmemişse filtre hiç eklenmez.
+     * The stored form is always comma-wrapped (`,5,12,`), so the `,1,` pattern
+     * never WRONGLY matches `,12,` ({@see NotificationMessage::encodeExcludeUsers()}).
+     * The ID arrives already cast to int in the method, and the pattern is also
+     * escaped via `escape()` (two layers). If the column hasn't been migrated
+     * yet, the filter isn't added at all.
      *
-     * @param BaseBuilder $builder Üzerine WHERE eklenecek builder.
-     * @param int         $userId  Kullanıcı kimliği.
+     * @param BaseBuilder $builder Builder to add a WHERE clause to.
+     * @param int         $userId  User ID.
      */
     private function applyExclusion(BaseBuilder $builder, int $userId): void
     {
@@ -419,27 +434,29 @@ class Notifier
     }
 
     /**
-     * Kullanıcı tercihlerini (opt-out) okuma zamanında uygular (anti-join).
+     * Applies user preferences (opt-out) at read time (anti-join).
      *
-     * Model B satırları küresel olduğu için susturma GÖNDERİM anında uygulanamaz;
-     * filtre burada, `notification_preferences` tablosuna LEFT JOIN + `p.id IS NULL`
-     * ile kurulur. `p.type = n.type OR n.type LIKE CONCAT(p.type, '.%')` sayesinde
-     * bir tercih satırı tam tip ya da tip ÖNEKİ olarak yazılabilir ('audit' → 'audit.*').
+     * Because Model B rows are global, muting can't be applied at SEND time;
+     * the filter is built here via a LEFT JOIN to the `notification_preferences`
+     * table + `p.id IS NULL`. Thanks to
+     * `p.type = n.type OR n.type LIKE CONCAT(p.type, '.%')`, a preference row
+     * can be written as an exact type or a type PREFIX ('audit' -> 'audit.*').
      *
-     * KRİTİK: `n.severity <> 'critical'` koşulu bilerek JOIN'in ON tarafındadır,
-     * WHERE'de DEĞİL. Böylece kritik satırlar hiç JOIN'lenmez → (a) asla susturulamaz,
-     * (b) birden çok eşleşen tercih satırı olsa bile listFor() satırı ÇOĞALTMAZ ve
-     * unreadCount()'un countAllResults() sayısını ŞİŞİRMEZ (ayakta kalan her satırın
-     * eşleşme sayısı sıfırdır, yani çıktı satırı tektir). Aynı nedenle bu JOIN
-     * countAllResults()'ı bozmaz: sorguya GROUP BY/DISTINCT eklenmez.
+     * CRITICAL: the `n.severity <> 'critical'` condition is deliberately on the
+     * JOIN's ON side, NOT in WHERE. This way critical rows are never joined at
+     * all, so (a) they can never be muted, and (b) even if multiple preference
+     * rows match, listFor() doesn't DUPLICATE the row and unreadCount()'s
+     * countAllResults() isn't INFLATED (every surviving row has zero matches,
+     * i.e. the output row is single). For the same reason this JOIN doesn't
+     * break countAllResults(): no GROUP BY/DISTINCT is added to the query.
      *
-     * Performans: JOIN indeksli `user_id` ile daralır — `notif_pref_unique` ve
-     * `notif_pref_lookup` indekslerinin İKİSİ de `user_id` ile başlar, hangisinin
-     * kullanılacağı optimizer'ın kararıdır — ve kullanıcı başına tercih kümesi
-     * küçüktür; ek sorgu yok, N+1 yok.
+     * Performance: the JOIN narrows on the indexed `user_id` — BOTH the
+     * `notif_pref_unique` and `notif_pref_lookup` indexes start with `user_id`,
+     * so which one gets used is the optimizer's call — and the per-user
+     * preference set is small; no extra query, no N+1.
      *
-     * @param BaseBuilder $builder Üzerine JOIN/WHERE eklenecek builder.
-     * @param int         $userId  Kullanıcı kimliği.
+     * @param BaseBuilder $builder Builder to add a JOIN/WHERE to.
+     * @param int         $userId  User ID.
      */
     private function applyPreferences(BaseBuilder $builder, int $userId): void
     {
@@ -465,12 +482,12 @@ class Notifier
     }
 
     /**
-     * Tek bir bildirimin kullanıcıya ilgili olup olmadığını doğrular (id-scope'lu relevans).
+     * Verifies whether a single notification is relevant to the user (ID-scoped relevance).
      *
-     * @param int $id     Bildirim kimliği.
-     * @param int $userId Kullanıcı kimliği.
+     * @param int $id     Notification ID.
+     * @param int $userId User ID.
      *
-     * @return bool İlgiliyse true.
+     * @return bool True if relevant.
      */
     private function isRelevant(int $id, int $userId): bool
     {
@@ -484,22 +501,24 @@ class Notifier
     }
 
     /**
-     * Kullanıcının üye olduğu Shield gruplarının adlarını döndürür (TEK grup-sorgusu kaynağı).
+     * Returns the names of the Shield groups the user is a member of (the SOLE group-query source).
      *
-     * Hem modül içi relevans/topic türetimi (applyRelevance, topicsFor) hem de modül dışı
-     * rol bazlı politikalar (RealtimeController'ın SSE bağlantı cap'i) bu tek okumayı
-     * kullanır; ikinci bir grup sorgusu implementasyonu YOKTUR.
+     * Used by both in-module relevance/topic derivation (applyRelevance,
+     * topicsFor) and out-of-module role-based policies (RealtimeController's
+     * SSE connection cap) via this single read; there is NO second group-query
+     * implementation.
      *
-     * UYARI (yetki): Bu metot YETKİ KONTROLÜ YAPMAZ — verilen herhangi bir userId'nin
-     * Shield grup üyeliğini olduğu gibi döndürür. ÇAĞIRAN, `$userId`'nin oturum sahibine
-     * ait olduğunu (`auth()->id()`) garanti ETMEK ZORUNDADIR; istemciden gelen bir id ile
-     * çağrılırsa rol keşfine açık bir IDOR olur.
+     * WARNING (authorization): this method does NOT PERFORM AN AUTHORIZATION
+     * CHECK — it returns the Shield group membership of whatever userId is
+     * given, as-is. The CALLER MUST GUARANTEE that `$userId` belongs to the
+     * session owner (`auth()->id()`); calling it with an ID from the client
+     * opens up an IDOR for role discovery.
      *
-     * @internal Modül içi kullanım + RealtimeController cap politikası içindir.
+     * @internal For in-module use + RealtimeController cap policy.
      *
-     * @param int $userId Kullanıcı kimliği (çağıran tarafından oturum sahibi olduğu doğrulanmış).
+     * @param int $userId User ID (verified by the caller to be the session owner).
      *
-     * @return string[] Grup adları.
+     * @return string[] Group names.
      */
     public function groupsFor(int $userId): array
     {
@@ -509,25 +528,27 @@ class Notifier
     }
 
     /**
-     * Verilen kullanıcıların, verilen grupların hangisine üye olduğunu TEK sorguda çözer.
+     * Resolves, in a SINGLE query, which of the given groups each of the given users belongs to.
      *
-     * Yalnız GÖNDERİM anındaki örtüşme temizliği içindir (bkz.
-     * {@see NotificationBuilder::coveredUserTargets()}): aynı yayında hem `toUser(5)`
-     * hem de 5'in üyesi olduğu bir gruba `toGroup(...)` verildiğinde kullanıcının iki
-     * satır görmesini engellemek üzere, kullanıcı grup satırının `exclude_users`
-     * listesine yazılır. Fan-out DEĞİLDİR: yalnızca AÇIKÇA hedeflenen kimliklerle
-     * sınırlı bir kesişim okumasıdır, grup üyelerinin tamamı materyalize edilmez.
+     * Only used for overlap cleanup at SEND time (see
+     * {@see NotificationBuilder::coveredUserTargets()}): when the same
+     * broadcast has both `toUser(5)` and `toGroup(...)` for a group 5 is a
+     * member of, the user is written into the group row's `exclude_users` list
+     * to prevent the user from seeing two rows. NOT fan-out: it's only an
+     * intersection read scoped to EXPLICITLY targeted IDs, the full group
+     * membership is never materialized.
      *
-     * `auth_groups_users` sorgusu — {@see groupsFor()} ile birlikte — bu sınıfta
-     * kalır; modül dışında ikinci bir grup-sorgusu implementasyonu YOKTUR.
-     * Shield tabloları henüz migrate edilmemişse boş harita döner (fatal atmaz).
+     * The `auth_groups_users` query — together with {@see groupsFor()} —
+     * stays in this class; there is NO second group-query implementation
+     * outside the module. Returns an empty map if the Shield tables haven't
+     * been migrated yet (doesn't throw).
      *
-     * @internal Yalnız gönderim anındaki örtüşme temizliği içindir (NotificationBuilder).
+     * @internal Only for overlap cleanup at send time (NotificationBuilder).
      *
-     * @param list<int>    $userIds Açıkça hedeflenmiş kullanıcı kimlikleri.
-     * @param list<string> $groups  Aynı yayında hedeflenmiş grup adları.
+     * @param list<int>    $userIds Explicitly targeted user IDs.
+     * @param list<string> $groups  Group names targeted in the same broadcast.
      *
-     * @return array<string, list<int>> Grup adı => o gruba üye olan hedeflenmiş kimlikler.
+     * @return array<string, list<int>> Group name => targeted IDs that are members of that group.
      */
     public function groupMembersAmong(array $userIds, array $groups): array
     {
@@ -550,37 +571,40 @@ class Notifier
     }
 
     /**
-     * Bir yayının kaç KİŞİYE gideceğini gönderim ÖNCESİ tahmin eder (composer önizlemesi).
+     * Estimates, BEFORE sending, how many PEOPLE a broadcast will reach (composer preview).
      *
-     * Model B satırları küresel olduğu için alıcı sayısı diske hiç yazılmaz; bu metot
-     * onu yayın tanımından (broadcast / kullanıcı / grup / hariç tutma) TÜRETİR ve
-     * hiçbir şey yazmaz. `auth_groups_users` sorgusu — {@see groupsFor()} ve
-     * {@see groupMembersAmong()} ile birlikte — bu sınıfta kalır; modülde ikinci bir
-     * grup-sorgusu sahibi YOKTUR.
+     * Because Model B rows are global, the recipient count is never written to
+     * disk; this method DERIVES it from the broadcast definition
+     * (broadcast / users / groups / exclusions) and writes nothing. The
+     * `auth_groups_users` query — together with {@see groupsFor()} and
+     * {@see groupMembersAmong()} — stays in this class; the module has NO
+     * second owner of the group query.
      *
-     * SORGU BÜTÇESİ (N+1 yok, girdi boyundan bağımsız):
-     *   - broadcast: 1 sorgu (toplam) + hariç tutma varsa 1 sorgu (var olanları say).
-     *   - hedefli:   grup verilmişse TEK `SELECT DISTINCT user_id ... WHERE group IN (...)`;
-     *     açık kimlikler ve hariç tutma PHP tarafında küme işlemiyle birleştirilir.
+     * QUERY BUDGET (no N+1, independent of input size):
+     *   - broadcast: 1 query (total) + 1 query if there's an exclusion (count existing ones).
+     *   - targeted:  if groups are given, a SINGLE
+     *     `SELECT DISTINCT user_id ... WHERE group IN (...)`; explicit IDs and
+     *     exclusions are merged with a set operation on the PHP side.
      *
-     * KAPSAM: yalnız ADRESLENEBİLİR hesaplar sayılır ({@see scopeAddressableUsers()}) —
-     * soft-delete edilmiş ve banlı hesaplar bildirimi hiçbir zaman göremez. Hariç
-     * tutulanlar broadcast'te GERÇEKTEN var olan kimliklerle düşülür; var olmayan bir
-     * kimliği düşmek sayıyı olduğundan küçük gösterirdi.
+     * SCOPE: only ADDRESSABLE accounts are counted ({@see scopeAddressableUsers()})
+     * — soft-deleted and banned accounts can never see a notification.
+     * Exclusions are subtracted from the broadcast using IDs that ACTUALLY
+     * exist; subtracting a nonexistent ID would understate the count.
      *
-     * YAKLAŞIKLIK (dürüstlük notu): hedefli modda grup üyeleri `auth_groups_users`'tan
-     * sayılır, `users`'a JOIN yapılmaz. Silinmiş ya da banlı bir kullanıcıya ait artık
-     * bir üyelik satırı kalmışsa sayı bir kişi fazla çıkabilir. Bu, ikinci bir JOIN'in
-     * maliyetine değmeyecek bir sapmadır: değer bir ÖNİZLEMEdir, teslim garantisi değildir.
+     * APPROXIMATION (an honesty note): in targeted mode, group members are
+     * counted from `auth_groups_users`, with no JOIN to `users`. If a deleted
+     * or banned user still has a leftover membership row, the count may come
+     * out one person too high. This is a deviation not worth the cost of a
+     * second JOIN: the value is a PREVIEW, not a delivery guarantee.
      *
-     * Shield tabloları henüz migrate edilmemişse 0 döner (fatal atmaz).
+     * Returns 0 if the Shield tables haven't been migrated yet (doesn't throw).
      *
-     * @param bool                 $broadcast    Yayın tüm kullanıcılara mı gidiyor (diğer hedeflere baskın).
-     * @param array<int, mixed>    $userIds      Açıkça hedeflenen kullanıcı kimlikleri.
-     * @param array<int, mixed>    $groups       Hedeflenen Shield grup adları.
-     * @param array<int, mixed>    $excludeUsers Hedefin dışında bırakılacak kullanıcı kimlikleri.
+     * @param bool                 $broadcast    Whether the broadcast goes to all users (overrides other targets).
+     * @param array<int, mixed>    $userIds      Explicitly targeted user IDs.
+     * @param array<int, mixed>    $groups       Targeted Shield group names.
+     * @param array<int, mixed>    $excludeUsers User IDs to leave out of the target.
      *
-     * @return int Tekilleştirilmiş tahmini alıcı sayısı (asla negatif değil).
+     * @return int Deduplicated estimated recipient count (never negative).
      */
     public function recipientCount(bool $broadcast, array $userIds, array $groups, array $excludeUsers): int
     {
@@ -603,28 +627,29 @@ class Notifier
     }
 
     /**
-     * Bir `users` sorgusunu ADRESLENEBİLİR hesaplarla sınırlar (TEK filtre kaynağı).
+     * Scopes a `users` query to ADDRESSABLE accounts (the SOLE filter source).
      *
-     * Adreslenebilir = bildirimi GÖREBİLECEK hesap. İki eleme uygulanır:
-     *   1. `deleted_at IS NULL` — Shield soft-delete edilmiş satırı hiçbir okuma
-     *      yolunda döndürmez.
-     *   2. `status <> 'banned'` — Shield oturum açmayı ban'da reddeder
+     * Addressable = an account that CAN see the notification. Two exclusions apply:
+     *   1. `deleted_at IS NULL` — never returns a Shield soft-deleted row on any read path.
+     *   2. `status <> 'banned'` — Shield rejects login while banned
      *      ({@see \CodeIgniter\Shield\Authentication\Authenticators\Session::login()}),
-     *      yani banlı hesap bildirimi hiçbir zaman okuyamaz. Kolon NULL'lanabilir
-     *      olduğu için `IS NULL OR <> 'banned'` yazılır; düz `<> 'banned'` NULL satırları
-     *      da elerdi, yani sıradan kullanıcıların TAMAMINI.
+     *      so a banned account can never read a notification. Because the column
+     *      is nullable, `IS NULL OR <> 'banned'` is written; a plain
+     *      `<> 'banned'` would also filter out NULL rows, i.e. ALL regular users.
      *
-     * `active` kolonu BİLEREK filtrelenmez: bu kurulumda etkinleştirme akışı kapalıdır
-     * (`Modules\Auth\Config\Auth::$actions['register'] === null`) ve Shield oturum
-     * açarken `active` bakmaz, yani `active = 0` olan hesap pekâlâ giriş yapıp bildirim
-     * okuyabilir. Onu elemek gerçek alıcıları sessizce düşürürdü.
+     * The `active` column is DELIBERATELY not filtered: in this setup the
+     * activation flow is disabled
+     * (`Modules\Auth\Config\Auth::$actions['register'] === null`) and Shield
+     * doesn't check `active` when logging in, so an account with `active = 0`
+     * can perfectly well log in and read notifications. Filtering it out would
+     * silently drop real recipients.
      *
-     * Hem composer'ın seçim/doğrulama sorguları hem de bu sınıfın sayımları buradan
-     * geçer; kural üç yerde kopyalanmaz.
+     * Both the composer's selection/validation queries and this class's counts
+     * go through here; the rule isn't duplicated in three places.
      *
-     * @param BaseBuilder $builder Üzerine WHERE eklenecek `users` builder'ı.
+     * @param BaseBuilder $builder The `users` builder to add a WHERE clause to.
      *
-     * @return BaseBuilder Zincirlemeye uygun aynı builder.
+     * @return BaseBuilder The same builder, chainable.
      */
     public static function scopeAddressableUsers(BaseBuilder $builder): BaseBuilder
     {
@@ -636,11 +661,11 @@ class Notifier
     }
 
     /**
-     * Broadcast alıcı sayısı: adreslenebilir hesap sayısı eksi var olan hariç tutulanlar.
+     * Broadcast recipient count: addressable account count minus existing exclusions.
      *
-     * @param list<int> $excluded Normalize edilmiş hariç tutma kimlikleri.
+     * @param list<int> $excluded Normalized exclusion IDs.
      *
-     * @return int Alıcı sayısı (asla negatif değil).
+     * @return int Recipient count (never negative).
      */
     private function broadcastRecipientCount(array $excluded): int
     {
@@ -658,11 +683,11 @@ class Notifier
     }
 
     /**
-     * Verilen grupların üye kimliklerini TEK sorguda, tekilleştirilmiş olarak döndürür.
+     * Returns member IDs of the given groups, deduplicated, in a SINGLE query.
      *
-     * @param list<string> $groups Normalize edilmiş grup adları.
+     * @param list<string> $groups Normalized group names.
      *
-     * @return list<int> Üye kullanıcı kimlikleri (tekil).
+     * @return list<int> Member user IDs (unique).
      */
     private function groupMemberIds(array $groups): array
     {
@@ -680,23 +705,24 @@ class Notifier
     }
 
     /**
-     * Ham kimlik listesini sayıma uygun hale getirir: int'e cast, 0/negatifi at, tekilleştir.
+     * Prepares a raw ID list for counting: cast to int, drop 0/negatives, deduplicate.
      *
-     * {@see NotificationMessage::normalizeExcludeUsers()} ile aynı ELEME kuralını
-     * uygular ama onun DEPOLAMA sözleşmesini (sıralama) taşımaz; burada tek gereken
-     * küme semantiğidir, saklanan bir değer üretilmez.
+     * Applies the same DROP rule as
+     * {@see NotificationMessage::normalizeExcludeUsers()} but doesn't carry its
+     * STORAGE contract (sorting); only set semantics are needed here, no
+     * stored value is produced.
      *
-     * @param array<int, mixed> $ids Ham kullanıcı kimlikleri.
+     * @param array<int, mixed> $ids Raw user IDs.
      *
-     * @return list<int> Tekil, pozitif kimlikler.
+     * @return list<int> Unique, positive IDs.
      */
     private static function normalizeIds(array $ids): array
     {
         $normalized = [];
 
         foreach ($ids as $id) {
-            // Skaler olmayan öğe atılır: iç içe bir dizi `(int)` cast'inde sessizce
-            // 1'e dönüşür ve hedeflenmemiş bir kullanıcıyı sayıma sokardı.
+            // A non-scalar element is dropped: an `(int)` cast on a nested array
+            // silently becomes 1 and would count an untargeted user.
             if (! is_scalar($id)) {
                 continue;
             }
@@ -712,11 +738,11 @@ class Notifier
     }
 
     /**
-     * Ham grup adı listesini temizler: metne çevir, boşları at, tekilleştir.
+     * Cleans a raw group name list: cast to string, drop empty ones, deduplicate.
      *
-     * @param array<int, mixed> $names Ham grup adları.
+     * @param array<int, mixed> $names Raw group names.
      *
-     * @return list<string> Tekil, boş olmayan grup adları.
+     * @return list<string> Unique, non-empty group names.
      */
     private static function normalizeNames(array $names): array
     {
@@ -738,9 +764,9 @@ class Notifier
     }
 
     /**
-     * Model B tablolarının (notifications + notification_reads) hazır olup olmadığı.
+     * Whether the Model B tables (notifications + notification_reads) are ready.
      *
-     * @return bool İkisi de mevcutsa true.
+     * @return bool True if both exist.
      */
     private function tablesReady(): bool
     {
@@ -749,11 +775,11 @@ class Notifier
     }
 
     /**
-     * Kanal sonuçları içinde en az bir başarılı teslim var mı.
+     * Whether there is at least one successful delivery among the channel results.
      *
-     * @param ChannelResult[] $results Teslim sonuçları.
+     * @param ChannelResult[] $results Delivery results.
      *
-     * @return bool Herhangi biri ok ise true.
+     * @return bool True if any is ok.
      */
     private function anyOk(array $results): bool
     {

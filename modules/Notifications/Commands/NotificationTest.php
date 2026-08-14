@@ -9,15 +9,15 @@ use CodeIgniter\CLI\CLI;
 use Modules\Notifications\Libraries\Notifier;
 
 /**
- * Bildirim Merkezi'ni uçtan uca denemek için hızlı bir test komutu.
+ * A quick test command for exercising the Notification Center end-to-end.
  *
- * `Notifier` servisini çağırdığı için aynı zamanda gerçek kod yolunu
- * (create / relevance / count / cache invalidation) doğrular.
+ * Since it calls the `Notifier` service, it also verifies the real code path
+ * (create / relevance / count / cache invalidation).
  *
- * Kullanım:
- *   php spark notifications:test                 # user_id=1'e bir bildirim
- *   php spark notifications:test 5               # user_id=5'e bir bildirim
- *   php spark notifications:test --role superadmin   # grup için tek satır (üyelik okuma-zamanında çözülür)
+ * Usage:
+ *   php spark notifications:test                 # a notification for user_id=1
+ *   php spark notifications:test 5               # a notification for user_id=5
+ *   php spark notifications:test --role superadmin   # a single row for the group (membership resolved at read time)
  *   php spark notifications:test 5 --title "Merhaba" --body "Deneme" --url /backend/blog
  */
 class NotificationTest extends BaseCommand

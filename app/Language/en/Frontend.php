@@ -8,5 +8,6 @@ return [
     'get_started' => 'Get Started',
     'learn_more' => 'Learn More',
     'footer_copyright' => 'All Rights Reserved &copy; CI4MS 2026',
-    'latest_posts' => 'Latest Blog Posts'
+    'latest_posts' => 'Latest Blog Posts',
+    'contact_form_success' => 'Your message has been received. We will get back to you shortly.'
 ];

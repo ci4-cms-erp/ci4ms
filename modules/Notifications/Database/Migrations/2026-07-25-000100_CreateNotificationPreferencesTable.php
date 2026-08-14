@@ -5,24 +5,25 @@ namespace Modules\Notifications\Database\Migrations;
 use CodeIgniter\Database\Migration;
 
 /**
- * Kullanıcı bildirim tercihleri (opt-out) tablosu: (user_id, type, channel) başına bir satır.
+ * User notification preferences (opt-out) table: one row per (user_id, type, channel).
  *
- * Model B küresel satır tuttuğu için tercih GÖNDERİM anında uygulanamaz (aynı satır
- * herkese aittir); filtre OKUMA zamanında `Notifier::applyRelevance()` içindeki
- * LEFT JOIN + `p.id IS NULL` anti-join'i ile uygulanır. Bu yüzden burada yalnız
- * SUSTURMA (enabled = 0) satırları anlamlıdır; satırın yokluğu "bildirim açık"tır.
+ * Because Model B keeps a global row (the same row belongs to everyone), the
+ * preference cannot be applied at SEND time; the filter is applied at READ time
+ * via the LEFT JOIN + `p.id IS NULL` anti-join inside `Notifier::applyRelevance()`.
+ * That is why only MUTE (enabled = 0) rows are meaningful here; the absence of a
+ * row means "notifications on".
  *
- * `type` bir tip ya da tip ÖNEKİdir: 'audit' satırı hem 'audit' hem 'audit.login'
- * kayıtlarını susturur (JOIN'de `n.type LIKE CONCAT(p.type, '.%')`). `channel = '*'`
- * tüm kanalları kapsar. `severity = 'critical'` satırlar JOIN'e hiç girmez, yani
- * kritik bildirimler susturulamaz.
+ * `type` is a type or a type PREFIX: an 'audit' row mutes both 'audit' and
+ * 'audit.login' records (in the JOIN: `n.type LIKE CONCAT(p.type, '.%')`).
+ * `channel = '*'` covers all channels. `severity = 'critical'` rows never enter
+ * the JOIN at all, meaning critical notifications cannot be muted.
  *
- * INDEX'ler okuma yolu içindir: JOIN önce `user_id` ile daralır (notif_pref_lookup),
- * UNIQUE ise aynı üçlünün çift yazılmasını engeller. FK CASCADE'dir: kullanıcı
- * silinince tercihleri de silinir.
+ * The INDEXes exist for the read path: the JOIN narrows first by `user_id`
+ * (notif_pref_lookup), while the UNIQUE index prevents duplicate writes of the
+ * same triple. The FK is CASCADE: deleting a user deletes their preferences too.
  *
- * up() tableExists guard'lıdır (tekrar çalıştırılabilir). down() yalnız dosya
- * bütünlüğü içindir: tablo kullanıcı verisi taşır, otomatik DROP veri kaybı olurdu.
+ * up() is tableExists-guarded (safe to re-run). down() exists only for file
+ * integrity: the table carries user data, so an automatic DROP would be data loss.
  */
 class CreateNotificationPreferencesTable extends Migration
 {
@@ -46,20 +47,20 @@ class CreateNotificationPreferencesTable extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
-            // Tam tip ('audit.login') ya da tip öneki ('audit').
+            // Full type ('audit.login') or a type prefix ('audit').
             'type' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 64,
                 'null'       => false,
             ],
-            // '*' = tüm kanallar; aksi halde notifications.channel ile birebir eşleşir.
+            // '*' = all channels; otherwise matches notifications.channel exactly.
             'channel' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 32,
                 'null'       => false,
                 'default'    => '*',
             ],
-            // 0 = susturuldu (okuma yolunda elenir). 1 = varsayılan, satır bilgi amaçlıdır.
+            // 0 = muted (filtered out on the read path). 1 = default, the row exists purely informationally.
             'enabled' => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,
@@ -82,8 +83,8 @@ class CreateNotificationPreferencesTable extends Migration
         $this->forge->addKey(['user_id', 'type', 'channel'], false, true, 'notif_pref_unique');
         $this->forge->addKey(['user_id', 'enabled'], false, false, 'notif_pref_lookup');
 
-        // Shield `users` tablosu yoksa (modül tek başına, Shield migrate edilmemiş)
-        // FK'siz oluştur: tablo yine çalışır, temizlik uygulama tarafında kalır.
+        // If the Shield `users` table doesn't exist (module standalone, Shield not
+        // migrated), create without the FK: the table still works, cleanup stays on the app side.
         if ($this->db->tableExists('users')) {
             $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'CASCADE');
         } else {
@@ -95,8 +96,8 @@ class CreateNotificationPreferencesTable extends Migration
 
     public function down()
     {
-        // Geri alma ELLE yapılır — tablo kullanıcı tercihlerini taşır, otomatik DROP veri kaybıdır.
-        // Manuel adım (gerekirse):
+        // Rollback is done MANUALLY — the table carries user preferences, so an automatic DROP would be data loss.
+        // Manual step (if needed):
         //   DROP TABLE `{prefix}notification_preferences`;
     }
 }

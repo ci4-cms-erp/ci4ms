@@ -12,10 +12,10 @@ return [
     'severityWarning'  => 'Uyarı',
     'severityCritical' => 'Kritik',
 
-    // SSE stream() 429 gövdesi — kısa ve ayrıntısız tutulur.
+    // SSE stream() 429 body — kept short and unspecific.
     'realtimeConnLimit' => 'Çok fazla açık anlık bağlantı var.',
 
-    // Tercih (opt-out) ekranı.
+    // Preferences (opt-out) screen.
     'preferences'      => 'Bildirim tercihleri',
     'prefIntro'        => 'Almak istemediğin bildirim tiplerini sustur. Susturma yalnız kendi hesabını etkiler.',
     'prefType'         => 'Bildirim tipi',
@@ -28,7 +28,7 @@ return [
     'prefTableMissing' => 'Bildirim tercihleri tablosu henüz migrate edilmemiş.',
     'prefTypeAudit'    => 'Güvenlik ve denetim uyarıları',
 
-    // Bildirim gönderme (composer) ekranı.
+    // Composer (send notification) screen.
     'compose'                 => 'Bildirim gönder',
     'composeIntro'            => 'Bildirimi yaz ve kimlere gideceğini seç. Gönderen olarak daima kendi hesabın kaydedilir.',
     'composeFieldTitle'       => 'Başlık',
@@ -57,9 +57,9 @@ return [
     'composeUnknownGroup'     => 'Tanınmayan bir grup seçildi.',
     'composeUnknownUser'      => 'Tanınmayan bir kullanıcı seçildi.',
     'composeTooManyTargets'   => 'Tek bir bildirimde en fazla {0} kullanıcı ve grup seçilebilir.',
-    // Literal süslü parantezler ICU'da quote'lanmıştır ('{' / '}'): doğrulayıcı bu satırı
-    // MessageFormatter'dan geçirir, quote'lanmamış bir parantez tüm kalıbın parse
-    // edilmesini bozar ve yöneticiye alan adı yerine ham {field} yer tutucusu görünür.
+    // Literal braces are ICU-quoted ('{' / '}'): the validator formats this line through
+    // MessageFormatter, and an unquoted brace makes the whole pattern fail to parse, so
+    // the administrator gets the raw {field} placeholder instead of the field name.
     'composeInvalidText'      => '{field} alanı < > \'{\' \'}\' = karakterlerini içeremez.',
     'composeInvalidUrl'       => 'Bağlantı / ile başlayan site-içi bir yol olmalı; buradan dış adres gönderilemez.',
     'composeTitleRequired'    => 'Başlık zorunlu.',

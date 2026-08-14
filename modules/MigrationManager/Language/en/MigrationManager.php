@@ -15,7 +15,7 @@ return [
     'runHistory' => 'Run History',
     'noWebRunnableSeeders' => 'No web-runnable seeders are available yet.',
 
-    // Görev 22 — list.php UI
+    // Task 22 — list.php UI
     'runAllMigrations' => 'Run All Migrations',
     'runSelectedMigrations' => 'Run Selected',
     'runAllSeeds' => 'Run All Seeds',
@@ -55,7 +55,7 @@ return [
     'targetAllNamespaces' => 'All namespaces (App + Modules)',
     'searchPlaceholder' => 'Search run history...',
 
-    // Görev 12 — Ci4msReferenceDataSeeder
+    // Task 12 — Ci4msReferenceDataSeeder
     'seederReferenceData' => 'Reference Data (languages, pages, sample blog & menu)',
     'seedAlreadyApplied' => 'Reference data already exists, nothing to do.',
 ];

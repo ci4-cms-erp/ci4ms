@@ -45,20 +45,24 @@ class Ci4MsAuthFilter implements FilterInterface
             }
         }
 
+        // redirect('403') is broken -- no '403' route is registered -- and this
+        // is a filter, not a controller, so failForbidden() (ResponseTrait) is
+        // not available either. Render the same error_403 view the rest of the
+        // backend uses, the way BackendMaintenanceFilter renders error_503.
         if (auth()->user()->inGroup('superadmin')) {
             if (! $page) {
-                return redirect('403');
+                return service('response')->setStatusCode(403)->setBody(view('Modules\Backend\Views\errors\html\error_403'));
             }
             return;
         } else {
             if (! $page) {
-                return redirect('403');
+                return service('response')->setStatusCode(403)->setBody(view('Modules\Backend\Views\errors\html\error_403'));
             }
         }
 
         $permissionString = strtolower($page->pagename) . '.' . $this->neededAction($page);
         if (! auth()->user()->can($permissionString)) {
-            return redirect('403');
+            return service('response')->setStatusCode(403)->setBody(view('Modules\Backend\Views\errors\html\error_403'));
         }
     }
 

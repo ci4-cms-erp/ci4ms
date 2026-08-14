@@ -7,5 +7,4 @@ return [
     'isHomePage' => 'Şu anki ana sayfa',
     'setAsHomePage' => 'Ana sayfa yap',
     'searchPlaceholder' => 'Sayfa ara...',
-    'totalPages' => 'Toplam Sayfa',
 ];

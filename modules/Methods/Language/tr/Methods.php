@@ -4,7 +4,6 @@ return [
     'methodCreate' => 'Metot Oluştur',
     'modules' => 'Modüller',
     'pageName' => 'Sayfa Adı',
-    'description' => 'Açıklama',
     'controller' => 'Kontrolcü',
     'methodName' => 'Metot adı',
     'pageOrder' => 'Sayfa Sırası',
@@ -20,7 +19,6 @@ return [
     'hasChildPages' => 'Alt Sayfa Var',
     'totalModules' => 'Toplam Modül',
     'activeModules' => 'Aktif Modül',
-    'totalPages' => 'Toplam Sayfa',
     'inNavigation' => 'Navigasyonda Olanlar',
     'allModules' => 'Tüm Modüller',
     'scanModules' => 'Modül Tara',
@@ -74,4 +72,6 @@ return [
     'zipPathTraversal' => 'ZIP dosyasında dizin gezdirme (path traversal) hatası var.',
     'zipBombDetected' => 'Yüklenen arşiv çok büyük veya boyutu aşırı bir giriş içeriyor. Açma işlemi reddedildi.',
     'symlinkRejected' => 'Yüklenen arşiv sembolik bağ içeriyor. Modül paketlerinde symlink kullanımına izin verilmez.',
+    'classNameMethodNameDuplicate' => 'Bu controller ve metot kombinasyonu zaten başka bir izin sayfasına kayıtlı.',
+    'moduleRequired' => 'Lütfen geçerli bir modül seçin.',
 ];

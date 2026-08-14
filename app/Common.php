@@ -204,10 +204,10 @@ if (!function_exists('compressAndOverwriteImage')) {
         $tempDestination = $path . 'temp_image.webp';
         imagewebp($tempImage, $tempDestination, $quality);
 
-        // Orijinal resmi silme
+        // Delete the original image
         unlink($path . $source);
 
-        // Geçici resmi orijinal dosya adıyla değiştirme
+        // Replace the temporary image with the original file name
         rename($tempDestination, $path . $source);
 
         return $source;

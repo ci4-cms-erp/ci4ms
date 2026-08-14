@@ -237,13 +237,13 @@ class Blog extends \Modules\Backend\Controllers\BaseController
                 // query blog_langs where seflink equals and blog_id != $id
                 $check = $this->commonModel->selectOne('blog_langs', ['seflink' => $lanData['seflink'], 'blog_id !=' => $id]);
                 if (!empty($check)) {
-                    return redirect()->route('blogUpdate', [$id])->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz. Seflink: ' . $lanData['seflink']);
+                    return redirect()->route('blogUpdate', [$id])->withInput()->with('error', lang('Blog.seflinkConflict', [$lanData['seflink']]));
                 }
             }
         } else {
             foreach ($langsPost as $lanCode => $lanData) {
                 if ($this->commonModel->isHave('blog_langs', ['seflink' => $lanData['seflink']]) === 1) {
-                    return redirect()->route('blogCreate')->withInput()->with('error', 'Blog seflink adresi daha önce kullanılmış. lütfen kontrol ederek bir daha oluşturmayı deneyeyiniz. Seflink: ' . $lanData['seflink']);
+                    return redirect()->route('blogCreate')->withInput()->with('error', lang('Blog.seflinkConflict', [$lanData['seflink']]));
                 }
             }
         }

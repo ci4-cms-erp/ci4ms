@@ -5,38 +5,39 @@ declare(strict_types=1);
 namespace Modules\MigrationManager\Contracts;
 
 /**
- * Web'den tetiklenebilir seed'ler için işaretleyici (marker) arayüz.
+ * Marker interface for seeders that can be triggered from the web.
  *
- * `vendor/codeigniter4/framework/system/Database/Seeder.php:154`'teki
- * `Seeder::call()` seeder sınıf adını hiç doğrulamadan `new $class(...)`
- * yapar. Bu arayüzü implement etmek, `SeederScanner::discover()`'ın
- * kullandığı yapısal bir allowlist'e girmenin ÖN KOŞULUDUR — implement
- * etmeyen seeder'lar (ör. `Ci4msDefaultsSeeder`) tarama sonucunda hiç
- * görünmez, ayrı bir denylist'e ihtiyaç yoktur.
+ * `vendor/codeigniter4/framework/system/Database/Seeder.php:154`'s
+ * `Seeder::call()` does `new $class(...)` without ever validating the seeder
+ * class name. Implementing this interface is the PREREQUISITE for entering
+ * the structural allowlist used by `SeederScanner::discover()` — seeders
+ * that don't implement it (e.g. `Ci4msDefaultsSeeder`) never show up in the
+ * scan results, so no separate denylist is needed.
  */
 interface WebRunnableSeeder
 {
     /**
-     * Backend arayüzünde gösterilecek etiketin `lang()` anahtarını döner.
+     * Returns the `lang()` key for the label shown in the backend UI.
      *
-     * Çevrilmiş metni DEĞİL, `Language/{en,tr}/MigrationManager.php`
-     * içindeki anahtarı döner — çeviri çağrı yerinde (view/controller)
-     * `lang('MigrationManager.' . $key)` ile yapılır.
+     * Returns the key INSIDE `Language/{en,tr}/MigrationManager.php`, NOT
+     * the translated text — the translation happens at the call site
+     * (view/controller) via `lang('MigrationManager.' . $key)`.
      *
-     * @return string lang() anahtarı (namespace/nokta içermez).
+     * @return string lang() key (no namespace/dot).
      */
     public static function seederLabel(): string;
 
     /**
-     * Seeder'ın aynı veri üzerinde güvenle birden çok kez çalıştırılıp
-     * çalıştırılamayacağını belirtir.
+     * States whether the seeder can safely be run more than once against
+     * the same data.
      *
-     * `false` dönerse UI, seeder zaten bir `migration_runs` kaydına sahipse
-     * tekrar çalıştırma aksiyonunu gizlemeli/engellemelidir; asıl
-     * idempotency garantisi yine de seeder'ın kendi `run()` implementasyonuna
-     * (ör. skip-gate) aittir — bu bayrak yalnızca UI/politika sinyalidir.
+     * If it returns `false`, the UI should hide/block the re-run action
+     * once the seeder already has a `migration_runs` record; the actual
+     * idempotency guarantee still belongs to the seeder's own `run()`
+     * implementation (e.g. a skip-gate) — this flag is only a UI/policy
+     * signal.
      *
-     * @return bool Tekrar çalıştırmaya güvenli ise `true`.
+     * @return bool `true` if it's safe to run again.
      */
     public static function isRepeatable(): bool;
 }

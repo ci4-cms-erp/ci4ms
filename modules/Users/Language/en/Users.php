@@ -30,7 +30,6 @@
     'surname' => 'Surname',
     'email' => 'E-mail Address',
     'password' => 'Password',
-    'username' => 'Username',
     'userGroups' => 'User Groups',
     'alreadyTakenEmail' => 'This email address has already been taken by another user, please check your information.',
     'addedToBlacklist' => 'User added to blacklist.',
@@ -73,4 +72,8 @@
     'groupNameConflict' => 'This group name is already in use.',
     'cannotEditOwnGroupName' => 'You cannot rename the group you currently belong to.',
     'permsExceedOwnGrant' => 'You cannot grant a permission you do not have yourself.',
+    'cannotEditOwnPermissions' => 'You cannot edit your own permissions.',
+    'cannotEditOwnAccount' => 'You cannot edit your own account from this screen; use your profile page instead.',
+    'groupExceedsOwnGrant' => 'You cannot assign a group with permissions you do not have yourself.',
+    'cannotResetPeerPassword' => 'You cannot set another user\'s password from this screen without superadmin privileges.',
 ];

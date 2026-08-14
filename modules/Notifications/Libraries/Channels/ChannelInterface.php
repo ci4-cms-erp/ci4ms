@@ -7,16 +7,16 @@ namespace Modules\Notifications\Libraries\Channels;
 use Modules\Notifications\Libraries\NotificationMessage;
 
 /**
- * Bir bildirim teslim kanalının sözleşmesi (in-app, e-posta, webhook ...).
+ * Contract for a notification delivery channel (in-app, email, webhook ...).
  */
 interface ChannelInterface
 {
     /**
-     * Tek bir bildirim mesajını bu kanaldan teslim eder.
+     * Delivers a single notification message through this channel.
      *
-     * @param NotificationMessage $message Temizlenmiş, tek-hedefli mesaj.
+     * @param NotificationMessage $message Sanitized, single-target message.
      *
-     * @return ChannelResult Teslim sonucu (ok/skipped + meta).
+     * @return ChannelResult Delivery result (ok/skipped + meta).
      */
     public function send(NotificationMessage $message): ChannelResult;
 }

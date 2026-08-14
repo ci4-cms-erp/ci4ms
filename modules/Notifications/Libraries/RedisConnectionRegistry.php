@@ -5,65 +5,72 @@ declare(strict_types=1);
 namespace Modules\Notifications\Libraries;
 
 /**
- * Redis destekli eşzamanlı SSE bağlantı defteri (rol bazlı bağlantı cap'inin TEK erişim noktası).
+ * Redis-backed concurrent SSE connection registry (the SOLE access point for the role-based connection cap).
  *
- * Kullanıcı başına açık bağlantılar `notif:conn:{userId}` ZSET'inde tutulur: üye =
- * bağlantı kimliği, skor = yuvanın son kullanma zaman damgası. INCR/DECR SAYACI
- * KULLANILMAZ; istemci koparsa DECR hiç çalışmaz ve sayaç kalıcı sızarak kullanıcıyı
- * kendi cap'ine kilitler. ZSET kendi kendini iyileştirir: her `acquire()` önce
- * ZREMRANGEBYSCORE ile süresi geçmiş yuvaları budar, ayrıca anahtarın kendisi de
- * EXPIRE ile ikinci bir güvenlik ağı taşır. Keyspace üzerinde O(N) olduğu için
- * SCAN MATCH kullanılmaz.
+ * Open connections per user are kept in the `notif:conn:{userId}` ZSET:
+ * member = connection ID, score = the slot's expiry timestamp. An INCR/DECR
+ * COUNTER IS NOT USED; if the client disconnects, DECR never runs and the
+ * counter would leak permanently, locking the user out of their own cap. The
+ * ZSET self-heals: every `acquire()` first prunes expired slots via
+ * ZREMRANGEBYSCORE, and the key itself also carries a second safety net via
+ * EXPIRE. SCAN MATCH isn't used because it's O(N) over the keyspace.
  *
- * ATOMİKLİK: buda → say → ekle → süre ver dizisi TEK bir `EVAL` betiğinde koşar.
- * PHP round-trip'leriyle bölünmüş bir ZCARD/ZADD ikilisinde eşzamanlı N istek cap'i
- * aşabilirdi (TOCTOU); ayrıca ZADD ile EXPIRE arasında süreç ölürse anahtar TTL'siz
- * kalıcı olarak sızardı. Tek betik hem bu iki yarışı kapatır hem de 4 round-trip'i 1'e
- * indirir.
+ * ATOMICITY: the prune -> count -> add -> expire sequence runs in a SINGLE
+ * `EVAL` script. A ZCARD/ZADD pair split across PHP round-trips could let
+ * concurrent N requests exceed the cap (TOCTOU); also, if the process died
+ * between ZADD and EXPIRE, the key would leak permanently without a TTL. The
+ * single script closes both races and also reduces 4 round-trips to 1.
  *
- * REDIS ERİŞİLEMEZSE DENY: `acquire()` null döner, yani stream 429 alır. Gerekçe —
- * Redis yokken sinyal deposu (RealtimeSignal) da hep 0 döndüğünden SSE zaten hiçbir
- * şey teslim edemez; bağlantıyı TTL boyunca açık tutmak saf worker israfıdır ve
- * korumak istediğimiz havuzu tüketir. İstemci bu durumda polling'e düşer.
- * Kardeş sınıf RealtimeSignal'ın best-effort (fail-open) davranışıyla bilinçli
- * olarak zıttır: orası sinyal, burası kaynak koruması.
+ * DENY IF REDIS IS UNREACHABLE: `acquire()` returns null, i.e. the stream gets
+ * a 429. Rationale — when Redis is down, the signal store (RealtimeSignal)
+ * also always returns 0, so SSE can't deliver anything anyway; keeping a
+ * connection open for the TTL is pure worker waste and consumes the pool
+ * we're trying to protect. The client falls back to polling in this case.
+ * This is a deliberate opposite of the sibling class RealtimeSignal's
+ * best-effort (fail-open) behavior: that one is signaling, this one is
+ * resource protection.
  *
- * Bağlantı RedisConnectionTrait üzerinden lazy kurulur (kısa connect + read timeout);
- * bağlantı ya da komut hatasında ASLA istisna sızmaz.
+ * The connection is lazily established via RedisConnectionTrait (short
+ * connect + read timeout); no exception EVER leaks on a connection or command
+ * error.
  */
 final class RedisConnectionRegistry implements ConnectionRegistryInterface
 {
     use RedisConnectionTrait;
 
-    /** Redis anahtar öneki; tam anahtar `notif:conn:{userId}` biçimindedir. */
+    /** Redis key prefix; the full key has the form `notif:conn:{userId}`. */
     private const KEY_PREFIX = 'notif:conn:';
 
-    /** Bağlantı kimliğinin bayt uzunluğu (hex'e çevrilince 16 karakter). */
+    /** Byte length of the connection ID (16 characters once hex-encoded). */
     private const CONN_ID_BYTES = 8;
 
     /**
-     * Yuva ayırmanın atomik betiği: budama, cap kontrolü, ekleme ve EXPIRE tek adımda.
+     * The atomic script for slot allocation: prune, cap check, add, and EXPIRE in one step.
      *
      * KEYS[1] = `notif:conn:{userId}`, ARGV = [cap, ttl, connId].
-     * Alt sınır `'-inf'`tir, `'0'` DEĞİL: sistem saatinin geri alınması ya da elle
-     * yazılmış bir üye yüzünden skoru <= 0 olan bir yuva aksi halde asla budanmaz ve
-     * aktif kullanıcıda kalıcı olarak bir yuvayı işgal ederdi.
+     * The lower bound is `'-inf'`, NOT `'0'`: otherwise a slot whose score is
+     * <= 0 due to the system clock being turned back or a manually written
+     * member would never be pruned and would permanently occupy a slot on an
+     * active user.
      *
-     * SAAT KAYNAĞI REDIS'TİR (`TIME`), PHP'nin `time()`'ı DEĞİL: çok sunuculu kurulumda
-     * saati ileri kaymış tek bir app sunucusu, ARGV ile gönderdiği `now` yüzünden her
-     * `acquire()`'da DİĞER sunucuların hâlâ canlı yuvalarını budar ve cap'i fiilen kaldırırdı.
-     * Skorlar tek bir saatle yazılıp tek bir saatle karşılaştırılmalıdır.
+     * THE CLOCK SOURCE IS REDIS (`TIME`), NOT PHP's `time()`: in a
+     * multi-server setup, a single app server whose clock has drifted forward
+     * would, via the `now` it sends in ARGV, prune OTHER servers' still-live
+     * slots on every `acquire()` and effectively remove the cap. Scores must
+     * be written and compared with a single clock.
      *
-     * TTL KISALTILMAZ: `EXPIRE` yalnız mevcut TTL daha küçükse yazılır. Koşulsuz `EXPIRE`,
-     * kısa TTL'li bir acquire'ın uzun TTL'li bir yuvanın anahtarını erken silmesine yol
-     * açıyordu (anahtar canlı yuvalarla birlikte gider, cap geçici olarak uygulanmaz).
-     * `TTL` yokluğu -1 döndüğü ve -1 her ttl'den küçük olduğu için anahtarın ilk
-     * yaratıldığı çağrıda süre normal biçimde verilir. Bu yüzden `EXPIRE ... GT`
-     * KULLANILMAZ: GT, TTL'siz anahtarı sonsuz TTL sayıp hiçbir şey yazmaz (ölçüldü:
-     * Redis 8.6.3'te ZADD sonrası `EXPIRE key 60 GT` → 0, TTL -1 kalır), yani ikinci
-     * güvenlik ağı ilk acquire'da tamamen kaybolurdu.
+     * THE TTL IS NEVER SHORTENED: `EXPIRE` is only written when the current
+     * TTL is smaller. An unconditional `EXPIRE` would let a short-TTL acquire
+     * prematurely delete the key of a long-TTL slot (the key expires along
+     * with the live slots, temporarily lifting the cap). Since the absence of
+     * `TTL` returns -1 and -1 is smaller than every ttl, the expiry is set
+     * normally on the call that first creates the key. That's why
+     * `EXPIRE ... GT` ISN'T USED: GT treats a TTL-less key as having infinite
+     * TTL and writes nothing (measured: on Redis 8.6.3, `EXPIRE key 60 GT`
+     * after a ZADD -> 0, TTL stays -1), meaning the second safety net would be
+     * completely lost on the very first acquire.
      *
-     * Dönüş: başarıda connId, cap doluysa nil (phpredis'te false).
+     * Return: connId on success, nil (false in phpredis) if the cap is full.
      */
     private const ACQUIRE_SCRIPT = <<<'LUA'
         local key    = KEYS[1]
@@ -90,20 +97,22 @@ final class RedisConnectionRegistry implements ConnectionRegistryInterface
         LUA;
 
     /**
-     * Kullanıcı için bir bağlantı yuvası ayırmaya çalışır (süresi geçmişleri budayarak).
+     * Attempts to allocate a connection slot for the user (pruning expired ones).
      *
-     * Tüm iş tek `EVAL` ile atomik koşar: TIME (saat Redis'ten) → ZREMRANGEBYSCORE (kendi
-     * kendini iyileştirme) → ZCARD >= cap ise deny → ZADD (skor = now + ttl) → mevcut TTL
-     * daha küçükse EXPIRE (ikinci güvenlik ağı, asla kısaltmaz).
-     * `$ttl` en az 1'e yükseltilir; `EXPIRE key 0` anahtarı SİLER, yani yuva kaydedilir
-     * ama cap sessizce uygulanmaz olurdu. Redis erişilemezse, betik hata verirse ya da
-     * cap doluysa null (deny) döner; asla throw etmez.
+     * The whole operation runs atomically via a single `EVAL`: TIME (clock
+     * from Redis) -> ZREMRANGEBYSCORE (self-healing) -> deny if
+     * ZCARD >= cap -> ZADD (score = now + ttl) -> EXPIRE if the current TTL is
+     * smaller (second safety net, never shortens).
+     * `$ttl` is raised to at least 1; `EXPIRE key 0` DELETES the key, meaning
+     * the slot would be recorded but the cap would silently stop being
+     * enforced. Returns null (deny) if Redis is unreachable, the script
+     * errors, or the cap is full; never throws.
      *
-     * @param int $userId Oturumdaki kullanıcının kimliği.
-     * @param int $cap    İzin verilen eşzamanlı bağlantı sayısı (çağıran daima >= 1 verir).
-     * @param int $ttl    Yuvanın saniye cinsinden ömrü (bağlantı TTL'i + tampon); < 1 ise 1'e yükseltilir.
+     * @param int $userId ID of the user in session.
+     * @param int $cap    Allowed number of concurrent connections (the caller always passes >= 1).
+     * @param int $ttl    Slot lifetime in seconds (connection TTL + buffer); raised to 1 if < 1.
      *
-     * @return string|null Bağlantı kimliği ya da null (kapasite dolu / cap uygulanamıyor).
+     * @return string|null Connection ID, or null (capacity full / cap couldn't be enforced).
      */
     public function acquire(int $userId, int $cap, int $ttl): ?string
     {
@@ -117,15 +126,16 @@ final class RedisConnectionRegistry implements ConnectionRegistryInterface
         try {
             $connId = bin2hex(random_bytes(self::CONN_ID_BYTES));
 
-            // phpredis imzası: eval(script, args, numKeys) — ilk numKeys argümanı KEYS'e gider.
+            // phpredis signature: eval(script, args, numKeys) — the first numKeys arguments go to KEYS.
             $granted = $redis->eval(
                 self::ACQUIRE_SCRIPT,
                 [self::KEY_PREFIX . $userId, (string) $cap, (string) $ttl, $connId],
                 1
             );
 
-            // Betik yalnız başarıda connId döner; false (cap dolu) ve her beklenmedik
-            // yanıt deny'dir — fail-closed sözleşmesi burada da geçerlidir.
+            // The script only returns connId on success; false (cap full) and
+            // any unexpected response are a deny — the fail-closed contract
+            // also applies here.
             return $granted === $connId ? $connId : null;
         } catch (\Throwable $e) {
             return null;
@@ -133,13 +143,13 @@ final class RedisConnectionRegistry implements ConnectionRegistryInterface
     }
 
     /**
-     * Ayrılmış bir bağlantı yuvasını ZREM ile serbest bırakır (hızlı yol).
+     * Releases an allocated connection slot via ZREM (fast path).
      *
-     * Çağrı hiç yapılmasa ya da hata verse bile yuva `acquire()`'daki skor/EXPIRE
-     * ikilisiyle kendiliğinden düşer; bu yüzden hata sessizce yutulur.
+     * Even if this call is never made or errors, the slot drops on its own via
+     * the score/EXPIRE pair from `acquire()`; that's why the error is swallowed silently.
      *
-     * @param int    $userId Yuvanın sahibi kullanıcının kimliği.
-     * @param string $connId `acquire()` tarafından döndürülen bağlantı kimliği.
+     * @param int    $userId ID of the user who owns the slot.
+     * @param string $connId Connection ID returned by `acquire()`.
      */
     public function release(int $userId, string $connId): void
     {
@@ -151,7 +161,7 @@ final class RedisConnectionRegistry implements ConnectionRegistryInterface
         try {
             $redis->zRem(self::KEY_PREFIX . $userId, $connId);
         } catch (\Throwable $e) {
-            // TTL güvenlik ağı yuvayı zaten düşürecek; sessizce dön.
+            // The TTL safety net will drop the slot anyway; return silently.
         }
     }
 }

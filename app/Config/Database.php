@@ -200,11 +200,12 @@ class Database extends Config
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
 
-            // defaultGroup yalnızca connect() argümansız çağrıldığında devreye
-            // girer. ci4commonmodel'in CommonModel'i grubu adıyla ister
-            // (connect('default')), böylece korumayı atlayıp test koşusunda
-            // CANLI veritabanına yazar. Grubun verisini de test grubuna
-            // eşitlemek, grubu adıyla isteyen her çağrıyı da kapsar.
+            // defaultGroup only kicks in when connect() is called without
+            // arguments. ci4commonmodel's CommonModel requests the group by
+            // name (connect('default')), which would bypass this guard and
+            // write to the LIVE database during a test run. Mirroring the
+            // default group's data into the tests group also covers every
+            // call that requests the group by name.
             $this->default = $this->tests;
         }
     }

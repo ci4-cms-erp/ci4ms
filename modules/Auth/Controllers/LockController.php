@@ -9,25 +9,26 @@ use Modules\Auth\Models\UserSessionModel;
 /**
  * Lock Screen Controller
  *
- * Kullanıcı hareketsizliği sonrası ekran kilitlenir ve bu controller üzerinden
- * şifre doğrulamasıyla kilit açılır. Oturum kapatılmaz, yalnızca erişim engellenir.
+ * The screen locks after user inactivity and is unlocked through this
+ * controller with password verification. The session isn't closed, only
+ * access is blocked.
  */
 class LockController extends BaseController
 {
     /**
      * GET /backend/lock
-     * Lock ekranını gösterir. Kilitli değilse dashboard'a yönlendirir.
+     * Shows the lock screen. Redirects to the dashboard if not locked.
      */
     public function lockView(): string|\CodeIgniter\HTTP\RedirectResponse
     {
-        // Oturum açık değilse login'e gönder
+        // Send to login if there's no active session
         if (! auth()->loggedIn()) {
             return redirect()->route('login');
         }
 
         $sessionId = session()->get('ci4ms_session_tracker_id');
 
-        // session_id yoksa veya kilitli değilse dashboard'a yönlendir (direkt erişim engeli)
+        // Redirect to the dashboard if there's no session_id or it's not locked (blocks direct access)
         if (! $sessionId) {
             return redirect()->to(config('Auth')->loginRedirect());
         }
@@ -42,7 +43,7 @@ class LockController extends BaseController
         $user      = auth()->user();
         $redirect  = $this->request->getGet('redirect') ?? '';
 
-        // Redirect URL güvenlik doğrulaması — sadece /backend/ ile başlayan URL'ler kabul edilir
+        // Redirect URL security validation — only URLs starting with /backend/ are accepted
         $safeRedirect = (str_starts_with($redirect, '/backend/') && ! str_contains($redirect, '..'))
             ? $redirect
             : config('Auth')->loginRedirect();
@@ -56,8 +57,8 @@ class LockController extends BaseController
 
     /**
      * POST /backend/lock
-     * Kullanıcı şifresini doğrular ve kilidi açar.
-     * AJAX isteği ise JSON yanıt döner (overlay unlock), değilse redirect.
+     * Verifies the user's password and unlocks the screen.
+     * Returns a JSON response for an AJAX request (overlay unlock), otherwise redirects.
      */
     public function unlockAction(): \CodeIgniter\HTTP\RedirectResponse|\CodeIgniter\HTTP\ResponseInterface
     {
@@ -80,12 +81,12 @@ class LockController extends BaseController
         $password = $this->request->getPost('password');
         $redirect = $this->request->getPost('redirect') ?? '';
 
-        // Redirect URL güvenlik doğrulaması
+        // Redirect URL security validation
         $safeRedirect = (str_starts_with($redirect, '/backend/') && ! str_contains($redirect, '..'))
             ? $redirect
             : config('Auth')->loginRedirect();
 
-        // Shield ile şifre doğrulama
+        // Password verification via Shield
         $user        = auth()->user();
         $credentials = [
             'email'    => $user->email,
@@ -98,7 +99,7 @@ class LockController extends BaseController
             $attempts++;
             session()->set('lock_attempts', $attempts);
 
-            // 3+ başarısız denemede oturumu sonlandır
+            // Terminate the session after 3+ failed attempts
             if ($attempts >= 3) {
                 session()->remove('lock_attempts');
                 auth()->logout();
@@ -126,7 +127,7 @@ class LockController extends BaseController
                 ->with('error', lang('Auth.unlockFailed', [$remaining]));
         }
 
-        // Başarılı — kilidi kaldır
+        // Success — remove the lock
         $model = new UserSessionModel();
         $model->unlockSession($sessionId);
         session()->remove('lock_attempts');
@@ -143,7 +144,7 @@ class LockController extends BaseController
 
     /**
      * POST /backend/lock/set
-     * JavaScript tarafından çağrılır; hareketsizlik sonrası DB'ye locked_at yazar.
+     * Called from JavaScript; writes locked_at to the DB after inactivity.
      */
     public function setLockAction(): \CodeIgniter\HTTP\ResponseInterface
     {
@@ -164,7 +165,7 @@ class LockController extends BaseController
 
     /**
      * GET /backend/lock/switch
-     * Mevcut oturumu kapatır ve login sayfasına yönlendirir (hesap değiştirme).
+     * Closes the current session and redirects to the login page (account switch).
      */
     public function switchAccount(): \CodeIgniter\HTTP\RedirectResponse
     {

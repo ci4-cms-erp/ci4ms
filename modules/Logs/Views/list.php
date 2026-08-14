@@ -33,7 +33,7 @@ echo $this->section('content'); ?>
             <div class="m-stat-card">
                 <div class="m-stat-icon st-current"><i class="fas fa-eye"></i></div>
                 <div>
-                    <div class="m-stat-value"><?php echo $stats['currentFile'] ?? '-' ?></div>
+                    <div class="m-stat-value"><?php echo esc($stats['currentFile'] ?? '-') ?></div>
                     <div class="m-stat-label">Görüntülenen Dosya</div>
                 </div>
             </div>
@@ -67,7 +67,7 @@ echo $this->section('content'); ?>
         <div class="col-md-9">
             <div class="card premium-card">
                 <div class="card-header d-flex align-items-center">
-                    <h3 class="card-title font-weight-bold mb-0">İçerik: <small class="text-muted ml-2"><?php echo $currentFile ?></small></h3>
+                    <h3 class="card-title font-weight-bold mb-0">İçerik: <small class="text-muted ml-2"><?php echo esc($currentFile) ?></small></h3>
                     <div class="ml-auto">
                         <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()" title="refresh"><i class="fas fa-sync-alt"></i></button>
                     </div>

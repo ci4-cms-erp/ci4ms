@@ -13,35 +13,37 @@ use Modules\MigrationManager\Libraries\RunLock;
 use Modules\MigrationManager\Libraries\SeederScanner;
 
 /**
- * Migration ve seed'lerin superadmin tarafından web'den keşfedilip
- * çalıştırılmasını sağlayan backend controller'ı.
+ * Backend controller that lets a superadmin discover and run migrations and
+ * seeds from the web.
  *
- * Erişim üç katmanlıdır: route filtresi (`backendGuard`,
- * `Modules\MigrationManager\Config\MigrationManagerConfig::$filters`),
- * `Modules\Methods` permission kaydı (fail-closed) ve bu sınıfın her public
- * metodunun ilk satırındaki `auth()->user()->inGroup('superadmin')`
- * kontrolü. Üçüncü katman filtre yapılandırması bozulsa bile tutar; hiçbir
- * metottan çıkarılmaz (`Methods::update()` izin matrisini gevşetebildiği
- * için filtre/permission katmanlarına tek başına güvenilmez).
+ * Access is enforced in three layers: the route filter (`backendGuard`,
+ * `Modules\MigrationManager\Config\MigrationManagerConfig::$filters`), the
+ * `Modules\Methods` permission record (fail-closed), and the
+ * `auth()->user()->inGroup('superadmin')` check on the first line of every
+ * public method in this class. The third layer holds even if the filter
+ * configuration breaks; it's never removed from any method (`Methods::update()`
+ * can loosen the permission matrix, so the filter/permission layers alone
+ * cannot be trusted).
  */
 class MigrationManager extends BaseController
 {
     /**
-     * Migration/seed durum panosunu render eder.
+     * Renders the migration/seed status dashboard.
      *
-     * Diskteki namespace'lerin DB geçmişiyle birleştirilmiş durumunu
-     * (`MigrationInspector::buildStatusReport()`), web'den çalıştırılabilir
-     * seed listesini (`SeederScanner::discover()` — bugün henüz hiçbir
-     * seeder `WebRunnableSeeder` implement etmediği için BOŞ dizi döner, bu
-     * beklenen davranıştır) ve son 50 çalıştırma kaydını (`Backup.php:14`
-     * deseni, `ORDER BY migration_runs.id DESC LIMIT 50`) view'a geçirir.
-     * `users` tablosuyla `LEFT JOIN` yapılıp her satıra `run_by_username`
-     * eklenir (BUG-2: ham `run_by` kullanıcı ID'si yerine kullanıcı adı);
-     * kullanıcı silinmişse (`run_by` FK `ON DELETE SET NULL`) veya kayıt
-     * sistem/otomasyon kaynaklıysa `run_by_username` `null` döner, view
-     * bunu `MigrationManager.deletedUser` ile karşılar. `ORDER BY` join
-     * sonrası `migration_runs.id` olarak NİTELENİR — `id` iki tabloda da
-     * var, nitelenmezse MySQL/MariaDB'de belirsiz-kolon hatası riski taşır.
+     * Passes the view the disk namespaces merged with the DB history
+     * (`MigrationInspector::buildStatusReport()`), the list of web-runnable
+     * seeds (`SeederScanner::discover()` — returns an EMPTY array today
+     * since no seeder implements `WebRunnableSeeder` yet, this is expected
+     * behavior), and the last 50 run records (`Backup.php:14` pattern,
+     * `ORDER BY migration_runs.id DESC LIMIT 50`). It does a `LEFT JOIN`
+     * with the `users` table and adds `run_by_username` to every row
+     * (BUG-2: the username instead of the raw `run_by` user ID); if the
+     * user was deleted (`run_by` FK `ON DELETE SET NULL`) or the record
+     * came from the system/automation, `run_by_username` is `null`, which
+     * the view renders via `MigrationManager.deletedUser`. After the join,
+     * `ORDER BY` QUALIFIES `migration_runs.id` — `id` exists in both
+     * tables, and leaving it unqualified risks an ambiguous-column error
+     * on MySQL/MariaDB.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -61,17 +63,16 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * POST edilen namespace'i sunucu-taraflı allowlist'e karşı doğrulayıp
-     * `MigrationRunner::latest()` ile çalıştırır ve sonucu `migration_runs`'a
-     * kaydeder.
+     * Validates the posted namespace against the server-side allowlist, runs
+     * it with `MigrationRunner::latest()`, and records the outcome in
+     * `migration_runs`.
      *
-     * POST edilen değer hiçbir yola/namespace'e birleştirilmez
-     * (concatenate edilmez); yalnızca `MigrationInspector::
-     * getDiscoveredNamespaces()`'ten türetilen allowlist'e
-     * `in_array(..., true)` ile eşleştirilir. Vendor namespace'ler
-     * (`readOnly=true`, ör. `CodeIgniter\Settings`) bu listede YOKTUR,
-     * dolayısıyla POST edilseler bile reddedilir — istemci tarafındaki
-     * `disabled` attribute'una güvenilmez.
+     * The posted value is never concatenated into any path/namespace; it's
+     * only matched against the allowlist derived from `MigrationInspector::
+     * getDiscoveredNamespaces()` via `in_array(..., true)`. Vendor
+     * namespaces (`readOnly=true`, e.g. `CodeIgniter\Settings`) are NOT in
+     * that list, so they're rejected even if posted — the client-side
+     * `disabled` attribute is never trusted.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -111,13 +112,13 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * POST edilen seeder FQCN'ini `SeederScanner::discover()` allowlist'ine
-     * karşı doğrulayıp `Config\Database::seeder()->call()` ile çalıştırır ve
-     * sonucu `migration_runs`'a kaydeder.
+     * Validates the posted seeder FQCN against the `SeederScanner::discover()`
+     * allowlist, runs it with `Config\Database::seeder()->call()`, and
+     * records the outcome in `migration_runs`.
      *
-     * Bugün `SeederScanner::discover()` BOŞ dizi döndüğü için (henüz hiçbir
-     * seeder `WebRunnableSeeder` implement etmiyor) bu uç PRODUCTION'DA HER
-     * ZAMAN reddeder — bu beklenen davranıştır, hata değildir.
+     * Since `SeederScanner::discover()` returns an EMPTY array today (no
+     * seeder implements `WebRunnableSeeder` yet), this endpoint ALWAYS
+     * rejects in PRODUCTION — this is expected behavior, not a bug.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -158,17 +159,20 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * `migration_runs` tablosunun DataTables uyumlu sayfalı listesini döner.
+     * Returns the DataTables-compatible paginated list of the `migration_runs`
+     * table.
      *
-     * `modules/Backup/Controllers/Backup.php:9-33`'teki AJAX-datatables
-     * deseninin birebir uygulamasıdır. `users` tablosuyla `LEFT JOIN`
-     * yapılıp her satıra `run_by_username` eklenir (BUG-2); `run_by` `null`
-     * ise (sistem/otomasyon kaynaklı ya da kullanıcı silinmiş) `run_by_username`
-     * da `null` döner. Yanıt HAM veri taşır — HTML kaçışlaması yalnız render
-     * sınırında, `Views/list.php`'nin kolon `render`'larındaki `escapeHtml()`
-     * ile yapılır. Burada ayrıca `esc()` uygulanırsa istemci ikinci kez
-     * kaçışlar (içinde `'` geçen kullanıcı adı `O&#039;Brien` görünür).
-     * `$total` sayımı join GEREKTİRMEZ, `count('migration_runs', ...)` değişmedi.
+     * This is a direct application of the AJAX-datatables pattern in
+     * `modules/Backup/Controllers/Backup.php:9-33`. It does a `LEFT JOIN`
+     * with the `users` table and adds `run_by_username` to every row
+     * (BUG-2); if `run_by` is `null` (system/automation-originated or the
+     * user was deleted), `run_by_username` is also `null`. The response
+     * carries RAW data — HTML escaping only happens at the render boundary,
+     * via the `escapeHtml()` calls in `Views/list.php`'s column `render`
+     * callbacks. Applying `esc()` here as well would double-escape on the
+     * client (a username containing `'` would show up as `O&#039;Brien`).
+     * The `$total` count does NOT require the join; `count('migration_runs', ...)`
+     * is unchanged.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -190,11 +194,12 @@ class MigrationManager extends BaseController
         ]);
         $total   = $this->commonModel->count('migration_runs', [], $like);
 
-        // Kaçışlama YALNIZ render sınırında yapılır (Views/list.php'nin her
-        // DataTables kolonundaki escapeHtml()). Burada esc() uygulanırsa
-        // istemci ikinci kez kaçışlar ve içinde ' veya & geçen bir kullanıcı
-        // adı tabloda "O&#039;Brien" diye görünür. Tek kural: sunucu ham veri
-        // döner, kolon render'ı kaçışlar — yeni kolon eklerken de bu geçerli.
+        // Escaping happens ONLY at the render boundary (escapeHtml() on every
+        // DataTables column in Views/list.php). Applying esc() here would
+        // double-escape on the client, so a username containing ' or & would
+        // show up in the table as "O&#039;Brien". Single rule: the server
+        // returns raw data, the column render escapes — this also applies
+        // when adding a new column.
         return $this->respond([
             'draw'                 => $parsed['draw'],
             'iTotalRecords'        => $total,
@@ -204,8 +209,8 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * `MigrationInspector::getDiscoveredNamespaces()`'ten salt-okunur
-     * OLMAYAN (vendor dışı) namespace isimlerini çıkarır.
+     * Extracts the NON-read-only (non-vendor) namespace names from
+     * `MigrationInspector::getDiscoveredNamespaces()`.
      *
      * @return list<string>
      */
@@ -220,17 +225,18 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * Kilit alındıktan sonra asıl migration çalıştırma-ve-kaydetme işini
-     * yapar. `RunLock::acquire()` başarılı olduğu VARSAYILARAK çağrılır.
+     * Does the actual run-and-record work once the lock is held. Called
+     * ASSUMING `RunLock::acquire()` already succeeded.
      *
-     * `Services::migrations(null, null, false)` ile non-shared bir
-     * `MigrationRunner` alınır (`Settings.php:238`'in shared instance'a
-     * `setNamespace()` sızıntısı bırakma hatasına düşülmez).
-     * `getCliMessages()` web bağlamında her zaman boş döndüğü için
-     * (`MigrationRunner.php:661,683` `is_cli()` guard'lı) "ne çalıştı"
-     * bilgisi `latest()` öncesi/sonrası `getHistory()` diff'inden türetilir.
+     * A non-shared `MigrationRunner` is obtained via
+     * `Services::migrations(null, null, false)` (avoids repeating the
+     * mistake in `Settings.php:238` of leaking a `setNamespace()` call into
+     * the shared instance). Since `getCliMessages()` always returns empty
+     * in a web context (`MigrationRunner.php:661,683` is guarded by
+     * `is_cli()`), the "what ran" information is derived from the
+     * `getHistory()` diff before/after `latest()`.
      *
-     * @param string $namespace Allowlist'ten doğrulanmış namespace.
+     * @param string $namespace Namespace already validated against the allowlist.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -265,13 +271,13 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * `latest()` öncesi/sonrası `getHistory()` anlık görüntülerini
-     * `version` alanına göre karşılaştırıp yeni uygulanan satırları çıkarır.
+     * Compares the `getHistory()` snapshots before/after `latest()` by
+     * `version` field and extracts the newly applied rows.
      *
-     * @param list<object> $before `latest()` öncesi `getHistory()` satırları.
-     * @param list<object> $after  `latest()` sonrası `getHistory()` satırları.
+     * @param list<object> $before `getHistory()` rows before `latest()`.
+     * @param list<object> $after  `getHistory()` rows after `latest()`.
      *
-     * @return list<object> `$after` içinde olup `$before`'da olmayan satırlar.
+     * @return list<object> Rows present in `$after` but not in `$before`.
      */
     private function diffAppliedMigrations(array $before, array $after): array
     {
@@ -284,21 +290,22 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * Diff sonucuna göre DB'ye kaydedilecek/kullanıcıya dönülecek mesajları
-     * üretir, `migration_runs`'a satırı yazar, audit event'ini tetikler ve
-     * JSON yanıtı döner.
+     * Builds the messages to store in the DB / return to the user based on
+     * the diff result, writes the row to `migration_runs`, fires the audit
+     * event, and returns the JSON response.
      *
-     * `latest()` `false` dönerse VEYA exception fırlatırsa (`$regressed`)
-     * framework otomatik olarak `regress(-1)` çağırmış olur
+     * If `latest()` returns `false` OR throws (`$regressed`), the framework
+     * has automatically called `regress(-1)`
      * (`vendor/codeigniter4/framework/system/Database/MigrationRunner.php:210-211`)
-     * — bu, `migrationRunFailedRegressed` mesajıyla yanıtta AÇIKÇA belirtilir.
+     * — this is stated EXPLICITLY in the response via the
+     * `migrationRunFailedRegressed` message.
      *
-     * @param string       $namespace  Çalıştırılan namespace.
-     * @param list<object> $applied    Yeni uygulanan migration satırları.
-     * @param list<object> $after      `latest()` sonrası tüm geçmiş satırları.
-     * @param bool         $regressed  Framework'ün otomatik `regress(-1)` çağırdığı durum.
-     * @param string|null  $error      Yakalanan exception mesajı (varsa).
-     * @param int          $durationMs Çalıştırma süresi (milisaniye).
+     * @param string       $namespace  Namespace that was run.
+     * @param list<object> $applied    Newly applied migration rows.
+     * @param list<object> $after      All history rows after `latest()`.
+     * @param bool         $regressed  Whether the framework auto-called `regress(-1)`.
+     * @param string|null  $error      Caught exception message (if any).
+     * @param int          $durationMs Run duration (milliseconds).
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -335,13 +342,13 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * `applied_count>0` ise yeni uygulanan satırların batch'ini, aksi halde
-     * (namespace zaten güncelse) mevcut son batch'i döner.
+     * If `applied_count>0`, returns the batch of the newly applied rows;
+     * otherwise (namespace already up to date) returns the current last batch.
      *
-     * @param list<object> $applied Yeni uygulanan migration satırları.
-     * @param list<object> $after   `latest()` sonrası tüm geçmiş satırları.
+     * @param list<object> $applied Newly applied migration rows.
+     * @param list<object> $after   All history rows after `latest()`.
      *
-     * @return int|null Hiç geçmiş yoksa `null`.
+     * @return int|null `null` if there's no history at all.
      */
     private function resolveBatch(array $applied, array $after): ?int
     {
@@ -357,11 +364,11 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * `getHistory()`'ye geçirilecek `group` değerini çalışma zamanı DB
-     * yapılandırmasından çözer (`MigrationInspector::historyGroup()` ile
-     * aynı kaynak — literal `'default'` KULLANILMAZ; `ENVIRONMENT===
-     * 'testing'` altında `Config\Database::$defaultGroup` `'tests'`e döner,
-     * bkz. `app/Config/Database.php:200-201`).
+     * Resolves the `group` value to pass to `getHistory()` from the runtime
+     * DB configuration (same source as `MigrationInspector::historyGroup()`
+     * — the literal `'default'` is NEVER used; under `ENVIRONMENT===
+     * 'testing'`, `Config\Database::$defaultGroup` resolves to `'tests'`,
+     * see `app/Config/Database.php:200-201`).
      *
      * @return string
      */
@@ -371,7 +378,7 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * POST edilen FQCN'i keşfedilen seeder listesinde arar.
+     * Looks up the posted FQCN in the discovered seeder list.
      *
      * @param list<array{class: class-string, label: string, repeatable: bool}> $seeders
      * @param string                                                            $seederClass
@@ -394,9 +401,9 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * Kilit alındıktan sonra asıl seed çalıştırma-ve-kaydetme işini yapar.
+     * Does the actual run-and-record work once the lock is held.
      *
-     * @param array{class: class-string, label: string, repeatable: bool} $entry Allowlist'ten doğrulanmış seeder girdisi.
+     * @param array{class: class-string, label: string, repeatable: bool} $entry Seeder entry already validated against the allowlist.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -431,14 +438,14 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * `migration_runs` tablosuna bir çalıştırma satırı ekler.
+     * Inserts a run row into the `migration_runs` table.
      *
      * @param 'migration'|'seed'  $kind
-     * @param string              $target       Migration namespace'i veya seed FQCN'i.
+     * @param string              $target       Migration namespace or seed FQCN.
      * @param 'success'|'failed'  $status
      * @param int                 $appliedCount
      * @param int|null            $batch
-     * @param string|null         $message      JSON veya hata metni.
+     * @param string|null         $message      JSON or error text.
      * @param int                 $durationMs
      *
      * @return void
@@ -459,12 +466,12 @@ class MigrationManager extends BaseController
     }
 
     /**
-     * `ci4ms.audit` event'ini tetikler (`Fileeditor::triggerFileevent()`
-     * deseni, `modules/Fileeditor/Controllers/Fileeditor.php:97-105`).
+     * Fires the `ci4ms.audit` event (`Fileeditor::triggerFileevent()`
+     * pattern, `modules/Fileeditor/Controllers/Fileeditor.php:97-105`).
      *
-     * @param string $action Örn. `'runMigration'`, `'runSeed'`.
-     * @param string $target Migration namespace'i veya seed FQCN'i.
-     * @param string $status `'success'` veya `'failed'`.
+     * @param string $action E.g. `'runMigration'`, `'runSeed'`.
+     * @param string $target Migration namespace or seed FQCN.
+     * @param string $status `'success'` or `'failed'`.
      *
      * @return void
      */

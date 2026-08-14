@@ -123,8 +123,8 @@ class Email extends BaseConfig
     {
         parent::__construct();
 
-        // 1. Ayarları Cache'den veya Veritabanından Çek
-        // BaseController'daki mantığın aynısını buraya uyguluyoruz.
+        // 1. Fetch settings from cache or the database
+        // We apply the same logic as in BaseController here.
 
         $settings = (object)cache('settings');
 

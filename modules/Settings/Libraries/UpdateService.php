@@ -11,9 +11,10 @@ use Modules\Settings\Config\UpdateKeys;
 /**
  * CI4MS Update Service
  *
- * GitHub API tabanlı güncelleme, yama indirme ve otomatik uygulama işlemlerini yönetir.
- * Her güncelleme, yayıncının Ed25519 ile imzaladığı release manifest'ine karşı
- * doğrulanır; imza doğrulanmadan tek bir dosya bile indirilmez veya yazılmaz.
+ * Manages GitHub API based updates, patch downloading, and automatic apply
+ * operations. Every update is verified against a release manifest signed by
+ * the publisher with Ed25519; not a single file is downloaded or written
+ * before the signature is verified.
  */
 class UpdateService
 {
@@ -46,18 +47,18 @@ class UpdateService
     private ManifestVerifier $verifier;
 
     /**
-     * @var array<array-key, mixed> Güvenilen imzalama anahtarları (key_id => entry)
+     * @var array<array-key, mixed> Trusted signing keys (key_id => entry)
      */
     private array $keyring;
 
     /**
-     * @param CURLRequest|null $client Test enjeksiyonu; null ise CI4 servisinden üretilir
+     * @param CURLRequest|null $client Test injection; produced from the CI4 service if null
      */
     public function __construct(?CURLRequest $client = null)
     {
         $this->client = $client ?? Services::curlrequest([
-            // CI4 default: connect 150 sn, transfer sınırsız — GitHub erişilemezken
-            // backend AJAX'ı ve update worker'ı asmaması için sınırlandı.
+            // CI4 default: connect 150s, transfer unlimited — bounded so a
+            // GitHub outage doesn't hang the backend AJAX and update worker.
             'timeout'         => 15,
             'connect_timeout' => 5,
         ]);
@@ -68,11 +69,11 @@ class UpdateService
     }
 
     /**
-     * GitHub Releases API üzerinden en son sürümü kontrol eder.
+     * Checks the latest version via the GitHub Releases API.
      *
-     * Yanıttaki hiçbir alan güvenilir kabul edilmez: tag adı katı bir sürüm
-     * allowlist'inden geçmeden kullanılmaz, çünkü bu değer backend'de admin'e
-     * gösterilir ve imza kapısından önce çalışır.
+     * No field in the response is treated as trusted: the tag name is not
+     * used before it passes a strict version allowlist, because this value
+     * is shown to the admin on the backend and runs before the signature gate.
      *
      * @return array
      */
@@ -103,22 +104,22 @@ class UpdateService
             $latestVersion = ltrim($tagName, 'v');
 
             if (version_compare($latestVersion, $currentVersion, '>')) {
-                // Değişen dosyaları getir (Pagination destekli)
+                // Fetch the changed files (with pagination support)
                 $changedFiles = $this->fetchAllChangedFiles($currentVersion, $latestVersion);
                 $assets = $this->assetUrls($release->assets ?? []);
 
                 return [
                     'result'           => true,
                     'update_available' => true,
-                    'latest_version'   => $latestVersion, // Geriye dönük uyumluluk
-                    'new_version'      => $latestVersion, // JS'nin beklediği
+                    'latest_version'   => $latestVersion, // Backward compatibility
+                    'new_version'      => $latestVersion, // What the JS expects
                     'current_version'  => $currentVersion,
                     'release_notes'    => $release->body ?? '',
                     'changed_files'    => $changedFiles,
                     'changed_count'    => count($changedFiles),
                     'compare_url'      => "https://github.com/{$this->repo}/compare/{$currentVersion}...{$latestVersion}",
                     'download_url'     => "https://github.com/{$this->repo}/archive/refs/tags/v{$latestVersion}.zip",
-                    // Rozet için: asset varlığı; gerçek doğrulama fetchManifest() içinde yapılır.
+                    // For the badge: asset presence; the real verification happens in fetchManifest().
                     'signed'           => $assets[self::MANIFEST_ASSET] !== null && $assets[self::SIGNATURE_ASSET] !== null
                 ];
             }
@@ -130,14 +131,14 @@ class UpdateService
     }
 
     /**
-     * İstenen sürümün imzalı release manifest'ini indirir ve doğrular.
+     * Downloads and verifies the signed release manifest for the requested version.
      *
-     * /releases/latest bir kez çağrılır; manifest ve imza asset URL'leri o yanıttaki
-     * browser_download_url alanlarından alınır (ek asset API çağrısı yapılmaz).
-     * İmza doğrulaması ham HTTP gövdesi üzerinden yapılır, JSON ancak doğrulama
-     * geçtikten sonra decode edilir.
+     * /releases/latest is called once; the manifest and signature asset URLs
+     * are taken from the browser_download_url fields in that response (no
+     * extra asset API call is made). Signature verification is performed on
+     * the raw HTTP body; the JSON is only decoded after verification passes.
      *
-     * @param string $expectedVersion Kurulması istenen sürüm (v öneki olmadan)
+     * @param string $expectedVersion The version requested for installation (without the v prefix)
      *
      * @return array{result: bool, message?: string, code?: string, manifest?: array, hashes?: array<string, string>, key_id?: string, fingerprint?: string}
      */
@@ -209,16 +210,18 @@ class UpdateService
     }
 
     /**
-     * Değişen dosyaları raw olarak indirip bir yama dosyası hazırlar veya doğrudan uygulama için döner.
+     * Downloads the changed files raw and either prepares a patch file or
+     * returns them for direct application.
      *
-     * İmzalı manifest kapısı dosyalar indirilmeden ÖNCE çalışır: kapı kapalıysa
-     * sıfır dosya indirilir. Manifest'te bulunmayan ya da SHA-256'sı tutmayan tek
-     * bir dosya bile tüm işlemi iptal ettirir; kısmi uygulama yoktur.
+     * The signed manifest gate runs BEFORE any file is downloaded: if the
+     * gate is closed, zero files are downloaded. Even a single file that is
+     * absent from the manifest or whose SHA-256 doesn't match aborts the
+     * entire operation; there is no partial apply.
      *
-     * İmzasız compare yanıtı, imzalı manifest ile çelişemez: manifest'in hâlâ
-     * yayınladığı bir dosyayı "removed" göstermek bastırma saldırısıdır ve tüm
-     * güncellemeyi iptal ettirir. Uygulanacak dosya kümesinin boş kalması da
-     * geçerli bir sonuç değildir.
+     * The unsigned compare response cannot contradict the signed manifest:
+     * showing a file the manifest still publishes as "removed" is a
+     * suppression attack and aborts the whole update. An empty set of files
+     * to apply is also not a valid outcome.
      *
      * @param string $currentVersion
      * @param string $latestVersion
@@ -250,7 +253,7 @@ class UpdateService
             $signedHash = $this->verifier->fileHash($manifest, $file['filename']);
 
             if ($file['status'] === 'removed') {
-                // İmzalı manifest dosyayı hâlâ yayınlıyorsa "removed" iddiası bir çelişkidir.
+                // If the signed manifest still publishes the file, the "removed" claim is a contradiction.
                 if ($signedHash !== null) {
                     return $this->signatureInvalid('removed_but_signed', 'compare claims a file was removed while the signed manifest still ships it: ' . $file['filename']);
                 }
@@ -258,12 +261,12 @@ class UpdateService
                 continue;
             }
 
-            // Manifest kapsamı dışındaki bir dosya, manifestten çıkarma saldırısıdır.
+            // A file outside the manifest scope is a manifest-exclusion attack.
             if ($signedHash === null) {
                 return $this->signatureInvalid('file_not_in_manifest', 'changed file is absent from the signed manifest: ' . $file['filename']);
             }
 
-            // Compare yanıtındaki sha yalnızca metadata; string değilse hash_equals() TypeError atar.
+            // The sha in the compare response is only metadata; hash_equals() throws a TypeError if it's not a string.
             $blobSha = $file['sha'] ?? null;
             if ($blobSha !== null && !is_string($blobSha)) {
                 log_message('warning', 'Update download rejected a changed file whose compare sha is not a string: ' . $file['filename']);
@@ -289,7 +292,7 @@ class UpdateService
                         return $this->assetTooLarge('source file body exceeds ' . self::MAX_BODY_BYTES . ' bytes: ' . $file['filename']);
                     }
 
-                    // SHA-1 blob eşleşmesi yalnızca yetkisiz ön filtre; yetkili kapı manifest SHA-256'dır.
+                    // The SHA-1 blob match is only an unauthenticated pre-filter; the authoritative gate is the manifest SHA-256.
                     if (is_string($blobSha) && !hash_equals($blobSha, $this->gitBlobSha($body))) {
                         $failed[] = $file['filename'];
                         continue;
@@ -307,7 +310,7 @@ class UpdateService
             }
         }
 
-        // Sıfır dosya uygulanacaksa sürüm yine de yükselirdi; bu, bastırma saldırısının kazandığı durumdur.
+        // If zero files were applied, the version would still bump; that's the case where a suppression attack wins.
         if ($downloaded === [] && $failed === []) {
             return $this->signatureInvalid('empty_apply_set', 'the signed release resolved to zero applicable files');
         }
@@ -331,18 +334,19 @@ class UpdateService
     }
 
     /**
-     * Güncellemeyi atomik olarak uygular.
+     * Applies the update atomically.
      *
-     * İmzalı hash haritası zorunludur: yazma döngüsünden, hatta yedek dizini
-     * oluşturulmadan önce her dosyanın içeriği yeniden doğrulanır. Doğrulanmamış
-     * bir dosya kümesiyle bu metoda hiçbir kod yolundan girilemez. Boş dosya
-     * kümesi de reddedilir: aksi halde hiçbir şey yazılmadan .env sürümü yükselir
-     * ve kurulum o güncellemeyi bir daha çekmez.
+     * A signed hash map is mandatory: every file's content is re-verified
+     * before the write loop, even before the backup directory is created.
+     * No code path can enter this method with an unverified file set. An
+     * empty file set is also rejected: otherwise the .env version would bump
+     * without anything being written, and the installation would never pull
+     * that update again.
      *
      * @param string                $latestVersion
      * @param array                 $filesContent    [path => content]
      * @param array                 $allChangedFiles Raw file list with status
-     * @param array<string, string> $signedHashes    İmzalı manifest hash haritası [path => sha256]
+     * @param array<string, string> $signedHashes    Signed manifest hash map [path => sha256]
      * @return array
      */
     public function applyUpdate(string $latestVersion, array $filesContent, array $allChangedFiles, array $signedHashes): array
@@ -369,32 +373,32 @@ class UpdateService
         try {
             if (!is_dir($backupDir)) mkdir($backupDir, 0755, true);
 
-            // 1. Silinecek dosyaları tespit et
+            // 1. Detect the files to delete
             foreach ($allChangedFiles as $f) {
                 if ($f['status'] === 'removed') {
                     $removedFiles[] = $f['filename'];
                 }
             }
 
-            // 2. Dosyaları uygula (Atomic Write)
+            // 2. Apply the files (Atomic Write)
             foreach ($filesContent as $path => $content) {
                 $targetFile = $this->safeTargetPath((string) $path);
                 $targetDir = dirname($targetFile);
 
-                // Yedekleme
+                // Backup
                 if (file_exists($targetFile)) {
                     $this->ensureDirectory(dirname($backupDir . $path));
                     copy($targetFile, $backupDir . $path);
                 }
 
-                // Dizin kontrolü
+                // Directory check
                 $this->ensureDirectory($targetDir);
 
                 if (!$this->directoryInsideRoot($targetDir)) {
                     throw new \RuntimeException("Hedef dizin proje kökünün dışına çıkıyor: {$path}");
                 }
 
-                // Atomic Write: Temp dosya oluştur ve rename yap
+                // Atomic Write: create a temp file and rename it
                 $tmpFile = $targetFile . '.update_tmp';
                 if (file_put_contents($tmpFile, $content) === false) {
                     throw new \Exception("Dosya yazılamadı: {$path}");
@@ -408,14 +412,14 @@ class UpdateService
                 $appliedFiles[] = $path;
             }
 
-            // 3. .env Güncelleme — yalnızca doğrulanmış kümenin tamamı yazıldıysa
+            // 3. .env update — only if the entire verified set was written
             if (count($appliedFiles) !== count($filesContent)) {
                 throw new \RuntimeException('Applied file count does not match the verified file set.');
             }
 
             $this->updateEnvVersion($latestVersion);
 
-            // 4. Temizlik ve SQL Migrations
+            // 4. Cleanup and SQL Migrations
             $this->runMigrations();
             cache()->clean();
 
@@ -435,10 +439,11 @@ class UpdateService
     }
 
     /**
-     * Belirli bir yedekten geri yükleme yapar.
+     * Restores from a specific backup.
      *
-     * Yedek dizininden gelen her yol, hedefe yazılmadan önce proje kökü içinde
-     * kaldığı doğrulanır; geçersiz bir yol tüm geri yüklemeyi durdurur.
+     * Every path coming from the backup directory is verified to stay inside
+     * the project root before being written to its target; an invalid path
+     * stops the entire restore.
      */
     public function rollback(string $backupDir, array $filesToRestore): bool
     {
@@ -462,7 +467,7 @@ class UpdateService
     }
 
     /**
-     * Kayıtlı yedekleri listeler.
+     * Lists the recorded backups.
      */
     public function listBackups(): array
     {
@@ -479,23 +484,25 @@ class UpdateService
             ];
         }
 
-        // En yeni en üstte
+        // Newest first
         usort($backups, fn($a, $b) => $b['date'] <=> $a['date']);
 
         return $backups;
     }
 
     /**
-     * Kullanıcıdan gelen yedek adını diskteki gerçek yedek listesine karşı çözer.
+     * Resolves a backup name coming from the user against the real backup
+     * list on disk.
      *
-     * Ad hiçbir noktada yol birleştirmeye girmez: basename ile daraltılır,
-     * listBackups() çıktısıyla eşleştirilir ve dizin yolu eşleşen kaydın kendi
-     * path'inden alınır. Eşleşme sonrası realpath kontrolü, backups dizinine
-     * yerleştirilmiş bir symlink'in kaynak dizini dışarı taşımasını engeller.
+     * The name never enters path concatenation at any point: it's narrowed
+     * with basename, matched against listBackups() output, and the directory
+     * path is taken from the matched entry's own path. The realpath check
+     * after matching prevents a symlink placed in the backups directory from
+     * escaping to a source directory outside it.
      *
-     * @param string $name Ham POST değeri
+     * @param string $name Raw POST value
      *
-     * @return string|null Sonu '/' ile biten mutlak dizin yolu; eşleşme yoksa null
+     * @return string|null Absolute directory path ending in '/'; null if no match
      */
     public function resolveBackupDir(string $name): ?string
     {
@@ -530,7 +537,7 @@ class UpdateService
     // --- Private Helpers ---
 
     /**
-     * Uygulanacak her dosyayı imzalı hash haritasına karşı yeniden doğrular.
+     * Re-verifies every file to be applied against the signed hash map.
      *
      * @param array<string, string> $filesContent
      * @param array<string, string> $signedHashes
@@ -557,9 +564,9 @@ class UpdateService
     }
 
     /**
-     * Release asset listesinden manifest ve imza indirme URL'lerini ayıklar.
+     * Extracts the manifest and signature download URLs from the release asset list.
      *
-     * @param mixed $assets GitHub release assets alanı (dizi ya da stdClass listesi)
+     * @param mixed $assets GitHub release assets field (array or list of stdClass)
      *
      * @return array{"manifest.json": string|null, "manifest.json.sig": string|null}
      */
@@ -581,20 +588,21 @@ class UpdateService
     }
 
     /**
-     * Bir release asset'ini indirir.
+     * Downloads a release asset.
      *
-     * browser_download_url 302 ile CDN'e yönlenir ve CI4 CURLRequest, options
-     * dizisinde allow_redirects yoksa CURLOPT_FOLLOWLOCATION'ı hiç set etmez.
-     * decode_content curl'ün sıkıştırmayı kendi çözmesini sağlar; elle
-     * Accept-Encoding gönderilirse ham gzip byte'ları imzayı bozar.
-     * Authorization header'ı bilerek gönderilmez: yönlendirme sonrası CDN'e
-     * kimlik bilgisi sızmamalı. Yönlendirme yalnızca https üzerinde izlenir,
-     * aksi halde saldırgan bir 302 ile düz metne düşürebilirdi.
+     * browser_download_url redirects to the CDN with a 302, and CI4's
+     * CURLRequest never sets CURLOPT_FOLLOWLOCATION unless allow_redirects is
+     * in the options array. decode_content lets curl handle decompression
+     * itself; sending Accept-Encoding manually would corrupt the signature
+     * with raw gzip bytes. The Authorization header is deliberately not
+     * sent: credentials must not leak to the CDN after the redirect. The
+     * redirect is only followed over https, otherwise an attacker could
+     * downgrade it to plaintext with a 302.
      *
-     * @param string      $url     İndirilecek asset adresi
-     * @param string|null $failure Çıkış parametresi: 'transport', 'http', 'oversize' veya 'empty'
+     * @param string      $url     Asset address to download
+     * @param string|null $failure Output parameter: 'transport', 'http', 'oversize', or 'empty'
      *
-     * @return string|null Gövde; başarısızlıkta null
+     * @return string|null Body; null on failure
      */
     private function downloadAsset(string $url, ?string &$failure = null): ?string
     {
@@ -645,10 +653,10 @@ class UpdateService
     }
 
     /**
-     * Content-Length başlığının tavanı aşıp aşmadığını söyler.
+     * Tells whether the Content-Length header exceeds the cap.
      *
-     * @param string $contentLength Ham başlık değeri ('' ise bilgi yok)
-     * @param int    $limit         Byte cinsinden tavan
+     * @param string $contentLength Raw header value ('' means no info)
+     * @param int    $limit         Cap in bytes
      */
     private function declaredSizeExceeds(string $contentLength, int $limit): bool
     {
@@ -656,16 +664,16 @@ class UpdateService
     }
 
     /**
-     * Göreli bir yolu proje kökü altındaki mutlak hedefe çevirir.
+     * Converts a relative path into an absolute target under the project root.
      *
-     * Yazma öncesi sözdizimsel kapı: null byte, mutlak yol, sürücü harfi ve
-     * ".." segmenti kabul edilmez.
+     * Syntactic gate before writing: a null byte, an absolute path, a drive
+     * letter, or a ".." segment is not accepted.
      *
-     * @param string $relativePath Depo göreli yol
+     * @param string $relativePath Repository-relative path
      *
-     * @return string Mutlak hedef dosya yolu
+     * @return string Absolute target file path
      *
-     * @throws \RuntimeException Yol güvenli değilse
+     * @throws \RuntimeException If the path is not safe
      */
     private function safeTargetPath(string $relativePath): string
     {
@@ -685,9 +693,9 @@ class UpdateService
     }
 
     /**
-     * Çözümlenmiş bir dizinin proje kökü altında kalıp kalmadığını söyler.
+     * Tells whether a resolved directory stays under the project root.
      *
-     * @param string $directory Var olması beklenen mutlak dizin
+     * @param string $directory Absolute directory expected to exist
      */
     private function directoryInsideRoot(string $directory): bool
     {
@@ -758,12 +766,12 @@ class UpdateService
     }
 
     /**
-     * İki sürüm arasında değişen dosyaları compare API'sinden toplar.
+     * Collects the files changed between two versions from the compare API.
      *
-     * Yanıttaki hiçbir alan güvenilir değildir: dosya adları bir allowlist'ten
-     * geçer, commit detay adresleri yalnızca api.github.com üzerindeki bu deponun
-     * commit endpoint'i ise istenir (aksi halde Authorization header'ı üçüncü
-     * tarafa giderdi).
+     * No field in the response is trusted: file names pass through an
+     * allowlist, and commit detail addresses are only requested if they are
+     * this repo's commit endpoint on api.github.com (otherwise the
+     * Authorization header would go to a third party).
      *
      * @return list<array{filename: string, status: string, sha: mixed}>
      */
@@ -781,7 +789,7 @@ class UpdateService
         $files = [];
         $this->collectChangedFiles($data['files'], $files);
 
-        // 300 dosya limiti kontrolü: Eğer commit sayısı fazlaysa commit detaylarından diğer dosyaları topla
+        // 300 file limit check: if there are more commits, collect the remaining files from commit details
         $commits = $data['commits'] ?? null;
         if (is_array($commits) && $commits !== [] && count($files) >= 300) {
             foreach ($commits as $commit) {
@@ -807,10 +815,11 @@ class UpdateService
     }
 
     /**
-     * Compare/commit yanıtındaki dosya girdilerini allowlist'ten geçirerek toplar.
+     * Collects file entries from the compare/commit response, passing them
+     * through the allowlist.
      *
-     * @param mixed                                                 $entries API'den gelen files dizisi
-     * @param array<string, array{filename: string, status: string, sha: mixed}> $files   Toplanan dosyalar (referans)
+     * @param mixed                                                 $entries The files array from the API
+     * @param array<string, array{filename: string, status: string, sha: mixed}> $files   Collected files (by reference)
      */
     private function collectChangedFiles(mixed $entries, array &$files): void
     {
@@ -836,9 +845,9 @@ class UpdateService
     }
 
     /**
-     * Bir adresin bu deponun GitHub API commit endpoint'i olup olmadığını söyler.
+     * Tells whether a URL is this repo's GitHub API commit endpoint.
      *
-     * @param string $url Commit girdisinden gelen ham adres
+     * @param string $url Raw URL taken from the commit entry
      */
     private function isRepoCommitUrl(string $url): bool
     {
@@ -863,14 +872,14 @@ class UpdateService
     }
 
     /**
-     * Güncelleme kilidini atomik olarak alır.
+     * Acquires the update lock atomically.
      *
-     * fopen('xb') yarışa kapalıdır: file_exists() + file_put_contents() ikilisinde
-     * iki istek aynı anda kilidi "alabiliyordu".
+     * fopen('xb') is race-free: with the file_exists() + file_put_contents()
+     * pair, two requests could "acquire" the lock at the same time.
      */
     private function acquireLock(): bool
     {
-        // 5 dakikadan eski lock'ları temizle
+        // Clean up locks older than 5 minutes
         if (file_exists($this->lockFile) && time() - filemtime($this->lockFile) > self::LOCK_TTL) {
             @unlink($this->lockFile);
         }
@@ -900,11 +909,12 @@ class UpdateService
     }
 
     /**
-     * .env içindeki app.version satırını günceller.
+     * Updates the app.version line inside .env.
      *
-     * $version imzalı manifest'ten gelir ve ManifestVerifier tarafından sürüm
-     * biçimine zorlanır; yine de replacement kaçışı uygulanır, çünkü preg_replace
-     * replacement'ında "$1" / "\1" geri referans olarak yorumlanır.
+     * $version comes from the signed manifest and is coerced into version
+     * format by ManifestVerifier; replacement escaping is still applied
+     * anyway, because preg_replace interprets "$1" / "\1" in the replacement
+     * as a backreference.
      */
     private function updateEnvVersion(string $version): void
     {

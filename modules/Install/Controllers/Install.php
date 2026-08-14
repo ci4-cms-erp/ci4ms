@@ -36,10 +36,10 @@ class Install extends Controller
                 'dbport' => ['label' => lang('Install.databasePort'), 'rules' => 'required|is_natural_no_zero|less_than[65536]'],
                 'name' => ['label' => lang('Install.firstName'), 'rules' => 'required|max_length[100]|regex_match[/^[^<>{}=]+$/u]'],
                 'surname' => ['label' => lang('Install.lastName'), 'rules' => 'required|max_length[100]|regex_match[/^[^<>{}=]+$/u]'],
-                'username' => ['label' => lang('Install.username'), 'rules' => 'required|alpha_numeric|min_length[3]|max_length[50]'],
+                'username' => ['label' => lang('Backend.username'), 'rules' => 'required|alpha_numeric|min_length[3]|max_length[50]'],
                 'password' => ['label' => lang('Install.password'), 'rules' => 'required|min_length[8]'],
                 'email' => ['label' => lang('Install.email'), 'rules' => 'required|valid_email|max_length[255]'],
-                'siteName' => ['label' => lang('Install.siteName'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]']
+                'siteName' => ['label' => lang('Backend.siteName'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]']
             ];
             if ($this->request->getPost('slogan')) $valData['slogan'] = ['label' => lang('Install.slogan'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]'];
 
@@ -55,7 +55,7 @@ class Install extends Controller
                 : 'false #Set this to true after enabling HTTPS in production.';
 
             $updates = [
-                'CI_ENVIRONMENT' => 'development',
+                'CI_ENVIRONMENT' => 'production',
                 'app.baseURL' => '\'' . $this->request->getPost('baseUrl') . '\'',
                 'app.forceGlobalSecureRequests' => $isHttps ? 'true' : 'false #Set to true after enabling HTTPS.',
                 'database.default.hostname' => $this->request->getPost('host'),
@@ -230,12 +230,11 @@ class Install extends Controller
         ]);
 
         // -----------------------------------------------------------------
-        // Update DevGate configuration with the installed user credentials
+        // Provision an independent DevGate credential (never the admin
+        // account password — see updateDevGateConfig() docblock).
         // -----------------------------------------------------------------
-        $this->updateDevGateConfig(
-            trim(strip_tags($installData['username'])),
-            $installData['password']
-        );
+        $devGateUsername = trim(strip_tags($installData['username']));
+        $devGatePassword = $this->updateDevGateConfig($devGateUsername);
 
         @unlink(APPPATH . 'Config/Routes.php');
         $file = ROOTPATH . 'modules/Backend/Commands/Views/routes.tpl.php';
@@ -252,60 +251,189 @@ class Install extends Controller
 
         file_put_contents(WRITEPATH . 'install.lock', 'Installed at: ' . date('Y-m-d H:i:s'));
         chmod(WRITEPATH . 'install.lock', 0444);
+
+        // The generated DevGate password only exists in memory at this point
+        // (it was hashed before being written to disk) — this is the one and
+        // only chance to show it to the operator. Render it inline instead of
+        // redirecting straight to baseUrl so it isn't lost in a page that was
+        // never built to display it.
+        if ($devGatePassword !== null) {
+            return $this->response->setBody($this->devGateCredentialsBody(
+                $devGateUsername,
+                $devGatePassword,
+                $installData['baseUrl']
+            ));
+        }
+
         return redirect()->to($installData['baseUrl'], 301);
     }
 
     /**
-     * Updates DevGate configuration with the initial admin credentials.
+     * Generates a fresh, independent DevGate credential and persists it hashed.
      *
-     * @param string $username
-     * @param string $password
-     * @return bool
+     * DevGate is a separate development-only Basic-Auth gate
+     * (see modules/DevGate/Filters/DevGateFilter.php) unrelated to the admin
+     * account created by this installer. Reusing the admin password here
+     * would mean a DevGate credential leak (e.g. shoulder-surfing the
+     * browser's Basic-Auth prompt) doubles as an admin account compromise —
+     * so a random password is generated instead, independent of anything the
+     * operator typed into this form. It is stored hashed
+     * (PASSWORD_BCRYPT) and returned once in plaintext; it cannot be
+     * recovered from the config file after this call.
+     *
+     * @param string $username DevGate username (reuses the installed admin
+     *                         username for convenience only).
+     *
+     * @return string|null Generated plaintext password, or null if the
+     *                      DevGate config file could not be updated.
      */
-    private function updateDevGateConfig(string $username, string $password): bool
+    private function updateDevGateConfig(string $username): ?string
     {
         $configPath = ROOTPATH . 'modules/DevGate/Config/DevGate.php';
 
         if (!file_exists($configPath) || !is_writable($configPath)) {
             log_message('info', "DevGate config file skipping: Not found or not writable.");
-            return false;
+            return null;
         }
 
         try {
             $content = file_get_contents($configPath);
 
-            // Robust detection of useHashedPasswords (handles spaces, newlines, and case-insensitivity)
-            $useHashed = false;
-            if (preg_match('/public\s+bool\s+\$useHashedPasswords\s*=\s*(true|1)/i', $content)) {
-                $useHashed = true;
-            }
+            $generatedPassword = bin2hex(random_bytes(16));
+            $hashedPassword    = password_hash($generatedPassword, PASSWORD_BCRYPT);
 
-            // Prepare credentials
-            $finalPass = $useHashed ? password_hash($password, PASSWORD_BCRYPT) : $password;
             $userKey = var_export($username, true);
-            $passVal = var_export($finalPass, true);
+            $passVal = var_export($hashedPassword, true);
 
             // Maintain project's '[]' array style with proper indentation
             $usersArray = "public array \$users = [" . PHP_EOL .
                 "        {$userKey} => {$passVal}," . PHP_EOL .
                 "    ];";
 
-            // Update the users array using a robust multiline regex
-            $newContent = preg_replace(
+            // Update the users array using a robust multiline regex.
+            // preg_replace_callback (not preg_replace) is required here: a
+            // bcrypt hash always starts with "$2y$12$..." and a plain
+            // preg_replace() replacement string treats "$2"/"$12" as
+            // backreferences (silently dropped, since this pattern has no
+            // capture groups), corrupting every generated hash. The
+            // callback's return value is inserted verbatim, with no
+            // backreference parsing.
+            $newContent = preg_replace_callback(
                 '/public\s+array\s+\$users\s*=\s*\[.*?\];/s',
-                $usersArray,
+                static fn () => $usersArray,
                 $content
             );
 
             if ($newContent === null || $newContent === $content) {
-                return false;
+                return null;
             }
 
-            return file_put_contents($configPath, $newContent) !== false;
+            // The value just written is a bcrypt hash, never the plaintext —
+            // force hashed comparison in DevGateFilter. $matchCount confirms
+            // the property was actually found and replaced exactly once;
+            // without that check a renamed/missing property would silently
+            // leave $useHashedPasswords=false while $users holds a hash,
+            // which locks DevGate out entirely (hash never equals plaintext).
+            $newContent = preg_replace(
+                '/public\s+bool\s+\$useHashedPasswords\s*=\s*(?:true|false);/i',
+                'public bool $useHashedPasswords = true;',
+                $newContent,
+                -1,
+                $matchCount
+            );
+
+            if ($newContent === null || $matchCount !== 1) {
+                return null;
+            }
+
+            return file_put_contents($configPath, $newContent) !== false ? $generatedPassword : null;
 
         } catch (\Exception $e) {
             log_message('error', "Failed to update DevGate config: " . $e->getMessage());
-            return false;
+            return null;
         }
+    }
+
+    /**
+     * Renders the one-time DevGate credential disclosure page shown at the
+     * end of a successful install. Kept as a self-contained inline response
+     * (no view file) since it is shown exactly once, pre-session, and never
+     * reachable again — see updateDevGateConfig() for why the password
+     * cannot be re-displayed later.
+     *
+     * @param string $username DevGate username
+     * @param string $password Generated plaintext DevGate password
+     * @param string $continueUrl URL to the freshly installed site
+     *
+     * @return string Full HTML document
+     */
+    private function devGateCredentialsBody(string $username, string $password, string $continueUrl): string
+    {
+        $title    = esc(lang('Install.devGateCredentialsTitle'));
+        $warning  = esc(lang('Install.devGateCredentialsWarning'));
+        $note     = esc(lang('Install.devGateCredentialsNote'));
+        $userLbl  = esc(lang('Install.devGateCredentialsUsername'));
+        $passLbl  = esc(lang('Install.devGateCredentialsPassword'));
+        $continue = esc(lang('Install.devGateCredentialsContinue'));
+        $userVal  = esc($username);
+        $passVal  = esc($password);
+        $url      = esc($continueUrl, 'attr');
+
+        return <<<HTML
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{$title}</title>
+            <style>
+                *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+                body {
+                    font-family: system-ui, -apple-system, sans-serif;
+                    background: #0f172a;
+                    color: #e2e8f0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    padding: 2rem;
+                }
+                .card {
+                    background: #1e293b;
+                    border: 1px solid #334155;
+                    border-radius: 12px;
+                    padding: 2.5rem;
+                    max-width: 480px;
+                    width: 100%;
+                }
+                h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: 1rem; }
+                .warning {
+                    background: #7c2d1222;
+                    border: 1px solid #7c2d1255;
+                    color: #fca5a5;
+                    border-radius: 8px;
+                    padding: 0.85rem 1rem;
+                    font-size: 0.85rem;
+                    margin-bottom: 1.25rem;
+                }
+                .note { color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5; }
+                .row { margin-bottom: 0.75rem; }
+                .row span.label { display: block; font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+                .row code { display: block; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 0.6rem 0.8rem; font-size: 0.95rem; word-break: break-all; }
+                a.continue { display: inline-block; margin-top: 1.5rem; color: #a78bfa; text-decoration: none; font-size: 0.9rem; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h1>{$title}</h1>
+                <div class="warning">{$warning}</div>
+                <p class="note">{$note}</p>
+                <div class="row"><span class="label">{$userLbl}</span><code>{$userVal}</code></div>
+                <div class="row"><span class="label">{$passLbl}</span><code>{$passVal}</code></div>
+                <a class="continue" href="{$url}">{$continue} &rarr;</a>
+            </div>
+        </body>
+        </html>
+        HTML;
     }
 }

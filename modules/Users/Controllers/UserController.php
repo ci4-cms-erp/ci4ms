@@ -107,7 +107,15 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * @return \CodeIgniter\HTTP\ResponseInterface|string
+     * Creates a new user from POST data and assigns the posted group(s), or
+     * renders the create form on GET.
+     *
+     * Subject to the same delegation ceiling as update_user(): syncGroups()
+     * only checks that the posted group names exist, not their permission
+     * level relative to the actor's own, so actorMayAssignGroup() must run
+     * before the user row is created.
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface|string Redirect on POST, rendered view on GET
      */
     public function create_user()
     {
@@ -130,6 +138,15 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             $users = auth()->getProvider();
             try {
+                $groups = $this->commonModel->lists('auth_groups', 'group', ['group!=' => 'superadmin'], 'id ASC', 0, 0, [], [], [], ['isReset' => false,], ['key' => 'id', 'where' => $this->request->getPost('group')]);
+                $groupNames = array_column($groups, 'group');
+
+                // Delegation ceiling: checked before the user row is created
+                // so a rejected request never leaves an orphaned, groupless
+                // account behind.
+                if (!auth()->user()->inGroup('superadmin') && !$this->actorMayAssignGroup($groupNames))
+                    return $this->failForbidden(lang('Users.groupExceedsOwnGrant'));
+
                 $d = [
                     'email' => $this->request->getPost('email'),
                     'firstname' => esc($this->request->getPost('firstname')),
@@ -144,8 +161,6 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                 if (!$users->save($user)) return redirect()->route('create_user')->withInput()->with('errors', $users->errors());
                 $new_user = $users->findById($users->getInsertID());
 
-                $groups = $this->commonModel->lists('auth_groups', 'group', ['group!=' => 'superadmin'], 'id ASC', 0, 0, [], [], [], ['isReset' => false,], ['key' => 'id', 'where' => $this->request->getPost('group')]);
-                $groupNames = array_column($groups, 'group');
                 $new_user->syncGroups(...$groupNames);
 
 
@@ -168,6 +183,60 @@ class UserController extends \Modules\Backend\Controllers\BaseController
         return view('Modules\Users\Views\usersCrud\form', $this->defData);
     }
 
+    /**
+     * Enforces a delegation ceiling for group assignment: a non-superadmin
+     * actor may only assign groups whose entire permission matrix is covered
+     * by the actor's own effective permissions.
+     *
+     * Mirrors the subset logic in
+     * PermgroupController::actorGrantsSubsetOfOwnPermissions(), kept as a
+     * separate implementation here because auth_groups.permissions is
+     * decoded per-group rather than compared against a single POSTed
+     * perms[] payload. Without this check, Shield's
+     * Authorizable::syncGroups() only verifies the group exists
+     * (GroupModel::isValidGroup()) -- it never compares the group's
+     * permission level to the actor's own, so a non-superadmin holding only
+     * users.create_user.create / users.update_user.update could otherwise
+     * assign themselves or a peer into a group more powerful than their
+     * own. Callers must skip this check for superadmin actors themselves
+     * (superadmin may assign any group); this method does not check
+     * inGroup('superadmin') itself.
+     *
+     * @param array<int, string> $targetGroupNames auth_groups.group names being assigned to the target user
+     *
+     * @return bool True if every permission granted by every target group is one the actor already holds
+     */
+    private function actorMayAssignGroup(array $targetGroupNames): bool
+    {
+        if ($targetGroupNames === []) {
+            return true;
+        }
+
+        $pageMap = [];
+        foreach ($this->commonModel->lists('auth_permissions_pages') as $page) {
+            $pageMap[$page->id] = strtolower($page->pagename);
+        }
+
+        $roleActionMap = ['create_r' => 'create', 'read_r' => 'read', 'update_r' => 'update', 'delete_r' => 'delete'];
+
+        $groups = $this->commonModel->lists('auth_groups', 'permissions', [], 'id ASC', 0, 0, [], [], [], ['isReset' => false,], ['key' => 'group', 'where' => $targetGroupNames]);
+        foreach ($groups as $group) {
+            $groupPerms = json_decode($group->permissions ?? '', true) ?? [];
+            foreach ($groupPerms as $perm) {
+                $pageId = $perm['page_id'] ?? null;
+                if (!isset($pageMap[$pageId]))
+                    continue;
+
+                foreach ($roleActionMap as $roleKey => $action) {
+                    if (!empty($perm[$roleKey]) && !auth()->user()->can($pageMap[$pageId] . '.' . $action))
+                        return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private function sendActivationEmail($user, $code)
     {
         $url = url_to('register-verify-account');
@@ -186,8 +255,32 @@ class UserController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * @param int $id
-     * @return \CodeIgniter\HTTP\ResponseInterface|string
+     * Updates an existing user's profile, group memberships, and (optionally)
+     * password from POST data, or renders the edit form on GET.
+     *
+     * Three privilege-escalation guards were missing before this fix: (1) the
+     * actor could target their own account id and change their own group
+     * membership (self-escalation) -- self-targeting is now rejected
+     * outright, since self-service editing already has a dedicated, safer
+     * path (profile(), which additionally verifies the current password
+     * before accepting a new one). (2) syncGroups() (Shield's Authorizable
+     * trait) only checks that the posted group names exist -- it never
+     * compares the target group's permission level to the actor's own -- so
+     * a non-superadmin actor could otherwise promote a peer into a group
+     * more powerful than the actor's own. actorMayAssignGroup() closes that
+     * gap and, like the superadmin/self-target guards, must run before the
+     * write. (3) a POSTed password was written to the target account with no
+     * current-password verification -- the only such check exists in
+     * profile(), and this route's authorization is a delegable granular
+     * permission (users.update), not superadmin-only. A non-superadmin actor
+     * holding that permission could therefore reset any peer's password and
+     * take over the account without ever knowing the original password. The
+     * password field is now rejected outright for non-superadmin actors
+     * targeting another account; superadmin actors are unaffected.
+     *
+     * @param int $id users.id of the account being updated
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface|string Redirect on POST, rendered view on GET
      */
     public function update_user(int $id)
     {
@@ -211,7 +304,27 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             $user = auth()->getProvider();
             $u = $user->withGroups()->findById($id);
-            if ($u->inGroup('superadmin')) return redirect()->route('403');
+            if ($u->inGroup('superadmin')) return $this->failForbidden();
+            if ((int) $id === (int) auth()->id()) return $this->failForbidden(lang('Users.cannotEditOwnAccount'));
+
+            // By this point the target is guaranteed to be a peer account,
+            // not the actor's own (self-target already rejected above). This
+            // route is protected only by the delegable granular users.update
+            // permission, not superadmin-only, and unlike profile() it never
+            // verifies the target's current password. Reject the password
+            // field outright for non-superadmin actors rather than silently
+            // dropping it, so the actor gets clear feedback that no reset
+            // happened instead of assuming it succeeded.
+            if ($this->request->getPost('password') && !auth()->user()->inGroup('superadmin'))
+                return $this->failForbidden(lang('Users.cannotResetPeerPassword'));
+
+            $groups = $this->commonModel->lists('auth_groups', 'group', ['group!=' => 'superadmin'], 'id ASC', 0, 0, [], [], [], ['isReset' => false,], ['key' => 'id', 'where' => $this->request->getPost('group')]);
+            $groupNames = array_column($groups, 'group');
+
+            // Delegation ceiling: must run before any write below.
+            if (!auth()->user()->inGroup('superadmin') && !$this->actorMayAssignGroup($groupNames))
+                return $this->failForbidden(lang('Users.groupExceedsOwnGrant'));
+
             $data = [
                 'email' => $this->request->getPost('email'),
                 'firstname' => esc($this->request->getPost('firstname')),
@@ -227,9 +340,8 @@ class UserController extends \Modules\Backend\Controllers\BaseController
 
             $u->fill($data);
             if ($user->save($u)) {
-                $groups = $this->commonModel->lists('auth_groups', 'group', ['group!=' => 'superadmin'], 'id ASC', 0, 0, [], [], [], ['isReset' => false,], ['key' => 'id', 'where' => $this->request->getPost('group')]);
-                $groupNames = array_column($groups, 'group');
                 $u->syncGroups(...$groupNames);
+                cache()->delete("{$id}_permissions");
                 return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
             } else return redirect()->route('update_user', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$data['username']]));
         }

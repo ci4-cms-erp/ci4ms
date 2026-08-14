@@ -45,6 +45,16 @@ $RECYCLE.BIN/
 .vagrant
 Vagrantfile
 
+# modules/DevGate/Config/DevGate.php is rewritten by the installer
+# (Install.php / Ci4msSetup.php) with a freshly generated, hashed DevGate
+# credential on every setup run — same class of secret as .env, must never
+# be committed going forward. NOTE: this file is CURRENTLY TRACKED in git
+# (pre-existing state); adding it here only stops FUTURE changes from being
+# staged. Removing it from history requires `git rm --cached
+# modules/DevGate/Config/DevGate.php` + a commit — a separate, user-approved
+# step, not performed here.
+modules/DevGate/Config/DevGate.php
+
 #-------------------------
 # Temporary Files
 #-------------------------
@@ -195,6 +205,14 @@ tests/Modules/Auth/*
 !tests/Modules/Backend/
 tests/Modules/Backend/*
 !tests/Modules/Backend/*Test.php
+# Backup restore authz (F2) regression locks.
+!tests/Modules/Backup/
+tests/Modules/Backup/*
+!tests/Modules/Backup/*Test.php
+# Logs view XSS escaping (F5) regression locks.
+!tests/Modules/Logs/
+tests/Modules/Logs/*
+!tests/Modules/Logs/*Test.php
 !tests/_support/
 tests/_support/*
 !tests/_support/Settings/
@@ -227,3 +245,9 @@ tests/Feature/*
 phpunit.xml.dist
 node_modules
 .security-audit
+graphify-out
+.claudeignore
+.ci4ms
+
+# Security disclosure reports (contain exploit PoCs / vulnerability details — never commit)
+ci4ms-security-reports-*.md

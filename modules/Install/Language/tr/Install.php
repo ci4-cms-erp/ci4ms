@@ -16,7 +16,6 @@ return [
     'yourName' => 'Adınız',
     'surname' => 'Soyadınız',
     'email' => 'E-posta',
-    'username' => 'Kullanıcı Adı',
     'passwordMinLength' => 'Şifre <small>(en az 8 karakter)</small>',
     'generatePassword' => 'Şifre Oluştur',
 
@@ -30,7 +29,6 @@ return [
     'databasePort' => 'Veritabanı Portu',
 
     // Site Information
-    'siteName' => 'Site Adı',
     'siteUrl' => 'Site URL',
     'siteSlogan' => 'Site Sloganı',
 
@@ -46,4 +44,12 @@ return [
     'invalidNonce' => 'Yükleme oturumu eksik veya süresi dolmuş. Lütfen sayfayı yenileyip formu tekrar gönderin.',
     'geoLookup' => 'Oturum konum takibini etkinleştir (yerel GeoIP veritabanı)',
     'geoLookupHint' => 'Login oturumları için yaklaşık şehir/ülke bilgisini yerel olarak türetir — üçüncü taraflara veri gönderilmez. Kurulumdan sonra ücretsiz DB-IP veritabanının indirilmesi gerekir: php spark ci4ms:geoip-update. "IP Geolocation by DB-IP" (CC BY 4.0) kullanır; etkinleştirilirse atıf zorunludur.',
+
+    // DevGate one-time credential display
+    'devGateCredentialsTitle' => 'DevGate Erişim Bilgileri',
+    'devGateCredentialsWarning' => 'Bu şifre yalnızca bir kez gösterilir ve tekrar görüntülenemez. Şimdi kaydedin.',
+    'devGateCredentialsNote' => 'DevGate, admin hesap şifrenizden bağımsız, ayrı bir geliştirme ortamı Basic-Auth katmanıdır.',
+    'devGateCredentialsUsername' => 'Kullanıcı Adı',
+    'devGateCredentialsPassword' => 'Şifre',
+    'devGateCredentialsContinue' => 'Siteye devam et',
 ];

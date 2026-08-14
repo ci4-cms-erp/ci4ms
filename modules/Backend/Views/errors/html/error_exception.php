@@ -1,9 +1,9 @@
 <?php
 /**
- * error_exception.php — development/testing ortamında detaylı hata raporu.
- * BaseExceptionHandler bu dosyayı include ederek render eder.
- * Erişilebilir değişkenler: $title, $exception, $message, $file, $line, $trace
- * Erişilebilir static metotlar: static::cleanPath(), static::highlightFile(), static::describeMemory()
+ * error_exception.php — detailed error report for the development/testing environment.
+ * BaseExceptionHandler renders this file by including it.
+ * Available variables: $title, $exception, $message, $file, $line, $trace
+ * Available static methods: static::cleanPath(), static::highlightFile(), static::describeMemory()
  */
 $error_id = uniqid('error', true);
 ?>

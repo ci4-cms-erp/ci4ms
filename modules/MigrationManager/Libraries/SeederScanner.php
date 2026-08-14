@@ -8,28 +8,28 @@ use CodeIgniter\Database\Seeder;
 use Modules\MigrationManager\Contracts\WebRunnableSeeder;
 
 /**
- * `app/Database/Seeds/` ve her modülün `Database/Seeds/` dizini altındaki
- * seed dosyalarını tarar ve yalnızca `WebRunnableSeeder` implement eden,
- * `Seeder` alt sınıfı olan sınıfları döner.
+ * Scans the seed files under `app/Database/Seeds/` and each module's
+ * `Database/Seeds/` directory, and returns only the classes that implement
+ * `WebRunnableSeeder` and are `Seeder` subclasses.
  *
- * Bu allowlist, `Seeder::call()`'daki doğrulamasız `new $class(...)` sinkini
- * (bkz. `WebRunnableSeeder` docblock'u) yapısal olarak kapatır: arayüzü
- * implement etmeyen bir seeder (ör. `Ci4msDefaultsSeeder`) tarama sonucuna
- * hiçbir zaman girmez — ayrı bir denylist gerekmez.
+ * This allowlist structurally closes the unvalidated `new $class(...)` sink
+ * in `Seeder::call()` (see `WebRunnableSeeder`'s docblock): a seeder that
+ * doesn't implement the interface (e.g. `Ci4msDefaultsSeeder`) never enters
+ * the scan results — no separate denylist is needed.
  *
- * FQCN türetme, kullanıcı girdisi almadan salt dosya sistemi taraması ile
- * yapılır: `app/Config/Autoload.php`'in her modül dizini için otomatik
- * kaydettiği `Modules\{Folder}` PSR-4 önekiyle birebir örtüşür.
+ * FQCN derivation is done through a pure filesystem scan with no user
+ * input: it maps exactly onto the `Modules\{Folder}` PSR-4 prefix that
+ * `app/Config/Autoload.php` auto-registers for every module directory.
  */
 class SeederScanner
 {
     /**
-     * `WebRunnableSeeder` implement eden geçerli seed sınıflarını keşfeder.
+     * Discovers the valid seed classes that implement `WebRunnableSeeder`.
      *
-     * Üretim ortamında `app/Database/Seeds/Ci4msDefaultsSeeder.php` bu
-     * arayüzü implement etmediği için dönen dizi, henüz `WebRunnableSeeder`
-     * implement eden hiçbir seeder eklenmemişse **boş** olur — bu beklenen
-     * davranıştır, hata değildir.
+     * Since `app/Database/Seeds/Ci4msDefaultsSeeder.php` doesn't implement
+     * this interface in production, the returned array is **empty** as
+     * long as no seeder implementing `WebRunnableSeeder` has been added yet
+     * — this is expected behavior, not a bug.
      *
      * @return list<array{class: class-string<Seeder>, label: string, repeatable: bool}>
      */
@@ -58,13 +58,13 @@ class SeederScanner
     }
 
     /**
-     * Disk üzerindeki seed dosyalarından, allowlist kontrolünden önceki
-     * aday FQCN listesini türetir.
+     * Derives the candidate FQCN list, before the allowlist check, from the
+     * seed files on disk.
      *
      * `app/Database/Seeds/{Basename}.php` -> `App\Database\Seeds\{Basename}`
      * `modules/{Module}/Database/Seeds/{Basename}.php` -> `Modules\{Module}\Database\Seeds\{Basename}`
      *
-     * @return list<string> Var olması garanti edilmeyen aday sınıf adları.
+     * @return list<string> Candidate class names not guaranteed to exist.
      */
     private function candidateClasses(): array
     {

@@ -11,6 +11,21 @@ class DbBackup
 {
     protected $db;
 
+    /**
+     * Table name suffixes (without any DBPrefix) that a restore file must
+     * never write to, even via an otherwise-allowed statement prefix
+     * (INSERT/UPDATE/DELETE/CREATE TABLE/ALTER TABLE/DROP TABLE). These back
+     * the RBAC system; a crafted restore file could otherwise grant itself
+     * superadmin, e.g. `INSERT INTO auth_groups_users ...`.
+     */
+    private const PROTECTED_RBAC_TABLES = [
+        'auth_groups',
+        'auth_groups_users',
+        'auth_permissions_users',
+        'auth_permissions_pages',
+        'auth_groups_permissions',
+    ];
+
     public function __construct(ConnectionInterface $db = null)
     {
         $this->db = $db ?? Database::connect();
@@ -182,6 +197,16 @@ class DbBackup
                 continue;
             }
 
+            // Defense-in-depth on top of the controller-level superadmin gate
+            // (Modules\Backup\Controllers\Backup::restore()): a statement
+            // that is otherwise allowed by prefix must still not touch an
+            // RBAC table. Skip only this statement, non-fatally, matching
+            // the "Unrecognized SQL skipped" pattern above.
+            if ($this->targetsProtectedRbacTable($trimmed)) {
+                log_message('warning', "DbBackup::restore — Statement targeting protected RBAC table skipped at statement {$stmtNum}: " . mb_substr($trimmed, 0, 100));
+                continue;
+            }
+
             $this->db->query($statement);
         }
 
@@ -189,6 +214,72 @@ class DbBackup
 
         fclose($file);
         return true;
+    }
+
+    /**
+     * Determine whether a SQL statement's target table is one of the
+     * protected RBAC tables, matching this connection's current DBPrefix
+     * as well as an arbitrary other prefix — the backup file may have been
+     * generated under a different installation's DBPrefix, or none at all.
+     *
+     * @param string $statement Single trimmed SQL statement.
+     *
+     * @return bool `true` when the statement must be skipped.
+     */
+    private function targetsProtectedRbacTable(string $statement): bool
+    {
+        $tableName = $this->extractStatementTableName($statement);
+        if ($tableName === null) {
+            return false;
+        }
+
+        $tableName = strtolower($tableName);
+        // Read from the live connection rather than Config\Database::class
+        // directly: $this->db is the exact connection this statement will
+        // run against, so its DBPrefix can't drift from the group actually
+        // resolved at runtime (relevant under the 'tests' group override).
+        $prefix = strtolower((string) $this->db->DBPrefix);
+
+        foreach (self::PROTECTED_RBAC_TABLES as $protected) {
+            if ($tableName === $protected) {
+                return true;
+            }
+
+            if ($prefix !== '' && $tableName === $prefix . $protected) {
+                return true;
+            }
+
+            // Any-prefix suffix match: catches a backup produced with a
+            // DBPrefix that differs from this installation's.
+            if (str_ends_with($tableName, '_' . $protected)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Extract the target table name from an INSERT/UPDATE/DELETE/CREATE
+     * TABLE/ALTER TABLE/DROP TABLE statement, stripping optional backtick
+     * or double-quote identifier delimiters.
+     *
+     * @param string $statement Single trimmed SQL statement.
+     *
+     * @return string|null `null` when the statement doesn't match a
+     *                      recognised DML/DDL shape (e.g. SET/LOCK/COMMIT).
+     */
+    private function extractStatementTableName(string $statement): ?string
+    {
+        if (!preg_match(
+            '/^(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM|DROP\s+TABLE(?:\s+IF\s+EXISTS)?|ALTER\s+TABLE|CREATE\s+TABLE)\s+[`"]?([a-zA-Z0-9_]+)[`"]?/i',
+            $statement,
+            $matches
+        )) {
+            return null;
+        }
+
+        return $matches[1];
     }
 
     /**

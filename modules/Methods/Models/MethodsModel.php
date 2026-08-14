@@ -73,8 +73,8 @@ class MethodsModel extends Model
     }
 
     /**
-     * Sadece isActive=1 olan modülleri ve sayfaları döndürür.
-     * Filtreleme SQL katmanında yapılır — view'da array_filter / foreach yük oluşturmaz.
+     * Returns only the modules and pages where isActive=1.
+     * Filtering happens at the SQL layer — no array_filter / foreach overhead in the view.
      */
     public function getActiveModules(): array
     {
@@ -107,9 +107,9 @@ class MethodsModel extends Model
             \'\'
             )
         ) AS pages_data')
-            // Sadece aktif modüller
+            // Only active modules
             ->where('modules.isActive', 1)
-            // JOIN koşuluna isActive filtresi: pasif sayfalar GROUP_CONCAT'e girmez
+            // isActive filter in the JOIN condition: inactive pages don't enter GROUP_CONCAT
             ->join(
                 'auth_permissions_pages',
                 'modules.id = ' . $prefix . 'auth_permissions_pages.module_id AND ' . $prefix . 'auth_permissions_pages.isActive = 1',
@@ -127,7 +127,7 @@ class MethodsModel extends Model
                 $pageItems = explode(',', $module->pages_data);
                 foreach ($pageItems as $pageStr) {
                     $pageData = explode('|||', $pageStr);
-                    // LEFT JOIN NULL satırı → ID boş gelir, atla
+                    // LEFT JOIN NULL row → ID comes back empty, skip
                     if (empty(trim($pageData[0]))) {
                         continue;
                     }
@@ -148,7 +148,7 @@ class MethodsModel extends Model
                 }
             }
 
-            // Aktif sayfası olmayan modülü döndürme
+            // Don't return a module that has no active pages
             if (empty($pages)) {
                 continue;
             }

@@ -7,44 +7,46 @@ namespace Modules\Notifications\Libraries;
 use CodeIgniter\Database\BaseConnection;
 
 /**
- * Additive şema yeteneklerinin (yeni kolon / yeni tablo) istek-ömürlü guard'ı.
+ * Request-lived guard for additive schema capabilities (a new column / a new table).
  *
- * Modül klasörü bırakılıp migration'lar HENÜZ koşmamış olabilir; bu durumda ne
- * `notifications.exclude_users` / `notifications.created_by` kolonları ne de
- * `notification_preferences` tablosu vardır. Okuma ve yazma yolları bu guard'lara
- * bakarak ilgili SQL parçasını
- * tamamen atlar — modül migrate edilmeden fatal atmaz (Notifier::tablesReady()
- * ile aynı savunma refleksi, ama AYRI sözleşme: tablesReady() Model B'nin
- * ZORUNLU iki tablosu içindir, buradakiler opsiyonel yeteneklerdir).
+ * The module folder may have been dropped in while migrations have NOT run
+ * yet; in that case neither the `notifications.exclude_users` /
+ * `notifications.created_by` columns nor the `notification_preferences` table
+ * exist. Read and write paths check these guards and skip the relevant SQL
+ * fragment entirely — it doesn't throw a fatal before the module is migrated
+ * (the same defensive reflex as Notifier::tablesReady(), but a SEPARATE
+ * contract: tablesReady() is for Model B's two REQUIRED tables, these are
+ * optional capabilities).
  *
- * Sonuçlar istek başına (static) hafızalanır: şema tek bir istek içinde
- * değişmez, bu yüzden her sorguda `tableExists()`/`fieldExists()` çağırıp
- * DB'yi yormaya gerek yoktur. Hafıza anahtarı yeteneğin YANINDA bağlantı
- * kimliğini (veritabanı adı + tablo öneki) taşır: aynı istekte birden çok DB
- * grubuyla çalışan kurulumlarda (multi-tenant, ayrı rapor bağlantısı) bir
- * bağlantının cevabı diğerine sızmamalıdır — sızsaydı hata fail-open yönünde,
- * yani kolonu olmayan bir şemaya hariç tutma SQL'i üretmek yönünde olurdu.
+ * Results are memoized per request (static): the schema doesn't change within
+ * a single request, so there's no need to call `tableExists()`/`fieldExists()`
+ * on every query and wear out the DB. The memo key carries the connection
+ * identity (database name + table prefix) ALONGSIDE the capability: in setups
+ * that work with multiple DB groups in the same request (multi-tenant, a
+ * separate reporting connection), one connection's answer must not leak into
+ * another — if it leaked, the error would be in the fail-open direction, i.e.
+ * producing exclusion SQL against a schema that doesn't have the column.
  *
- * UZUN ÖMÜRLÜ SÜREÇ UYARISI: hafıza istek ömrü varsayımına dayanır. Bir queue
- * worker / daemon aynı PHP sürecinde migration sonrası çalışmaya devam ederse
- * eski cevabı taşımaya devam eder; böyle bir süreçte migration'dan sonra
- * {@see reset()} çağrılmalıdır.
+ * LONG-LIVED PROCESS WARNING: the memo relies on the request-lifetime
+ * assumption. If a queue worker / daemon keeps running in the same PHP
+ * process after a migration, it keeps carrying the stale answer; {@see reset()}
+ * must be called after a migration in such a process.
  */
 final class SchemaGuard
 {
     /**
-     * '{veritabanı}|{önek}|{yetenek}' => var mı (istek ömrü boyunca hafızalanır).
+     * '{database}|{prefix}|{capability}' => exists (memoized for the request lifetime).
      *
      * @var array<string, bool>
      */
     private static array $memo = [];
 
     /**
-     * `notifications.exclude_users` kolonu mevcut mu (hariç tutma yazılabilir/okunabilir mi).
+     * Whether the `notifications.exclude_users` column exists (whether exclusion is read/writable).
      *
-     * @param BaseConnection<object, object> $db Şemanın sorulacağı bağlantı.
+     * @param BaseConnection<object, object> $db Connection to query the schema on.
      *
-     * @return bool Kolon varsa true.
+     * @return bool True if the column exists.
      */
     public static function hasExcludeUsers(BaseConnection $db): bool
     {
@@ -52,15 +54,16 @@ final class SchemaGuard
     }
 
     /**
-     * `notifications.created_by` kolonu mevcut mu (hesap verebilirlik izi yazılabilir mi).
+     * Whether the `notifications.created_by` column exists (whether the accountability trail can be written).
      *
-     * `hasExcludeUsers()` ile aynı kalıp, AMA farklı bir teslim sözleşmesi: bu yetenek
-     * yokken satır YİNE yazılır (fail-open), yalnız iz kaybolur
+     * Same pattern as `hasExcludeUsers()`, BUT a different delivery contract:
+     * when this capability is absent, the row is STILL written (fail-open),
+     * only the trail is lost
      * ({@see \Modules\Notifications\Libraries\Channels\InAppChannel::buildRow()}).
      *
-     * @param BaseConnection<object, object> $db Şemanın sorulacağı bağlantı.
+     * @param BaseConnection<object, object> $db Connection to query the schema on.
      *
-     * @return bool Kolon varsa true.
+     * @return bool True if the column exists.
      */
     public static function hasCreatedBy(BaseConnection $db): bool
     {
@@ -68,11 +71,11 @@ final class SchemaGuard
     }
 
     /**
-     * `notification_preferences` tablosu mevcut mu (tercih JOIN'i eklenebilir mi).
+     * Whether the `notification_preferences` table exists (whether the preference JOIN can be added).
      *
-     * @param BaseConnection<object, object> $db Şemanın sorulacağı bağlantı.
+     * @param BaseConnection<object, object> $db Connection to query the schema on.
      *
-     * @return bool Tablo varsa true.
+     * @return bool True if the table exists.
      */
     public static function hasPreferences(BaseConnection $db): bool
     {
@@ -80,12 +83,12 @@ final class SchemaGuard
     }
 
     /**
-     * Bir yeteneğin, bağlantıya özgü hafıza anahtarı.
+     * The connection-specific memo key for a capability.
      *
-     * @param BaseConnection<object, object> $db         Cevabın alındığı bağlantı.
-     * @param string                         $capability Yetenek adı.
+     * @param BaseConnection<object, object> $db         Connection the answer was obtained from.
+     * @param string                         $capability Capability name.
      *
-     * @return string '{veritabanı}|{önek}|{yetenek}'.
+     * @return string '{database}|{prefix}|{capability}'.
      */
     private static function memoKey(BaseConnection $db, string $capability): string
     {
@@ -93,10 +96,10 @@ final class SchemaGuard
     }
 
     /**
-     * Hafızalanmış yetenekleri sıfırlar.
+     * Resets the memoized capabilities.
      *
-     * @internal Yalnız test desteği: migration'ı aynı süreç içinde koşan ya da
-     *           sahte bağlantı enjekte eden testler için.
+     * @internal Only for test support: tests that run a migration within the
+     *           same process or inject a fake connection.
      *
      * @return void
      */

@@ -1,10 +1,10 @@
 <?php
 /**
- * Blog/Categories - Birleşik Form View (Oluştur & Güncelle)
+ * Blog/Categories - Combined Form View (Create & Update)
  *
- * $isEdit değişkeni controller tarafından gönderilir:
- *   - new()  → $isEdit = false, $infos yok
- *   - edit() → $isEdit = true,  $infos ve $langsData dolu
+ * The $isEdit variable is sent by the controller:
+ *   - new()  → $isEdit = false, $infos not set
+ *   - edit() → $isEdit = true,  $infos and $langsData populated
  */
 $isEdit        = isset($infos);
 $formAction    = $isEdit
@@ -12,7 +12,7 @@ $formAction    = $isEdit
     : route_to('categoryCreate');
 $defaultLocale = setting('App.defaultLocale') ?: 'tr';
 
-// Edit modunda SEO verisi: default locale veya ilk dil
+// SEO data in edit mode: default locale or first available language
 $langInfo = null;
 if ($isEdit && !empty($langsData)) {
     $langInfo = $langsData[$defaultLocale] ?? current($langsData);

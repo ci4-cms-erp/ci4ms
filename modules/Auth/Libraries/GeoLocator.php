@@ -54,8 +54,8 @@ class GeoLocator
                 return is_string($value) ? (trim(strip_tags($value)) ?: null) : null;
             };
 
-            // MMDB kaydında beklenen yapı: node['names']['en']; bozuk/eksik
-            // düğümler null'a düşer.
+            // Expected structure in the MMDB record: node['names']['en'];
+            // broken/missing nodes fall back to null.
             $pick = static function (mixed $node) use ($clean): ?string {
                 if (! is_array($node) || ! isset($node['names']) || ! is_array($node['names'])) {
                     return null;

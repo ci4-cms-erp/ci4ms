@@ -6,31 +6,34 @@ use CodeIgniter\Database\Migration;
 use RuntimeException;
 
 /**
- * `auth_groups.group` ve `auth_groups_users.(user_id,group)` çiftine UNIQUE
- * index ekler (bkz. KARAR-2, `.ci4ms/plans/migration-manager/context.md:614-625`).
+ * Adds a UNIQUE index to `auth_groups.group` and to the
+ * `auth_groups_users.(user_id,group)` pair (see DECISION-2,
+ * `.ci4ms/plans/migration-manager/context.md:614-625`).
  *
- * Kayıtlı isim ZORUNLU: `Forge::addUniqueKey()`'e verilen açık `$keyName`,
- * `Forge::createTable()`'ın aksine tabloyla BİRLEŞTİRİLMEZ (yalnız otomatik
- * üretilen isimde `$table . '_' . implode('_', $fields)` kalıbı kullanılır,
- * bkz. `vendor/codeigniter4/framework/system/Database/Forge.php:1179-1181`).
- * Bu yüzden `down()`'daki `dropKey()` çağrıları `$prefixKeyName=false` İLE
- * yapılır — aksi halde `dropKey()` `DBPrefix`'i (bu ortamda `ci4ms_`) isme
- * tekrar ekleyip var olmayan bir index adını aramaya çalışır
- * (`Forge.php:450-453`).
+ * An explicit name is REQUIRED: the explicit `$keyName` passed to
+ * `Forge::addUniqueKey()` is NOT COMBINED with the table, unlike
+ * `Forge::createTable()` (only the auto-generated name uses the
+ * `$table . '_' . implode('_', $fields)` pattern, see
+ * `vendor/codeigniter4/framework/system/Database/Forge.php:1179-1181`).
+ * That's why the `dropKey()` calls in `down()` are made WITH
+ * `$prefixKeyName=false` — otherwise `dropKey()` would re-add the
+ * `DBPrefix` (`ci4ms_` in this environment) to the name and try to look up
+ * an index name that doesn't exist (`Forge.php:450-453`).
  *
- * `auth_groups_users.user_id`'de Shield'ın kurduğu bir FK var (`user_id` →
+ * `auth_groups_users.user_id` has an FK set up by Shield (`user_id` →
  * `users.id`, `vendor/codeigniter4/shield/src/Database/Migrations/
- * 2020-12-28-223112_create_auth_tables.php:150-152` — açık bir index
- * OLMADAN `addForeignKey()` çağrılıyor, MySQL/InnoDB FK için kendi örtük
- * destek index'ini otomatik kurar). AMPİRİK OLARAK DOĞRULANDI (bu görevin
- * raporunda): `(user_id, group)` composite UNIQUE eklendiğinde, MySQL
- * FK'nin örtük destek index'ini composite index LEHİNE otomatik DÜŞÜRÜYOR
- * (leftmost column eşleşiyor) — sonuçta composite UNIQUE, FK'nin TEK
- * destekleyici index'i hâline geliyor ve `down()`'da `DROP INDEX` "Cannot
- * drop index ...: needed in a foreign key constraint" ile PATLIYOR. Çözüm:
- * composite UNIQUE'den ÖNCE, ondan bağımsız, kalıcı ve açık isimli tekil bir
- * `user_id` index'i eklenir — bu index FK'nin daimi destekçisi olur,
- * composite UNIQUE serbestçe eklenip kaldırılabilir hâle gelir.
+ * 2020-12-28-223112_create_auth_tables.php:150-152` — `addForeignKey()` is
+ * called WITHOUT an explicit index, so MySQL/InnoDB automatically creates
+ * its own implicit support index for the FK). EMPIRICALLY CONFIRMED (in
+ * this task's report): when the `(user_id, group)` composite UNIQUE is
+ * added, MySQL automatically DROPS the FK's implicit support index IN
+ * FAVOR OF the composite index (the leftmost column matches) — as a
+ * result the composite UNIQUE becomes the FK's ONLY supporting index, and
+ * `DROP INDEX` in `down()` BLOWS UP with "Cannot drop index ...: needed in
+ * a foreign key constraint". Solution: BEFORE the composite UNIQUE, a
+ * standalone, persistent, explicitly named `user_id` index is added,
+ * independent of it — this index becomes the FK's permanent supporter,
+ * leaving the composite UNIQUE free to be added and dropped.
  */
 class AddUniqueKeyToAuthGroupsAndUsers extends Migration
 {
@@ -39,17 +42,19 @@ class AddUniqueKeyToAuthGroupsAndUsers extends Migration
     private const AUTH_GROUPS_USERS_USER_ID_KEY = 'auth_groups_users_user_id_index';
 
     /**
-     * `auth_groups.group` ve `auth_groups_users.(user_id,group)` için UNIQUE
-     * index ekler. Duplicate satır varsa ham "Duplicate entry" DB hatasına
-     * düşmeden önce anlamlı bir istisna fırlatır — bu koruma savunma
-     * amaçlıdır: canlı `ci4ms`'te bu oturumda salt-okunur ölçülen durum
-     * `auth_groups` 2 satır, `auth_groups_users` 3 satır, 0 duplicate ve
-     * her iki tabloda da yalnızca `PRIMARY(id)` index'i (bu migration'la
-     * eklenecek unique index'ler henüz yok) — yani KARAR-2'nin (unique
-     * index kararı) kanıtı bu ölçüm değil, farklı/gelecekteki kurulumlarda
-     * oluşabilecek duplicate'lere karşı önceden alınan bir tedbirdir.
+     * Adds a UNIQUE index for `auth_groups.group` and for
+     * `auth_groups_users.(user_id,group)`. If there are duplicate rows, it
+     * throws a meaningful exception before falling into a raw "Duplicate
+     * entry" DB error — this guard is defensive: the state measured
+     * read-only on the live `ci4ms` in this session is `auth_groups` 2
+     * rows, `auth_groups_users` 3 rows, 0 duplicates, and only a
+     * `PRIMARY(id)` index on both tables (the unique indexes this
+     * migration adds don't exist yet) — i.e. this measurement is not the
+     * evidence for DECISION-2 (the unique index decision), it's a
+     * precaution taken against duplicates that could occur on different
+     * or future setups.
      *
-     * @throws RuntimeException Hedef tablolardan biri duplicate içeriyorsa.
+     * @throws RuntimeException If either target table contains duplicates.
      */
     public function up()
     {
@@ -59,9 +64,9 @@ class AddUniqueKeyToAuthGroupsAndUsers extends Migration
         $this->forge->addUniqueKey('group', self::AUTH_GROUPS_UNIQUE_KEY);
         $this->forge->processIndexes('auth_groups');
 
-        // FK'nin (user_id -> users.id) örtük destek index'ini composite
-        // UNIQUE'in "yutmasını" önlemek için önce kalıcı, bağımsız bir tekil
-        // index eklenir (bkz. sınıf docblock'u).
+        // A persistent, standalone single-column index is added first to
+        // prevent the composite UNIQUE from "swallowing" the FK's
+        // (user_id -> users.id) implicit support index (see class docblock).
         if (! $this->indexExists('auth_groups_users', self::AUTH_GROUPS_USERS_USER_ID_KEY)) {
             $this->forge->addKey('user_id', false, false, self::AUTH_GROUPS_USERS_USER_ID_KEY);
             $this->forge->processIndexes('auth_groups_users');
@@ -72,15 +77,16 @@ class AddUniqueKeyToAuthGroupsAndUsers extends Migration
     }
 
     /**
-     * `up()`'ta eklenen iki UNIQUE index'i kaldırır. Veri kaybı yoktur —
-     * yalnızca constraint kalkar, satırlar dokunulmadan kalır.
+     * Removes the two UNIQUE indexes added in `up()`. There's no data
+     * loss — only the constraint is lifted, rows are left untouched.
      *
-     * `auth_groups_users_user_id_index` KASITLI OLARAK burada drop
-     * EDİLMEZ: `user_id` FK'sinin (bkz. sınıf docblock'u) kalıcı destek
-     * index'idir — kaldırılırsa FK constraint hatası oluşur (composite
-     * UNIQUE zaten kaldırıldığı için tek alternatif odur). Bu, `up()`'tan
-     * önce de FK'nin (örtük biçimde) İHTİYAÇ DUYDUĞU bir yapıdır; bu
-     * migration onu görünür/kalıcı hale getiriyor, veri taşımıyor.
+     * `auth_groups_users_user_id_index` is DELIBERATELY NOT dropped here:
+     * it's the `user_id` FK's (see class docblock) permanent support
+     * index — dropping it would cause an FK constraint error (since the
+     * composite UNIQUE is already dropped, it's the only remaining
+     * alternative). This is a structure the FK (implicitly) NEEDED even
+     * before `up()`; this migration just makes it visible/permanent, it
+     * doesn't move data.
      */
     public function down()
     {
@@ -89,9 +95,9 @@ class AddUniqueKeyToAuthGroupsAndUsers extends Migration
     }
 
     /**
-     * Verilen tabloda, verilen isimde bir index olup olmadığını salt-okunur
-     * `SHOW INDEX` ile kontrol eder (idempotency guard — `up()` iki kez
-     * çağrılırsa "Duplicate key name" hatasına düşmemek için).
+     * Checks read-only, via `SHOW INDEX`, whether an index with the given
+     * name exists on the given table (idempotency guard — to avoid a
+     * "Duplicate key name" error if `up()` is called twice).
      */
     private function indexExists(string $table, string $keyName): bool
     {
@@ -101,11 +107,12 @@ class AddUniqueKeyToAuthGroupsAndUsers extends Migration
     }
 
     /**
-     * `auth_groups.group` üzerinde duplicate değer var mı diye salt-okunur
-     * kontrol yapar.
+     * Checks read-only whether there's a duplicate value on
+     * `auth_groups.group`.
      *
-     * @throws RuntimeException Duplicate `group` değeri bulunursa, hangi
-     *                          değerlerin kaç kez tekrarlandığını mesaja yazar.
+     * @throws RuntimeException If a duplicate `group` value is found, with
+     *                          the message listing which values repeat how
+     *                          many times.
      */
     private function guardNoDuplicateAuthGroups(): void
     {
@@ -132,11 +139,12 @@ class AddUniqueKeyToAuthGroupsAndUsers extends Migration
     }
 
     /**
-     * `auth_groups_users.(user_id,group)` çifti üzerinde duplicate var mı
-     * diye salt-okunur kontrol yapar.
+     * Checks read-only whether there's a duplicate on the
+     * `auth_groups_users.(user_id,group)` pair.
      *
-     * @throws RuntimeException Duplicate (user_id, group) çifti bulunursa,
-     *                          hangi çiftlerin kaç kez tekrarlandığını mesaja yazar.
+     * @throws RuntimeException If a duplicate (user_id, group) pair is
+     *                          found, with the message listing which pairs
+     *                          repeat how many times.
      */
     private function guardNoDuplicateAuthGroupsUsers(): void
     {

@@ -80,6 +80,16 @@ class Backup extends \Modules\Backend\Controllers\BaseController
 
     public function restore()
     {
+        // Third-layer guard, kept even though the route filter and
+        // Modules\Methods permission entry should already gate this action:
+        // if either is misconfigured or bypassed, this is what stops an
+        // authenticated-but-non-superadmin user from restoring an arbitrary
+        // SQL dump (see Modules\MigrationManager\Controllers\MigrationManager
+        // class docblock for the same rationale). Never remove this check.
+        if (!auth()->user()->inGroup('superadmin')) {
+            return $this->failForbidden(lang('Backup.restoreForbidden'));
+        }
+
         $valData = ([
             'backup_file' => ['label' => 'Backup File', 'rules' => 'uploaded[backup_file]|ext_in[backup_file,zip]'],
         ]);
@@ -141,12 +151,12 @@ class Backup extends \Modules\Backend\Controllers\BaseController
     {
         $fileName = basename($fileName);
         if (!preg_match('/^backup_[\d\-_]+\.zip$/', $fileName)) {
-            return redirect()->route('backup')->with('error', 'Geçersiz dosya adı.');
+            return redirect()->route('backup')->with('error', lang('Backup.invalidFileName'));
         }
         $path = WRITEPATH . 'backups/' . $fileName;
         if (file_exists($path)) {
             return $this->response->download($path, null);
         }
-        return redirect()->route('backup')->with('error', 'Dosya bulunamadı.');
+        return redirect()->route('backup')->with('error', lang('Backup.fileNotFound'));
     }
 }

@@ -14,7 +14,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     protected UpdateService $updateService;
 
     /**
-     * @param UpdateService|null $updateService Test enjeksiyonu; null ise üretilir
+     * @param UpdateService|null $updateService Test injection; produced if null
      */
     public function __construct(?UpdateService $updateService = null)
     {
@@ -28,9 +28,9 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         $this->defData['request'] = $this->request;
         $this->defData['mimes'] = Mimes::$mimes;
 
-        // normalize(): stdClass / array / eski düz liste formatlarını kanonik
-        // {all, until, modules: map} yapısına çevirir; view kalan dakika
-        // prefill'i için until değerlerini kullanır.
+        // normalize(): converts stdClass / array / old flat list formats into
+        // the canonical {all, until, modules: map} shape; the view uses the
+        // until values for the remaining-minutes prefill.
         $this->defData['backendMaintenance'] = BackendMaintenance::normalize(
             cache('settings')['backendMaintenance'] ?? null
         );
@@ -399,8 +399,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Lock Screen — Hareketsizlik zaman aşımı ayarlarını kaydeder.
-     * idleTimeoutEnabled (bool) ve idleTimeoutMinutes (int) değerlerini günceller.
+     * Lock Screen — Saves the inactivity timeout settings.
+     * Updates the idleTimeoutEnabled (bool) and idleTimeoutMinutes (int) values.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -410,7 +410,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return $this->failForbidden();
         }
 
-        // idleTimeoutEnabled ayarı (0 veya 1)
+        // idleTimeoutEnabled setting (0 or 1)
         if ($this->request->getPost('type') === 'enabled') {
             $valRules = [
                 'isActive' => ['label' => lang('Backend.status'), 'rules' => 'required|in_list[0,1]'],
@@ -427,7 +427,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             }
         }
 
-        // idleTimeoutMinutes ayarı (1-480 dakika arası)
+        // idleTimeoutMinutes setting (1-480 minutes)
         if ($this->request->getPost('type') === 'minutes') {
             $valRules = [
                 'minutes' => ['label' => lang('Settings.idleTimeoutMinutes'), 'rules' => 'required|is_natural_no_zero|less_than_equal_to[480]'],
@@ -448,9 +448,10 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Oturum konum takibi (yerel GeoIP lookup) ayarını günceller.
-     * Auth.geoLookupEnabled (bool) — default kapalı; açılırken MMDB dosyası
-     * eksikse yanıtta dbMissing=true dönerek UI'ın uyarı göstermesini sağlar.
+     * Updates the session location tracking (local GeoIP lookup) setting.
+     * Auth.geoLookupEnabled (bool) — off by default; when enabling it, if the
+     * MMDB file is missing, the response returns dbMissing=true so the UI can
+     * show a warning.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -482,10 +483,10 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Backend bakım modunu kaydeder (tüm backend + tahmini süre (dakika) +
-     * modül bazlı bakım map'i: modulAdi => dakika).
-     * `App.backendMaintenance = {all, until, modules: map}` yazar
-     * (BackendMaintenanceFilter okur).
+     * Saves the backend maintenance mode (full backend + estimated duration
+     * (minutes) + a per-module maintenance map: moduleName => minutes).
+     * Writes `App.backendMaintenance = {all, until, modules: map}`
+     * (read by BackendMaintenanceFilter).
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -507,7 +508,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             $all = (bool) $this->request->getPost('all');
             $minutes = (int) $this->request->getPost('minutes');
 
-            // modules map'i yalnızca gerçekten var olan modüllere göre allowlist'lenir.
+            // The modules map is allowlisted only against modules that actually exist.
             $allowed = $this->backendMaintenanceModules();
             $posted = (array) ($this->request->getPost('modules') ?? []);
             $modules = [];
@@ -517,7 +518,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                     continue;
                 }
                 $moduleMinutes = (int) $moduleMinutes;
-                // dakika > 0 ise bitiş timestamp'i, değilse süresiz (null)
+                // end timestamp if minutes > 0, otherwise indefinite (null)
                 $modules[$name] = $moduleMinutes > 0 ? time() + ($moduleMinutes * 60) : null;
             }
 
@@ -541,15 +542,16 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Hedefli önbellek temizleme (AJAX). CacheRegistry allowlist'indeki mantıksal
-     * id'leri sunucuda sabit anahtar/pattern'lere çözer ve `cache()->delete()` /
-     * `cache()->deleteMatching()` uygular; `all=1` gelirse tüm clearable id'leri
-     * temizler.
+     * Targeted cache clearing (AJAX). Resolves logical ids from the
+     * CacheRegistry allowlist into fixed keys/patterns on the server and
+     * applies `cache()->delete()` / `cache()->deleteMatching()`; if `all=1`
+     * is passed, clears all clearable ids.
      *
-     * Shield dinamik RBAC config'i (`shield_auth_dynamic_config`) protected'tır ve
-     * hiçbir yoldan silinmez; gerçek `clean()` / `cache:clear` ASLA çağrılmaz.
-     * Glob pattern'ler yalnızca registry'den üretilir, client'tan alınmaz;
-     * allowlist dışı id'ler sessizce düşürülür.
+     * Shield's dynamic RBAC config (`shield_auth_dynamic_config`) is
+     * protected and is never deleted by any path; the real `clean()` /
+     * `cache:clear` is NEVER called. Glob patterns are only produced from
+     * the registry, never taken from the client; ids outside the allowlist
+     * are silently dropped.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -595,8 +597,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Bakıma alınabilecek modüllerin (backend sayfası olan, altyapı hariç)
-     * distinct listesini döndürür. 1 saat cache'lenir.
+     * Returns a distinct list of modules eligible for maintenance (those
+     * with a backend page, excluding infrastructure). Cached for 1 hour.
      *
      * @return string[]
      */
@@ -624,7 +626,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return $this->response->setStatusCode(400)->setBody(lang('Settings.newVersionRequired'));
         }
 
-        // Sürüm dizesi zip adına ve indirme yoluna giriyor; autoUpdate() ile aynı kapı.
+        // The version string feeds into the zip name and download path; same gate as autoUpdate().
         if (!$this->validateVersionString($latestVersion)) {
             return $this->response->setStatusCode(422)->setBody(lang('Settings.invalidVersionFormat'));
         }
@@ -647,7 +649,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             $patchZip->addFromString($path, $content);
         }
 
-        // Removed files listesi ekle (indirilen dosyalarla aynı compare sonucundan)
+        // Add the removed files list (from the same compare result as the downloaded files)
         $files = $result['all_files'] ?? [];
         $removed = [];
         foreach ($files as $f) {
@@ -682,13 +684,13 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return $this->respond(['result' => false, 'message' => lang('Settings.invalidVersionFormat')], 422);
         }
 
-        // 1. İmzalı manifest kapısı + dosyaları çek (kapı kapalıysa hiçbir dosya inmez)
+        // 1. Signed manifest gate + fetch files (if the gate is closed, no file is downloaded)
         $downloadResult = $this->updateService->downloadPatchRaw($currentVersion, $latestVersion);
         if ($downloadResult['result'] === false) {
             return $this->respond($downloadResult, 500);
         }
 
-        // 2. Uygula (removed listesi, indirilen dosyalarla aynı compare sonucundan)
+        // 2. Apply (removed list, from the same compare result as the downloaded files)
         $allFiles = $downloadResult['all_files'] ?? [];
         $applyResult = $this->updateService->applyUpdate(
             $latestVersion,
@@ -711,7 +713,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Yedekleri listeler (AJAX).
+     * Lists backups (AJAX).
      */
     public function listBackups()
     {
@@ -723,7 +725,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Manuel rollback işlemi (AJAX).
+     * Manual rollback operation (AJAX).
      */
     public function rollbackUpdate()
     {
@@ -735,8 +737,8 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return $this->respond(['result' => false, 'message' => lang('Settings.backupNameRequired')], 400);
         }
 
-        // Yedek adı doğrudan bir yola giriyordu; çözümleme UpdateService'te,
-        // gerçek yedek listesine karşı yapılır (bkz. UpdateRollbackPathTest).
+        // The backup name used to feed directly into a path; resolution now
+        // happens in UpdateService, against the real backup list (see UpdateRollbackPathTest).
         $backupDir = $this->updateService->resolveBackupDir($backupName);
         if ($backupDir === null) {
             log_message('warning', 'Rollback rejected an unknown backup name: ' . $backupName);
@@ -744,7 +746,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return $this->respond(['result' => false, 'message' => lang('Settings.invalidBackupName')], 404);
         }
 
-        // Tüm dosyaları listeleyelim (basitleştirilmiş: backup içindeki her şeyi geri atıyor)
+        // List all files (simplified: restores everything inside the backup)
         $files = $this->getRecursiveFiles($backupDir);
         $result = $this->updateService->rollback($backupDir, $files);
 
@@ -781,10 +783,10 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Güvenilen release imzalama anahtarlarını görünüm için özetler.
+     * Summarizes the trusted release signing keys for the view.
      *
-     * Parmak izi config'te saklanan değerden değil, public key'den yeniden
-     * hesaplanır; böylece elle düzenlenmiş bir fingerprint alanı yanıltamaz.
+     * The fingerprint is recomputed from the public key, not from the value
+     * stored in config; this way a manually edited fingerprint field cannot mislead.
      *
      * @return list<array{key_id: string, status: string, fingerprint: string, short: string}>
      */

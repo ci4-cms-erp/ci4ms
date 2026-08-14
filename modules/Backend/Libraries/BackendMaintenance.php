@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Modules\Backend\Libraries;
 
 /**
- * Backend bakım modunun saf (DB/HTTP bağımsız) karar mantığı.
- * Filtre ve Settings controller'ı bu sınıfı kullanır; bu sayede
- * çekirdek mantık birim testlerle izole edilebilir.
+ * Pure (DB/HTTP independent) decision logic for the Backend maintenance mode.
+ * Used by the filter and the Settings controller; this lets the
+ * core logic be isolated with unit tests.
  */
 class BackendMaintenance
 {
-    /** Bakım listesinde gösterilmeyen / kilitlenemeyen altyapı modülleri. */
+    /** Infrastructure modules not shown in / not lockable from the maintenance list. */
     public const EXCLUDED = ['Auth', 'Backend', 'Install'];
 
     /**
@@ -28,7 +28,7 @@ class BackendMaintenance
 
     /**
      * `-Modules-Blog-Controllers-Blog` -> `Blog`
-     * (auth_permissions_pages.className formatı)
+     * (auth_permissions_pages.className format)
      */
     public static function moduleFromDbClassName(string $dbClassName): ?string
     {
@@ -40,20 +40,20 @@ class BackendMaintenance
     }
 
     /**
-     * Ayar deposundan / cache'ten gelen backendMaintenance değerini kanonik
-     * yapıya çevirir: `{all: bool, until: ?int, modules: array<modulAdi, ?int>}`.
+     * Converts the backendMaintenance value coming from the settings store /
+     * cache into the canonical structure: `{all: bool, until: ?int, modules: array<moduleName, ?int>}`.
      *
-     * - stdClass (settings cache) ve associative array girişlerini kabul eder.
-     * - Geriye dönük uyumluluk: eski düz liste formatı (`["Blog"]`)
-     *   `["Blog" => null]` map'ine dönüştürülür.
-     * - `until` değerleri unix timestamp'tir; boş/0/negatif değerler null olur.
+     * - Accepts stdClass (settings cache) and associative array inputs.
+     * - Backward compatibility: the old flat-list format (`["Blog"]`)
+     *   is converted to the `["Blog" => null]` map.
+     * - `until` values are unix timestamps; empty/0/negative values become null.
      *
      * @return array{all: bool, until: ?int, modules: array<string, ?int>}
      */
     public static function normalize(mixed $bmSetting): array
     {
         if ($bmSetting instanceof \stdClass) {
-            // İç içe stdClass'ları da (modules map'i) diziye çevir.
+            // Also convert nested stdClass instances (the modules map) into arrays.
             $bmSetting = json_decode((string) json_encode($bmSetting), true);
         }
         if (! is_array($bmSetting)) {
@@ -63,7 +63,7 @@ class BackendMaintenance
         $modules = [];
         foreach ((array) ($bmSetting['modules'] ?? []) as $key => $value) {
             if (is_int($key)) {
-                // Eski format: ["Blog"] -> ["Blog" => null]
+                // Old format: ["Blog"] -> ["Blog" => null]
                 $modules[(string) $value] = null;
                 continue;
             }
@@ -77,7 +77,7 @@ class BackendMaintenance
         ];
     }
 
-    /** Boş/0/negatif until değerlerini null'a, gerisini int'e çevirir. */
+    /** Converts empty/0/negative until values to null, the rest to int. */
     private static function normalizeUntil(mixed $until): ?int
     {
         if ($until === null || $until === '') {
@@ -89,8 +89,8 @@ class BackendMaintenance
     }
 
     /**
-     * `modules` hem eski düz liste (`["Blog"]`) hem yeni map
-     * (`["Blog" => ?until]`) formatını kabul eder.
+     * `modules` accepts both the old flat-list (`["Blog"]`) and the new map
+     * (`["Blog" => ?until]`) format.
      *
      * @param array{all?: bool, modules?: array<int|string, int|string|null>} $maintenance
      */
@@ -108,20 +108,20 @@ class BackendMaintenance
         }
         $modules = (array) ($maintenance['modules'] ?? []);
         if (array_is_list($modules)) {
-            // Eski format: düz modül adı listesi.
+            // Old format: flat list of module names.
             return in_array($module, $modules, true);
         }
-        // Yeni format: map (modulAdi => ?until); varlık kontrolü yeterli.
+        // New format: map (moduleName => ?until); an existence check is enough.
         return array_key_exists($module, $modules);
     }
 
     /**
-     * auth_permissions_pages.className formatındaki (`-Modules-Blog-Controllers-Blog`)
-     * bir kaydın modülünün bakım haritasında olup olmadığını söyler.
-     * Modül adı türetilemiyorsa (App controller'ları vb.) false döner.
-     * Sidebar'daki bakım rozetinin saf karar mantığıdır.
+     * Tells whether the module of a record in the auth_permissions_pages.className
+     * format (`-Modules-Blog-Controllers-Blog`) is in the maintenance map.
+     * Returns false if the module name cannot be derived (App controllers, etc.).
+     * This is the pure decision logic for the maintenance badge in the sidebar.
      *
-     * @param array{modules?: array<string, int|null>} $maintenance normalize() çıktısı
+     * @param array{modules?: array<string, int|null>} $maintenance output of normalize()
      */
     public static function moduleInMaintenance(array $maintenance, string $dbClassName): bool
     {
@@ -134,9 +134,9 @@ class BackendMaintenance
     }
 
     /**
-     * Engelleyen kapsamın bitiş timestamp'ini döner: modül bakımdaysa modülün
-     * kendi `until` değeri (null olabilir), değilse `all=true` iken global
-     * `until`, hiçbiri değilse null.
+     * Returns the blocking scope's end timestamp: the module's own `until`
+     * value (may be null) if the module is under maintenance, otherwise the
+     * global `until` while `all=true`, otherwise null.
      *
      * @param array{all?: bool, until?: int|null, modules?: array<string, int|null>} $maintenance
      */
@@ -154,8 +154,9 @@ class BackendMaintenance
     }
 
     /**
-     * Bakım bitişine kalan saniye. `until` (unix ts) yoksa/0/negatifse null,
-     * geçmişse 0, gelecekse kalan saniye döner.
+     * Seconds remaining until maintenance ends. Returns null if `until`
+     * (unix ts) is missing/0/negative, 0 if it's in the past, or the
+     * remaining seconds if it's in the future.
      *
      * @param array{until?: int|string|null} $maintenance
      */
@@ -176,8 +177,8 @@ class BackendMaintenance
     }
 
     /**
-     * auth_permissions_pages className'lerinden, bakıma alınabilecek
-     * distinct + sıralı modül adlarını üretir (altyapı modülleri hariç).
+     * Produces distinct, sorted module names eligible for maintenance mode
+     * from auth_permissions_pages className values (excluding infrastructure modules).
      *
      * @param string[] $dbClassNames
      * @param string[] $excluded

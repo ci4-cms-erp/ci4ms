@@ -24,7 +24,7 @@ class Forms extends \App\Controllers\BaseController
             $email->setMessage($this->request->getPost('message'));
 
             $email->send();
-            return redirect()->back()->with('message', 'Mesajınız tarafımıza iletildi. En kısa zamanda geri dönüş sağlanacaktır');
+            return redirect()->back()->with('message', lang('Frontend.contact_form_success'));
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }

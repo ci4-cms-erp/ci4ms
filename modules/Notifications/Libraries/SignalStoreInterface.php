@@ -5,30 +5,30 @@ declare(strict_types=1);
 namespace Modules\Notifications\Libraries;
 
 /**
- * Anlık-sinyal deposu sözleşmesi (SSE nudge sayaçları için dar arayüz).
+ * The realtime-signal store contract (a narrow interface for SSE nudge counters).
  *
- * RealtimeSignal (final) bunu uygular; RealtimeChannel ve SSE stream() bu tipe
- * bağımlıdır, böylece testler canlı Redis olmadan bir test double enjekte edebilir
- * (Services::signalStore() seam'i). Uygulamalar ASLA istisna sızdırmaz — bump false,
- * read baseline-0 döner.
+ * RealtimeSignal (final) implements this; RealtimeChannel and the SSE
+ * stream() depend on this type, so tests can inject a test double without
+ * live Redis (the Services::signalStore() seam). Implementations NEVER leak
+ * an exception — bump returns false, read returns baseline-0.
  */
 interface SignalStoreInterface
 {
     /**
-     * Bir kanalın sinyal sayacını artırır (best-effort).
+     * Increments a channel's signal counter (best-effort).
      *
-     * @param string $channel Notifier::topicFor() çıktısı olan kanal adı.
+     * @param string $channel Channel name that is the output of Notifier::topicFor().
      *
-     * @return bool Sayaç artırılabildiyse true; aksi halde false.
+     * @return bool True if the counter could be incremented; false otherwise.
      */
     public function bump(string $channel): bool;
 
     /**
-     * Verilen kanalların güncel sinyal sayaçlarını okur (yoksa/erişilemezse 0).
+     * Reads the current signal counters for the given channels (0 if missing/unreachable).
      *
-     * @param list<string> $channels Notifier::topicsFor() ile türetilen kanal adları.
+     * @param list<string> $channels Channel names derived via Notifier::topicsFor().
      *
-     * @return array<string, int> channel => güncel sayaç (yoksa 0).
+     * @return array<string, int> channel => current counter (0 if missing).
      */
     public function read(array $channels): array;
 }

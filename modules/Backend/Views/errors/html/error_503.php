@@ -1,7 +1,7 @@
 <?php
 
-// retryAfter: BackendMaintenanceFilter'dan gelir (gerçek kalan saniye).
-// Yoksa / 0 ise geri sayım gösterilmez ve sayfa bugünkü gibi kalır.
+// retryAfter: comes from BackendMaintenanceFilter (actual remaining seconds).
+// If missing / 0, the countdown is not shown and the page stays as-is.
 $retryAfter = (isset($retryAfter) && (int) $retryAfter > 0) ? (int) $retryAfter : null;
 
 ob_start();

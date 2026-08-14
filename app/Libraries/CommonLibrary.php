@@ -61,7 +61,7 @@ class CommonLibrary
     }
 
     /**
-     * TODO: çoklu veri işlenmesi için virgül kullanılır hale getirilecek.(,)
+     * TODO: will be changed to use a comma for multi-value processing.(,)
      * Undocumented function
      *
      * @param string $string
@@ -69,10 +69,10 @@ class CommonLibrary
      */
     public function parseInTextFunctions(string $string)
     {
-        // 1. Yeni FormBuilder parser: {{form=iletisim-form}}
+        // 1. New FormBuilder parser: {{form=iletisim-form}}
         if (preg_match_all('/\{\{form=([a-zA-Z0-9_-]+)\}\}/', $string, $matches)) {
             foreach ($matches[1] as $index => $formSlug) {
-                // Eğer modül aktif ve FormRenderer sınıfı varsa form HTML'ini al
+                // If the module is active and the FormRenderer class exists, get the form HTML
                 if (class_exists('\Modules\FormBuilder\Libraries\FormRenderer')) {
                     $formHtml = \Modules\FormBuilder\Libraries\FormRenderer::render($formSlug);
                     $string = str_replace($matches[0][$index], $formHtml, $string);
@@ -82,7 +82,7 @@ class CommonLibrary
             }
         }
 
-        // 2. Mevcut parse in text fonksiyonları
+        // 2. Existing parse-in-text functions
         $functions = $this->findFunction($string, '{', '/}');
         if (strpos($string, '[/')) {
             $val = $this->findFunction($string, '[/', '/]');

@@ -9,16 +9,17 @@ use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
 /**
- * Eski, okunmuş bildirimleri budayan bakım komutu.
+ * Maintenance command that prunes old, read notifications.
  *
- * Aday: `created_at` verilen gün eşiğinden eski VE en az bir `notification_reads`
- * satırı olan (okunmuş proxy) bildirimler. `--force` VERİLMEDİKÇE hiçbir şey silmez,
- * yalnız aday sayısını basar (dry-run). Silme, FK CASCADE ile ilgili okundu
- * kayıtlarını da temizler. Bu komut Events/cron'a BAĞLANMAZ; elle çalıştırılır.
+ * Candidate: notifications older than the given `created_at` day threshold AND
+ * having at least one `notification_reads` row (read proxy). Deletes nothing
+ * UNLESS `--force` is given, otherwise only prints the candidate count (dry-run).
+ * Deletion also clears the related read records via FK CASCADE. This command is
+ * NOT wired to Events/cron; it's run manually.
  */
 class NotificationsPurge extends BaseCommand
 {
-    /** --days verilmezse kullanılan varsayılan eşik (gün). */
+    /** Default threshold (days) used when --days is not given. */
     private const DEFAULT_DAYS = 90;
 
     protected $group       = 'Notifications';
@@ -32,9 +33,9 @@ class NotificationsPurge extends BaseCommand
     ];
 
     /**
-     * Aday okunmuş bildirimleri raporlar (dry-run) veya --force ile siler.
+     * Reports candidate read notifications (dry-run) or deletes them with --force.
      *
-     * @param array<int|string, string|null> $params CLI argümanları (kullanılmaz).
+     * @param array<int|string, string|null> $params CLI arguments (unused).
      */
     public function run(array $params): void
     {
@@ -53,9 +54,11 @@ class NotificationsPurge extends BaseCommand
 
         $threshold = date('Y-m-d H:i:s', strtotime("-{$days} days"));
 
-        // Okunmuş proxy: en az bir notification_reads satırı olan, eşikten eski bildirimler.
-        // TODO: "tam-okundu" (tüm ilgili kullanıcılarca okunmuş) hesabı relevans genişlemesi
-        //       gerektirdiğinden ileriye bırakıldı; şimdilik "en az bir okundu" ölçütü kullanılıyor.
+        // Read proxy: notifications older than the threshold that have at least one
+        // notification_reads row.
+        // TODO: a "fully read" (read by all relevant users) calculation was deferred
+        //       because it requires expanding relevance; for now the "at least one
+        //       read" criterion is used.
         $ids = array_map(
             static fn ($row) => (int) $row->id,
             $model->db->table('notifications n')
@@ -82,8 +85,9 @@ class NotificationsPurge extends BaseCommand
             return;
         }
 
-        // CommonModel::remove() IN ifadesi üretemediğinden tek sorguluk toplu silme için
-        // ham query builder kullanılır (N+1'den kaçınmak için). FK CASCADE okundu kayıtlarını temizler.
+        // Raw query builder is used for a single-query bulk delete (to avoid N+1),
+        // since CommonModel::remove() can't produce an IN clause. FK CASCADE clears
+        // the read records.
         $model->db->table('notifications')->whereIn('id', $ids)->delete();
 
         CLI::write(CLI::color("{$count} okunmuş bildirim silindi (FK CASCADE ile okundu kayıtları temizlendi).", 'green'));

@@ -10,86 +10,90 @@ use Modules\Notifications\Libraries\NotificationMessage;
 use Modules\Notifications\Libraries\Notifier;
 
 /**
- * Bildirim oluşturucu (composer) — yöneticinin elle bildirim gönderdiği backend controller.
+ * Notification composer — the backend controller the admin uses to manually send notifications.
  *
- * Uçlar (bkz. Config/Routes.php):
- *   GET  backend/notifications/compose         index()   — gönderim formu (role: read)
- *   GET  backend/notifications/compose/users   users()   — AJAX: select2 kullanıcı kaynağı (role: read)
- *   POST backend/notifications/compose/preview preview() — AJAX: alıcı sayısı önizlemesi (role: create)
- *   POST backend/notifications/compose         send()    — yayını gönderir (role: create)
+ * Endpoints (see Config/Routes.php):
+ *   GET  backend/notifications/compose         index()   — send form (role: read)
+ *   GET  backend/notifications/compose/users   users()   — AJAX: select2 user source (role: read)
+ *   POST backend/notifications/compose/preview preview() — AJAX: recipient count preview (role: create)
+ *   POST backend/notifications/compose         send()    — sends the broadcast (role: create)
  *
- * ÖNİZLEME NEDEN 'create': preview() bir sayı döndürür ama o sayı bir ÜYELİK/VARLIK
- * sızıntısıdır — `groups[]=superadmin` seçimine bir kimlik ekleyip sayının değişip
- * değişmediğine bakan biri, o kimliğin superadmin olup olmadığını (ve genel olarak var
- * olup olmadığını) öğrenir. 'read' izni üst çubuk çanı için HERKESE verildiğinden, bu
- * uç gönderim yetkisiyle aynı kovaya alınmıştır: önizleyemeyen zaten gönderemez.
+ * WHY PREVIEW IS 'create': preview() returns a count, but that count is a
+ * MEMBERSHIP/EXISTENCE leak — someone who adds an identity to a `groups[]=superadmin`
+ * selection and watches whether the count changes learns whether that identity is a
+ * superadmin (and whether it exists at all). Since the 'read' permission is granted to
+ * EVERYONE for the top bar bell, this endpoint is bucketed with the send permission:
+ * whoever can't preview can't send either.
  *
- * GÜVENLİK — bu yetki-hassas bir özelliktir, aşağıdakiler sözleşmedir:
- *   1. GÖNDEREN KİMLİĞİ: daima `auth()->id()`. İstemcinin POST'ladığı bir `created_by`
- *      ya da `user_id` alanı HİÇBİR yerde okunmaz, dolayısıyla etkisizdir.
- *   2. MASS-ASSIGNMENT YOK: POST dizisi hiçbir yere spread edilmez; her alan adıyla
- *      TEK TEK okunur ({@see payload()}) ve doğrulama da o sunucu-kurulu dizi üzerinde
- *      ({@see \CodeIgniter\Controller::validateData()}) yapılır. Böylece formda hiç
- *      olmayan bir anahtar ne doğrulamaya ne de yayına girebilir.
- *   3. GRUP WHITELIST'İ: kabul edilen grup adları Shield'in `AuthGroups` yapılandırmasının
- *      anahtarlarından gelir ({@see allowedGroups()}); listede olmayan bir ad SESSİZCE
- *      YUTULMAZ, doğrulama hatası olarak geri döner.
- *   4. KULLANICI KİMLİKLERİ: `users` tablosuna karşı TEK sorguda doğrulanır
- *      ({@see existingUserIds()}); ADRESLENEBİLİR olmayan (var olmayan, soft-delete
- *      edilmiş ya da banlı) bir kimlik isteği reddeder. Döngü içinde sorgu YOKTUR.
- *      Hedef sayısı ayrıca {@see NotificationsConfig::TARGETS_MAX} ile sınırlıdır.
- *   5. GÖNDERİM YOLU: yalnız `service('notifier')` builder'ı. `notifications` tablosuna
- *      doğrudan INSERT YOKTUR; temizleme (strip_tags, URL doğrulama, severity ve hariç
- *      tutma normalizasyonu) TEK yerde, {@see NotificationMessage} yapıcısında olur ve
- *      burada TEKRARLANMAZ.
- *   6. CSRF: global koruma açıktır; bu uçlar `NotificationsConfig::$csrfExcept`'e
- *      EKLENMEZ — AJAX POST'lar token'ı gövdede taşır (bkz. Views/compose.php).
- *   7. YETKİ: rotalar `backendGuard` + `role` bayrağı arkasındadır (fail-closed);
- *      izin kaydı Methods taramasıyla düşer.
+ * SECURITY — this is a permission-sensitive feature, the following are the contract:
+ *   1. SENDER IDENTITY: always `auth()->id()`. A `created_by` or `user_id` field posted
+ *      by the client is NEVER read anywhere, so it has no effect.
+ *   2. NO MASS-ASSIGNMENT: the POST array is never spread anywhere; every field is read
+ *      ONE BY ONE, by name ({@see payload()}), and validation is also performed on that
+ *      server-built array ({@see \CodeIgniter\Controller::validateData()}). This way a
+ *      key that isn't in the form can enter neither validation nor the broadcast.
+ *   3. GROUP WHITELIST: accepted group names come from the keys of Shield's `AuthGroups`
+ *      configuration ({@see allowedGroups()}); a name not in the list is NOT silently
+ *      swallowed, it comes back as a validation error.
+ *   4. USER IDENTITIES: validated against the `users` table in a SINGLE query
+ *      ({@see existingUserIds()}); rejects the request for any identity that is not
+ *      ADDRESSABLE (nonexistent, soft-deleted, or banned). There is NO query inside a
+ *      loop. Target count is also bounded by {@see NotificationsConfig::TARGETS_MAX}.
+ *   5. SEND PATH: only the `service('notifier')` builder. There is NO direct INSERT
+ *      into the `notifications` table; sanitization (strip_tags, URL validation,
+ *      severity and exclude normalization) happens in ONE place, the
+ *      {@see NotificationMessage} constructor, and is NOT repeated here.
+ *   6. CSRF: global protection is on; these endpoints are NOT added to
+ *      `NotificationsConfig::$csrfExcept` — AJAX POSTs carry the token in the body
+ *      (see Views/compose.php).
+ *   7. AUTHORIZATION: routes sit behind `backendGuard` + the `role` flag (fail-closed);
+ *      the permission record is dropped by the Methods scan.
  *
- * Bildirim TİPİ istemciden ALINMAZ: composer'dan çıkan her yayın {@see TYPE} ile
- * damgalanır, böylece tercih/susturma whitelist'i sabit bir slug üzerinden çalışır ve
- * istemci kendi tipini uydurup mevcut susturmaları atlatamaz.
+ * The notification TYPE is NEVER TAKEN from the client: every broadcast coming out of
+ * the composer is stamped with {@see TYPE}, so the preference/mute whitelist operates
+ * on a fixed slug and the client can't invent its own type to bypass existing mutes.
  */
 class ComposerController extends \Modules\Backend\Controllers\BaseController
 {
     /**
-     * Composer'dan çıkan yayınların sabit tipi.
+     * Fixed type of broadcasts coming out of the composer.
      *
-     * İstemciden ALINMAZ: serbest tip kabul edilseydi gönderen, kullanıcıların MEVCUT
-     * susturmalarını her gönderimde yeni bir slug uydurarak atlatabilir ve tip uzayını
-     * sınırsızca kirletebilirdi. Susturma whitelist'i
-     * ({@see NotificationsConfig::$preferenceTypes}) sabit slug'lar üzerinde çalışır.
+     * NEVER TAKEN from the client: if a free-form type were accepted, the sender could
+     * dodge users' EXISTING mutes by inventing a new slug on every send, polluting the
+     * type space without bound. The mute whitelist
+     * ({@see NotificationsConfig::$preferenceTypes}) operates on fixed slugs.
      *
-     * DÜRÜSTLÜK NOTU: bu slug şu anda o whitelist'te DEĞİLDİR, yani composer çıktısı
-     * tercih ekranından susturulamaz. Bunun bir ürün kararı olarak gözden geçirilmesi
-     * gerekir (yönetici duyurusu susturulabilmeli mi?); teknik olarak tek gereken
-     * slug'ı `$preferenceTypes`'a ve etiketini Language/{en,tr}'ye eklemektir.
+     * HONESTY NOTE: this slug is currently NOT in that whitelist, meaning composer
+     * output cannot be muted from the preferences screen. This needs to be revisited as
+     * a product decision (should an admin announcement be mutable?); technically all
+     * that's needed is adding the slug to `$preferenceTypes` and its label to
+     * Language/{en,tr}.
      */
     private const TYPE = 'announcement';
 
-    /** Select2 uzak kaynağının tek istekte döndürdüğü en fazla kullanıcı sayısı. */
+    /** Max number of users the select2 remote source returns in a single request. */
     private const USER_PICKER_LIMIT = 20;
 
     /**
-     * Kullanıcı arama teriminin en fazla karakter uzunluğu.
+     * Max character length of the user search term.
      *
-     * Aranan en uzun kolon 255 karakterdir (`firstname`/`surname`); daha uzun bir terim
-     * hiçbir satıra uyamaz, yalnız her tuş vuruşunda gereksiz büyük bir sorgu bağlar.
+     * The longest searched column is 255 characters (`firstname`/`surname`); a longer
+     * term can never match any row, it would just bind an unnecessarily large query on
+     * every keystroke.
      */
     private const USER_PICKER_TERM_MAX = 255;
 
-    /** Hedef kipi: tüm kullanıcılar (tek 'broadcast' satırı). */
+    /** Target mode: all users (a single 'broadcast' row). */
     private const MODE_BROADCAST = 'broadcast';
 
-    /** Hedef kipi: seçili kullanıcılar ve/veya gruplar. */
+    /** Target mode: selected users and/or groups. */
     private const MODE_TARGETED = 'targeted';
 
     /**
-     * Önem seviyesi slug'ı => görünen etiketin lang anahtarı.
+     * Severity slug => lang key of the displayed label.
      *
-     * Hangi seviyelerin VAR OLDUĞUNUN tek kaynağı {@see NotificationMessage::SEVERITIES};
-     * bu dizi yalnız onlara etiket takar ({@see severityChoices()}).
+     * The single source of which severities EXIST is {@see NotificationMessage::SEVERITIES};
+     * this array only attaches labels to them ({@see severityChoices()}).
      *
      * @var array<string, string>
      */
@@ -100,12 +104,13 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     ];
 
     /**
-     * Gönderim formunu render eder (kullanıcı ve grup kaynakları sunucudan gelir).
+     * Renders the send form (user and group sources come from the server).
      *
-     * Grup listesi doğrudan whitelist'in kendisidir; kullanıcı listesi büyüyebileceği
-     * için forma gömülmez, {@see users()} uzak kaynağından sayfa sayfa çekilir.
+     * The group list is directly the whitelist itself; the user list isn't embedded in
+     * the form since it can grow large, it's fetched page by page from the {@see users()}
+     * remote source.
      *
-     * @return string Render edilmiş composer görünümü.
+     * @return string The rendered composer view.
      */
     public function index(): string
     {
@@ -120,19 +125,18 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Select2 uzak kaynağı: arama terimiyle filtrelenmiş kullanıcı listesi.
+     * Select2 remote source: user list filtered by the search term.
      *
-     * Yalnız AJAX kabul eder ve TEK sorgu açar; sonuç {@see USER_PICKER_LIMIT} ile
-     * sınırlıdır, yani kullanıcı tablosunun tamamı hiçbir zaman istemciye dökülmez.
-     * Yalnız ADRESLENEBİLİR hesaplar görünür ({@see Notifier::scopeAddressableUsers()}):
-     * soft-delete edilmiş ve banlı kimlikler operatöre sızmaz.
+     * Accepts AJAX only and opens a SINGLE query; the result is bounded by
+     * {@see USER_PICKER_LIMIT}, meaning the entire user table is never dumped to the
+     * client. Only ADDRESSABLE accounts are visible ({@see Notifier::scopeAddressableUsers()}):
+     * soft-deleted and banned identities never leak to the operator.
      *
-     * ARAMA TERİMİ: CI4'ün `like()` kuralı değeri BİND eder (SQL enjeksiyonu yoktur) ama
-     * LIKE joker'lerine DOKUNMAZ — `%`/`_` kalıp olarak çalışmaya devam eder. Bu, tek
-     * başına bir enjeksiyon değil bir SAYIM (enumeration) yükselticidir: `a%`, `_a%` gibi
-     * kalıplarla {@see USER_PICKER_LIMIT}'lik pencere kaydırılıp kullanıcı listesi
-     * haritalanabilir. Bu yüzden terim {@see searchTerm()} içinde nötrlenir ve
-     * uzunluğu sınırlanır.
+     * SEARCH TERM: CI4's `like()` rule BINDS the value (no SQL injection risk), but it
+     * does NOT TOUCH LIKE wildcards — `%`/`_` continue to work as patterns. On its own
+     * this isn't an injection but an ENUMERATION amplifier: patterns like `a%`, `_a%`
+     * can slide the {@see USER_PICKER_LIMIT} window and map out the user list. That's
+     * why the term is neutralized in {@see searchTerm()} and its length is capped.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface `{status, results: [{id, text}]}`.
      */
@@ -172,11 +176,12 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Gönderim öncesi alıcı sayısı önizlemesi (hiçbir şey yazmaz).
+     * Recipient count preview before sending (writes nothing).
      *
-     * Sayım {@see Notifier::recipientCount()}'a delege edilir — grup sorgusunun tek
-     * sahibi odur. Geçersiz seçimler burada HATA vermez, yalnız sayıma girmez:
-     * önizleme bir doğrulama ucu değildir, asıl karar {@see send()}'de verilir.
+     * Counting is delegated to {@see Notifier::recipientCount()} — it's the sole owner
+     * of the group query. Invalid selections do NOT produce an ERROR here, they simply
+     * aren't counted: preview is not a validation endpoint, the real decision is made
+     * in {@see send()}.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface `{status, count}`.
      */
@@ -201,17 +206,18 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Yayını gönderir: doğrular, hedefi sunucuda kurar ve builder'a devreder.
+     * Sends the broadcast: validates, builds the target on the server, and hands off to the builder.
      *
-     * Hedef seçimleri KİPTEN BAĞIMSIZ doğrulanır (broadcast'te kullanılmasalar bile):
-     * geçersiz bir seçimi "nasılsa okunmuyor" diye geçirmek, kipin sonradan
-     * değişebildiği bir formda sessiz bir kabul yüzeyi bırakırdı.
+     * Target selections are validated REGARDLESS OF MODE (even if unused in broadcast):
+     * letting an invalid selection through with "it isn't read anyway" would leave a
+     * silent acceptance surface in a form where the mode can change afterwards.
      *
-     * BAŞARI RAPORU teslimin GERÇEĞİNE dayanır ({@see DispatchOutcome}): "gönderildi"
-     * yalnız kalıcı satırların TAMAMI yazıldığında söylenir, kısmi teslim ayrı ve açık
-     * bir hata olarak bildirilir. Kalıcı yazım güvenlik gerekçesiyle reddedildiğinde
-     * (uygulanamayan hariç tutma) yöneticiye "gönderildi" demek, dışlanan kullanıcıların
-     * korunduğu sanılırken hiç kimseye bildirim gitmemesi demekti.
+     * The SUCCESS REPORT is based on the ACTUAL delivery outcome ({@see DispatchOutcome}):
+     * "sent" is only said when ALL of the persistent rows were written; a partial
+     * delivery is reported as a separate, explicit error. When a persistent write is
+     * rejected for a security reason (an exclusion that couldn't be applied), telling
+     * the admin "sent" would mean the excluded users were believed to be protected while
+     * nobody received the notification at all.
      *
      * @return \CodeIgniter\HTTP\RedirectResponse
      */
@@ -231,8 +237,8 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
         $userIds    = $this->postedIds('users');
         $excludeIds = $this->postedIds('exclude_users');
 
-        // Tavan kontrolü var olma kontrolünden ÖNCE: aksi halde bin kimlikli bir gövde,
-        // reddedileceği halde önce bin öğelik bir IN sorgusu açtırırdı.
+        // Cap check BEFORE the existence check: otherwise a thousand-identity body,
+        // even though it would be rejected, would first open a thousand-item IN query.
         if (count($userIds) + count($groups) > NotificationsConfig::TARGETS_MAX) {
             return $this->rejected([
                 'users' => self::text('Notifications.composeTooManyTargets', [NotificationsConfig::TARGETS_MAX]),
@@ -271,7 +277,7 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Paylaşımlı Notifier servis örneği.
+     * Shared Notifier service instance.
      *
      * @return Notifier
      */
@@ -284,11 +290,11 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Formun tekil alanlarını sunucuda, adıyla tek tek okur (mass-assignment kapalı).
+     * Reads the form's individual fields on the server, one by one, by name (mass-assignment is off).
      *
-     * Dönen dizi hem doğrulamanın hem yayının TEK girdisidir; burada olmayan bir POST
-     * anahtarı sisteme hiç giremez. Değerler ham bırakılır: temizleme
-     * {@see NotificationMessage} yapıcısının işidir ve iki yerde yapılmaz.
+     * The returned array is the SOLE input for both validation and the broadcast; a
+     * POST key not in here can never enter the system. Values are left raw: sanitizing
+     * is the job of the {@see NotificationMessage} constructor and is not done in two places.
      *
      * @return array{title: string, body: string, url: string, severity: string, mode: string}
      */
@@ -304,20 +310,21 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Doğrulanmış yayını builder üzerinden teslim eder (tek gönderim yolu).
+     * Delivers the validated broadcast through the builder (the single send path).
      *
-     * Gönderen kimliği DAİMA `auth()->id()`'dir. Hedef döngüleri yalnız builder'a
-     * direktif ekler — içlerinde sorgu YOKTUR, örtüşme/grup çözümü tek batch halinde
-     * {@see \Modules\Notifications\Libraries\NotificationBuilder::dispatch()} içinde olur.
+     * The sender identity is ALWAYS `auth()->id()`. The target loops only add
+     * directives to the builder — there is NO query inside them, overlap/group
+     * resolution happens as a single batch inside
+     * {@see \Modules\Notifications\Libraries\NotificationBuilder::dispatch()}.
      *
-     * @param array{title: string, body: string, url: string, severity: string, mode: string} $payload   Doğrulanmış alanlar.
-     * @param bool                                                                            $broadcast Tüm kullanıcılara mı.
-     * @param list<int>                                                                       $userIds   Doğrulanmış hedef kimlikleri.
-     * @param list<string>                                                                    $groups    Whitelist'ten geçmiş grup adları.
-     * @param list<int>                                                                       $excludeIds Doğrulanmış hariç tutma kimlikleri.
+     * @param array{title: string, body: string, url: string, severity: string, mode: string} $payload   Validated fields.
+     * @param bool                                                                            $broadcast Whether it targets all users.
+     * @param list<int>                                                                       $userIds   Validated target ids.
+     * @param list<string>                                                                    $groups    Group names that passed the whitelist.
+     * @param list<int>                                                                       $excludeIds Validated exclusion ids.
      *
-     * @return ChannelResult[] Her (hedef × kanal) için bir sonuç; teslim kararı bu
-     *                         listeden {@see DispatchOutcome} ile türetilir.
+     * @return ChannelResult[] One result per (target × channel); the delivery decision
+     *                         is derived from this list via {@see DispatchOutcome}.
      */
     private function publish(array $payload, bool $broadcast, array $userIds, array $groups, array $excludeIds): array
     {
@@ -348,10 +355,10 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Formu, girdiyi koruyarak hata mesajıyla geri gönderir.
+     * Sends the form back with an error message while preserving the input.
      *
-     * @param array<string, string>|null $errors  Alan bazlı doğrulama hataları ya da null.
-     * @param string|null                $message Alan bazlı olmayan tek hata mesajı ya da null.
+     * @param array<string, string>|null $errors  Field-level validation errors, or null.
+     * @param string|null                $message A single non-field-level error message, or null.
      *
      * @return \CodeIgniter\HTTP\RedirectResponse
      */
@@ -365,24 +372,25 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Kabul edilen Shield grupları: grup adı => görünen başlık (TEK whitelist kaynağı).
+     * Accepted Shield groups: group name => displayed title (the ONE whitelist source).
      *
-     * Kaynak, Shield'in `AuthGroups` yapılandırmasıdır; proje bu yapılandırmayı
-     * `auth_groups` tablosundan doldurup cache'lediği için liste kurulumun gerçek
-     * gruplarıyla aynıdır. Hem arayüz hem {@see send()} doğrulaması aynı diziden
-     * beslenir: burada olmayan bir ad ne gösterilir ne de kabul edilir.
+     * The source is Shield's `AuthGroups` configuration; since the project populates
+     * this configuration from the `auth_groups` table and caches it, the list matches
+     * the setup's actual groups. Both the UI and {@see send()} validation are fed from
+     * the same array: a name not in here is neither shown nor accepted.
      *
-     * NEDEN `setting('AuthGroups.groups')` DEĞİL (Shield'in GroupModel'i onu kullanır):
-     * `setting()` okuması settings DEPOSUNA bir sorgu açar ve depo erişilemezse
-     * İSTİSNA fırlatır — bu kurulumda birim test bağlamı tam olarak öyledir (settings
-     * tablosu yalnız `default` bağlantısında var). Whitelist'in fatal atabilmesi,
-     * çözdüğü sorundan ağırdır: bu projede `Modules\Auth\Config\AuthGroups` statik bir
-     * yapılandırma sınıfıdır ve settings deposunda `AuthGroups.groups` satırı yoktur,
-     * yani `setting()` bugün zaten bu aynı diziye düşüyor — sadece her çağrıda bir
-     * sorgu fazlasıyla. Gruplar ileride settings üzerinden ezilebilir hale gelirse
-     * burası da o kaynağa taşınmalıdır.
+     * WHY NOT `setting('AuthGroups.groups')` (which Shield's GroupModel uses): a
+     * `setting()` read opens a query against the settings STORE and THROWS AN EXCEPTION
+     * if the store is unreachable — in this setup that's exactly the case in the unit
+     * test context (the settings table only exists on the `default` connection). Letting
+     * the whitelist be able to fatal is a heavier cost than the problem it solves: in
+     * this project `Modules\Auth\Config\AuthGroups` is a static configuration class and
+     * there is no `AuthGroups.groups` row in the settings store, meaning `setting()`
+     * already falls back to this same array today — just with an extra query on every
+     * call. If groups become overridable via settings in the future, this should be
+     * moved to that source too.
      *
-     * @return array<string, string> Grup adı => başlık (başlık boşsa adın kendisi).
+     * @return array<string, string> Group name => title (the name itself if the title is empty).
      */
     private function allowedGroups(): array
     {
@@ -405,17 +413,17 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Verilen kimliklerden ADRESLENEBİLİR olanları TEK sorguda döndürür.
+     * Returns the ADDRESSABLE ones among the given ids, in a SINGLE query.
      *
-     * Soft-delete edilmiş ve banlı satırlar var sayılmaz ({@see
-     * Notifier::scopeAddressableUsers()}): ikisi de bildirimi hiçbir zaman göremez, yani
-     * anlamlı bir hedef değildirler. Bu yüzden böyle bir kimlik seçildiğinde gönderim
-     * "tanınmayan kullanıcı" ile reddedilir (fail-closed) — kimliğin durumu hakkında
-     * ayrıca bilgi verilmez.
+     * Soft-deleted and banned rows are NOT counted ({@see
+     * Notifier::scopeAddressableUsers()}): neither can ever see the notification, so
+     * they aren't a meaningful target. That's why the send is rejected with "unknown
+     * user" (fail-closed) when such an identity is selected — no further information
+     * about the identity's status is given.
      *
-     * @param array<int, int> $ids Doğrulanacak kimlikler.
+     * @param array<int, int> $ids Ids to validate.
      *
-     * @return list<int> Adreslenebilir kimlikler (tekil).
+     * @return list<int> Addressable ids (unique).
      */
     private function existingUserIds(array $ids): array
     {
@@ -431,18 +439,19 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Ham arama terimini LIKE için güvenli hale getirir (uzunluk tavanı + joker nötrleme).
+     * Makes the raw search term safe for LIKE (length cap + wildcard neutralization).
      *
-     * CI4 `like()` değeri bind eder, yani enjeksiyon riski yoktur; ama `%` ve `_`
-     * KALIP olarak çalışmaya devam eder. Terim, CI4'ün sorguya eklediği `ESCAPE '!'`
-     * sözleşmesiyle kaçırılır ({@see \CodeIgniter\Database\BaseBuilder::_like()}), yani
-     * joker KARAKTERLERİ SİLİNMEZ, literalleştirilir: `john_doe` araması hâlâ o kullanıcıyı
-     * bulur, `a%` ise artık her şeyle eşleşmez. Kaçış karakterinin kendisi de ('!')
-     * ikizlenir, aksi halde terime '!' yazan biri sonraki karakteri kaçırabilirdi.
+     * CI4's `like()` rule binds the value, so there's no injection risk; but `%` and `_`
+     * keep working as PATTERNS. The term is escaped following the `ESCAPE '!'`
+     * convention CI4 adds to the query ({@see \CodeIgniter\Database\BaseBuilder::_like()}),
+     * meaning wildcard CHARACTERS ARE NOT STRIPPED, they're literalized: a search for
+     * `john_doe` still finds that user, while `a%` no longer matches everything. The
+     * escape character itself ('!') is also doubled, otherwise someone typing '!' in the
+     * term could escape the following character.
      *
-     * @param mixed $raw Query string'ten gelen ham değer.
+     * @param mixed $raw Raw value from the query string.
      *
-     * @return string Sorguya bağlanmaya hazır terim ('' = filtre yok).
+     * @return string Term ready to be bound to the query ('' = no filter).
      */
     private static function searchTerm($raw): string
     {
@@ -464,14 +473,14 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Bir POST alanını metin olarak okur; skaler olmayan her değer '' olur.
+     * Reads a POST field as text; any non-scalar value becomes ''.
      *
-     * `title[]=x` gibi dizi enjeksiyonları burada durur: doğrulamaya ve yayına giden
-     * değer daima metindir.
+     * Array injections like `title[]=x` stop here: the value that reaches validation
+     * and the broadcast is always text.
      *
-     * @param string $field POST alan adı.
+     * @param string $field POST field name.
      *
-     * @return string Alanın metin değeri ya da ''.
+     * @return string The field's text value, or ''.
      */
     private function postedString(string $field): string
     {
@@ -481,11 +490,11 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Bir çoklu seçim POST alanını kullanıcı kimliği listesine çevirir.
+     * Converts a multi-select POST field into a list of user ids.
      *
-     * @param string $field POST alan adı.
+     * @param string $field POST field name.
      *
-     * @return list<int> Tekil, pozitif kimlikler.
+     * @return list<int> Unique, positive ids.
      */
     private function postedIds(string $field): array
     {
@@ -493,11 +502,11 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Bir çoklu seçim POST alanını grup adı listesine çevirir (whitelist kontrolü ÇAĞIRANIN işidir).
+     * Converts a multi-select POST field into a list of group names (whitelist checking is the CALLER's job).
      *
-     * @param string $field POST alan adı.
+     * @param string $field POST field name.
      *
-     * @return list<string> Tekil, boş olmayan adlar.
+     * @return list<string> Unique, non-empty names.
      */
     private function postedNames(string $field): array
     {
@@ -505,25 +514,25 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Ham bir çoklu seçim değerini kullanıcı kimliği listesine indirger.
+     * Reduces a raw multi-select value to a list of user ids.
      *
-     * Skaler olmayan öğeler ATILIR: `users[][]` gibi iç içe bir dizi `(int)` cast'inde
-     * sessizce 1'e dönüşür ve HEDEFLENMEMİŞ bir kullanıcıya işaret ederdi. 0/negatif
-     * kimlikler elenir, liste tekilleştirilir.
+     * Non-scalar items are DROPPED: a nested array like `users[][]` would silently
+     * become 1 on `(int)` cast and point at an UNINTENDED user. 0/negative ids are
+     * eliminated, the list is deduplicated.
      *
-     * NEDEN {@see NotificationMessage::normalizeExcludeUsers()}'a DELEGE EDİLMİYOR
-     * (üç benzer normalize'in bilinçli ayrımı): o metot DEPOLAMA sözleşmesini uygular ve
-     * bu iki noktada farklıdır —
-     *   1. Skaler olmayan öğeyi ELEMEZ, doğrudan `(int)` cast eder; `[[5]]` girdisi 1'e
-     *      döner, yani kimliği 1 olan hesabı (kurulumun ilk hesabı, çoğu zaman
-     *      superadmin) hedeflerdi. Buradaki eleme tam olarak o hijack'i durdurur.
-     *   2. Listeyi SIRALAR (aynı hariç tutma kümesi hep aynı CSV'yi üretsin diye).
-     *      Hedef listesinde sıra, yazılacak satırların sırasıdır; sıralamak yöneticinin
-     *      verdiği direktif sırasını sessizce değiştirirdi.
+     * WHY THIS DOESN'T DELEGATE to {@see NotificationMessage::normalizeExcludeUsers()}
+     * (a deliberate split of three similar normalizers): that method enforces the
+     * STORAGE contract and differs from this one in two points —
+     *   1. It does NOT drop a non-scalar item, it casts it directly to `(int)`; a `[[5]]`
+     *      input becomes 1, meaning it would target the account with id 1 (the setup's
+     *      first account, often superadmin). The dropping here stops exactly that hijack.
+     *   2. It SORTS the list (so the same exclusion set always produces the same CSV).
+     *      Order in the target list is the order the rows are written in; sorting would
+     *      silently change the directive order the admin gave.
      *
-     * @param mixed $raw POST ya da eski girdiden gelen ham değer.
+     * @param mixed $raw Raw value from POST or old input.
      *
-     * @return list<int> Tekil, pozitif kimlikler (girdi sırasında).
+     * @return list<int> Unique, positive ids (in input order).
      */
     private static function normalizeIds($raw): array
     {
@@ -540,11 +549,11 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Ham bir çoklu seçim değerini ad listesine indirger (skaler olmayanlar atılır).
+     * Reduces a raw multi-select value to a list of names (non-scalars are dropped).
      *
-     * @param mixed $raw POST ya da eski girdiden gelen ham değer.
+     * @param mixed $raw Raw value from POST or old input.
      *
-     * @return list<string> Tekil, boş olmayan adlar.
+     * @return list<string> Unique, non-empty names.
      */
     private static function normalizeNames($raw): array
     {
@@ -561,15 +570,16 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Hatalı gönderimden sonra select2 kutularını yeniden dolduracak kullanıcı etiketleri.
+     * User labels to repopulate the select2 boxes after a failed submission.
      *
-     * Kullanıcı kutuları uzak kaynaktan (AJAX) beslendiği için tarayıcı, `withInput()`
-     * ile geri gelen kimliklerin ETİKETİNİ bilmez; etiketsiz seçim ekranda kaybolur ve
-     * yönetici tek bir doğrulama hatasında tüm hedef listesini elle yeniden kurardı.
-     * Bu yüzden etiketler sunucuda, TEK sorguda çözülür — ve yalnız eski girdi VARSA,
-     * yani mutlu yolda hiç sorgu açılmaz.
+     * Since the user boxes are fed from a remote (AJAX) source, the browser doesn't
+     * know the LABEL of the ids coming back via `withInput()`; an unlabeled selection
+     * would disappear from the screen, and the admin would have to manually rebuild the
+     * entire target list after a single validation error. That's why labels are
+     * resolved on the server, in a SINGLE query — and only IF old input EXISTS, so no
+     * query is opened at all on the happy path.
      *
-     * @return array<int, string> Kullanıcı kimliği => görünen etiket.
+     * @return array<int, string> User id => displayed label.
      */
     private function oldUserLabels(): array
     {
@@ -597,16 +607,16 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Bir dil satırını KESİN metin olarak okur.
+     * Reads a language line as GUARANTEED text.
      *
-     * `lang()` çoğul biçimli satırlarda liste döndürebilir; buradaki kullanım yerleri
-     * (alan etiketi, doğrulama mesajı, hata metni) her zaman TEK satır bekler. Tip
-     * daraltma her çağrı yerinde tekrarlanmasın diye tek noktada yapılır.
+     * `lang()` can return a list for pluralized lines; the call sites here (field
+     * label, validation message, error text) always expect a SINGLE line. Type
+     * narrowing is done in one place so it doesn't need to be repeated at every call site.
      *
-     * @param string            $key  '{Modül}.{anahtar}' dil anahtarı.
-     * @param array<int, mixed> $args Satırdaki {0}, {1} ... yer tutucularının değerleri.
+     * @param string            $key  '{Module}.{key}' language key.
+     * @param array<int, mixed> $args Values for the {0}, {1}, ... placeholders in the line.
      *
-     * @return string Dil satırı (liste gelirse boşlukla birleştirilmiş hali).
+     * @return string The language line (joined with spaces if a list comes back).
      */
     private static function text(string $key, array $args = []): string
     {
@@ -616,15 +626,15 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Boş metni null'a indirger (nullable alan sözleşmesi).
+     * Reduces empty text to null (the nullable field contract).
      *
-     * `strip_tags` burada TEKRARLANMAZ: temizlemenin tek sahibi
-     * {@see NotificationMessage} yapıcısıdır, iki yerde yapılırsa kuralın hangi
-     * katmanda değiştiği izlenemez hale gelir.
+     * `strip_tags` is NOT REPEATED here: the sole owner of sanitizing is the
+     * {@see NotificationMessage} constructor; doing it in two places would make it
+     * untraceable which layer changes the rule.
      *
-     * @param string $value Ham alan değeri.
+     * @param string $value Raw field value.
      *
-     * @return string|null Doldurulmuş metin ya da null.
+     * @return string|null The filled-in text, or null.
      */
     private static function nullableText(string $value): ?string
     {
@@ -632,11 +642,11 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Bir kullanıcı satırının seçim kutusunda görünecek etiketi.
+     * The label of a user row as it will appear in the selection box.
      *
-     * @param \stdClass $row id, username, firstname, surname taşıyan satır.
+     * @param \stdClass $row Row carrying id, username, firstname, surname.
      *
-     * @return string 'Ad Soyad (kullanıcıadı)' ya da hangisi doluysa o.
+     * @return string 'First Last (username)', or whichever part is filled in.
      */
     private static function userLabel(\stdClass $row): string
     {
@@ -651,38 +661,40 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Seçilebilen önem seviyeleri: slug => görünen etiketin lang anahtarı.
+     * Selectable severity levels: slug => lang key of the displayed label.
      *
-     * @return array<string, string> Seviye slug'ı => lang anahtarı.
+     * @return array<string, string> Severity slug => lang key.
      */
     private static function severityChoices(): array
     {
-        // Kesişim: etiketi olmayan bir seviye forma HİÇ çıkmaz (fail-closed) ve
-        // etiketi olup artık var olmayan bir slug da düşer — iki sabit ayrışırsa
-        // arayüz sessizce yanlış bir seçenek göstermez.
+        // Intersection: a severity without a label NEVER shows up in the form
+        // (fail-closed), and a slug that has a label but no longer exists is also
+        // dropped — if the two constants diverge, the UI won't silently show a wrong option.
         return array_intersect_key(self::SEVERITY_LABELS, array_flip(NotificationMessage::SEVERITIES));
     }
 
     /**
-     * Gönderim formunun doğrulama kuralları (proje regex sözleşmesiyle).
+     * Validation rules for the send form (following the project's regex convention).
      *
-     * URL BURADA, composer'a ÖZEL olarak site-içi bir yola daraltılır: '/' ile başlamayan
-     * her değer (mutlak `https://...`, şemasız `example.com/x`, `javascript:` ...)
-     * REDDEDİLİR. Gerekçe yetkidir: `compose.create` izinli alt-seviye bir operatör,
-     * superadmin grubuna `severity=critical` bir bildirim gönderebiliyor; kritik
-     * bildirimler susturulamadığı ve arayüzde gönderen görünmediği için mesaj "sistem"
-     * gibi algılanır. Dış bir bağlantı bu güveni doğrudan bir kimlik avı sayfasına
-     * taşırdı. {@see NotificationMessage::sanitizeUrl()}'in GENEL sözleşmesi (programatik
-     * üreticiler http(s) kullanabilir) BOZULMAZ; o katman burada elenmeyen protokol-göreli
-     * biçimler ('//host', '/\host') için son savunma olarak yerinde kalır.
+     * The URL is narrowed HERE, SPECIFICALLY for the composer, to a site-relative path:
+     * any value not starting with '/' (an absolute `https://...`, a schemeless
+     * `example.com/x`, `javascript:` ...) is REJECTED. The rationale is authorization: a
+     * lower-level operator with `compose.create` permission can send a
+     * `severity=critical` notification to the superadmin group; because critical
+     * notifications can't be muted and the sender isn't shown in the UI, the message is
+     * perceived as coming from "the system". An external link would carry that trust
+     * straight to a phishing page. The GENERAL contract of
+     * {@see NotificationMessage::sanitizeUrl()} (programmatic producers may use http(s))
+     * is NOT broken; that layer remains in place as the last line of defense for
+     * protocol-relative forms not filtered out here ('//host', '/\host').
      *
-     * Geçersiz URL artık SESSİZCE düşmez: eskiden `example.com/duyuru` yazan yönetici
-     * bağlantısız bir bildirim gönderip hiçbir uyarı almıyordu.
+     * An invalid URL no longer SILENTLY drops: previously an admin who typed
+     * `example.com/duyuru` would send a notification without a link and get no warning at all.
      *
-     * `body` için de {@see NotificationsConfig::BODY_MAX} sınırı vardır: kolon TEXT ve
-     * `strictOn = false` olduğundan sınırsız bir gövde sessizce kesilirdi.
+     * `body` is also bounded by {@see NotificationsConfig::BODY_MAX}: since the column
+     * is TEXT and `strictOn = false`, an unbounded body would be silently truncated.
      *
-     * @return array<string, array<string, string>> CI4 doğrulama kural tanımı.
+     * @return array<string, array<string, string>> CI4 validation rule definition.
      */
     private function validationRules(): array
     {
@@ -697,7 +709,7 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
             ],
             'url' => [
                 'label' => self::text('Notifications.composeFieldUrl'),
-                // '/' ile başlar ve kontrol karakteri (CR/LF/TAB/NUL) taşımaz.
+                // Starts with '/' and carries no control character (CR/LF/TAB/NUL).
                 'rules' => 'permit_empty|max_length[' . NotificationsConfig::URL_MAX . ']|regex_match[/^\/[^\x00-\x1F\x7F]*$/]',
             ],
             'severity' => [
@@ -712,9 +724,9 @@ class ComposerController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Doğrulama hatalarının kullanıcıya görünen metinleri.
+     * User-visible texts for validation errors.
      *
-     * @return array<string, array<string, string>> Alan => kural => mesaj.
+     * @return array<string, array<string, string>> Field => rule => message.
      */
     private function validationMessages(): array
     {

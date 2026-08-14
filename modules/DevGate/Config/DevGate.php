@@ -16,11 +16,16 @@ class DevGate extends BaseConfig
      *   'username' => password_hash('password', PASSWORD_BCRYPT)
      *
      * Set $useHashedPasswords = true to enable hash comparison.
+     *
+     * No credentials ship here by default — the installer (Install.php /
+     * Ci4msSetup.php) generates a random password on setup and writes it
+     * here, hashed. Until then this array is empty and DevGate rejects
+     * every request (see DevGateFilter::isAuthenticated()).
+     *
+     * Example (illustrative only, not a real hash):
+     *   'dev' => '$2y$12$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01'
      */
-    public array $users = [
-        'admin' => 'admin', //'$2y$12$puK4KAwrt.6G.RywpVy0xO6LI7rKAR09L0iArxWzGocGCCLnEzxmy'
-        'dev'   => 'devpass' //'$2y$12$NrHvzuu7zau7lvZskdGjweNO7.5sdTnx95gjLc6K8w5x935eVTlz6'
-    ];
+    public array $users = [];
 
     /**
      * true  → values in $users are hashes created with password_hash()

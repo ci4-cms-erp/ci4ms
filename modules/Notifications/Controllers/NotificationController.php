@@ -6,23 +6,23 @@ use Modules\Notifications\Config\NotificationsConfig;
 use Modules\Notifications\Libraries\Notifier;
 
 /**
- * Bildirim Merkezi — backend controller.
+ * Notification Center — backend controller.
  *
- * Uçlar (bkz. Config/Routes.php):
- *   GET  backend/notifications            index()        — tam liste sayfası (role: read)
- *   GET  backend/notifications/feed       feed()         — AJAX: dropdown + rozet (role: read)
- *   POST backend/notifications/read/(:num) markRead()    — AJAX: tek kaydı okundu işaretle (role: update)
- *   POST backend/notifications/readAll    markAllRead()  — AJAX: tümünü okundu işaretle (role: update)
+ * Endpoints (see Config/Routes.php):
+ *   GET  backend/notifications            index()        — full list page (role: read)
+ *   GET  backend/notifications/feed       feed()         — AJAX: dropdown + badge (role: read)
+ *   POST backend/notifications/read/(:num) markRead()    — AJAX: mark a single record as read (role: update)
+ *   POST backend/notifications/readAll    markAllRead()  — AJAX: mark all as read (role: update)
  *
- * GÜVENLİK (Model B): Okuma/işaretleme relevans+okundu sözleşmesi Notifier'da
- * tek noktadan (applyRelevance) uygulanır; bir kullanıcı yalnız kendisine ilgili
- * (broadcast / kendi 'user' / üye olduğu 'group') bildirimi görür ve işaretleyebilir
- * (IDOR koruması). Yazma uçları yalnız AJAX kabul eder; global CSRF zaten aktiftir.
+ * SECURITY (Model B): the read/mark relevance+read contract is enforced from a single
+ * point in Notifier (applyRelevance); a user can only see and mark notifications
+ * relevant to them (broadcast / their own 'user' / a 'group' they belong to) (IDOR
+ * protection). Write endpoints accept AJAX only; global CSRF is already active.
  */
 class NotificationController extends \Modules\Backend\Controllers\BaseController
 {
     /**
-     * Paylaşımlı Notifier servis örneği.
+     * Shared Notifier service instance.
      *
      * @return Notifier
      */
@@ -32,9 +32,9 @@ class NotificationController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Model B tablolarının (notifications + notification_reads) hazır olup olmadığı.
+     * Whether the Model B tables (notifications + notification_reads) are ready.
      *
-     * @return bool İkisi de mevcutsa true.
+     * @return bool True if both exist.
      */
     private function tablesReady(): bool
     {
@@ -43,17 +43,18 @@ class NotificationController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Oturumdaki kullanıcının bildirim listesi (ilgili + son LIST_LIMIT kayıt).
+     * The session user's notification list (relevant + last LIST_LIMIT records).
      *
-     * @return string Render edilmiş liste görünümü.
+     * @return string The rendered list view.
      */
     public function index(): string
     {
         $notifications = [];
         $unread        = 0;
 
-        // Tablolar henüz migrate edilmemişse (modül bırakıldı, migration çalışmadı)
-        // menüden gelen tıklama fatal atmamalı; boş listeyle render et.
+        // If the tables haven't been migrated yet (module was just dropped in,
+        // migration hasn't run), a click from the menu shouldn't fatal; render with an
+        // empty list.
         if ($this->tablesReady()) {
             $userId        = (int) auth()->id();
             $notifications = $this->notifier()->listFor($userId, NotificationsConfig::LIST_LIMIT);
@@ -69,7 +70,7 @@ class NotificationController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * AJAX besleme: üst çubuk dropdown'ı için son FEED_LIMIT bildirim + okunmamış sayısı.
+     * AJAX feed: the last FEED_LIMIT notifications + unread count for the top bar dropdown.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -93,9 +94,9 @@ class NotificationController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Tek bir bildirimi okundu olarak işaretler (yalnız ilgili kullanıcı, idempotent).
+     * Marks a single notification as read (only the relevant user, idempotent).
      *
-     * @param int $id Bildirim kimliği.
+     * @param int $id Notification id.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */
@@ -111,7 +112,7 @@ class NotificationController extends \Modules\Backend\Controllers\BaseController
 
         $userId = (int) auth()->id();
 
-        // Kayıt yok ya da kullanıcıya ilgili değil (IDOR koruması) → 404.
+        // No such record, or it's not relevant to the user (IDOR protection) → 404.
         if (! $this->notifier()->markRead($id, $userId)) {
             return $this->failNotFound();
         }
@@ -120,7 +121,7 @@ class NotificationController extends \Modules\Backend\Controllers\BaseController
     }
 
     /**
-     * Kullanıcının tüm ilgili okunmamış bildirimlerini okundu işaretler.
+     * Marks all of the user's relevant unread notifications as read.
      *
      * @return \CodeIgniter\HTTP\ResponseInterface
      */

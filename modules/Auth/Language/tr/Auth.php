@@ -83,7 +83,6 @@ return [
     'password' => 'Parola',
     'repeatPassword' => 'Parolayı Tekrarla',
     'emailOrUsername' => 'Email yada kullanıcı adı',
-    'username' => 'Kullanıcı Adı',
     'register' => 'Kayıt Ol',
     'signIn' => 'Oturum Aç',
     'alreadyRegistered' => 'Çoktan Kaydoldun mu?',
@@ -98,8 +97,6 @@ return [
     'generatePasswordMessage' => 'Yeni şifrenizden sadece bir adım uzaktasınız, şifrenizi şimdi oluşturun.',
     'forgotPasswordMessage' => 'Şifrenizi mi unuttunuz? Burada e-mail adresiniz ile kolayca yeni bir şifre alabilirsiniz.',
     'loginMessage' => 'Oturumunuzu başlatmak için giriş yapın',
-    'membershipPasswordReset' => 'Membership Password Reset',
-    'passwordResetMessage'    => 'Your membership password has been reset. Your password reset request is valid until {reset_expires}. Please click <a href="{reset_link}"><b>here</b></a> to set your new password.',
 
     // Lock Screen
     'screenLocked'          => 'Oturum Kilitlendi',

@@ -42,7 +42,7 @@ foreach ($modules as $m) {
                 <div class="m-stat-icon st-pages"><i class="fas fa-file-alt"></i></div>
                 <div>
                     <div class="m-stat-value"><?php echo $totalPages ?></div>
-                    <div class="m-stat-label"><?php echo lang('Methods.totalPages') ?></div>
+                    <div class="m-stat-label"><?php echo lang('Backend.totalPages') ?></div>
                 </div>
             </div>
         </div>

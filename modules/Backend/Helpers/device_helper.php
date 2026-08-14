@@ -11,7 +11,7 @@
 use CodeIgniter\HTTP\UserAgent;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ANA FONKSİYON
+// MAIN FUNCTION
 // ─────────────────────────────────────────────────────────────────────────────
 
 if (! function_exists('extract_device_info'))
@@ -24,7 +24,7 @@ if (! function_exists('extract_device_info'))
      *   $agent      = $request->getUserAgent();
      *   $deviceInfo = extract_device_info($agent);
      *
-     * @param  UserAgent $agent  $request->getUserAgent() sonucu
+     * @param  UserAgent $agent  Result of $request->getUserAgent()
      * @return array{
      *     user_agent: string,
      *     browser: string,
@@ -60,10 +60,10 @@ if (! function_exists('extract_device_info'))
         $browserVersion = '';
 
         if ($agent->isBrowser()) {
-            $browser        = $agent->getBrowser();        // "Chrome", "Firefox" vs.
+            $browser        = $agent->getBrowser();        // "Chrome", "Firefox" etc.
             $browserVersion = $agent->getVersion();        // "120.0"
         } elseif ($agent->isRobot()) {
-            $browser = $agent->getRobot();                 // "Googlebot" vs.
+            $browser = $agent->getRobot();                 // "Googlebot" etc.
         }
 
         /* ── OS EXTRACTION ──────────────────────────────────────
@@ -92,7 +92,7 @@ if (! function_exists('extract_device_info'))
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// YARDIMCI: TABLET TESPİTİ
+// HELPER: TABLET DETECTION
 // ─────────────────────────────────────────────────────────────────────────────
 
 if (! function_exists('is_tablet_ua'))
@@ -111,7 +111,7 @@ if (! function_exists('is_tablet_ua'))
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VIEW YARDIMCILARI (CI4 ile ilgisi yok — sadece icon mapping)
+// VIEW HELPERS (unrelated to CI4 — just icon mapping)
 // ─────────────────────────────────────────────────────────────────────────────
 
 if (! function_exists('device_icon'))

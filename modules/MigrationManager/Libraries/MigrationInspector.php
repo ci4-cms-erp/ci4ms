@@ -9,32 +9,33 @@ use Config\Database;
 use Config\Services;
 
 /**
- * Diskteki migration namespace'lerini keşfeder ve DB geçmişiyle birleştirip
- * bir durum raporu üretir.
+ * Discovers the migration namespaces on disk and merges them with the DB
+ * history to build a status report.
  *
- * Kaynak DAİMA diskir, `findMigrations()` DEĞİL: `findMigrations()`
+ * The source is ALWAYS disk, NEVER `findMigrations()`: `findMigrations()`
  * (`vendor/codeigniter4/framework/system/Database/MigrationRunner.php:445`)
- * namespace=null'da composer'ın kayıtlı TÜM PSR-4 önek listesini
- * (`service('autoloader')->getNamespace()`, 50-100+ paket) gezer. Bunun
- * yerine bilinen namespace listesi üzerinde döngüyle `findNamespaceMigrations()`
- * (public, `:469`) çağrılır. Bu tasarım aynı zamanda DB'de kayıtlı ama
- * dosyası artık var olmayan "yetim" namespace'lerin (ör. `Modules\Crm`)
- * rapora hiç girmemesini garanti eder — ayrı bir gizleme filtresi YOKTUR,
- * çünkü rapor listesi diskten inşa edilir, DB yalnızca zenginleştirme
- * amaçlı okunur.
+ * with namespace=null walks composer's ENTIRE registered PSR-4 prefix list
+ * (`service('autoloader')->getNamespace()`, 50-100+ packages). Instead, this
+ * class loops over the known namespace list and calls
+ * `findNamespaceMigrations()` (public, `:469`). This design also guarantees
+ * that "orphan" namespaces registered in the DB but with no file anymore
+ * (e.g. `Modules\Crm`) never enter the report — there's NO separate hiding
+ * filter, because the report list is built from disk and the DB is only
+ * read for enrichment.
  *
- * `getHistory()` (`:697-714`) namespace parametresi ALMAZ; çağrıldığı
- * `MigrationRunner` örneğinin `$namespace` iç durumuna bakar. Namespace
- * başına ayrı `getHistory()` çağırmak N+1'e düşer (`system/Commands/
- * Database/MigrateStatus.php`'nin yaptığı hata, `:114-115`) — bunun yerine
- * `setNamespace(null)` ile bu filtre kapatılır, TÜM geçmiş TEK sorguda
- * çekilir ve PHP tarafında namespace'e göre gruplanır.
+ * `getHistory()` (`:697-714`) does NOT TAKE a namespace parameter; it looks
+ * at the `$namespace` internal state of the `MigrationRunner` instance it's
+ * called on. Calling `getHistory()` separately per namespace falls into N+1
+ * (the mistake made by `system/Commands/Database/MigrateStatus.php`,
+ * `:114-115`) — instead, this filter is turned off with `setNamespace(null)`,
+ * the ENTIRE history is fetched in ONE query and grouped by namespace on
+ * the PHP side.
  */
 class MigrationInspector
 {
     /**
-     * Diskte karşılığı olmayan, salt-okunur listelenen vendor migration
-     * namespace'leri.
+     * Vendor migration namespaces that have no disk counterpart and are
+     * listed read-only.
      *
      * @var list<string>
      */
@@ -43,15 +44,15 @@ class MigrationInspector
     private MigrationRunner $runner;
 
     /**
-     * @param MigrationRunner|null $runner Test edilebilirlik için enjekte
-     *                                     edilebilir (ör. çağrı sayısını
-     *                                     sayan bir spy/mock). `null` ise
+     * @param MigrationRunner|null $runner Can be injected for testability
+     *                                     (e.g. a spy/mock that counts
+     *                                     calls). If `null`,
      *                                     `Services::migrations(null, null, false)`
-     *                                     (non-shared) kullanılır — paylaşımlı
-     *                                     örneğe `setNamespace()` state
-     *                                     sızıntısı bırakılmaz
-     *                                     (`Settings.php:238`'in düştüğü
-     *                                     hataya düşülmez).
+     *                                     (non-shared) is used — no
+     *                                     `setNamespace()` state leaks into
+     *                                     the shared instance (avoids the
+     *                                     mistake `Settings.php:238` falls
+     *                                     into).
      */
     public function __construct(?MigrationRunner $runner = null)
     {
@@ -59,12 +60,13 @@ class MigrationInspector
     }
 
     /**
-     * Diskte bulunan migration namespace'lerini keşfeder.
+     * Discovers the migration namespaces found on disk.
      *
-     * `App` + her `modules/*` dizini (`Modules\{Basename}` önekiyle,
-     * `app/Config/Autoload.php:106` konvansiyonuyla birebir) + sabit
-     * `VENDOR_NAMESPACES` sırasıyla döner. Vendor namespace'leri
-     * `readOnly=true` bayrağıyla işaretlenir; geri kalanı `false`.
+     * Returns, in order, `App` + every `modules/*` directory (with a
+     * `Modules\{Basename}` prefix, matching the
+     * `app/Config/Autoload.php:106` convention exactly) + the fixed
+     * `VENDOR_NAMESPACES`. Vendor namespaces are flagged `readOnly=true`;
+     * the rest are `false`.
      *
      * @return list<array{namespace: string, readOnly: bool}>
      */
@@ -84,21 +86,22 @@ class MigrationInspector
     }
 
     /**
-     * Tüm migration geçmişini TEK `getHistory()` çağrısıyla çeker ve
-     * normalize edilmiş namespace'e göre gruplar.
+     * Fetches the entire migration history in ONE `getHistory()` call and
+     * groups it by normalized namespace.
      *
-     * `\Modules\Notifications` (baştaki ters bölü ile) DB'de bozuk, ayrı bir
-     * anahtar altında kayıtlı (kök neden: `Autoloader.php:254` PSR-4
-     * eşlemesinde `trim($prefix,'\\')` uygulanırken `MigrationRunner`'ın
-     * kendisi geçmiş satırına namespace'i olduğu gibi yazıyor, `:656`, ve
-     * `getHistory()` bunu literal string eşleştiriyor, `:709-710`) —
-     * `ltrim($namespace, '\\')` ile normalize edilip doğru gruba katılır.
+     * `\Modules\Notifications` (with a leading backslash) is stored broken
+     * in the DB, under a separate key (root cause: while
+     * `Autoloader.php:254` applies `trim($prefix,'\\')` in the PSR-4
+     * mapping, `MigrationRunner` itself writes the namespace as-is to the
+     * history row, `:656`, and `getHistory()` matches it as a literal
+     * string, `:709-710`) — it's normalized with `ltrim($namespace, '\\')`
+     * and joined to the correct group.
      *
-     * @return array<string, list<object>> Anahtar normalize edilmiş
-     *                                     namespace, değer `getHistory()`
-     *                                     satırları (`version`, `class`,
-     *                                     `namespace`, `time`, `batch`
-     *                                     alanlı `stdClass` nesneleri).
+     * @return array<string, list<object>> Key is the normalized namespace,
+     *                                     value is the `getHistory()` rows
+     *                                     (`stdClass` objects with
+     *                                     `version`, `class`, `namespace`,
+     *                                     `time`, `batch` fields).
      */
     public function getHistoryByNamespace(): array
     {
@@ -114,12 +117,12 @@ class MigrationInspector
     }
 
     /**
-     * `getDiscoveredNamespaces()` ile `getHistoryByNamespace()`'i birleştirip
-     * her namespace için bir durum satırı üretir.
+     * Merges `getDiscoveredNamespaces()` with `getHistoryByNamespace()` and
+     * produces one status row per namespace.
      *
-     * DB'de kayıtlı ama diskte karşılığı olmayan "yetim" namespace'ler
-     * (`getDiscoveredNamespaces()`'de yer almadıkları için) rapora hiç
-     * girmez.
+     * "Orphan" namespaces registered in the DB but with no disk counterpart
+     * (since they're not in `getDiscoveredNamespaces()`) never enter the
+     * report.
      *
      * @return list<array{
      *     namespace: string,
@@ -153,13 +156,13 @@ class MigrationInspector
     }
 
     /**
-     * Bir namespace'in geçmiş satırları arasından en son çalıştırılan
-     * batch'i ve tarihini belirler.
+     * Determines the most recently run batch and its date among a
+     * namespace's history rows.
      *
-     * @param list<object> $history `getHistoryByNamespace()`'ten tek bir grup.
+     * @param list<object> $history A single group from `getHistoryByNamespace()`.
      *
      * @return array{0: int|null, 1: string|null} `[lastBatch, lastDate]`;
-     *                                             `$history` boşsa `[null, null]`.
+     *                                             `[null, null]` if `$history` is empty.
      */
     private function lastRun(array $history): array
     {
@@ -184,23 +187,23 @@ class MigrationInspector
     }
 
     /**
-     * `getHistory()`'ye geçirilecek `group` değerini çalışma zamanı DB
-     * yapılandırmasından çözer (literal `'default'` yerine).
+     * Resolves the `group` value to pass to `getHistory()` from the runtime
+     * DB configuration (instead of the literal `'default'`).
      *
-     * SAPMA GEREKÇESİ: bu proje `ENVIRONMENT==='testing'` altında (PHPUnit,
-     * `vendor/codeigniter4/framework/system/Test/bootstrap.php:29`)
-     * `Config\Database::$defaultGroup`'u `'tests'`e çeviriyor
-     * (`app/Config/Database.php:200-201`) ve migration geçmişi satırlarının
-     * `group` sütunu tam olarak bu değerle yazılıyor
+     * REASON FOR THE DEVIATION: under `ENVIRONMENT==='testing'` (PHPUnit,
+     * `vendor/codeigniter4/framework/system/Test/bootstrap.php:29`), this
+     * project turns `Config\Database::$defaultGroup` into `'tests'`
+     * (`app/Config/Database.php:200-201`) and the migration history rows'
+     * `group` column is written with exactly that value
      * (`MigrationRunner::__construct()` `:154`, `addHistory()` `:655`).
-     * Kanıt (bu oturumda ölçüldü, salt-okunur `SELECT`):
-     * canlı `ci4ms_migrations` → `group='default'` (51 satır);
-     * `ci4ms_test.ci4ms_migrations` → `group='tests'` (40 satır).
-     * Literal `getHistory('default')` PHPUnit altında HER ZAMAN 0 satır
-     * dönerdi (yanlış-negatif, hata fırlatmaz ama rapor içeriği hatalı
-     * olurdu). Bu metot `MigrationRunner::__construct()`'ın grubu
-     * hesapladığı AYNI kaynağı (`config(Database::class)->defaultGroup`)
-     * kullanarak doğru filtreyi garanti eder.
+     * Evidence (measured in this session, read-only `SELECT`): live
+     * `ci4ms_migrations` → `group='default'` (51 rows);
+     * `ci4ms_test.ci4ms_migrations` → `group='tests'` (40 rows). A literal
+     * `getHistory('default')` would ALWAYS return 0 rows under PHPUnit
+     * (false negative, doesn't throw but the report content would be
+     * wrong). This method guarantees the correct filter by using the SAME
+     * source (`config(Database::class)->defaultGroup`) that
+     * `MigrationRunner::__construct()` uses to compute the group.
      */
     private function historyGroup(): string
     {

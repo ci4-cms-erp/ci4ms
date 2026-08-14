@@ -5,7 +5,6 @@ return [
     'invalidSource' => 'Geçersiz kaynak dosya veya klasör',
     'invalidFileOrFolder' => 'Geçersiz dosya veya klasör',
     'folderNotEmpty' => 'Klasörün içi boş değil veya silme işlemi başarısız!',
-    'path' => 'Yol',
     'file' => 'Dosya',
     'newFile' => 'Yeni Dosya',
     'newFolder' => 'Yeni Klasör',

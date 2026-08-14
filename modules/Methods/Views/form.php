@@ -1,10 +1,10 @@
 <?php
 /**
- * Methods - Birleşik Form View (Oluştur & Güncelle)
+ * Methods - Unified Form View (Create & Update)
  *
- * $isEdit değişkeni controller tarafından gönderilir:
- *   - create() → $isEdit = false, $method yok
- *   - update() → $isEdit = true,  $method dolu
+ * The $isEdit variable is sent by the controller:
+ *   - create() → $isEdit = false, no $method
+ *   - update() → $isEdit = true,  $method is populated
  */
 $isEdit     = isset($method);
 $formAction = $isEdit
@@ -68,7 +68,7 @@ echo $this->section('content'); ?>
                            value="<?php echo old('pagename', $isEdit ? $method->pagename : '') ?>" required>
                 </div>
                 <div class="form-group col-md-4">
-                    <label><?php echo lang('Methods.description') ?></label>
+                    <label><?php echo lang('Backend.description') ?></label>
                     <input type="text" name="description" class="form-control"
                            value="<?php echo old('description', $isEdit ? $method->description : '') ?>">
                 </div>
@@ -128,7 +128,7 @@ echo $this->section('content'); ?>
                     <select name="parent_pk" id="parentPk" class="form-control select2">
                         <option value="" disabled selected><?php echo lang('Backend.selectOption', [lang('Methods.parentPage')]) ?></option>
                         <?php
-                        // create modunda $permPages, update modunda $methods gelir
+                        // $permPages comes in create mode, $methods in update mode
                         $parentList = $isEdit ? ($methods ?? []) : ($permPages ?? []);
                         foreach ($parentList as $item):
                         ?>

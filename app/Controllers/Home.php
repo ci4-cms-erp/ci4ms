@@ -27,7 +27,7 @@ class Home extends BaseController
         $defaultLang = cache('default_frontend_language') ?? setting('App.defaultLocale') ?? 'tr';
 
         if (!empty($homePageId) && empty($seflink)) {
-            // Önce istenen locale'de dene
+            // Try the requested locale first
             $pages = $this->commonModel->lists(
                 'pages',
                 'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
@@ -36,7 +36,7 @@ class Home extends BaseController
                 [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
                 ['isReset' => true]
             );
-            // Çeviri yoksa varsayılan dile düş
+            // Fall back to the default language if there's no translation
             if (empty($pages) && $locale !== $defaultLang) {
                 $pages = $this->commonModel->lists(
                     'pages',
@@ -48,7 +48,7 @@ class Home extends BaseController
                 );
             }
         } else {
-            // Önce istenen locale'de slug'a göre bul
+            // Find by slug in the requested locale first
             $pages = $this->commonModel->lists(
                 'pages',
                 'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
@@ -57,7 +57,7 @@ class Home extends BaseController
                 [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
                 ['isReset' => true]
             );
-            // Çeviri yoksa varsayılan dile düş
+            // Fall back to the default language if there's no translation
             if (empty($pages) && $locale !== $defaultLang) {
                 $pages = $this->commonModel->lists(
                     'pages',
@@ -358,7 +358,7 @@ class Home extends BaseController
         if (!empty($this->request->getPost('commentID'))) $vdata['commentID'] = ['label' => 'Comment', 'rules' => 'required|is_natural_no_zero'];
         $valData = ($vdata);
         if ($this->validate($valData) == false) return $this->fail($this->validator->getErrors());
-        if (ENVIRONMENT !== 'development' && $this->request->getPost('captcha') != session()->getFlashdata('cap')) return $this->fail('Please get a new captcha !');
+        if (!(ENVIRONMENT === 'development' && setting('Auth.captchaBypassInDevelopment')) && $this->request->getPost('captcha') != session()->getFlashdata('cap')) return $this->fail('Please get a new captcha !');
         $checked = $this->commonLibrary->commentBadwordFiltering(
             $this->request->getPost('comMessage'),
             $this->defData['settings']->badwords->list,

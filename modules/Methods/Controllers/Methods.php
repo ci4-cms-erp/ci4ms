@@ -53,11 +53,38 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         return view('Modules\Methods\Views\list', $this->defData);
     }
 
+    /**
+     * Creates a new auth_permissions_pages row from the method form.
+     *
+     * className/methodName are the exact keys Ci4MsAuthFilter uses to look up
+     * the authorization row for a request, so a new row is refused if it would
+     * collide with an already-registered controller/method pair (see
+     * classNameMethodNameCollides()). module_id is resolved from the form's
+     * `moduleName` field (which actually posts modules.id, see form.php) via
+     * resolveModuleId() and refused if missing/invalid, because
+     * auth_permissions_pages.module_id is NOT NULL with no default and carries
+     * a foreign key to modules(id).
+     *
+     * @return \CodeIgniter\HTTP\RedirectResponse|string
+     */
     public function create()
     {
         if ($this->request->is('post')) {
             if ($this->validate($this->validationRules()) === false)
                 return redirect()->route('methodCreate')->withInput()->with('errors', $this->validator->getErrors());
+
+            $className = esc(strip_tags(trim((string) $this->request->getPost('className'))));
+            $methodName = esc(strip_tags(trim((string) $this->request->getPost('methodName'))));
+
+            if ($this->classNameMethodNameCollides($className, $methodName)) {
+                return redirect()->route('methodCreate')->withInput()->with('error', lang('Methods.classNameMethodNameDuplicate'));
+            }
+
+            $moduleId = $this->resolveModuleId($this->request->getPost('moduleName'));
+            if ($moduleId === null) {
+                return redirect()->route('methodCreate')->withInput()->with('error', lang('Methods.moduleRequired'));
+            }
+
             $roles = $this->request->getPost('typeOfPermissions');
             $r = [
                 'create_r' => in_array('create', $roles),
@@ -70,8 +97,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 $this->commonModel->create('auth_permissions_pages', [
                     'pagename' => esc(strip_tags(trim($this->request->getPost('pagename')))),
                     'description' => esc(strip_tags(trim($this->request->getPost('description')))),
-                    'className' => esc(strip_tags(trim($this->request->getPost('className')))),
-                    'methodName' => esc(strip_tags(trim($this->request->getPost('methodName')))),
+                    'className' => $className,
+                    'methodName' => $methodName,
                     'sefLink' => $this->request->getPost('sefLink'),
                     'hasChild' => $this->request->getPost('hasChild') ?? 0,
                     'pageSort' => !empty($this->request->getPost('pageSort')) ? $this->request->getPost('pageSort') : NULL,
@@ -79,7 +106,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                     'symbol' => !empty($this->request->getPost('symbol')) ? $this->request->getPost('symbol') : NULL,
                     'inNavigation' => $this->request->getPost('inNavigation') ?? 0,
                     'isBackoffice' => $this->request->getPost('isBackoffice') ?? 0,
-                    'typeOfPermissions' => $this->request->getPost('typeOfPermissions')
+                    'module_id' => $moduleId,
+                    'typeOfPermissions' => $roles
                 ])
             ) {
                 return redirect()->route('methodList')->with('success', lang('Backend.created', [$this->request->getPost('pagename')]));
@@ -91,11 +119,30 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         return view('Modules\Methods\Views\form', $this->defData);
     }
 
+    /**
+     * Updates an existing auth_permissions_pages row from the method form.
+     *
+     * Same className/methodName collision guard as create(); a match against
+     * a DIFFERENT row is refused, a match against the row's own current pk is
+     * allowed (submitting the form unchanged must not be blocked).
+     *
+     * @param int $pk auth_permissions_pages.id
+     *
+     * @return \CodeIgniter\HTTP\RedirectResponse|string
+     */
     public function update(int $pk)
     {
         if ($this->request->is('post')) {
             if ($this->validate($this->validationRules()) === false)
                 return redirect()->route('methodUpdate', [$pk])->withInput()->with('errors', $this->validator->getErrors());
+
+            $className = esc(strip_tags(trim((string) $this->request->getPost('className'))));
+            $methodName = esc(strip_tags(trim((string) $this->request->getPost('methodName'))));
+
+            if ($this->classNameMethodNameCollides($className, $methodName, $pk)) {
+                return redirect()->route('methodUpdate', [$pk])->withInput()->with('error', lang('Methods.classNameMethodNameDuplicate'));
+            }
+
             $roles = $this->request->getPost('typeOfPermissions');
             $r = [
                 'create_r' => in_array('create', $roles),
@@ -108,8 +155,8 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 $this->commonModel->edit('auth_permissions_pages', [
                     'pagename' => esc(strip_tags(trim($this->request->getPost('pagename')))),
                     'description' => esc(strip_tags(trim($this->request->getPost('description')))),
-                    'className' => esc(strip_tags(trim($this->request->getPost('className')))),
-                    'methodName' => esc(strip_tags(trim($this->request->getPost('methodName')))),
+                    'className' => $className,
+                    'methodName' => $methodName,
                     'sefLink' => $this->request->getPost('sefLink'),
                     'hasChild' => (bool) $this->request->getPost('hasChild') === true ? 1 : 0,
                     'pageSort' => $this->request->getPost('pageSort') ?? 0,
@@ -419,7 +466,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         if (empty($module))
             return $this->failNotFound(lang('Methods.deleteModuleFailed'));
 
-        // Korumalı modül kontrolü
+        // Protected module check
         if (in_array($module->name, self::PROTECTED_MODULES)) {
             return $this->respond([
                 'status' => 'error',
@@ -427,7 +474,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             ]);
         }
 
-        // İsim eşleşme kontrolü
+        // Name match check
         if ($confirmName !== $module->name)
             return $this->respond([
                 'status' => 'error',
@@ -467,12 +514,88 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         ]);
     }
 
+    /**
+     * Validation rules for the create()/update() method form.
+     *
+     * className/methodName feed Ci4MsAuthFilter's authorization lookup
+     * (auth_permissions_pages.className + .methodName), so they are
+     * restricted to the charset ModuleScanner itself produces
+     * (str_replace('\\', '-', ...) of a PSR-4 class name, plus a plain
+     * method identifier) instead of the generic "no angle brackets" rule
+     * used for free-text fields elsewhere in this controller.
+     *
+     * @return array<string, array{label: string, rules: string}>
+     */
     private function validationRules(): array
     {
         return [
             'pagename' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
             'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
+            'className' => ['label' => '', 'rules' => 'permit_empty|regex_match[/^[A-Za-z0-9_\-]*$/]'],
+            'methodName' => ['label' => '', 'rules' => 'permit_empty|regex_match[/^[A-Za-z0-9_\-]*$/]'],
             'typeOfPermissions' => ['label' => '', 'rules' => 'required']
         ];
+    }
+
+    /**
+     * Whether the given className/methodName pair is already registered to a
+     * DIFFERENT auth_permissions_pages row.
+     *
+     * auth_permissions_pages has no unique constraint on (className,
+     * methodName) — a real DB-level fix is tracked separately (schema/index
+     * decision) — so this is an application-level guard: it stops create()/
+     * update() from writing a row that duplicates an existing controller's
+     * authorization key, which is exactly the key Ci4MsAuthFilter looks up
+     * to decide which typeOfPermissions applies to an incoming request.
+     * The empty/empty pair is exempt: it is the legitimate "menu-only,
+     * no route" parent page pattern also produced by
+     * ModuleScanner::createVirtualParents().
+     *
+     * @param string   $className  Sanitized className value about to be written.
+     * @param string   $methodName Sanitized methodName value about to be written.
+     * @param int|null $excludePk  auth_permissions_pages.id to treat as "self" on update(); null on create().
+     *
+     * @return bool True if the pair collides with another row.
+     */
+    private function classNameMethodNameCollides(string $className, string $methodName, ?int $excludePk = null): bool
+    {
+        if ($className === '' && $methodName === '') {
+            return false;
+        }
+
+        $existing = $this->commonModel->selectOne('auth_permissions_pages', ['className' => $className, 'methodName' => $methodName]);
+        if (empty($existing)) {
+            return false;
+        }
+
+        return $excludePk === null || (int) $existing->id !== $excludePk;
+    }
+
+    /**
+     * Resolves the posted `moduleName` field to a real modules.id.
+     *
+     * The Methods form's module <select> is named `moduleName` but its
+     * option values are actually modules.id (see
+     * modules/Methods/Views/form.php:146-154), not a module name string.
+     * This validates that the posted value is a positive integer AND that a
+     * modules row with that id actually exists, instead of trusting an
+     * attacker-controlled value that could otherwise violate the
+     * module_id -> modules(id) foreign key
+     * (modules/Backend/Database/Migrations/2026-02-25-062806_AddForeignKeys.php:15).
+     *
+     * @param mixed $moduleIdPost Raw POST value of the `moduleName` field.
+     *
+     * @return int|null Resolved modules.id, or null if missing, not a
+     *                   positive integer, or not an existing module.
+     */
+    private function resolveModuleId(mixed $moduleIdPost): ?int
+    {
+        if (!is_scalar($moduleIdPost) || !ctype_digit((string) $moduleIdPost) || (int) $moduleIdPost < 1) {
+            return null;
+        }
+
+        $module = $this->commonModel->selectOne('modules', ['id' => (int) $moduleIdPost]);
+
+        return empty($module) ? null : (int) $module->id;
     }
 }

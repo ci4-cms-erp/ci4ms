@@ -269,7 +269,7 @@ echo script_tag("be-assets/js/ci4ms.js");
 echo script_tag("be-assets/plugins/moment/moment.min.js");
 echo script_tag("be-assets/plugins/inputmask/jquery.inputmask.min.js") ?>
 <script type="text/javascript" <?php echo csp_script_nonce(); ?>>
-    // Create modunda tüm tag'ları yükle
+    // Load all tags in create mode
     $.ajax({
         method: "POST",
         url: "<?php echo route_to('tagify') ?>",

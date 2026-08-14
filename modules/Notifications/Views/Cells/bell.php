@@ -1,17 +1,17 @@
 <?php
 /**
- * Üst çubuk bildirim çanı — AdminLTE navbar dropdown.
+ * Top bar notification bell — AdminLTE navbar dropdown.
  *
- * @var int   $unread          Okunmamış bildirim sayısı
- * @var array $items           Son ~FEED_LIMIT ilgili bildirim (stdClass satırları)
- * @var bool  $realtimeEnabled Redis destekli PHP-SSE anlık teslim açık mı (false → yalnız 60sn polling)
+ * @var int   $unread          Number of unread notifications
+ * @var array $items           Latest ~FEED_LIMIT relevant notifications (stdClass rows)
+ * @var bool  $realtimeEnabled Whether Redis-backed PHP-SSE realtime delivery is on (false -> 60s polling only)
  *
- * CSRF: POST istekleri jQuery ile yapılır; be-assets/js/ci4ms.js global AJAX
- * katmanı X-CSRF-TOKEN başlığını ve gövde token'ını otomatik ekler — burada
- * elle token yönetimi gerekmez.
+ * CSRF: POST requests are made with jQuery; the be-assets/js/ci4ms.js global AJAX
+ * layer automatically adds the X-CSRF-TOKEN header and the body token — no
+ * manual token handling is needed here.
  */
 
-// severity → [ikon, renk] eşlemesi; bilinmeyen değer info'ya düşer.
+// severity -> [icon, color] mapping; an unknown value falls back to info.
 $severityMap = [
     'info'     => ['far fa-bell', 'text-primary'],
     'warning'  => ['fas fa-exclamation-triangle', 'text-warning'],
@@ -20,9 +20,10 @@ $severityMap = [
 $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
 ?>
 <style>
-    /* Bootstrap'ın .dropdown-item'ı nowrap'tir ve dropdown-menu-lg yalnız min-width verir:
-       uzun başlık sarmayıp öğeyi genişletir, menü de ekranın sağına taşardı. Genişliği
-       sabitleyip sarmayı açıyoruz; max-width dar ekranda viewport'u aşmayı engeller. */
+    /* Bootstrap's .dropdown-item is nowrap, and dropdown-menu-lg only sets a min-width:
+       a long title wouldn't wrap and would widen the item, and the menu would overflow
+       off the right edge of the screen. We fix the width and enable wrapping; max-width
+       prevents overflowing the viewport on narrow screens. */
     #ci4msNotifBell .dropdown-menu {
         width: 22rem;
         max-width: calc(100vw - 1rem);
@@ -93,7 +94,7 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
     }
 
     function safeUrl(u) {
-        // Sunucu tarafı zaten doğruluyor; istemcide de yalnız '/...' veya http(s) kabul et.
+        // The server side already validates this; on the client, also only accept '/...' or http(s).
         if (!u) return '#';
         if (u.charAt(0) === '/' && u.charAt(1) !== '/' && u.charAt(1) !== '\\') return u;
         if (/^https?:\/\//i.test(u)) return u;
@@ -136,7 +137,7 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
         });
     }
 
-    // Global scope — dropdown içindeki onclick'ler için.
+    // Global scope — for the onclick handlers inside the dropdown.
     window.ci4msNotifMarkRead = function (id) {
         $.post(readBase + '/' + id).done(function () { refresh(); });
     };
@@ -145,8 +146,8 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
         $.post(readAllUrl).done(function () { refresh(); });
     };
 
-    // Reconcile: SSE payload'a GÜVENMEDEN feed ucundan (DB source-of-truth) yeniden oku.
-    // Kısa debounce ile mesaj/ping patlamalarında tek istek yapılır.
+    // Reconcile: re-read from the feed endpoint (DB source-of-truth) WITHOUT TRUSTING the SSE payload.
+    // A short debounce ensures a single request during bursts of messages/pings.
     var reconcileTimer = null;
     function reconcile() {
         if (reconcileTimer) return;
@@ -156,10 +157,10 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
         }, 400);
     }
 
-    // Çoklu sekme senkronu: her sekme kendi EventSource'unu açar (basit + doğru; admin
-    // panelinde sekme sayısı azdır, leader election'a değmez). Bir sekme mesaj alınca
-    // BroadcastChannel (yoksa storage event) ile diğer sekmeleri de reconcile'a çağırır;
-    // debounce sayesinde bu, gereksiz istek fırtınasına dönüşmez.
+    // Multi-tab sync: each tab opens its own EventSource (simple + correct; the admin
+    // panel has few open tabs, not worth leader election). When a tab receives a message,
+    // it calls the other tabs to reconcile via BroadcastChannel (or a storage event
+    // fallback); thanks to the debounce this doesn't turn into a storm of unnecessary requests.
     var bc = null;
     try { bc = ('BroadcastChannel' in window) ? new BroadcastChannel('ci4ms_notif') : null; } catch (e) { bc = null; }
     function broadcastPing() {
@@ -174,19 +175,19 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
         });
     }
 
-    // realtime kapalı → DAVRANIŞ BİREBİR ESKİSİ: yalnız 60sn polling, SSE kodu hiç çalışmaz.
+    // realtime off → BEHAVIOR IS IDENTICAL TO BEFORE: only 60s polling, the SSE code never runs.
     if (!realtime) {
         $(function () { setInterval(refresh, pollMs); });
         return;
     }
 
-    // realtime açık → EventSource + polling fallback (jitter'lı exponential backoff).
+    // realtime on → EventSource + polling fallback (exponential backoff with jitter).
     var es         = null;
     var pollTimer  = null;
     var connecting = false;
     var backoff    = 1000;
     var backoffMax = 30000;
-    var coolDownMs = 300000;   // kalıcı kapanış sonrası TEK yeniden deneme aralığı (5 dk)
+    var coolDownMs = 300000;   // single retry interval after a permanent close (5 min)
 
     function startPollingFallback() {
         if (pollTimer) return;
@@ -205,8 +206,8 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
     function connect() {
         if (connecting) return;
         connecting = true;
-        // Same-origin SSE ucuna doğrudan bağlan; oturum cookie'si withCredentials ile gider,
-        // kanallar sunucuda session'dan türetilir (istemci topic göndermez).
+        // Connect directly to the same-origin SSE endpoint; the session cookie travels via
+        // withCredentials, channels are derived from the session on the server (the client never sends a topic).
         openStream(streamUrl);
     }
 
@@ -221,33 +222,34 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
         }
         es.onopen = function () {
             connecting = false;
-            backoff = 1000;              // sağlıklı bağlantı → backoff sıfırla
-            stopPollingFallback();       // SSE çalışırken polling'e gerek yok
-            reconcile();                 // açılışta kaçırılmış olabilecekleri yakala
+            backoff = 1000;              // healthy connection → reset backoff
+            stopPollingFallback();       // no need for polling while SSE is running
+            reconcile();                 // catch anything that might have been missed on open
         };
         es.onmessage = function () {
-            reconcile();                 // payload'a güvenme; DB'den reconcile et
-            broadcastPing();             // diğer sekmeleri de uyar
+            reconcile();                 // don't trust the payload; reconcile from the DB
+            broadcastPing();             // wake up the other tabs too
         };
         es.onerror = function () {
             connecting = false;
-            // Tarayıcı gerçeği: onerror HTTP durum kodunu JS'e VERMEZ. Ama spec gereği sunucu
-            // 2xx-olmayan bir yanıt (429 bağlantı cap'i dolu, 204 realtime kapalı) ya da yanlış
-            // content-type dönerse tarayıcı akışı KALICI kapatır → readyState CLOSED (2).
-            // Geçici ağ kopmasında ise readyState CONNECTING (0) kalır. Bu yüzden durumu
-            // close()'dan ÖNCE okuyoruz (close() readyState'i CLOSED yapar).
-            // CLOSED dalında 429'u 204'ten ayırt edemeyiz; sorun değil, doğru eylem ikisinde de
-            // aynı: polling'e geç ve backoff ZİNCİRİNİ ÇALIŞTIRMA. Aksi halde cap dolu iken
-            // reconnect döngüsü korumaya çalıştığımız worker havuzunu daha da zorlardı.
+            // Browser reality: onerror does NOT give the HTTP status code to JS. But per spec, if
+            // the server returns a non-2xx response (429 connection cap full, 204 realtime off) or
+            // the wrong content-type, the browser closes the stream PERMANENTLY → readyState CLOSED (2).
+            // On a transient network drop, readyState stays CONNECTING (0). That's why we read the
+            // state BEFORE close() (close() sets readyState to CLOSED).
+            // In the CLOSED branch we can't tell a 429 apart from a 204; that's fine, the correct action
+            // is the same either way: switch to polling and DO NOT RUN the backoff CHAIN. Otherwise, while
+            // the cap is full, the reconnect loop would put even more strain on the worker pool we're
+            // trying to protect.
             var permanent = !es || es.readyState === EventSource.CLOSED;
             if (es) { es.close(); es = null; }
             startPollingFallback();
             if (permanent) {
-                // Backoff ZİNCİRİ çalıştırılmaz: scheduleReconnect() çağrılmaz, üstel
-                // hızlanma yoktur — her kalıcı hatada sabit 5 dk sonrasına yeniden denenir
-                // (sekme başına ~0.003 req/s; aynı sekmedeki 60 sn polling'den 5 kat ucuz).
-                // Amaç: geçici bir Redis kesintisi ya da anlık doluluk sekmeyi ömür boyu
-                // polling'e mahkûm etmesin.
+                // The backoff CHAIN is not run: scheduleReconnect() is not called, there is no
+                // exponential ramp-up — every permanent error retries after a fixed 5 min instead
+                // (~0.003 req/s per tab; 5x cheaper than the same tab's 60s polling).
+                // Goal: don't condemn a tab to lifelong polling over a transient Redis outage or
+                // momentary fullness.
                 setTimeout(connect, coolDownMs);
                 return;
             }
@@ -256,7 +258,7 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
     }
 
     $(function () {
-        refresh();   // ilk durumu hemen çek (SSE hiç açılmasa bile)
+        refresh();   // fetch the initial state right away (even if SSE never opens)
         connect();
     });
 })();

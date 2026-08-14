@@ -16,14 +16,14 @@ class CreateNotificationsTable extends Migration
                 'auto_increment' => true,
                 'null'           => false,
             ],
-            // Alıcı kullanıcı. Rol hedefleri gönderim anında bu satırlara açılır.
+            // Recipient user. Role targets are expanded into these rows at send time.
             'user_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
                 'null'       => false,
             ],
-            // Makine-okunur olay tipi: 'update.available', 'auth.failed_login', 'comment.new' ...
+            // Machine-readable event type: 'update.available', 'auth.failed_login', 'comment.new' ...
             'type' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 64,
@@ -39,15 +39,15 @@ class CreateNotificationsTable extends Migration
                 'null'    => true,
                 'default' => null,
             ],
-            // Tıklanınca gidilecek hedef. Notifier tarafında yazılırken doğrulanır
-            // (yalnız site-içi '/...' veya http(s)); görüntülenirken esc() ile kaçılır.
+            // Target navigated to on click. Validated on the Notifier side when written
+            // (site-internal '/...' or http(s) only); escaped with esc() when displayed.
             'url' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
                 'null'       => true,
                 'default'    => null,
             ],
-            // NULL = okunmamış. Ayrı bir bayrak tutulmaz; tarih hem durumu hem zamanı verir.
+            // NULL = unread. No separate flag is kept; the date carries both the status and the time.
             'read_at' => [
                 'type'    => 'DATETIME',
                 'null'    => true,
@@ -60,7 +60,7 @@ class CreateNotificationsTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addKey(['user_id', 'read_at']); // okunmamış rozeti + kullanıcı listesi için
+        $this->forge->addKey(['user_id', 'read_at']); // for the unread badge + user list
         $this->forge->addKey('created_at');
         $this->forge->createTable('notifications', true);
     }

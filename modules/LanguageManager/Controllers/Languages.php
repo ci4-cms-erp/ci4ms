@@ -146,7 +146,7 @@ class Languages extends \Modules\Backend\Controllers\BaseController
         $lang = $this->commonModel->selectOne('languages', ['id' => $id]);
         if (!$lang) {
             return redirect()->to(site_url('backend/language-manager/languages'))
-                ->with('error', lang('LanguageManager.recordNotFound'));
+                ->with('error', lang('Backend.recordNotFound'));
         }
 
         if ($this->request->is('post')) {

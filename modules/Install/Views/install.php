@@ -50,7 +50,7 @@ echo $this->section('content'); ?>
                 <div class="form-group"><label for=""><?php echo lang('Install.email') ?></label>
                   <input type="email" class="form-control" name="email" value="<?php echo old('email') ?>" placeholder="E-mail" required>
                 </div>
-                <div class="form-group"><label for=""><?php echo lang('Install.username') ?></label>
+                <div class="form-group"><label for=""><?php echo lang('Backend.username') ?></label>
                   <input type="text" class="form-control" name="username" value="<?php echo old('username') ?>" placeholder="Username" required>
                 </div>
                 <div class="form-group">
@@ -103,7 +103,7 @@ echo $this->section('content'); ?>
               </div>
               <div id="site-infos-part" class="content" role="tabpanel" aria-labelledby="site-infos-part-trigger">
                 <div class="form-group">
-                  <label for=""><?php echo lang('Install.siteName') ?></label>
+                  <label for=""><?php echo lang('Backend.siteName') ?></label>
                   <input type="text" name="siteName" value="<?php echo old('siteName') ?>" class="form-control" placeholder="<?php echo lang('Install.siteNamePlaceholder') ?>" required>
                 </div>
                 <div class="form-group">
@@ -159,7 +159,7 @@ echo $this->section('javascript'); ?>
     $('#password').pwstrength(options);
   });
 
-  // Rastgele Şifre Üretimi
+  // Random Password Generation
   function generatePassword() {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
     let password = "";

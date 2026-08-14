@@ -3,13 +3,13 @@
 namespace Modules\MigrationManager\Config;
 
 /**
- * MigrationManager modül yapılandırması (Backup/Notifications kalıbıyla birebir).
- * - csrfExcept: BOŞ — AJAX uçları global CSRF muafiyeti almaz, `X-CSRF-TOKEN` header'ı
- *   kullanılır (`Modules\Backend\Filters\CsrfTokenRefreshFilter`, backendGuard'ın
- *   `after`'ına otomatik eklenir, bkz. app/Config/Filters.php:311-318).
- * - filters: backend/migration-manager altındaki tüm uçları backendGuard arkasına alır.
- * - moduleInfo: modül listesindeki ikon.
- * - menus: sol menüde görünecek gezinme kaydı (etiket lang('MigrationManager.migrationManager')).
+ * MigrationManager module configuration (identical to the Backup/Notifications pattern).
+ * - csrfExcept: EMPTY — AJAX endpoints do not get a global CSRF exemption; the
+ *   `X-CSRF-TOKEN` header is used instead (`Modules\Backend\Filters\CsrfTokenRefreshFilter`,
+ *   automatically appended to backendGuard's `after`, see app/Config/Filters.php:311-318).
+ * - filters: puts every endpoint under backend/migration-manager behind backendGuard.
+ * - moduleInfo: icon shown in the module list.
+ * - menus: navigation entry shown in the left sidebar (label lang('MigrationManager.migrationManager')).
  */
 class MigrationManagerConfig
 {

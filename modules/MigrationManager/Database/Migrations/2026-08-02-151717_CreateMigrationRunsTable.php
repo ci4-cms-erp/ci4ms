@@ -6,14 +6,15 @@ use CodeIgniter\Database\Migration;
 use CodeIgniter\Database\RawSql;
 
 /**
- * Audit tablosu: her migration/seed çalıştırma DENEMESİ için 1 satır
- * (migration dosyası başına DEĞİL, run-aksiyonu başına — bkz. KARAR-1,
+ * Audit table: 1 row per migration/seed run ATTEMPT (not per migration
+ * file, but per run action — see DECISION-1,
  * .ci4ms/plans/migration-manager/context.md:588-604).
  *
- * FK `run_by` → `users.id` `tableExists('users')` guard'lıdır AMA try/catch
- * ile YUTULMAZ: `modules/Backend/Database/Migrations/2026-02-25-062806_AddForeignKeys.php`
- * dosyasının try/catch-yutma anti-deseni burada KASITLI olarak tekrarlanmaz
- * (o dosyanın 14 FK'sinin hiçbiri canlı DB'de kurulamamış, bkz. KARAR-1-EK).
+ * FK `run_by` → `users.id` is guarded by `tableExists('users')` BUT is NOT
+ * SWALLOWED by a try/catch: the try/catch-swallowing anti-pattern in
+ * `modules/Backend/Database/Migrations/2026-02-25-062806_AddForeignKeys.php`
+ * is DELIBERATELY not repeated here (none of that file's 14 FKs actually
+ * got created on the live DB, see DECISION-1-ADDENDUM).
  */
 class CreateMigrationRunsTable extends Migration
 {
@@ -32,7 +33,7 @@ class CreateMigrationRunsTable extends Migration
                 'constraint' => ['migration', 'seed'],
                 'null'       => false,
             ],
-            // migration: 'Modules\Blog' gibi namespace; seed: FQCN.
+            // migration: a namespace like 'Modules\Blog'; seed: FQCN.
             'target' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
@@ -57,7 +58,7 @@ class CreateMigrationRunsTable extends Migration
                 'null'       => true,
                 'default'    => null,
             ],
-            // JSON: uygulanan version+class listesi VEYA hata mesajı.
+            // JSON: the list of applied version+class pairs OR an error message.
             'message' => [
                 'type'    => 'TEXT',
                 'null'    => true,
@@ -94,7 +95,7 @@ class CreateMigrationRunsTable extends Migration
         $this->forge->addKey(['target', 'kind', 'created_at'], false, false, 'idx_target_kind_created');
         $this->forge->addKey(['kind', 'status', 'created_at'], false, false, 'idx_kind_status_created');
 
-        // `users` tablosu yoksa (modül tek başına, Shield migrate edilmemiş) FK'siz oluştur.
+        // If the `users` table doesn't exist (module standalone, Shield not migrated), create without an FK.
         if ($this->db->tableExists('users')) {
             $this->forge->addForeignKey('run_by', 'users', 'id', 'CASCADE', 'SET NULL');
         } else {

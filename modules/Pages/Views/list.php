@@ -16,7 +16,7 @@ echo $this->section('content'); ?>
                 <div class="m-stat-icon st-total"><i class="fas fa-file-alt"></i></div>
                 <div>
                     <div class="m-stat-value"><?php echo $stats['total'] ?></div>
-                    <div class="m-stat-label"><?php echo lang('Pages.totalPages') ?? 'Total Pages' ?></div>
+                    <div class="m-stat-label"><?php echo lang('Backend.totalPages') ?></div>
                 </div>
             </div>
         </div>

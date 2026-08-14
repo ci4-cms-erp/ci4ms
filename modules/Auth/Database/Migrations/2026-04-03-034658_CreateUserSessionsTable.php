@@ -95,7 +95,7 @@ class CreateUserSessionsTable extends Migration
         $this->forge->addPrimaryKey('id');
         $this->forge->addKey('user_id');
         $this->forge->addKey('session_id');
-        $this->forge->addKey(['user_id', 'is_active']); // composite index — liste sorgusu için
+        $this->forge->addKey(['user_id', 'is_active']); // composite index — for list queries
 
         $this->forge->createTable('user_sessions', true);
     }

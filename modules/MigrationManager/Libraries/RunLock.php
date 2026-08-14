@@ -5,72 +5,75 @@ declare(strict_types=1);
 namespace Modules\MigrationManager\Libraries;
 
 /**
- * Migration/seed çalıştırma kilidi.
+ * Migration/seed run lock.
  *
- * `flock(LOCK_EX|LOCK_NB)` tabanlıdır: kilit işletim sistemi tarafından
- * kilidi tutan **open file description**'a bağlanır — süreç fatal hata,
- * `SIGKILL` veya timeout ile ölse bile çekirdek kilidi OTOMATİK bırakır.
- * `fclose()` çağrıldığı an da flock anında serbest kalır; bu yüzden kilit
- * tutulduğu sürece dosya tanıtıcısı `release()` çağrılana kadar AÇIK
- * tutulmalıdır (bkz. `$handle`).
+ * Based on `flock(LOCK_EX|LOCK_NB)`: the lock is tied by the operating
+ * system to the **open file description** holding it — the kernel
+ * AUTOMATICALLY releases it even if the process dies with a fatal error,
+ * `SIGKILL`, or timeout. The flock is also freed the instant `fclose()` is
+ * called; that's why the file handle must stay OPEN for as long as the lock
+ * is held, until `release()` is called (see `$handle`).
  *
- * Tarihçe: bu sınıf başlangıçta `modules/Settings/Libraries/UpdateService.php:871-893`
- * (`acquireLock()`/`releaseLock()`) deseninin birebir kopyasıydı —
- * `fopen(..., 'xb')` + dosya mtime'ına dayalı TTL ile "bayat" kilidi temizleyen
- * bir tasarım. O tasarımda heartbeat yoktu (TTL'yi aşan uzun bir koşumda başka
- * bir süreç kilidi bayat sanıp silebiliyordu) ve `unlink()` + `fopen('xb')`
- * arasında bir TOCTOU penceresi vardı. Bu sınıf `flock()`'a geçirilerek her
- * iki sorun da yapısal olarak ortadan kaldırıldı — TTL/heartbeat kavramı
- * `flock()` ile birlikte gereksizleşir, çünkü kilidin sahipliği artık bir
- * dosya içeriğine/zaman damgasına değil, çekirdeğin kendi izlediği open file
- * description'a bağlıdır. `UpdateService::acquireLock()`/`releaseLock()`
- * AYNI TTL/TOCTOU kusurunu hâlâ taşıyor — bu bilinçli olarak bu görevin
- * kapsamı dışında bırakıldı, ayrı bir kullanıcı kararı gerektirir.
+ * History: this class started as an exact copy of the
+ * `modules/Settings/Libraries/UpdateService.php:871-893`
+ * (`acquireLock()`/`releaseLock()`) pattern — a design that cleans up a
+ * "stale" lock via `fopen(..., 'xb')` + a TTL based on the file's mtime.
+ * That design had no heartbeat (a long run exceeding the TTL could get its
+ * lock deleted by another process assuming it was stale) and had a TOCTOU
+ * window between `unlink()` and `fopen('xb')`. This class was moved to
+ * `flock()`, which structurally eliminates both problems — the
+ * TTL/heartbeat concept becomes unnecessary with `flock()`, because lock
+ * ownership is no longer tied to file content/a timestamp but to an open
+ * file description tracked by the kernel itself.
+ * `UpdateService::acquireLock()`/`releaseLock()` STILL carries the SAME
+ * TTL/TOCTOU flaw — this was deliberately left out of this task's scope and
+ * requires a separate user decision.
  *
- * `app/Config/Migrations.php`'deki `$lock` bayrağının yerini TUTMAZ (o bayrak
- * kasıtlı olarak kapalı bırakılmıştır) — bu sınıf yalnızca `MigrationManager`
- * modülünün kendi çalıştırma uçları (ve `Modules\Backend\Commands\Ci4msMigrate`
- * CLI komutu) için uygulama seviyesinde eşzamanlılık kilididir.
+ * It does NOT REPLACE the `$lock` flag in `app/Config/Migrations.php` (that
+ * flag is deliberately left off) — this class is only an
+ * application-level concurrency lock for `MigrationManager` module's own
+ * run endpoints (and the `Modules\Backend\Commands\Ci4msMigrate` CLI
+ * command).
  *
- * Platform kısıtı: `flock()` NFS gibi ağ dosya sistemlerinde GÜVENİLİR
- * DEĞİLDİR. Kilit dosyası `WRITEPATH` altında (`writable/locks/`) yerel disk
- * varsayımıyla tutulur; bu varsayım kırılırsa (`WRITEPATH` bir NFS mount'una
- * taşınırsa) bu sınıfın dışlama garantisi geçersizleşir.
+ * Platform constraint: `flock()` is NOT RELIABLE on network filesystems
+ * such as NFS. The lock file is kept under `WRITEPATH` (`writable/locks/`)
+ * on the assumption of a local disk; if that assumption breaks (`WRITEPATH`
+ * moved to an NFS mount), this class's exclusion guarantee becomes invalid.
  */
 class RunLock
 {
     private string $lockFile;
 
     /**
-     * Kilit tutulurken açık kalan dosya tanıtıcısı.
+     * File handle that stays open while the lock is held.
      *
-     * `flock()` bir open file description'a bağlıdır — bu handle
-     * `release()` çağrılana (veya sürecin kendisi ölene) kadar AÇIK
-     * kalmalıdır. `fclose()` çağrıldığı an flock anında serbest kaldığı
-     * için bu alan yalnızca `release()` içinde kapatılır; `acquire()`
-     * içinde asla `fclose()` edilmez (başarısız flock denemesi hariç).
+     * `flock()` is tied to an open file description — this handle must
+     * stay OPEN until `release()` is called (or the process itself dies).
+     * Since the flock is freed the instant `fclose()` is called, this field
+     * is only closed inside `release()`; it's never `fclose()`d inside
+     * `acquire()` (except for a failed flock attempt).
      *
      * @var resource|null
      */
     private mixed $handle = null;
 
     /**
-     * Bu örneğin kilidi GERÇEKTEN tuttuğunu izler. Yalnız `acquire()`
-     * kilidi gerçekten kazandığında (`true` döndüğünde) `true` olur;
-     * `release()` yalnız bu bayrak `true` iken `$handle`'ı kapatır ve
-     * ardından `false`'a döner — böylece aynı örnek üzerindeki ikinci bir
-     * `release()` çağrısı, zaten kapalı bir handle'da tekrar `fclose()`
-     * çağırıp PHP `E_WARNING`'i tetiklemek yerine no-op olur.
+     * Tracks whether this instance ACTUALLY holds the lock. Only becomes
+     * `true` when `acquire()` truly wins the lock (returns `true`);
+     * `release()` only closes `$handle` and resets to `false` while this
+     * flag is `true` — so a second `release()` call on the same instance is
+     * a no-op instead of calling `fclose()` again on an already-closed
+     * handle and triggering a PHP `E_WARNING`.
      */
     private bool $held = false;
 
     /**
-     * @param string|null $lockFile Kilit dosyasının tam yolu. `null` ise
+     * @param string|null $lockFile Full path of the lock file. If `null`,
      *                              `WRITEPATH.'locks/migration_manager.lock'`
-     *                              kullanılır (asla `public/` altında değil).
+     *                              is used (never under `public/`).
      *
-     * @throws \RuntimeException Kilit dizini oluşturulamıyorsa, yazılabilir
-     *                            değilse veya bir sembolik bağsa (bkz.
+     * @throws \RuntimeException If the lock directory can't be created, isn't
+     *                            writable, or is a symlink (see
      *                            `ensureDirectory()`).
      */
     public function __construct(?string $lockFile = null)
@@ -81,50 +84,53 @@ class RunLock
     }
 
     /**
-     * Çalıştırma kilidini `flock(LOCK_EX|LOCK_NB)` ile atomik olarak alır ve
-     * bu örneği kilidin sahibi olarak işaretler.
+     * Atomically acquires the run lock with `flock(LOCK_EX|LOCK_NB)` and
+     * marks this instance as the lock's owner.
      *
-     * Kilit dosyası `'c'` modunda açılır (create-or-open, TRUNCATE ETMEZ) —
-     * `'w'` veya `'xb'` DEĞİL: `'w'` her açılışta dosyayı sıfırlardı, bu da
-     * flock'u ALAMAYAN bir sürecin bile (`fopen()` başarılı olur, yalnızca
-     * sonraki `flock()` başarısız olur) kilit sahibinin yazdığı teşhis
-     * içeriğini silmesine yol açardı. Bu yüzden teşhis içeriği (pid + zaman
-     * damgası) yalnızca lock BAŞARIYLA alındıktan SONRA `ftruncate()` +
-     * `fwrite()` ile yazılır, açılış anında değil. Bu içerik tamamen
-     * opsiyoneldir ve insan operasyonu için `cat writable/locks/...` ile
-     * okunabilir olması amaçlanır — bu sınıfın hiçbir mantık dalı bu içeriği
-     * geri OKUMAZ.
+     * The lock file is opened in `'c'` mode (create-or-open, does NOT
+     * TRUNCATE) — NOT `'w'` or `'xb'`: `'w'` would reset the file on every
+     * open, which would let even a process that FAILS to get the flock
+     * (`fopen()` succeeds, only the subsequent `flock()` fails) erase the
+     * diagnostic content written by the lock's owner. That's why the
+     * diagnostic content (pid + timestamp) is only written with
+     * `ftruncate()` + `fwrite()` AFTER the lock is SUCCESSFULLY acquired,
+     * not at open time. This content is entirely optional and meant to be
+     * readable by a human operator via `cat writable/locks/...` — no logic
+     * branch in this class ever READS it back.
      *
-     * Sembolik bağ koruması (`'c'` modu eski `'xb'`'nin aksine sembolik bağı
-     * TAKİP EDER — `O_CREAT|O_EXCL` yok): `fopen()`'dan ÖNCE `is_link()` ile
-     * hızlı-başarısız (fail-fast) bir kontrol yapılır — bu yalnızca gereksiz
-     * bir dosya tanıtıcısı açmaktan kaçınmak içindir, TEK BAŞINA TOCTOU'ya
-     * (kontrol ile `fopen()` arasında yol değişebilir) KARŞI YETERLİ
-     * DEĞİLDİR. Asıl garanti `fopen()` SONRASI gelir: `fstat($handle)`
-     * (`fopen()`'ın GERÇEKTEN açtığı, sembolik bağı takip eden inode)
-     * `lstat($this->lockFile)` (yolun son bileşenini TAKİP ETMEYEN, o an
-     * üzerindeki inode) ile karşılaştırılır. Düz bir dosyada ikisi HER ZAMAN
-     * aynı `dev`+`ino` çiftini verir; yol bir sembolik bağSA (veya kontrol
-     * ile `fopen()` arasında bağa DÖNÜŞTÜYSE) farklılaşır. Eşleşmezse handle
-     * hemen kapatılır ve `flock()`'a/`ftruncate()`'e/`fwrite()`'a HİÇ
-     * ULAŞILMADAN `false` döner — böylece başka bir dosyanın içeriği
-     * kısaltılıp üzerine yazılamaz. `clearstatcache()` her kontrolden önce
-     * zorunludur (PHP'nin stat önbelleği sembolik bağ değişimini
-     * gizleyebilir). Meşru (sembolik bağsız) akışta bu karşılaştırma flock
-     * semantiğini DEĞİŞTİRMEZ — fstat/lstat her zaman eşleşir, akış aynen
-     * devam eder. Bu kontrol yalnız kilit DOSYASININ kendisini korur; kilit
-     * DİZİNİNİN bir sembolik bağ olması `ensureDirectory()`'de ayrıca
-     * engellenir (ikisi birbirini tamamlar, bkz. o metodun docblock'u).
+     * Symlink protection (`'c'` mode, unlike the old `'xb'`, DOES FOLLOW
+     * symlinks — no `O_CREAT|O_EXCL`): a fail-fast `is_link()` check
+     * happens BEFORE `fopen()` — this is only to avoid opening an
+     * unnecessary file handle, it's NOT SUFFICIENT on its own against
+     * TOCTOU (the path can change between the check and `fopen()`). The
+     * real guarantee comes AFTER `fopen()`: `fstat($handle)` (the inode
+     * that `fopen()` ACTUALLY opened, following any symlink) is compared
+     * against `lstat($this->lockFile)` (the inode currently at the path,
+     * NOT following the final path component). On a plain file the two
+     * ALWAYS give the same `dev`+`ino` pair; they diverge if the path IS a
+     * symlink (or TURNED INTO one between the check and `fopen()`). If they
+     * don't match, the handle is closed immediately and `false` is
+     * returned WITHOUT EVER REACHING `flock()`/`ftruncate()`/`fwrite()` —
+     * so another file's content can't be truncated and overwritten.
+     * `clearstatcache()` is mandatory before every check (PHP's stat cache
+     * can hide a symlink swap). On a legitimate (non-symlink) path this
+     * comparison does NOT CHANGE flock semantics — fstat/lstat always
+     * match, the flow proceeds unchanged. This check only protects the
+     * lock FILE itself; the lock DIRECTORY being a symlink is separately
+     * blocked in `ensureDirectory()` (the two complement each other, see
+     * that method's docblock).
      *
-     * `fopen()` kendisi başarısız olursa (izin/dizin sorunu) `false` döner —
-     * önceki mtime/TTL tasarımıyla tutarlı. `flock()` `false` dönerse (kilit
-     * başka bir open file description tarafından hâlâ tutuluyor) handle
-     * hemen `fclose()` edilip `false` döner, sızıntı olmaz.
+     * If `fopen()` itself fails (permission/directory issue), `false` is
+     * returned — consistent with the previous mtime/TTL design. If
+     * `flock()` returns `false` (the lock is still held by another open
+     * file description), the handle is closed immediately and `false` is
+     * returned, no leak.
      *
-     * @return bool Kilit bu çağrıyla alınabildiyse `true`; kilit başka bir
-     *              işlem (veya bu örneğin daha önce başarıyla aldığı ve
-     *              henüz `release()` etmediği kendi kilidi), veya yolun bir
-     *              sembolik bağ olması/olmaya dönüşmesi nedeniyle `false`.
+     * @return bool `true` if the lock was acquired by this call; `false` if
+     *              the lock is held by another process (or is this
+     *              instance's own lock it already successfully acquired
+     *              and hasn't `release()`d yet), or because the path is or
+     *              became a symlink.
      */
     public function acquire(): bool
     {
@@ -165,7 +171,7 @@ class RunLock
         $this->handle = $handle;
         $this->held   = true;
 
-        // Teşhis amaçlı, opsiyonel içerik — mantığın hiçbir yerinde okunmaz.
+        // Diagnostic, optional content — never read back anywhere in the logic.
         @ftruncate($handle, 0);
         @fwrite($handle, sprintf("pid=%d acquired_at=%s\n", getmypid(), date(DATE_ATOM)));
         @fflush($handle);
@@ -174,28 +180,30 @@ class RunLock
     }
 
     /**
-     * Kilidi serbest bırakır — yalnız bu örnek kilidi GERÇEKTEN tutuyorsa.
+     * Releases the lock — only if this instance ACTUALLY holds it.
      *
-     * `flock($this->handle, LOCK_UN)` + `fclose($this->handle)` ile
-     * kapatılır. **`unlink()` YAPILMAZ**: flock'lu bir dosyayı silmek klasik
-     * bir yarış üretir — silinen yol disk üzerinde farklı bir inode olarak
-     * yeniden oluşturulabilir ve iki süreç birbirinden habersiz iki farklı
-     * inode'a kilit tutuyor sanabilir (ikisi de "kilidi ben aldım" sanır).
-     * Kilit dosyasının boş/teşhis-içerikli haliyle diskte KALICI olarak
-     * kalması bu tasarımda NORMAL ve BEKLENENDİR — bu bir sızıntı DEĞİLDİR.
-     * ("Sızdırmayacak" kabul kriteri ASILI KALMIŞ bir `flock()`'u, yani
-     * sürecin kilidi hiç bırakmamasını kastediyor; boş bir kilit dosyasının
-     * diskte kalması ayrı ve kasıtlı bir davranıştır.)
+     * Closed via `flock($this->handle, LOCK_UN)` + `fclose($this->handle)`.
+     * **NO `unlink()`**: deleting a flock'd file produces a classic race —
+     * the deleted path can be recreated on disk as a different inode, and
+     * two processes could each think they hold the lock on two different
+     * inodes without knowing about each other (both think "I got the
+     * lock"). The lock file PERMANENTLY remaining on disk in its
+     * empty/diagnostic-content state is NORMAL and EXPECTED in this design
+     * — it is NOT a leak. (The "won't leak" acceptance criterion refers to
+     * a `flock()` being left HANGING, i.e. a process never releasing the
+     * lock; an empty lock file remaining on disk is a separate, deliberate
+     * behavior.)
      *
-     * `$held` guard'ı hâlâ gereklidir — ama artık "başka bir sürecin
-     * kilidini silmeme" için DEĞİL (`unlink()` hiç yapılmadığı için o risk
-     * zaten YOK). Guard'ın yeni gerekçesi: aynı örnek üzerinde `release()`
-     * İKİNCİ kez çağrılırsa (`Ci4msMigrate::run()` aynı `$lock` örneğinin
-     * `release()`'ini iki ayrı `finally` bloğundan çağırıyor), guard
-     * olmadan zaten KAPALI bir handle'da tekrar `fclose()` çağrılır ve PHP
-     * "supplied resource is not a valid stream resource" `E_WARNING`'i
-     * basar. Guard bunu önler; kilit hiç tutulmadıysa (`acquire()` hiç
-     * çağrılmadı veya `false` döndü) de aynı sebeple no-op'tur.
+     * The `$held` guard is still needed — but no longer to avoid "deleting
+     * another process's lock" (that risk is already GONE since `unlink()`
+     * is never done). The guard's new justification: if `release()` is
+     * called a SECOND time on the same instance (`Ci4msMigrate::run()`
+     * calls `release()` on the same `$lock` instance from two separate
+     * `finally` blocks), without the guard `fclose()` would be called again
+     * on an already-CLOSED handle and PHP would emit a "supplied resource
+     * is not a valid stream resource" `E_WARNING`. The guard prevents that;
+     * it's also a no-op for the same reason if the lock was never held
+     * (`acquire()` was never called or returned `false`).
      *
      * @return void
      */
@@ -213,25 +221,26 @@ class RunLock
     }
 
     /**
-     * Kilit dosyasının bulunacağı dizini gerekirse oluşturur ve yazılabilir
-     * olduğunu doğrular.
+     * Creates the directory the lock file lives in if needed, and verifies
+     * it's writable.
      *
-     * `is_dir()` kontrolünden ÖNCE dizinin bir sembolik bağ olup olmadığı
-     * denetlenir: `writable/` dizini `0777` izinlidir, dolayısıyla herhangi
-     * bir yerel kullanıcı `writable/locks`'u silip yerine başka bir hedefe
-     * (ör. hassas bir dosyanın bulunduğu dizine) işaret eden bir sembolik
-     * bağ koyabilir — `is_dir()` bunu SESSİZCE kabul eder, çünkü bir
-     * sembolik bağın hedefi bir dizinse `is_dir()` de `true` döner. Bu
-     * kontrol o senaryoyu erken ve açıkça reddeder. `acquire()`'daki
-     * fstat/lstat karşılaştırması yalnız kilit DOSYASININ kendisini korur,
-     * bu DİZİN düzeyindeki saldırıyı KAPSAMAZ — ikisi birbirini tamamlar.
+     * The directory is checked for being a symlink BEFORE the `is_dir()`
+     * check: the `writable/` directory has `0777` permissions, so any local
+     * user could delete `writable/locks` and replace it with a symlink
+     * pointing to another target (e.g. a directory containing a sensitive
+     * file) — `is_dir()` would SILENTLY accept that, because `is_dir()`
+     * also returns `true` if a symlink's target is a directory. This check
+     * rejects that scenario early and explicitly. The fstat/lstat
+     * comparison in `acquire()` only protects the lock FILE itself, it does
+     * NOT COVER this DIRECTORY-level attack — the two complement each
+     * other.
      *
-     * @param string $path Oluşturulacak/doğrulanacak dizin yolu.
+     * @param string $path Directory path to create/verify.
      *
      * @return void
      *
-     * @throws \RuntimeException Dizin bir sembolik bağsa, oluşturulamıyorsa
-     *                            veya yazılabilir değilse.
+     * @throws \RuntimeException If the directory is a symlink, can't be
+     *                            created, or isn't writable.
      */
     private function ensureDirectory(string $path): void
     {

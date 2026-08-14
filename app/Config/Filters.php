@@ -308,9 +308,9 @@ class Filters extends BaseFilters
         }
         $this->filters = array_merge($this->filters, $allFilters);
 
-        // backendGuard'ın before rotalarını otomatik olarak after'a da yay.
-        // Böylece CsrfTokenRefreshFilter alias içinde tanımlanmış tüm korumalı
-        // rotalarda her module config'e ayrıca csrfTokenRefreshFilter eklemeye gerek kalmaz.
+        // Automatically propagate backendGuard's before routes to after as well.
+        // This way, every module config doesn't need to add csrfTokenRefreshFilter
+        // separately for all protected routes defined within the CsrfTokenRefreshFilter alias.
         if (!empty($this->filters['backendGuard']['before'])) {
             $this->filters['backendGuard']['after'] = array_unique([
                 ...($this->filters['backendGuard']['after'] ?? []),

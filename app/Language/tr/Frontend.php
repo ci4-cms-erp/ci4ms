@@ -8,5 +8,6 @@ return [
     'get_started' => 'Hemen Başla',
     'learn_more' => 'Daha Fazla Bilgi',
     'footer_copyright' => 'Tüm Hakları Saklıdır &copy; CI4MS 2026',
-    'latest_posts' => 'Son Blog Yazıları'
+    'latest_posts' => 'Son Blog Yazıları',
+    'contact_form_success' => 'Mesajınız tarafımıza iletildi. En kısa zamanda geri dönüş sağlanacaktır.'
 ];

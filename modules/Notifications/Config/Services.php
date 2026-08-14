@@ -10,17 +10,17 @@ use Modules\Notifications\Libraries\RedisConnectionRegistry;
 use Modules\Notifications\Libraries\SignalStoreInterface;
 
 /**
- * Bildirim Merkezi servis fabrikası (CI4 tarafından otomatik keşfedilir).
+ * Notification Center service factory (auto-discovered by CI4).
  *
- * `service('notifier')` bu fabrikaya çözülür; böylece uygulamanın her yeri
- * (Events, controller'lar, cell'ler) paylaşımlı tek bir Notifier örneğine erişir.
+ * `service('notifier')` resolves to this factory; this way every part of the
+ * application (Events, controllers, cells) accesses a single shared Notifier instance.
  */
 class Services extends BaseService
 {
     /**
-     * Bildirim servisini döndürür.
+     * Returns the notification service.
      *
-     * @param bool $getShared Paylaşımlı örnek isteniyor mu.
+     * @param bool $getShared Whether a shared instance is requested.
      *
      * @return Notifier
      */
@@ -34,12 +34,12 @@ class Services extends BaseService
     }
 
     /**
-     * Redis destekli anlık-sinyal deposunu döndürür.
+     * Returns the Redis-backed realtime-signal store.
      *
-     * Hem RealtimeChannel (bump) hem SSE stream() (read) bu tek örneği kullanır;
-     * testler `Services::injectMock('signalStore', ...)` ile sahte enjekte edebilir.
+     * Both RealtimeChannel (bump) and SSE stream() (read) use this single instance;
+     * tests can inject a mock via `Services::injectMock('signalStore', ...)`.
      *
-     * @param bool $getShared Paylaşımlı örnek isteniyor mu.
+     * @param bool $getShared Whether a shared instance is requested.
      *
      * @return SignalStoreInterface
      */
@@ -53,12 +53,12 @@ class Services extends BaseService
     }
 
     /**
-     * Eşzamanlı SSE bağlantı defterini döndürür.
+     * Returns the concurrent SSE connection registry.
      *
-     * SSE stream() rol bazlı bağlantı cap'ini yalnız bu tek örnek üzerinden uygular;
-     * testler `Services::override('connectionRegistry', ...)` ile sahte enjekte edebilir.
+     * SSE stream() enforces its role-based connection cap only through this single
+     * instance; tests can inject a mock via `Services::override('connectionRegistry', ...)`.
      *
-     * @param bool $getShared Paylaşımlı örnek isteniyor mu.
+     * @param bool $getShared Whether a shared instance is requested.
      *
      * @return ConnectionRegistryInterface
      */

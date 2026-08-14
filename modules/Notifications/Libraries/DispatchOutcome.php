@@ -8,30 +8,32 @@ use Modules\Notifications\Libraries\Channels\ChannelResult;
 use Modules\Notifications\Libraries\Channels\DurableChannelInterface;
 
 /**
- * Bir yayının GERÇEKTEN teslim edilip edilmediğinin değişmez cevabı.
+ * The immutable answer to whether a broadcast was ACTUALLY delivered.
  *
- * Karar burada verilir, çağıranda değil: "gönderildi mi" sorusunun tek doğru ölçüsü
- * KALICI yazan kanalların ({@see DurableChannelInterface}) sonuçlarıdır. Geçici kanallar
- * (realtime sinyali gibi) sayıma HİÇ girmez — onların `ok`'u yalnız "istemcilere
- * yeniden oku dedim" demektir; ortada okunacak satır yoksa bu bir teslim değildir.
+ * The decision is made here, not by the caller: the only correct measure of
+ * "was it sent" is the results of channels that write PERSISTENTLY
+ * ({@see DurableChannelInterface}). Transient channels (like the realtime
+ * signal) NEVER count toward the total — their `ok` only means "I told the
+ * clients to re-read"; if there's no row to read, that isn't a delivery.
  *
- * ÜÇ DURUM ayrı ayrı görünür kılınır, çünkü kullanıcıya söylenecek şey farklıdır:
- *   - TAM     ({@see isComplete()}): denenen her kalıcı satır yazıldı.
- *   - KISMİ   ({@see isPartial()}):  bazıları yazıldı, bazıları REDDEDİLDİ. Yayın
- *     hedeflenen kitlenin bir bölümüne ulaşmadı; "gönderildi" demek yalan olurdu.
- *   - HİÇBİRİ ({@see storedNothing()}): tek satır bile yazılmadı.
- * Hiç kalıcı kanal çalışmadıysa (`attempted() === 0`) sonuç HİÇBİRİ'dir — bilgi
- * yokluğu başarı sayılmaz (fail-closed).
+ * THREE STATES are surfaced separately because what needs to be told to the
+ * user differs:
+ *   - COMPLETE ({@see isComplete()}): every attempted persistent row was written.
+ *   - PARTIAL  ({@see isPartial()}):  some were written, some were REFUSED. The
+ *     broadcast did not reach part of the intended audience; saying "sent" would be a lie.
+ *   - NONE     ({@see storedNothing()}): not a single row was written.
+ * If no persistent channel ran at all (`attempted() === 0`), the result is
+ * NONE — the absence of information does not count as success (fail-closed).
  *
- * Refüz sebepleri ({@see refusals()}) kanalın kendi log kaydını TEKRARLAMAZ; yalnız
- * çağıranın kararını ve mesajını zenginleştirmek için taşınır.
+ * Refusal reasons ({@see refusals()}) do NOT DUPLICATE the channel's own log
+ * entry; they are only carried to enrich the caller's decision and message.
  */
 final class DispatchOutcome
 {
     /**
-     * @param int          $attempted Kalıcı kanal üzerinden denenen satır sayısı.
-     * @param int          $stored    Bunlardan gerçekten yazılanların sayısı.
-     * @param list<string> $refusals  Yazılamayanların tekilleştirilmiş sebepleri.
+     * @param int          $attempted Number of rows attempted via a persistent channel.
+     * @param int          $stored    Number of those actually written.
+     * @param list<string> $refusals  Deduplicated reasons for the ones that could not be written.
      */
     private function __construct(
         private readonly int $attempted,
@@ -41,12 +43,12 @@ final class DispatchOutcome
     }
 
     /**
-     * Kanal sonuçlarından teslim durumunu türetir.
+     * Derives the delivery status from the channel results.
      *
-     * @param ChannelResult[] $results {@see NotificationBuilder::dispatch()} çıktısı
-     *                                 (kanal kimliğiyle etiketlenmiş sonuçlar).
+     * @param ChannelResult[] $results Output of {@see NotificationBuilder::dispatch()}
+     *                                 (results labeled with the channel id).
      *
-     * @return self Teslim özeti.
+     * @return self Delivery summary.
      */
     public static function fromResults(array $results): self
     {
@@ -62,9 +64,9 @@ final class DispatchOutcome
     }
 
     /**
-     * Kalıcı kanal üzerinden kaç satır denendi.
+     * How many rows were attempted via a persistent channel.
      *
-     * @return int Denenen satır sayısı (hiç kalıcı kanal çalışmadıysa 0).
+     * @return int Number of attempted rows (0 if no persistent channel ran).
      */
     public function attempted(): int
     {
@@ -72,9 +74,9 @@ final class DispatchOutcome
     }
 
     /**
-     * Kaç satır gerçekten yazıldı.
+     * How many rows were actually written.
      *
-     * @return int Yazılan satır sayısı.
+     * @return int Number of written rows.
      */
     public function stored(): int
     {
@@ -82,9 +84,9 @@ final class DispatchOutcome
     }
 
     /**
-     * Denenen her satır yazıldı mı (ve en az bir satır denendi mi).
+     * Was every attempted row written (and was at least one row attempted).
      *
-     * @return bool Yayın eksiksiz teslim edildiyse true.
+     * @return bool True if the broadcast was delivered completely.
      */
     public function isComplete(): bool
     {
@@ -92,9 +94,9 @@ final class DispatchOutcome
     }
 
     /**
-     * Satırların bir bölümü yazıldı, bir bölümü reddedildi mi.
+     * Was part of the rows written and part refused.
      *
-     * @return bool Kısmi teslimde true.
+     * @return bool True on partial delivery.
      */
     public function isPartial(): bool
     {
@@ -102,9 +104,9 @@ final class DispatchOutcome
     }
 
     /**
-     * Hiçbir kalıcı satır yazılmadı mı (hiç denenmemiş olması dahil).
+     * Was no persistent row written at all (including the case where nothing was attempted).
      *
-     * @return bool Ortada bildirim yoksa true.
+     * @return bool True if there is no notification at all.
      */
     public function storedNothing(): bool
     {
@@ -112,9 +114,9 @@ final class DispatchOutcome
     }
 
     /**
-     * Yazılamayan satırların tekilleştirilmiş refüz sebepleri.
+     * Deduplicated refusal reasons for the rows that could not be written.
      *
-     * @return list<string> 'exclusion-unsupported', 'insert-failed' gibi sebepler.
+     * @return list<string> Reasons such as 'exclusion-unsupported', 'insert-failed'.
      */
     public function refusals(): array
     {

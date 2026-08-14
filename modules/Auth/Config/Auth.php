@@ -54,6 +54,20 @@ class Auth extends ShieldAuth
 
     /**
      * --------------------------------------------------------------------
+     * Captcha Bypass In Development (ci4ms)
+     * --------------------------------------------------------------------
+     * When true AND ENVIRONMENT === 'development', the login captcha (and
+     * the public comment-form captcha in app/Controllers/Home.php) is
+     * bypassed for local dev convenience. Both conditions are required:
+     * ENVIRONMENT alone is not enough, so an operator who accidentally
+     * ships with CI_ENVIRONMENT=development still gets captcha enforcement
+     * unless this setting is also explicitly turned on. Overridable via the
+     * settings table (Auth.captchaBypassInDevelopment).
+     */
+    public bool $captchaBypassInDevelopment = false;
+
+    /**
+     * --------------------------------------------------------------------
      * View files
      * --------------------------------------------------------------------
      */

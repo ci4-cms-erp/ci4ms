@@ -9,20 +9,20 @@ use CodeIgniter\HTTP\ResponseInterface;
 use Throwable;
 
 /**
- * Backend modülüne özel Custom Exception Handler.
+ * Custom Exception Handler specific to the Backend module.
  *
- * Backend modülü bağlamında fırlatılan exception'lar için
- * kendi temalı hata sayfalarını render eder.
+ * Renders its own themed error pages for exceptions thrown
+ * within the Backend module context.
  */
 class BackendExceptionHandler extends BaseExceptionHandler implements ExceptionHandlerInterface
 {
     /**
-     * Backend error view'larının bulunduğu dizin.
+     * Directory containing the Backend error views.
      */
     protected ?string $viewPath = ROOTPATH . 'modules/Backend/Views/errors/';
 
     /**
-     * Exception'ı yakala ve Backend temalı hata sayfasını göster.
+     * Catch the exception and display the Backend-themed error page.
      */
     public function handle(
         Throwable $exception,
@@ -31,20 +31,20 @@ class BackendExceptionHandler extends BaseExceptionHandler implements ExceptionH
         int $statusCode,
         int $exitCode,
     ): void {
-        // CLI isteğiyse varsayılan CLI error view'ını kullan
+        // If it's a CLI request, use the default CLI error view
         if (is_cli()) {
             $this->render($exception, $statusCode, $this->viewPath . "cli/error_{$statusCode}.php");
             exit($exitCode);
         }
 
-        // HTTP status code'a özel view var mı?
+        // Is there a view specific to this HTTP status code?
         $viewFile = $this->viewPath . "html/error_{$statusCode}.php";
 
         if (is_file($viewFile)) {
-            // Status code'a özel view mevcut — doğrudan BaseExceptionHandler render
+            // A status-code-specific view exists — render it directly via BaseExceptionHandler
             $this->render($exception, $statusCode, $viewFile);
         } else {
-            // Yoksa environment'a göre fallback
+            // Otherwise fall back based on the environment
             $fallback = (ENVIRONMENT === 'production')
                 ? $this->viewPath . 'html/production.php'
                 : $this->viewPath . 'html/error_exception.php';

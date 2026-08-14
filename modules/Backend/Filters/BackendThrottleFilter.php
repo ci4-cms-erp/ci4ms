@@ -10,7 +10,7 @@ class BackendThrottleFilter extends \App\Filters\ThrottleFilter
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Argüman ne olursa olsun 'backend' profilini zorla.
+        // Force the 'backend' profile regardless of the argument.
         return parent::before($request, ['backend']);
     }
 }

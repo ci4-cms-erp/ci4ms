@@ -27,7 +27,7 @@ return [
     'path' => 'Path',
     'firstName' => 'First Name',
     'lastName' => 'Last Name',
-    'userName' => 'User Name',
+    'username' => 'Username',
     'password' => 'Password',
     'start' => 'Start',
     'expire' => 'Expire',
@@ -206,4 +206,9 @@ return [
     'errExcNo'                 => 'No',
     'errExcPath'               => 'Path',
     'errExcUserAgent'          => 'User Agent',
+
+    // Consolidated from other modules
+    'totalPages' => 'Total Pages',
+    'siteName' => 'Site Name',
+    'date' => 'Date',
 ];

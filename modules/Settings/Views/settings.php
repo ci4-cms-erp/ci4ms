@@ -18,7 +18,7 @@ echo $this->section('content'); ?>
                 <div class="m-stat-icon st-app"><i class="fas fa-desktop"></i></div>
                 <div>
                     <div class="m-stat-value"><?php echo esc($settings->siteName ?? 'CI4MS') ?></div>
-                    <div class="m-stat-label"><?php echo lang('Settings.siteName') ?></div>
+                    <div class="m-stat-label"><?php echo lang('Backend.siteName') ?></div>
                 </div>
             </div>
         </div>
@@ -116,7 +116,7 @@ echo $this->section('content'); ?>
                                                     <input type="checkbox" id="backend-maintenance-all" class="bswitch" <?php echo !empty($bm['all']) ? 'checked' : '' ?> data-size="mini">
                                                 </div>
                                                 <?php
-                                                // Aktif global bakımda kalan dakika prefill'i (gelecekteki until için).
+                                                // Remaining-minutes prefill for active global maintenance (for the future until).
                                                 $bmGlobalMinutes = (!empty($bm['until']) && $bm['until'] > time()) ? (int) ceil(($bm['until'] - time()) / 60) : '';
                                                 ?>
                                                 <div class="form-group mb-2" id="backend-maintenance-minutes-wrap" style="<?php echo !empty($bm['all']) ? '' : 'display:none' ?>">
@@ -295,7 +295,7 @@ echo $this->section('content'); ?>
                                         <div class="input-group">
                                             <input type="email" id="testemail" class="form-control" placeholder="test@ci4ms.pro">
                                             <div class="input-group-append">
-                                                <button class="btn btn-info" id="sendtest" type="button"><i class="fas fa-paper-plane mr-1"></i> <?php echo lang('Settings.send') ?></button>
+                                                <button class="btn btn-info" id="sendtest" type="button"><i class="fas fa-paper-plane mr-1"></i> <?php echo lang('Backend.send') ?></button>
                                             </div>
                                         </div>
                                     </div>
@@ -365,8 +365,8 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
     const CI4MS_UPDATE_KEYS = <?php echo json_encode($trustedUpdateKeys ?? [], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     const CI4MS_UPDATE_KEYS_ACTIVE = CI4MS_UPDATE_KEYS.filter(k => k.status === 'active').length;
 
-    // SweetAlert2'nin html: parametresi DOMParser + appendChild kullanır ve hiçbir şeyi
-    // temizlemez. GitHub'dan gelen her değer (tag, dosya adı, url) buradan geçmek zorunda.
+    // SweetAlert2's html: parameter uses DOMParser + appendChild and sanitizes
+    // nothing. Every value coming from GitHub (tag, file name, url) has to pass through this.
     const CI4MS_HTML_ENTITIES = {
         '&': '&amp;',
         '<': '&lt;',
@@ -380,8 +380,8 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             .replace(/[&<>"']/g, c => CI4MS_HTML_ENTITIES[c]);
     }
 
-    // Sunucu bu adresleri doğrulanmış sürümden kurar; yine de yalnızca github.com
-    // üzerindeki mutlak https adresleri render edilir (javascript:, data: vb. kapalı).
+    // The server builds these addresses from a verified version; still, only
+    // absolute https addresses on github.com are rendered (javascript:, data:, etc. blocked).
     function githubUrl(value) {
         const url = String(value === null || value === undefined ? '' : value);
 
@@ -406,11 +406,11 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         },
         hide: function(deleteElement) {
             Swal.fire({
-                title: '<?php echo lang('Settings.areYouSure') ?>',
+                title: '<?php echo lang('Backend.areYouSure') ?>',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: '<?php echo lang('Settings.delete') ?>',
-                cancelButtonText: '<?php echo lang('Settings.cancel') ?>'
+                cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
             }).then((result) => {
                 if (result.isConfirmed) $(this).slideUp(deleteElement);
             });
@@ -491,7 +491,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         });
     });
 
-    // Session Geo Lookup Switch (yerel GeoIP)
+    // Session Geo Lookup Switch (local GeoIP)
     $('#geo-lookup-enabled').on('switchChange.bootstrapSwitch', function(e, state) {
         $.ajax({
             url: '<?php echo route_to('saveGeoLookup') ?>',
@@ -510,7 +510,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         });
     });
 
-    // Lock Screen — Idle Timeout Dakika Kaydet
+    // Lock Screen — Idle Timeout Save Minutes
     $('#save-idle-minutes').on('click', function() {
         let minutes = parseInt($('#idle-timeout-minutes').val(), 10);
         if (!minutes || minutes < 1 || minutes > 480) {
@@ -540,15 +540,15 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
         });
     });
 
-    // Tema adı/slug'ı info.xml'den, yani yüklenen ZIP'ten gelir. Değerler
-    // attribute interpolasyonu yerine data-* üzerinden taşınır.
+    // The theme name/slug comes from info.xml, i.e. the uploaded ZIP. Values
+    // are carried via data-* instead of attribute interpolation.
     $('.ci4ms-choose-template').on('click', function() {
         chooseTemplate(this.dataset.slug, this.dataset.name);
     });
 
     function chooseTemplate(path, templateName) {
         Swal.fire({
-            // Swal'ın title'ı HTML olarak ayrıştırılır; düz metin için escHtml şart.
+            // Swal's title is parsed as HTML; escHtml is mandatory for plain text.
             title: '<?php echo lang('Settings.changeToTheme') ?>'.replace('{0}', escHtml(templateName)),
             icon: 'question',
             showCancelButton: true,
@@ -580,7 +580,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
             [CI4MS_CSRF.name]: CI4MS_CSRF.getHash()
         }).done(r => {
             showToast(r.message, r.result ? 'success' : 'error');
-            btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> <?php echo lang('Settings.send') ?>');
+            btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> <?php echo lang('Backend.send') ?>');
         });
     });
 
@@ -609,7 +609,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                         </div>`;
                     }
 
-                    // Doğrulanabilir bir imza yoksa güncelleme yolu tamamen kapalıdır.
+                    // If there is no verifiable signature, the update path is fully closed.
                     const verifiable = r.signed === true && CI4MS_UPDATE_KEYS_ACTIVE > 0;
                     const signatureBlock = r.signed === true
                         ? `<div class="mt-2"><span class="badge badge-success"><i class="fas fa-shield-alt mr-1"></i> <?php echo lang('Settings.updateSignedRelease') ?></span></div>`
@@ -646,7 +646,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                         showCancelButton: true,
                         cancelButtonText: '<?php echo lang('Backend.close') ?>',
                         didOpen: () => {
-                            // Sürüm ve adresler attribute interpolasyonu yerine closure ile taşınır.
+                            // Version and addresses are carried via closure instead of attribute interpolation.
                             document.getElementById('ci4ms-auto-update')
                                 ?.addEventListener('click', () => autoUpdate(String(r.new_version)));
                             document.getElementById('ci4ms-download-patch')
@@ -690,12 +690,12 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
 
     function autoUpdate(latestVersion) {
         Swal.fire({
-            title: '<?php echo lang('Settings.areYouSure') ?>',
+            title: '<?php echo lang('Backend.areYouSure') ?>',
             text: '<?php echo lang('Settings.autoUpdateConfirm') ?>',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: '<?php echo lang('Settings.yes') ?>',
-            cancelButtonText: '<?php echo lang('Settings.cancel') ?>'
+            cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
         }).then(res => {
             if (res.isConfirmed) {
                 Swal.fire({
@@ -746,7 +746,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                         <thead>
                             <tr>
                                 <th><?php echo lang('Settings.backupName') ?></th>
-                                <th><?php echo lang('Settings.date') ?></th>
+                                <th><?php echo lang('Backend.date') ?></th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -774,7 +774,7 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
                     showCancelButton: true,
                     cancelButtonText: '<?php echo lang('Backend.close') ?>',
                     didOpen: () => {
-                        // Yedek adı dosya sisteminden gelir; attribute'a değil closure'a taşınır.
+                        // The backup name comes from the file system; it's carried via closure, not an attribute.
                         Swal.getHtmlContainer()?.querySelectorAll('.ci4ms-rollback')
                             .forEach(btn => btn.addEventListener('click', () => rollbackUpdate(btn.dataset.backup)));
                     }
@@ -787,12 +787,12 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
 
     function rollbackUpdate(backupName) {
         Swal.fire({
-            title: '<?php echo lang('Settings.areYouSure') ?>',
+            title: '<?php echo lang('Backend.areYouSure') ?>',
             text: '<?php echo lang('Settings.rollbackConfirm') ?>',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: '<?php echo lang('Settings.yes') ?>',
-            cancelButtonText: '<?php echo lang('Settings.cancel') ?>'
+            cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
         }).then(res => {
             if (res.isConfirmed) {
                 Swal.fire({
@@ -848,12 +848,12 @@ echo script_tag("be-assets/js/ci4ms.js") ?>
 
     function confirmClearCache(onConfirm) {
         Swal.fire({
-            title: '<?php echo lang('Settings.areYouSure') ?>',
+            title: '<?php echo lang('Backend.areYouSure') ?>',
             text: '<?php echo lang('Settings.cacheClearConfirm') ?>',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: '<?php echo lang('Settings.yes') ?>',
-            cancelButtonText: '<?php echo lang('Settings.cancel') ?>'
+            cancelButtonText: '<?php echo lang('Backend.cancel') ?>'
         }).then(res => {
             if (res.isConfirmed) onConfirm();
         });

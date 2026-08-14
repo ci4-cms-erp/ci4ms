@@ -5,24 +5,27 @@ declare(strict_types=1);
 namespace Modules\Notifications\Libraries\Channels;
 
 /**
- * KALICI teslim yapan kanalların işaretçi (marker) arayüzü.
+ * Marker interface for channels that deliver PERSISTENTLY.
  *
- * Bir kanalın bu arayüzü uygulaması şu SÖZÜ verir: `ok` dönen her sonuç, bildirimin
- * kullanıcı yeniden bağlandığında da orada olacağı bir KAYIT bıraktığı anlamına gelir.
- * Bugün bunu yalnız {@see InAppChannel} yapar ({@see \Modules\Notifications\Libraries\Notifier}
- * Model B: `notifications` tablosuna küresel satır). {@see RealtimeChannel} ise satır
- * DEĞİL, yalnız "yeniden oku" sinyali üretir — teslim edilmiş sayılamaz.
+ * A channel implementing this interface makes the PROMISE that every result
+ * that returns `ok` means it left a RECORD that will still be there when the
+ * user reconnects. Today only {@see InAppChannel} does this
+ * ({@see \Modules\Notifications\Libraries\Notifier} Model B: a global row in
+ * the `notifications` table). {@see RealtimeChannel}, on the other hand,
+ * produces NO row, only a "re-read" signal — it cannot be counted as delivered.
  *
- * NEDEN AYRI BİR ARAYÜZ: "gönderildi mi" sorusunun cevabı "herhangi bir kanal ok döndü
- * mü" DEĞİLDİR. Kalıcı yazan kanal bir GÜVENLİK refüzüyle satırı atıp
- * ({@see InAppChannel::refuseUnenforceableExclusion()}) geçici kanal sinyalini
- * bump'ladığında, "herhangi biri ok" kuralı yöneticiye "gönderildi" der; oysa ortada
- * bildirim yoktur ve sinyali izleyen istemciler boş bir feed bulur.
+ * WHY A SEPARATE INTERFACE: the answer to "was it sent" is NOT "did any channel
+ * return ok". When the persistent channel drops the row via a SECURITY refusal
+ * ({@see InAppChannel::refuseUnenforceableExclusion()}) while the transient
+ * channel still bumps its signal, an "any one is ok" rule would tell the
+ * administrator "sent" — yet there is no notification, and clients following
+ * the signal find an empty feed.
  *
- * Metot EKLEMEZ: mevcut kanalların (ve test ikizlerinin) hiçbiri değişmek zorunda
- * kalmadan, YENİ kanallar da kalıcılığı açıkça beyan etmedikçe geçici sayılır
- * (fail-closed). Karar {@see \Modules\Notifications\Libraries\DispatchOutcome} içinde
- * bu işarete bakılarak verilir.
+ * Adds NO methods: none of the existing channels (or their test doubles) have
+ * to change, while NEW channels are treated as transient (fail-closed) unless
+ * they explicitly declare persistence. The decision inside
+ * {@see \Modules\Notifications\Libraries\DispatchOutcome} is made by checking
+ * this marker.
  */
 interface DurableChannelInterface extends ChannelInterface
 {

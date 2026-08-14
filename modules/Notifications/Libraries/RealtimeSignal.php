@@ -7,31 +7,32 @@ namespace Modules\Notifications\Libraries;
 use Modules\Notifications\Config\NotificationsConfig;
 
 /**
- * Redis destekli anlık-sinyal deposu (SSE nudge sayaçlarının TEK erişim noktası).
+ * Redis-backed realtime-signal store (the SOLE access point for SSE nudge counters).
  *
- * KALICILIK BURADA DEĞİLDİR: bildirim satırını InAppChannel DB'ye yazar. Bu depo
- * yalnız "yeni bir şey var, reconcile et" sinyalini `notif:sig:{channel}` sayacında
- * tutar; `{channel}` DAİMA `Notifier::topicFor()` çıktısıdır (sunucu türetimli; asla
- * istemci girdisi). Yazan taraf RealtimeChannel (bump), okuyan taraf SSE stream()'dir
- * (read). Tek seam olması hem izolasyonu hem test edilebilirliği sağlar
- * (Services::signalStore() → injectMock).
+ * PERSISTENCE IS NOT HERE: InAppChannel writes the notification row to the DB.
+ * This store only holds the "something new happened, reconcile" signal in the
+ * `notif:sig:{channel}` counter; `{channel}` is ALWAYS the output of
+ * `Notifier::topicFor()` (server-derived; never client input). The writer is
+ * RealtimeChannel (bump), the reader is the SSE stream() (read). Having a
+ * single seam provides both isolation and testability
+ * (Services::signalStore() -> injectMock).
  *
- * Bağlantı RedisConnectionTrait üzerinden lazy kurulur; kısa connect ve read timeout
- * kullanır: Redis down (ya da yanıt vermeyen) iken tetikleyici isteği veya SSE
- * açılışını bloklamamalı. Bağlantı/komut hatasında ASLA istisna sızmaz — bump false,
- * read baseline-0 döner.
+ * The connection is lazily established via RedisConnectionTrait; it uses a
+ * short connect and read timeout: it must not block the triggering request or
+ * SSE opening while Redis is down (or unresponsive). No exception EVER leaks
+ * on a connection/command error — bump returns false, read returns baseline-0.
  */
 final class RealtimeSignal implements SignalStoreInterface
 {
     use RedisConnectionTrait;
 
-    /** Redis anahtar öneki; tam anahtar `notif:sig:{channel}` biçimindedir. */
+    /** Redis key prefix; the full key has the form `notif:sig:{channel}`. */
     private const KEY_PREFIX = 'notif:sig:';
 
     private NotificationsConfig $config;
 
     /**
-     * @param NotificationsConfig|null $config Enjekte edilmezse global config çözülür.
+     * @param NotificationsConfig|null $config The global config is resolved if not injected.
      */
     public function __construct(?NotificationsConfig $config = null)
     {
@@ -39,14 +40,14 @@ final class RealtimeSignal implements SignalStoreInterface
     }
 
     /**
-     * Bir kanalın sinyal sayacını artırır ve TTL'ini tazeler (best-effort).
+     * Increments a channel's signal counter and refreshes its TTL (best-effort).
      *
-     * `INCR notif:sig:{channel}` + `EXPIRE realtimeSignalTtl`. Redis erişilemezse
-     * ya da komut hata verirse sessizce false döner (asla throw etmez).
+     * `INCR notif:sig:{channel}` + `EXPIRE realtimeSignalTtl`. Returns false
+     * silently if Redis is unreachable or the command errors (never throws).
      *
-     * @param string $channel Notifier::topicFor() çıktısı olan kanal adı.
+     * @param string $channel Channel name that is the output of Notifier::topicFor().
      *
-     * @return bool Sayaç artırılabildiyse true; aksi halde false.
+     * @return bool True if the counter could be incremented; false otherwise.
      */
     public function bump(string $channel): bool
     {
@@ -67,15 +68,16 @@ final class RealtimeSignal implements SignalStoreInterface
     }
 
     /**
-     * Verilen kanalların güncel sinyal sayaçlarını okur (yoksa/erişilemezse 0).
+     * Reads the current signal counters for the given channels (0 if missing/unreachable).
      *
-     * Dönen dizi DAİMA istenen her kanal için bir anahtar taşır; böylece çağıran
-     * baseline farkını güvenle karşılaştırabilir. Tüm kanallar tek `MGET` round-trip'i
-     * ile okunur; SSE döngüsünde saniyede bir çağrılması ucuzdur ve DB'ye hiç dokunmaz.
+     * The returned array ALWAYS carries a key for each requested channel, so
+     * the caller can safely compare the baseline diff. All channels are read
+     * in a single `MGET` round-trip; calling it once a second in the SSE loop
+     * is cheap and never touches the DB.
      *
-     * @param list<string> $channels Notifier::topicsFor() ile türetilen kanal adları.
+     * @param list<string> $channels Channel names derived via Notifier::topicsFor().
      *
-     * @return array<string, int> channel => güncel sayaç (yoksa 0).
+     * @return array<string, int> channel => current counter (0 if missing).
      */
     public function read(array $channels): array
     {
@@ -90,7 +92,7 @@ final class RealtimeSignal implements SignalStoreInterface
         }
 
         try {
-            // Tek round-trip: kanal başına ayrı GET yerine MGET (SSE döngüsü saniyede bir okur).
+            // Single round-trip: MGET instead of a separate GET per channel (the SSE loop reads once a second).
             $values = $redis->mget(array_map(
                 static fn (string $channel): string => self::KEY_PREFIX . $channel,
                 $channels
@@ -100,7 +102,7 @@ final class RealtimeSignal implements SignalStoreInterface
                 return $result;
             }
 
-            // MGET değerleri $channels ile aynı sırada döner; konumsal olarak eşle.
+            // MGET values come back in the same order as $channels; map them positionally.
             $values = array_values($values);
 
             foreach ($channels as $index => $channel) {
@@ -108,7 +110,7 @@ final class RealtimeSignal implements SignalStoreInterface
                 $result[$channel] = is_numeric($value) ? (int) $value : 0;
             }
         } catch (\Throwable $e) {
-            // Baseline zaten 0'larla dolu; sessizce dön.
+            // Baseline is already filled with 0s; return silently.
         }
 
         return $result;

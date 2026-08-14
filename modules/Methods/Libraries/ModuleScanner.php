@@ -318,9 +318,9 @@ class ModuleScanner
     }
 
     /**
-     * Config dosyalarındaki $menus içinde parent_pk olarak referans edilen
-     * ancak kendisi bir route'a sahip olmayan "sanal parent" menü girişlerini
-     * veritabanına ekler. (Örn: Users.usersCrud gibi sadece gruplama amaçlı menüler)
+     * Inserts "virtual parent" menu entries into the database that are
+     * referenced as parent_pk within $menus in config files but do not
+     * themselves have a route. (E.g. grouping-only menus like Users.usersCrud)
      */
     private function createVirtualParents(CommonModel $commonModel): void
     {
@@ -347,7 +347,7 @@ class ModuleScanner
 
         // Find records referenced as parent_pk but not present in $menus or DB on their own
         foreach ($allParentRefs as $parentPageName => $referencingModName) {
-            // DB'de zaten var mı?
+            // Does it already exist in the DB?
             $existsInDb = $commonModel->selectOne('auth_permissions_pages', ['pagename' => $parentPageName], 'id');
             if (!empty($existsInDb)) continue;
 

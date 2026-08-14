@@ -5,7 +5,6 @@ return [
     'invalidSource' => 'Invalid source file or folder',
     'invalidFileOrFolder' => 'Invalid file or folder',
     'folderNotEmpty' => 'Folder is not empty or deletion failed!',
-    'path' => 'Path',
     'file' => 'File',
     'newFile' => 'New File',
     'newFolder' => 'New Folder',

@@ -56,10 +56,10 @@ echo $this->section('content'); ?>
 
                 <div id="modulesContainer">
                     <?php foreach ($modules as $module):
-                        // getActiveModules() sadece aktif modül+sayfaları döndürür;
-                        // array_filter ile tekrar filtrelemeye gerek yok.
+                        // getActiveModules() returns only active module+pages;
+                        // no need to filter again with array_filter.
 
-                        // Kullanıcıya özel yetki durumunu hesapla
+                        // Calculate the user-specific permission status
                         $grantedPages = 0;
                         foreach ($module->pages as $_p) {
                             if (!empty($perms)) {
@@ -135,7 +135,7 @@ echo $this->section('content'); ?>
                                         </thead>
                                         <tbody>
                                             <?php foreach ($module->pages as $page):
-                                                // Kullanıcının bu sayfa için yetkisi var mı? (ön-hesap)
+                                                // Does the user have permission for this page? (pre-computed)
                                                 $isChecked = false;
                                                 if (!empty($perms)) {
                                                     foreach ($perms as $_p) {
@@ -332,8 +332,8 @@ echo $this->section('javascript') ?>
         $('#moduleFilter, #statusFilter').on('change', runFilter);
 
         // ═══════════════════════════════════════════════════════════
-        // Modül Toggle Senkronizasyonu
-        // Kural: 0 sayfa checked → pasif | kısmi → indeterminate | tamamı → aktif
+        // Module Toggle Synchronization
+        // Rule: 0 pages checked → inactive | partial → indeterminate | all → active
         // ═══════════════════════════════════════════════════════════
         function syncModuleToggle(moduleCard) {
             var $card       = $(moduleCard);
@@ -345,24 +345,24 @@ echo $this->section('javascript') ?>
             if (total === 0) return;
 
             if (checkedCnt === 0) {
-                // Hiç yetki yok → pasif
+                // No permission at all → inactive
                 toggleEl.checked       = false;
                 toggleEl.indeterminate = false;
                 $card.addClass('inactive').data('status', 'inactive').attr('data-status', 'inactive');
             } else if (checkedCnt === total) {
-                // Tümü yetkili → aktif
+                // All authorized → active
                 toggleEl.checked       = true;
                 toggleEl.indeterminate = false;
                 $card.removeClass('inactive').data('status', 'active').attr('data-status', 'active');
             } else {
-                // Kısmi yetki → indeterminate (turuncu)
+                // Partial permission → indeterminate (orange)
                 toggleEl.checked       = true;
                 toggleEl.indeterminate = true;
                 $card.removeClass('inactive').data('status', 'active').attr('data-status', 'active');
             }
         }
 
-        // Sayfa yüklenince indeterminate durumlarını uygula
+        // Apply indeterminate states once the page loads
         $('.module-card').each(function () {
             var toggleEl = $(this).find('.module-toggle-input')[0];
             if (toggleEl && $(toggleEl).data('partial') == '1') {
@@ -371,18 +371,18 @@ echo $this->section('javascript') ?>
         });
 
         // ═══════════════════════════════════════════════════════════
-        // Module Toggle Tıklama: Tümü Aç / Tümü Kapat
+        // Module Toggle Click: Turn All On / Turn All Off
         // ═══════════════════════════════════════════════════════════
         $('.module-toggle-input').on('change', function (e) {
             e.stopPropagation();
             var $this = $(this);
             var moduleCard = $this.closest('.module-card');
 
-            // indeterminate durumu temizle — artık kullanıcı net seçim yaptı
+            // Clear the indeterminate state — the user has now made a clear choice
             this.indeterminate = false;
 
             if (this.checked) {
-                // Tüm sayfa toggle'larını aktif yap
+                // Turn all page toggles on
                 moduleCard.find('.page-toggle input').each(function () {
                     $(this).prop('checked', true);
                     var row = $(this).closest('.page-item');
@@ -393,7 +393,7 @@ echo $this->section('javascript') ?>
                 });
                 moduleCard.removeClass('inactive').attr('data-status', 'active');
             } else {
-                // Tüm sayfa toggle'larını pasif yap
+                // Turn all page toggles off
                 moduleCard.find('.page-toggle input').each(function () {
                     $(this).prop('checked', false);
                     var row = $(this).closest('.page-item');
@@ -419,7 +419,7 @@ echo $this->section('javascript') ?>
                 row.addClass('row-inactive');
                 badge.text('<?php echo lang('Backend.passive') ?>').attr('class', 'm-status-pill m-status-inactive status-badge');
             }
-            // Sayfa toggle değişti — üst modül toggle'ını senkronize et
+            // Page toggle changed — sync the parent module toggle
             syncModuleToggle($(this).closest('.module-card'));
         });
     })();

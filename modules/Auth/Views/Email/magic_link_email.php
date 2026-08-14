@@ -40,7 +40,7 @@
                             <div style="background-color: #f9fbfb; border-left: 4px solid #8bcbb7; padding: 15px; margin-top: 40px; font-size: 14px; border-radius: 0 6px 6px 0; color: #333333;">
                                 <p style="margin: 0 0 10px 0; font-weight: bold; color: #123a49;"><?php echo lang('Auth.emailInfo') ?></p>
                                 <ul style="margin: 0; padding-left: 20px; color: #666666; line-height: 1.8;">
-                                    <li><strong><?php echo lang('Auth.username') ?>:</strong> <?php echo esc($user->username) ?></li>
+                                    <li><strong><?php echo lang('Backend.username') ?>:</strong> <?php echo esc($user->username) ?></li>
                                     <li><strong><?php echo lang('Auth.emailIpAddress') ?>:</strong> <?php echo esc($ipAddress) ?></li>
                                     <li><strong><?php echo lang('Auth.emailDevice') ?>:</strong> <?php echo esc($userAgent) ?></li>
                                     <li><strong><?php echo lang('Auth.emailDate') ?>:</strong> <?php echo esc($date) ?></li>

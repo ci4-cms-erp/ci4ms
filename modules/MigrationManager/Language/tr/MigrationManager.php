@@ -15,7 +15,7 @@ return [
     'runHistory' => 'Çalıştırma Geçmişi',
     'noWebRunnableSeeders' => 'Henüz web üzerinden çalıştırılabilir bir seed yok.',
 
-    // Görev 22 — list.php arayüzü
+    // Task 22 — list.php UI
     'runAllMigrations' => 'Tüm Migration\'ları Çalıştır',
     'runSelectedMigrations' => 'Seçilenleri Çalıştır',
     'runAllSeeds' => 'Tüm Seed\'leri Çalıştır',
@@ -55,7 +55,7 @@ return [
     'targetAllNamespaces' => 'Tüm alan adları (App + Modüller)',
     'searchPlaceholder' => 'Çalıştırma geçmişinde ara...',
 
-    // Görev 12 — Ci4msReferenceDataSeeder
+    // Task 12 — Ci4msReferenceDataSeeder
     'seederReferenceData' => 'Referans Veri (diller, sayfalar, örnek blog ve menü)',
     'seedAlreadyApplied' => 'Referans veri zaten mevcut, yapılacak bir şey yok.',
 ];

@@ -9,30 +9,33 @@ use ci4commonmodel\CommonModel;
 use Modules\MigrationManager\Contracts\WebRunnableSeeder;
 
 /**
- * Web'den tetiklenebilir, parametresiz referans veri seeder'ı.
+ * Web-triggerable, parameterless reference data seeder.
  *
- * `Modules\Install\Services\InstallService::createDefaultData()`'nın referans
- * veri (diller, sayfalar, örnek blog, menü, ayarlar) kısmının BAĞIMSIZ bir
- * kopyasıdır -- o metodu ÇAĞIRMAZ. Gerekçe: `createDefaultData()` ayrıca
- * `auth_groups`/`auth_groups_users` satırları oluşturup
- * `Modules\Methods\Libraries\ModuleScanner::runScan()`'ı tetikliyor; bu
- * tarama `auth_permissions_pages` tablosunu SİLİP yeniden dolduruyor ve
- * tarama sırasında `Ci4MsAuthFilter` (fail-closed) sayfa satırı bulamayan
- * hiçbir isteğe -- superadmin dahil -- izin vermiyor. Web'den tetiklenirse
- * toplu kilitlenme riski taşır. Bu yüzden bu seeder yalnızca içerik verisini
- * yazar; kullanıcı/grup/izin verisine hiç dokunmaz.
+ * This is an INDEPENDENT copy of the reference data (languages, pages,
+ * sample blog, menu, settings) portion of
+ * `Modules\Install\Services\InstallService::createDefaultData()` -- it does
+ * NOT call that method. Reason: `createDefaultData()` also creates
+ * `auth_groups`/`auth_groups_users` rows and triggers
+ * `Modules\Methods\Libraries\ModuleScanner::runScan()`; this scan WIPES and
+ * repopulates the `auth_permissions_pages` table, and while scanning,
+ * `Ci4MsAuthFilter` (fail-closed) denies every request -- including
+ * superadmin -- for which it can't find a page row. Triggering it from the
+ * web carries a mass-lockout risk. That's why this seeder only writes
+ * content data; it never touches user/group/permission data.
  *
- * Bu seeder'ın tek `count('pages') > 0` kapısı KASITLI ve DOĞRUDUR --
- * yalnız içerik yazdığı için "içerik var mı" sorusu tek bir `pages`
- * kontrolüyle eksiksiz cevaplanır. Bu, `InstallService::createDefaultData()`'nın
- * çok-bloklu (her tablo kendi guard'ına bakan) tasarımıyla KARIŞTIRILMAMALI:
- * o metot hem içerik hem kimlik (`auth_groups`/`auth_groups_users`) yazdığı
- * için tek bir `pages` kapısı yanlıştı (içerik varken kimliği de atlıyordu).
+ * This seeder's single `count('pages') > 0` gate is INTENTIONAL and
+ * CORRECT -- since it only writes content, the "is there content?" question
+ * is fully answered by a single `pages` check. This must NOT be CONFUSED
+ * with `InstallService::createDefaultData()`'s multi-block design (each
+ * table checked by its own guard): that method writes both content and
+ * identity (`auth_groups`/`auth_groups_users`) data, so a single `pages`
+ * gate would be wrong there (it would skip identity data too while content
+ * existed).
  */
 class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
 {
     /**
-     * Backend arayüzünde gösterilecek etiketin `lang()` anahtarını döner.
+     * Returns the `lang()` key of the label to display in the backend UI.
      *
      * @return string
      */
@@ -42,8 +45,9 @@ class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
     }
 
     /**
-     * Bu seeder tekrar tetiklendiğinde veri bozulmasına yol açmaz: `run()`
-     * en başında `pages` tablosu doluysa no-op döner (skip-gate).
+     * Re-triggering this seeder does not cause data corruption: `run()`
+     * returns as a no-op right at the start if the `pages` table already
+     * has rows (skip-gate).
      *
      * @return bool
      */
@@ -53,15 +57,17 @@ class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
     }
 
     /**
-     * Referans veriyi (diller, sayfalar, örnek blog, menü, ayarlar) yazar.
+     * Writes the reference data (languages, pages, sample blog, menu,
+     * settings).
      *
-     * İdempotent: `pages` tablosunda zaten satır varsa hiçbir şey yazmadan
-     * döner. Bu no-op SESSİZ değildir -- `log_message('info', ...)` ile
-     * işaretlenir; ancak bu mesaj bugün backend UI'ına YANSIMAZ, çünkü
+     * Idempotent: returns without writing anything if the `pages` table
+     * already has rows. This no-op is NOT SILENT -- it is flagged via
+     * `log_message('info', ...)`; however this message does NOT surface in
+     * the backend UI today, because
      * `Modules\MigrationManager\Controllers\MigrationManager::executeSeed()`
-     * (satır ~388-416) `Config\Database::seeder()->call()`'ın dönüş
-     * değerine bakmadan, exception fırlatılmadığı sürece her zaman
-     * `seedRunSuccess` mesajını döner.
+     * (line ~388-416) always returns the `seedRunSuccess` message as long as
+     * no exception is thrown, without checking the return value of
+     * `Config\Database::seeder()->call()`.
      *
      * @return void
      */
@@ -86,7 +92,7 @@ class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
     }
 
     /**
-     * `languages` tablosuna varsayılan tr/en satırlarını yazar.
+     * Writes the default tr/en rows to the `languages` table.
      *
      * @param CommonModel $commonModel
      *
@@ -121,10 +127,10 @@ class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
     }
 
     /**
-     * `pages` tablosuna ana sayfa + iletişim sayfası satırlarını tekil
-     * `create()` çağrılarıyla yazar ve gerçek insert ID'lerini döner
-     * (`createMany()` insert ID döndürmez, `CommonModel.php:200-204`;
-     * `create()` döner, `CommonModel.php:151`).
+     * Writes the home page + contact page rows to the `pages` table with
+     * individual `create()` calls and returns their actual insert IDs
+     * (`createMany()` does not return insert IDs, `CommonModel.php:200-204`;
+     * `create()` does, `CommonModel.php:151`).
      *
      * @param CommonModel $commonModel
      *
@@ -139,8 +145,9 @@ class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
     }
 
     /**
-     * `pages_langs` tablosuna ana sayfa/iletişim sayfasının tr/en içeriğini
-     * yazar; `pages_id` değerleri `seedPages()`'ten dinamik olarak alınır.
+     * Writes the tr/en content of the home page/contact page to the
+     * `pages_langs` table; `pages_id` values are taken dynamically from
+     * `seedPages()`.
      *
      * @param CommonModel $commonModel
      * @param int         $homePageId
@@ -253,8 +260,9 @@ class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
     }
 
     /**
-     * `blog` + `blog_langs` tablolarına 3 örnek yazı ekler (`blog_langs.blog_id`
-     * FK'lı olduğu için önce `blog` satırı yazılıp insert ID alınır).
+     * Adds 3 sample posts to the `blog` + `blog_langs` tables (since
+     * `blog_langs.blog_id` has an FK, the `blog` row is written first and
+     * its insert ID is taken).
      *
      * @param CommonModel $commonModel
      *
@@ -300,10 +308,10 @@ class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
     }
 
     /**
-     * `menu` tablosuna anasayfa/blog/iletişim satırlarını yazar; `pages_id`
-     * değerleri `seedPages()`'ten dinamik olarak alınır (`blog` satırı
-     * `urlType='url'`, `pages_id=null` -- `InstallService.php:209` deseninin
-     * aynısı, dokunulmaz).
+     * Writes the home/blog/contact rows to the `menu` table; `pages_id`
+     * values are taken dynamically from `seedPages()` (the `blog` row has
+     * `urlType='url'`, `pages_id=null` -- the same pattern as
+     * `InstallService.php:209`, left untouched).
      *
      * @param CommonModel $commonModel
      * @param int         $homePageId
@@ -321,11 +329,11 @@ class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
     }
 
     /**
-     * `settings` tablosuna varsayılan `Config\App`/`Config\Security`/...
-     * satırlarını yazar. `siteName` SABİT `'CI4MS'` -- bu seeder parametre
-     * almadığı için `InstallService.php:217`'deki `??`'siz `$args['siteName']`
-     * erişimi burada tekrarlanmaz. `homePage` değeri `seedPages()`'ten
-     * dinamik olarak alınır (sabit `1` DEĞİL).
+     * Writes the default `Config\App`/`Config\Security`/... rows to the
+     * `settings` table. `siteName` is FIXED as `'CI4MS'` -- since this
+     * seeder takes no parameters, the `??`-less `$args['siteName']` access
+     * from `InstallService.php:217` is not repeated here. The `homePage`
+     * value is taken dynamically from `seedPages()` (NOT a fixed `1`).
      *
      * @param CommonModel $commonModel
      * @param int         $homePageId
@@ -354,11 +362,12 @@ class Ci4msReferenceDataSeeder extends Seeder implements WebRunnableSeeder
             ['class' => 'Elfinder', 'key' => 'convertWebp', 'value' => '1', 'type' => 'boolean', 'context' => null],
             ['class' => 'Config\\App', 'key' => 'defaultLocale', 'value' => 'en', 'type' => 'string', 'context' => null],
             ['class' => 'Modules\\Auth\\Config\\Auth', 'key' => 'geoLookupEnabled', 'value' => '0', 'type' => 'boolean', 'context' => null],
+            ['class' => 'Modules\\Auth\\Config\\Auth', 'key' => 'captchaBypassInDevelopment', 'value' => '0', 'type' => 'boolean', 'context' => null],
         ];
 
-        // settings.created_at/updated_at NOT NULL ve default'suz gelir
-        // (codeigniter4/settings migration'ı). InstallService.php:234-237'deki
-        // aynı gerekçe.
+        // settings.created_at/updated_at come as NOT NULL and without a
+        // default (codeigniter4/settings migration). Same reasoning as
+        // InstallService.php:234-237.
         $commonModel->createMany('settings', array_map(
             static fn (array $row): array => $row + ['created_at' => $now, 'updated_at' => $now],
             $settings

@@ -30,4 +30,5 @@ return [
     'searchPlaceholder' => 'Blog ara...',
     'searchComments' => 'Yorumlarda ara...',
     'relatedPost' => 'İlgili Yazı',
+    'seflinkConflict' => 'Blog seflink adresi daha önce kullanılmış. Lütfen kontrol ederek farklı bir tane oluşturmayı deneyin. Seflink: {0}',
 ];

@@ -33,7 +33,7 @@ class UserSessionModel extends Model
         'terminated_at',
     ];
 
-    protected $useTimestamps = false; // Manuel yönetiyoruz
+    protected $useTimestamps = false; // Managed manually
 
     // ──────────────────────────────────────────────────────────────────
     // WRITE
@@ -114,7 +114,7 @@ class UserSessionModel extends Model
         $cache    = \Config\Services::cache();
 
         if ($cache->get($cacheKey)) {
-            return; // 60 saniye dolmamış, güncelleme
+            return; // 60 seconds haven't elapsed yet, skip update
         }
 
         $this->where('session_id', $sessionId)
@@ -126,10 +126,10 @@ class UserSessionModel extends Model
     }
 
     /**
-     * Belirli bir session_id için ekranı kilitler (locked_at = NOW()).
-     * Sadece o cihazın oturumunu etkiler, diğer cihazlar etkilenmez.
+     * Locks the screen for a given session_id (locked_at = NOW()).
+     * Only affects that device's session, other devices are unaffected.
      *
-     * @param string $sessionId Kilitlenecek cihazın kalıcı tanımlayıcısı
+     * @param string $sessionId Permanent identifier of the device to lock
      * @return void
      */
     public function lockSession(string $sessionId): void
@@ -141,10 +141,10 @@ class UserSessionModel extends Model
     }
 
     /**
-     * Belirli bir session_id için ekran kilidini kaldırır (locked_at = NULL).
-     * Başarılı şifre doğrulaması sonrasında çağrılır.
+     * Removes the screen lock for a given session_id (locked_at = NULL).
+     * Called after a successful password verification.
      *
-     * @param string $sessionId Kilidi açılacak cihazın kalıcı tanımlayıcısı
+     * @param string $sessionId Permanent identifier of the device to unlock
      * @return void
      */
     public function unlockSession(string $sessionId): void

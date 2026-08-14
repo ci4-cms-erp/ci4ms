@@ -320,7 +320,7 @@ echo $this->section('javascript') ?>
         $('#moduleFilter').on('change', runFilter);
 
         // ═══════════════════════════════════════════════════════════
-        // Modül Toggle Senkronizasyonu
+        // Module Toggle Synchronization
         // ═══════════════════════════════════════════════════════════
         function syncModuleToggle(moduleCard) {
             var $card      = $(moduleCard);
@@ -347,7 +347,7 @@ echo $this->section('javascript') ?>
         }
 
         // ═══════════════════════════════════════════════════════════
-        // Module Toggle: Tümü Aç / Kapat
+        // Module Toggle: Toggle All On / Off
         // ═══════════════════════════════════════════════════════════
         $('.module-toggle-input').on('change', function (e) {
             e.stopPropagation();

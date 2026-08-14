@@ -71,7 +71,7 @@ class LoginController extends BaseController
         }
 
         $captchaCheck = ($this->request->getPost('captcha') == $this->session->getFlashdata('cap')) ? true : false;
-        if (ENVIRONMENT === 'development') $captchaCheck = true;
+        if (ENVIRONMENT === 'development' && setting('Auth.captchaBypassInDevelopment')) $captchaCheck = true;
         if (!$captchaCheck) return redirect()->route('login')->withInput()->with('error', lang('Auth.badCaptcha'));
 
         /** @var array $credentials */

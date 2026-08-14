@@ -4,7 +4,6 @@ return [
     'methodCreate' => 'Create Method',
     'modules' => 'Modules',
     'pageName' => 'Page Name',
-    'description' => 'Description',
     'controller' => 'Controller',
     'methodName' => 'Method Name',
     'pageOrder' => 'Page Order',
@@ -20,7 +19,6 @@ return [
     'hasChildPages' => 'Has Child Pages',
     'totalModules' => 'Total Modules',
     'activeModules' => 'Active Modules',
-    'totalPages'=>'Total Pages',
     'inNavigation' => 'In Navigation',
     'allModules' => 'All Modules',
     'scanModules' => 'Scan Modules',
@@ -74,4 +72,6 @@ return [
     'zipPathTraversal' => 'ZIP contains path traversal.',
     'zipBombDetected' => 'Uploaded archive is too large or contains an oversized entry. Refusing to extract.',
     'symlinkRejected' => 'Uploaded archive contains a symbolic link. Symlinks are not allowed in module packages.',
+    'classNameMethodNameDuplicate' => 'This controller and method combination is already registered to another permission page.',
+    'moduleRequired' => 'Please select a valid module.',
 ];

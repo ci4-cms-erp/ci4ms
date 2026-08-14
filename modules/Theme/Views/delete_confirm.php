@@ -88,7 +88,7 @@
 <script type="text/javascript" <?php echo csp_script_nonce(); ?>>
     document.addEventListener("DOMContentLoaded", function() {
 
-        // Tümünü seç / bırak
+        // Select all / deselect all
         const checkAllBtn = document.getElementById('checkAllTables');
         if (checkAllBtn) {
             checkAllBtn.addEventListener('change', function() {

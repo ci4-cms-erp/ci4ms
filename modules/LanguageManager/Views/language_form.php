@@ -140,7 +140,7 @@ echo $this->section('javascript'); ?>
             $('#flagPickerModal').modal('hide');
         });
 
-        // Flag input alanına manuel veri girişi
+        // Manual data entry into the flag input field
         $('#flag_input').on('input blur', function() {
             var val = $(this).val().trim();
             if (val.indexOf('<') !== -1) {

@@ -12,10 +12,10 @@ return [
     'severityWarning'  => 'Warning',
     'severityCritical' => 'Critical',
 
-    // SSE stream() 429 gövdesi — kısa ve ayrıntısız tutulur.
+    // SSE stream() 429 body — kept short and unspecific.
     'realtimeConnLimit' => 'Too many open realtime connections.',
 
-    // Tercih (opt-out) ekranı.
+    // Preferences (opt-out) screen.
     'preferences'      => 'Notification preferences',
     'prefIntro'        => 'Mute the notification types you do not want to receive. Muting only affects your own account.',
     'prefType'         => 'Notification type',

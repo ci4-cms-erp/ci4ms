@@ -321,13 +321,13 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
         function runSequentially(items, requestFn, logSelector, onDone) {
             var results = [];
 
-            // jQuery'nin global $.ajaxSetup({complete:...}) token-yenilemesi bu isteğin
-            // yanıtından SONRA (completeDeferred.fireWith) çalışır — ama .always() (ve
-            // dolayısıyla step(i+1)) o güncellemeden ÖNCE tetiklenir, çünkü .done()/.fail()
-            // ile bağlı LOKAL zincir global complete callback'inden önce resolve/reject
-            // edilir. Sıradaki istek bu yüzden her zaman bir önceki (bayat) token'la
-            // gidiyordu. Burada, .always() step(i+1)'i çağırmadan ÖNCE, senkron olarak
-            // yanıtın X-CSRF-TOKEN header'ını okuyup token'ı güncelliyoruz.
+            // jQuery's global $.ajaxSetup({complete:...}) token refresh runs AFTER this
+            // request's response (completeDeferred.fireWith) — but .always() (and hence
+            // step(i+1)) fires BEFORE that update, because the LOCAL chain bound via
+            // .done()/.fail() resolves/rejects before the global complete callback. The
+            // next request was therefore always going out with the previous (stale)
+            // token. Here, BEFORE .always() calls step(i+1), we synchronously read the
+            // X-CSRF-TOKEN header from the response and refresh the token.
             function refreshCsrfFromResponse(jqXHR) {
                 var newToken = jqXHR && jqXHR.getResponseHeader && jqXHR.getResponseHeader('X-CSRF-TOKEN');
                 if (newToken) {
@@ -347,10 +347,10 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                         handleRunResponse(item, response || {}, logSelector, results, false);
                     })
                     .fail(function (jqXHR) {
-                        // Başarısız CSRF doğrulaması sunucu tarafındaki token'ı değiştirmez
-                        // (Security::verify() regenerate'e ulaşmadan exception fırlatır), bu
-                        // yüzden 403 yanıtında X-CSRF-TOKEN header'ı da olmaz — bu durumda
-                        // mevcut token'a dokunulmaz.
+                        // A failed CSRF check doesn't change the server-side token
+                        // (Security::verify() throws before reaching regenerate), so a 403
+                        // response also has no X-CSRF-TOKEN header — in this case the
+                        // current token is left untouched.
                         refreshCsrfFromResponse(jqXHR);
                         var response = (jqXHR && jqXHR.responseJSON) || {};
                         handleRunResponse(item, response, logSelector, results, true);
@@ -502,8 +502,8 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
                 {
                     data: 'target',
                     render: function (d) {
-                        // Sunucu ham veri döner (MigrationManager::history()),
-                        // kaçışlama burada yapılır — diğer tüm kolonlarla aynı kural.
+                        // The server returns raw data (MigrationManager::history()),
+                        // escaping happens here — same rule as every other column.
                         if (d === '*') {
                             return '<span class="text-muted">' + escapeHtml(LANG.targetAllNamespacesLabel) + '</span>';
                         }

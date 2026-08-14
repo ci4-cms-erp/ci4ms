@@ -3,10 +3,11 @@ echo $this->section('title');
 echo lang('Notifications.compose');
 echo $this->endSection();
 
-// select2 varlıkları BU görünüme özeldir (global layout'a eklenmez): yalnız burada
-// uzak kaynaklı çoklu seçim var, her backend sayfasına ~100 KB yüklemenin anlamı yok.
-// Yollar link_tag() ile kurulur (kök-göreli sabit yol DEĞİL): alt dizine kurulmuş bir
-// sitede '/be-assets/...' 404 verirdi. Aynı dosyanın script bölümü de script_tag() kullanır.
+// select2 assets are SPECIFIC to this view (not added to the global layout):
+// only this page has remote-source multi-select, no point loading ~100 KB on
+// every backend page. Paths are built with link_tag() (NOT a root-relative
+// fixed path): on a site installed in a subdirectory, '/be-assets/...' would
+// 404. This file's script section also uses script_tag() for the same reason.
 echo $this->section('head');
 echo link_tag('be-assets/plugins/select2/css/select2.min.css');
 echo link_tag('be-assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css');
@@ -14,19 +15,21 @@ echo $this->endSection();
 echo $this->section('content');
 
 /**
- * @var array<string, string> $composeGroups     Grup adı => görünen başlık (whitelist)
- * @var array<string, string> $composeSeverities Önem slug'ı => lang anahtarı
- * @var array<int, string>    $composeOldUsers   Hatalı gönderim sonrası kimlik => etiket
+ * @var array<string, string> $composeGroups     Group name => display title (whitelist)
+ * @var array<string, string> $composeSeverities Severity slug => lang key
+ * @var array<int, string>    $composeOldUsers   ID => label after a failed submission
  */
-// Eski girdi doğrudan istemciden gelir: dizi/skaler beklentisi burada zorlanır, aksi
-// halde `title[]=x` gibi bir gönderim esc()'e dizi taşırdı.
+// Old input comes directly from the client: the array/scalar expectation is
+// enforced here, otherwise a submission like `title[]=x` would carry an array
+// into esc().
 $oldScalars = static fn ($value): array => is_array($value)
     ? array_values(array_filter($value, 'is_scalar'))
     : [];
-// old() varsayılan olarak esc($value, 'html') uygular; bu görünüm değeri ZATEN esc()
-// ile basıyor. İkisi birlikte çift kaçış demekti: hatalı bir gönderimden sonra
-// 'Tom & Jerry' başlığı forma 'Tom &amp; Jerry' olarak dönüyordu (XSS değil, veri
-// bozulması). Bu yüzden ham okunur, kaçış TEK yerde — basıldığı yerde — kalır.
+// old() applies esc($value, 'html') by default; this view ALREADY prints the
+// value through esc(). The two together meant double escaping: after a failed
+// submission, a 'Tom & Jerry' title would come back into the form as
+// 'Tom &amp; Jerry' (not XSS, but data corruption). That's why it's read raw
+// here, and escaping stays in the SINGLE place — where it's printed.
 $oldText = static function (string $field): string {
     $value = old($field, '', false);
 
@@ -38,8 +41,9 @@ $oldGroups   = array_map('strval', $oldScalars(old('groups')));
 $oldUsers    = array_map('intval', $oldScalars(old('users')));
 $oldExcluded = array_map('intval', $oldScalars(old('exclude_users')));
 
-// Uzak kaynaklı kutuların eski seçimleri: etiket yalnız sunucudan gelir, istemcinin
-// gönderdiği metin DEĞİL — aksi halde seçim kutusuna serbest metin yazılabilirdi.
+// Old selections for remote-source boxes: the label only comes from the
+// server, NOT text sent by the client — otherwise free text could be written
+// into the select box.
 $oldUserOptions = static function (array $ids) use ($composeOldUsers): array {
     $options = [];
     foreach ($ids as $id) {
@@ -178,8 +182,8 @@ $oldUserOptions = static function (array $ids) use ($composeOldUsers): array {
 echo $this->section('javascript');
 echo script_tag("be-assets/plugins/select2/js/select2.full.min.js"); ?>
 <script type="text/javascript" <?php echo csp_script_nonce(); ?>>
-    // CSRF: token gövdede taşınır (CI4MS_CSRF, be-assets/js/ci4ms.js'te tanımlıdır ve
-    // layout tarafından bu section'dan ÖNCE yüklenir). Global $csrfExcept'e dokunulmaz.
+    // CSRF: the token is carried in the body (CI4MS_CSRF is defined in be-assets/js/ci4ms.js and
+    // is loaded by the layout BEFORE this section). The global $csrfExcept is left untouched.
     var COMPOSE_PREVIEW_URL = '<?php echo route_to('notifComposePreview') ?>';
     var COMPOSE_USERS_URL = '<?php echo route_to('notifComposeUsers') ?>';
     var COMPOSE_RECIPIENTS_TPL = '<?php echo esc(lang('Notifications.composeRecipients'), 'js') ?>';
@@ -205,8 +209,8 @@ echo script_tag("be-assets/plugins/select2/js/select2.full.min.js"); ?>
         }
     });
 
-    // Yalnız UX: broadcast seçiliyken hedef kutuları kapanır. Sunucu kararını kendi
-    // verir (send() kipi kendisi okur), yani bu kilidi atlamak bir şeyi değiştirmez.
+    // UX only: the target boxes are disabled while broadcast is selected. The server makes its
+    // own decision (send() reads the mode itself), so bypassing this lock changes nothing.
     function composeSyncMode() {
         var broadcast = $('#compose-mode-broadcast').is(':checked');
         $('#compose-targets').toggle(!broadcast);

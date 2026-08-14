@@ -105,7 +105,7 @@ echo $this->section('content'); ?>
                     <?php foreach ($modules as $module):
                         $activePageCount = count($module->pages);
 
-                        // Mevcut yetki durumunu hesapla
+                        // Calculate the current permission status
                         $grantedPages = 0;
                         foreach ($module->pages as $_p) {
 
@@ -124,7 +124,7 @@ echo $this->section('content'); ?>
                         $modulePartial      = $grantedPages > 0 && $grantedPages < $activePageCount;
                         $moduleGranted      = $grantedPages > 0;
 
-                        // data-status: en az bir yetki varsa active, yoksa inactive
+                        // data-status: active if there's at least one permission, otherwise inactive
                         $moduleStatus = $moduleGranted ? 'active' : 'inactive';
                     ?>
                         <div class="m-module-card module-card <?php echo !$moduleGranted ? 'inactive' : '' ?>"
@@ -185,7 +185,7 @@ echo $this->section('content'); ?>
                                     <tbody>
                                         <?php foreach ($module->pages as $page):
 
-                                            // Sayfanın mevcut yetki durumu
+                                            // The page's current permission status
                                             $isChecked = false;
                                             if (!empty($perms)) {
                                                 foreach ($perms as $p) {
@@ -288,7 +288,7 @@ echo $this->section('javascript') ?>
         });
 
         // ═══════════════════════════════════════════════════════════
-        // Sayfa yüklenince indeterminate durumlarını uygula
+        // Apply indeterminate states once the page loads
         // ═══════════════════════════════════════════════════════════
         $('.module-card').each(function () {
             var toggleEl = $(this).find('.module-toggle-input')[0];
@@ -383,7 +383,7 @@ echo $this->section('javascript') ?>
         $('#moduleFilter, #statusFilter').on('change', runFilter);
 
         // ═══════════════════════════════════════════════════════════
-        // Modül Toggle Senkronizasyonu
+        // Module Toggle Synchronization
         // ═══════════════════════════════════════════════════════════
         function syncModuleToggle(moduleCard) {
             var $card      = $(moduleCard);
@@ -410,7 +410,7 @@ echo $this->section('javascript') ?>
         }
 
         // ═══════════════════════════════════════════════════════════
-        // Module Toggle: Tümü Aç / Kapat
+        // Module Toggle: Turn All On / Off
         // ═══════════════════════════════════════════════════════════
         $('.module-toggle-input').on('change', function (e) {
             e.stopPropagation();

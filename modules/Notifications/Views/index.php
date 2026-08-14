@@ -4,7 +4,7 @@ echo lang('Notifications.title');
 echo $this->endSection();
 echo $this->section('content');
 
-// severity → [ikon, renk] eşlemesi; bilinmeyen değer info'ya düşer.
+// severity -> [icon, color] mapping; an unknown value falls back to info.
 $severityMap = [
     'info'     => ['far fa-bell', 'text-primary'],
     'warning'  => ['fas fa-exclamation-triangle', 'text-warning'],
@@ -30,9 +30,9 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
                 <a href="<?php echo route_to('notifPrefs') ?>" class="btn btn-sm btn-outline-secondary">
                     <i class="fas fa-sliders-h mr-1"></i><?php echo lang('Notifications.preferences') ?>
                 </a>
-                <?php // İzin kontrolü YOK: projede view-içi izin helper'ı bulunmuyor, gate'leme
-                      // fail-closed olarak rotanın kendisinde (backendGuard + role) yapılır — yetkisiz
-                      // kullanıcı bağlantıyı görür ama uç 403 döner. ?>
+                <?php // NO permission check here: the project has no in-view permission helper, gating
+                      // is done fail-closed on the route itself (backendGuard + role) — an unauthorized
+                      // user sees the link but the endpoint returns 403. ?>
                 <a href="<?php echo route_to('notifCompose') ?>" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-paper-plane mr-1"></i><?php echo lang('Notifications.compose') ?>
                 </a>
@@ -75,7 +75,7 @@ $severityOf = static fn ($s) => $severityMap[$s] ?? $severityMap['info'];
 <?php echo $this->endSection();
 echo $this->section('javascript'); ?>
 <script>
-    // CSRF: token be-assets/js/ci4ms.js global AJAX katmanınca eklenir (kanonik).
+    // CSRF: the token is added by the be-assets/js/ci4ms.js global AJAX layer (canonical).
     function notifMarkRead(id, url) {
         $.post(url).done(function () { $('#notif-' + id).removeClass('font-weight-bold'); });
     }

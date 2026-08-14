@@ -5,12 +5,12 @@ namespace Modules\Notifications\Database\Migrations;
 use CodeIgniter\Database\Migration;
 
 /**
- * Model B okundu-durumu tablosu: (notification_id, user_id) başına en fazla bir satır.
+ * Model B read-status table: at most one row per (notification_id, user_id).
  *
- * Bir bildirim, ilgili bir kullanıcı tarafından okunduğunda buraya bir satır yazılır;
- * satırın yokluğu "okunmamış" anlamına gelir. UNIQUE(notification_id,user_id) çift
- * okundu kaydını engeller (markAll INSERT IGNORE ile idempotenttir). FK'ler CASCADE'dir:
- * bildirim ya da kullanıcı silinince ilgili okundu kayıtları da silinir.
+ * A row is written here when a notification is read by a relevant user; the absence
+ * of a row means "unread". UNIQUE(notification_id,user_id) prevents a duplicate read
+ * record (markAll is idempotent via INSERT IGNORE). FKs are CASCADE: when a
+ * notification or user is deleted, the related read records are deleted too.
  */
 class CreateNotificationReadsTable extends Migration
 {

@@ -5,10 +5,10 @@ echo $this->endSection();
 echo $this->section('content');
 
 /**
- * @var bool                  $prefReady    Tercih tablosu migrate edildi mi
- * @var array<string, string> $prefTypes    Tip/tip-öneki => lang anahtarı (whitelist)
- * @var list<string>          $prefChannels Seçilebilen kanal anahtarları (whitelist)
- * @var list<string>          $prefMuted    Susturulmuş '{type}|{channel}' anahtarları
+ * @var bool                  $prefReady    Whether the preferences table has been migrated
+ * @var array<string, string> $prefTypes    Type/type-prefix => lang key (whitelist)
+ * @var list<string>          $prefChannels Selectable channel keys (whitelist)
+ * @var list<string>          $prefMuted    Muted '{type}|{channel}' keys
  */
 $isMuted = static fn (string $type, string $channel): bool => in_array($type . '|' . $channel, $prefMuted, true);
 $channelLabel = static fn (string $channel): string => $channel === '*'

@@ -10,26 +10,30 @@ use Modules\Notifications\Libraries\NotificationMessage;
 use Modules\Notifications\Libraries\SchemaGuard;
 
 /**
- * In-app kanal — mesajı `notifications` tablosuna küresel (Model B) satır olarak yazar.
+ * In-app channel — writes the message to the `notifications` table as a
+ * global (Model B) row.
  *
- * Satır `user_id = null` ile açılır; hedef yalnız `target_type`/`target_value` ile
- * ifade edilir ve okuma anında relevans sorgusuyla çözülür (fan-out yok). Yazımdan
- * sonra okunmamış-rozet cache'i taşınabilir bir `deleteMatching` guard'ıyla düşürülür;
- * desteklemeyen cache handler'larında 60 sn'lik TTL üst-sınır olarak devreye girer.
+ * The row is opened with `user_id = null`; the target is expressed only via
+ * `target_type`/`target_value` and resolved at read time through the relevance
+ * query (no fan-out). After the write, the unread-badge cache is dropped via a
+ * portable `deleteMatching` guard; on cache handlers that don't support it, a
+ * 60s TTL acts as the upper bound instead.
  *
- * Hariç tutma bu kanalda KAYNAĞINA göre ele alınır: AÇIK (`exceptUser()`) bir dışlama
- * garanti edilemiyorsa satır yazılmaz (FAIL-CLOSED), yalnız TÜRETİLMİŞ (örtüşme
- * daraltması) bir dışlama uygulanamıyorsa satır yazılır (FAIL-OPEN + uyarı).
- * Gerekçe: {@see refuseUnenforceableExclusion()}.
+ * Exclusion is handled in this channel BY ITS SOURCE: if an EXPLICIT
+ * (`exceptUser()`) exclusion cannot be guaranteed, the row is not written
+ * (FAIL-CLOSED); only when a DERIVED (overlap-narrowing) exclusion cannot be
+ * applied is the row still written (FAIL-OPEN + warning).
+ * Rationale: {@see refuseUnenforceableExclusion()}.
  *
- * KALICILIK BEYANI: bu kanal {@see DurableChannelInterface} uygular, yani `ok` dönen
- * her sonucu "bildirim gerçekten yazıldı" olarak sayılabilir kılar. Yayının teslim
- * edilip edilmediği kararı YALNIZ böyle işaretlenmiş kanalların sonuçlarından
- * türetilir ({@see \Modules\Notifications\Libraries\DispatchOutcome}).
+ * PERSISTENCE DECLARATION: this channel implements {@see DurableChannelInterface},
+ * meaning every result that returns `ok` can be counted as "the notification
+ * was actually written". Whether a broadcast was delivered is decided ONLY
+ * from the results of channels marked this way
+ * ({@see \Modules\Notifications\Libraries\DispatchOutcome}).
  */
 final class InAppChannel implements DurableChannelInterface
 {
-    /** Küresel satırlarda kullanıcı-özel değeri yoktur. */
+    /** Global rows have no user-specific value. */
     private const GLOBAL_USER_ID = null;
 
     private CommonModel $model;
@@ -40,15 +44,16 @@ final class InAppChannel implements DurableChannelInterface
     }
 
     /**
-     * Mesajı bir `notifications` satırına yazar ve okunmamış cache'ini geçersiz kılar.
+     * Writes the message to a `notifications` row and invalidates the unread cache.
      *
-     * Uygulanamayan bir AÇIK hariç tutma isteğinde satır YAZILMAZ; yalnız türetilmiş
-     * daraltma uygulanamıyorsa satır yazılır ve durum uyarı olarak loglanır. Gerekçe:
+     * When an EXPLICIT exclusion request cannot be enforced, the row is NOT
+     * WRITTEN; only when a derived narrowing cannot be applied is the row
+     * written, with the situation logged as a warning. Rationale:
      * {@see refuseUnenforceableExclusion()}.
      *
-     * @param NotificationMessage $message Temizlenmiş, tek-hedefli mesaj.
+     * @param NotificationMessage $message Sanitized, single-target message.
      *
-     * @return ChannelResult Satır yazıldıysa ok(insertId), aksi halde skipped.
+     * @return ChannelResult ok(insertId) if the row was written, skipped otherwise.
      */
     public function send(NotificationMessage $message): ChannelResult
     {
@@ -73,36 +78,44 @@ final class InAppChannel implements DurableChannelInterface
     }
 
     /**
-     * Uygulanamayacak bir hariç tutma isteğinde yazımı reddeder (yalnız AÇIK dışlama için).
+     * Refuses the write for an exclusion request that cannot be enforced
+     * (only for EXPLICIT exclusion).
      *
-     * `exceptUser()` bir teslim TERCİHİ değil, çağıranın açıkça istediği bir dışlama
-     * GARANTİSİdir ({@see \Modules\Notifications\Libraries\NotificationBuilder::exceptUser()}
-     * sözleşmesi: "hariç tutma HER ZAMAN kazanır"). Garantinin verilemediği iki durumda
-     * satırı yazmak, hariç tutulan kullanıcının bildirimi GÖRMESİ demektir — sessiz bir
-     * sızıntı. Bu yüzden satır hiç yazılmaz ve olay `critical` seviyede loglanır:
-     *   1. `exclude_users` kolonu henüz migrate edilmemiştir (SchemaGuard false döner);
-     *      alan yazılamaz, okuma yolundaki filtre de hiç eklenmez.
-     *   2. Liste {@see NotificationsConfig::EXCLUDE_USERS_MAX} tavanını aşar; TEXT
-     *      taşmasında değer sessizce kesilir ve sentinel sarmalı bozulur. KIRPMA
-     *      yapılmaz — kırpma da tam olarak sızıntı yönünde bozardı.
+     * `exceptUser()` is not a delivery PREFERENCE, it is a GUARANTEE of
+     * exclusion that the caller explicitly asked for
+     * ({@see \Modules\Notifications\Libraries\NotificationBuilder::exceptUser()}
+     * contract: "exclusion ALWAYS wins"). In the two situations where the
+     * guarantee cannot be given, writing the row would mean the excluded user
+     * SEES the notification — a silent leak. So the row is never written and
+     * the event is logged at `critical` level:
+     *   1. The `exclude_users` column has not been migrated yet (SchemaGuard
+     *      returns false); the field cannot be written, and the read-path
+     *      filter is never added either.
+     *   2. The list exceeds the {@see NotificationsConfig::EXCLUDE_USERS_MAX}
+     *      cap; on TEXT overflow the value would be silently truncated and the
+     *      sentinel wrapper broken. No TRUNCATION is applied — truncating
+     *      would break things in exactly the leaking direction too.
      *
-     * KAYNAK AYRIMI: örtüşme daraltmasından TÜREYEN liste ({@see
-     * \Modules\Notifications\Libraries\NotificationBuilder::coveredUserTargets()}) bir
-     * garanti değil, çift-teslim önleyen bir optimizasyondur. Kolon yokken onun için de
-     * fail-closed davranmak, kimsenin `exceptUser()` çağırmadığı `toUser(5) +
-     * toGroup('x')` yayınında GRUP satırının tamamen kaybolması demekti: tüm grup
-     * bildirimi alamıyordu. Bu, önlenmek istenen sızıntıdan daha ağır bir kayıp
-     * olduğundan yalnız türetilmiş dışlamada satır YAZILIR (FAIL-OPEN) ve durum
-     * `warning` ile loglanır — bedeli, doğrudan hedeflenen kullanıcının bildirimi iki
-     * kez görmesidir. Tavan kontrolü ise kaynağı umursamaz: taşan CSV'nin sızıntısı
-     * hangi kaynaktan geldiğine bakmaz, birleşik sayı üzerinden değerlendirilir.
+     * SOURCE DISTINCTION: the list DERIVED from overlap narrowing ({@see
+     * \Modules\Notifications\Libraries\NotificationBuilder::coveredUserTargets()})
+     * is not a guarantee, it is an optimization that prevents double delivery.
+     * Behaving fail-closed for it too when the column is missing would mean
+     * the GROUP row disappears entirely in a `toUser(5) + toGroup('x')`
+     * broadcast where nobody called `exceptUser()` — the entire group would
+     * fail to receive the notification. Since that is a heavier loss than the
+     * leak being prevented, the row IS WRITTEN only for a derived exclusion
+     * (FAIL-OPEN), and the situation is logged as `warning` — the cost being
+     * that the directly targeted user sees the notification twice. The cap
+     * check, however, doesn't care about the source: an overflowing CSV's leak
+     * is evaluated on the combined count regardless of where it came from.
      *
-     * Hariç tutma İSTEMEYEN yayınlar (`excludeUsers === []`) bu yoldan hiç geçmez, yani
-     * migrate edilmemiş bir modülde normal bildirimler eskisi gibi yazılmaya devam eder.
+     * Broadcasts that DO NOT WANT exclusion (`excludeUsers === []`) never go
+     * through this path at all, so on a module that hasn't been migrated,
+     * normal notifications keep being written as before.
      *
-     * @param NotificationMessage $message Teslim edilmek üzere olan mesaj.
+     * @param NotificationMessage $message The message about to be delivered.
      *
-     * @return ChannelResult|null Reddedildiyse skipped sonucu, aksi halde null.
+     * @return ChannelResult|null The skipped result if refused, null otherwise.
      */
     private function refuseUnenforceableExclusion(NotificationMessage $message): ?ChannelResult
     {
@@ -150,23 +163,26 @@ final class InAppChannel implements DurableChannelInterface
     }
 
     /**
-     * Bir küresel bildirim satırının alan setini hazırlar.
+     * Prepares the field set for a global notification row.
      *
-     * `exclude_users` yalnız kolon migrate edilmişse yazılır (FAZ 2 additive kolonu);
-     * biçim sentinel-sarmalı CSV'dir ({@see NotificationMessage::encodeExcludeUsers()}),
-     * boş listede NULL kalır.
+     * `exclude_users` is only written if the column has been migrated (PHASE 2
+     * additive column); the format is a sentinel-wrapped CSV
+     * ({@see NotificationMessage::encodeExcludeUsers()}), staying NULL for an
+     * empty list.
      *
-     * `created_by` de aynı şekilde kolona bağlıdır, AMA sözleşmesi TERSİDİR ve bu
-     * FAIL-OPEN davranış kasıtlıdır: kolon yoksa satır YİNE yazılır, yalnız iz düşer.
-     * `exclude_users`'ın fail-closed refüzü ({@see refuseUnenforceableExclusion()})
-     * BURAYA TAŞINMAZ, çünkü ikisi farklı şeyleri korur: hariç tutma bir TESLİM
-     * garantisidir — uygulanmazsa dışlanan kullanıcı bildirimi görür, yani sızıntı
-     * olur. `created_by` ise yalnız bir HESAP VEREBİLİRLİK izidir; uygulanamaması
-     * kimseye yanlış içerik göstermez. Migrate edilmemiş bir kurulumda bildirimlerin
-     * tamamen kaybolması, "kim gönderdi" bilgisinin kaybolmasından çok daha ağır bir
-     * sonuçtur, bu yüzden durum yalnız loglanır.
+     * `created_by` likewise depends on the column, BUT its contract is the
+     * OPPOSITE, and this FAIL-OPEN behavior is deliberate: if the column is
+     * missing the row is STILL written, only the trail is dropped. The
+     * fail-closed refusal of `exclude_users`
+     * ({@see refuseUnenforceableExclusion()}) is NOT CARRIED OVER HERE, because
+     * the two protect different things: exclusion is a DELIVERY guarantee — if
+     * not enforced, the excluded user sees the notification, i.e. a leak.
+     * `created_by` is only an ACCOUNTABILITY trail; failing to apply it shows
+     * nobody any wrong content. On an unmigrated install, notifications being
+     * lost entirely is a far heavier consequence than losing the "who sent it"
+     * information, so the situation is only logged.
      *
-     * @param NotificationMessage $message Zaten temizlenmiş mesaj.
+     * @param NotificationMessage $message The already-sanitized message.
      *
      * @return array<string, mixed>
      */
@@ -206,12 +222,13 @@ final class InAppChannel implements DurableChannelInterface
     }
 
     /**
-     * Küresel yazımda tüm kullanıcıların okunmamış-rozet cache'lerini süpürür.
+     * Sweeps every user's unread-badge cache on a global write.
      *
-     * `deleteMatching` CacheInterface'te tanımlıdır, ancak bazı handler'lar
-     * (Memcached/Wincache) onu `: never` olarak uygulayıp istisna fırlatır; bu
-     * yüzden portatiflik guard'ı method_exists değil try/catch'tir. Desteklemeyen
-     * handler'da 60 sn'lik TTL üst-sınır olarak devreye girer (fatal atılmaz).
+     * `deleteMatching` is defined on CacheInterface, but some handlers
+     * (Memcached/Wincache) implement it as `: never` and throw an exception;
+     * that's why the portability guard is try/catch rather than method_exists.
+     * On an unsupported handler, a 60s TTL acts as the upper bound instead (no
+     * fatal is thrown).
      */
     private function invalidateUnreadCaches(): void
     {

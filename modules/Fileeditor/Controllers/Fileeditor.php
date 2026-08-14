@@ -47,7 +47,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $fullPath = realpath(ROOTPATH . $path);
 
         if (!$fullPath || !$this->isInsideProject($fullPath)) {
-            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
         }
         $iterator = new DirectoryIterator($fullPath);
         $result = [];
@@ -90,7 +90,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if (!$this->allowedFileTypes($fullPath))
             return $this->failForbidden();
         if (!$fullPath || !is_file($fullPath) || !$this->isInsideProject($fullPath))
-            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
         return $this->response->setJSON(['content' => file_get_contents($fullPath)]);
     }
 
@@ -122,7 +122,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if (!$this->allowedFileTypes($fullPath))
             return $this->failForbidden();
         if (!$fullPath || !is_file($fullPath) || !$this->isInsideProject($fullPath))
-            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
         // isWritableTarget() scopes writes to public/templates/ only —
         // theme editing is Fileeditor's one legitimate write use case.
         if (!$this->isWritableTarget($path))
@@ -167,7 +167,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         // gracefully — this check must run before dirname($fullPath) is
         // ever called.
         if (!$fullPath || !file_exists($fullPath) || !$this->isInsideProject($fullPath))
-            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
         $newPath = dirname($fullPath) . DIRECTORY_SEPARATOR . $newName;
 
         // Verify the rename target's directory stays within ROOTPATH.
@@ -177,7 +177,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         // escape it with.
         $realNewDir = realpath(dirname($fullPath));
         if (!$realNewDir || !$this->isInsideProject($realNewDir))
-            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
 
         if (!$this->isWritableTarget($path))
             return $this->failForbidden(lang('Fileeditor.writeNotAllowed'));
@@ -214,7 +214,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if (!$this->allowedFileTypes($name))
             return $this->failForbidden();
         if (!$fullPath || !is_dir($fullPath) || !$this->isInsideProject($fullPath))
-            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
         // isWritableTarget() scopes writes to public/templates/ only — same
         // reasoning as saveFile().
         if (!$this->isWritableTarget($path))
@@ -262,7 +262,7 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
             return $this->failForbidden();
         $fullPath = realpath(ROOTPATH . $path);
         if (!$fullPath || !is_dir($fullPath) || !$this->isInsideProject($fullPath))
-            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Fileeditor.path')])])->setStatusCode(400);
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
         if (!$this->isWritableTarget($path))
             return $this->failForbidden(lang('Fileeditor.writeNotAllowed'));
 

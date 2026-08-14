@@ -8,9 +8,9 @@ class CreateAuthGroupsUsers extends Migration
 {
     public function up()
     {
-        // fieldExists() sonucu bağlantıda önbelleklenir ve şema bu süreç içinde
-        // değişince bayat kalır (migrate:refresh / rollback+migrate). Guard yalan
-        // söylemesin diye önce sıfırlanır.
+        // fieldExists() results are cached on the connection and go stale if
+        // the schema changes within this process (migrate:refresh /
+        // rollback+migrate). Reset first so the guard doesn't lie.
         $this->db->resetDataCache();
 
         $columns = [

@@ -101,7 +101,7 @@ class Exceptions extends BaseConfig
      */
     public function handler(int $statusCode, Throwable $exception): ExceptionHandlerInterface
     {
-        // Backend modülü bağlamında ise kendi handler'ımızı kullan
+        // Use our own handler if within the Backend module context
         if ($this->isBackendContext($exception)) {
             return new \Modules\Backend\Exceptions\BackendExceptionHandler($this);
         }
@@ -120,7 +120,7 @@ class Exceptions extends BaseConfig
 
     private function isBackendContext(Throwable $exception): bool
     {
-        // 1. Aktif controller Backend namespace'inde mi?
+        // 1. Is the active controller in the Backend namespace?
         try {
             $controller = service('router')->controllerName();
 
@@ -128,25 +128,25 @@ class Exceptions extends BaseConfig
                 return true;
             }
         } catch (\Throwable $e) {
-            // Router henüz hazır değilse atla
+            // Skip if the router isn't ready yet
         }
 
-        // 2. Exception Backend modülü içindeki bir dosyadan mı fırlatıldı?
+        // 2. Was the exception thrown from a file inside the Backend module?
         if (str_contains($exception->getFile(), 'modules' . DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR)) {
             return true;
         }
 
-        // 3. Call stack'te Backend modülü sınıfı var mı?
+        // 3. Is there a Backend module class in the call stack?
         foreach ($exception->getTrace() as $frame) {
             if (!isset($frame['class'])) {
                 continue;
             }
-            // Doğrudan Backend namespace'inde mi?
+            // Directly in the Backend namespace?
             if (str_starts_with($frame['class'], 'Modules\\Backend\\')) {
                 return true;
             }
-            // BaseController'ı extend eden herhangi bir sınıf mı?
-            // (Pages, Blog, Catalog vb. backend modülleri bunu karşılar)
+            // Is it any class that extends BaseController?
+            // (covers backend modules like Pages, Blog, Catalog, etc.)
             if (
                 class_exists($frame['class'], false)
                 && is_subclass_of($frame['class'], 'Modules\\Backend\\Controllers\\BaseController')

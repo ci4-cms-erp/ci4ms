@@ -25,7 +25,7 @@ $defaultLocale = setting('App.defaultLocale') ?: 'tr'; ?>
         </div>
         <div class="card-body">
 
-            <?php /* Hata mesajları */ ?>
+            <?php /* Error messages */ ?>
             <?php if (session()->has('errors')): ?>
                 <div class="alert alert-danger alert-dismissible">
                     <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -143,7 +143,7 @@ $defaultLocale = setting('App.defaultLocale') ?: 'tr'; ?>
                     <div class="form-group col-md-12">
                         <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
                             <?php
-                            // create modunda varsayılan "Yayında" (1), edit modunda mevcut değer
+                            // default is "Published" (1) in create mode, existing value in edit mode
                             $currentActive = $isEdit ? (bool) $pageInfo->isActive : true;
                             ?>
                             <label class="btn btn-outline-secondary <?php echo $currentActive === false ? 'active' : '' ?>">
@@ -256,7 +256,7 @@ echo script_tag("be-assets/js/ci4ms.js"); ?>
     tags([]);
 
     <?php if (!$isEdit): ?>
-    // Yeni kayıt modunda: başlık yazıldığında seflink otomatik üretilir
+    // In new record mode: seflink is auto-generated when the title is typed
     <?php endif; ?>
 
     $('.ptitle').on('change', function () {
