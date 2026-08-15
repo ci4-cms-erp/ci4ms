@@ -147,7 +147,7 @@ if (! function_exists('browser_icon'))
             str_contains($browser, 'Firefox')         => 'fab fa-firefox',
             str_contains($browser, 'Safari')          => 'fab fa-safari',
             str_contains($browser, 'Edge')            => 'fab fa-edge',
-            str_contains($browser, 'Opera')           => 'fab fa-opera', // varsa
+            str_contains($browser, 'Opera')           => 'fab fa-opera', // if present
             str_contains($browser, 'Samsung Browser') => 'fas fa-mobile-alt',
             default                                   => 'fas fa-globe',
         };
