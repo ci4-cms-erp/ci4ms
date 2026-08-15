@@ -4,6 +4,7 @@ namespace Modules\Methods\Controllers;
 
 use ZipArchive;
 use Modules\Methods\Libraries\ModuleInstaller;
+use Modules\Backend\Libraries\ZipSecurityValidator;
 
 class Methods extends \Modules\Backend\Controllers\BaseController
 {
@@ -214,46 +215,16 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipOpenFailed')]);
         }
 
-        // ── Pre-extraction validation ──────────────────────────────
-        // Validate every entry STRING-side before any file actually exists.
-        // The previous realpath() containment check was dead code: realpath
-        // returns false for paths that don't exist yet (i.e. pre-extraction),
-        // so the short-circuit `$realEntry !== false && ...` never fired.
-        $totalUncompressed = 0;
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $entryName = $zip->getNameIndex($i);
-            $stat = $zip->statIndex($i);
-
-            if (
-                $entryName === ''
-                || preg_match('/^[\\/\\\\]/', $entryName)            // absolute path
-                || preg_match('/^[A-Za-z]:[\\/\\\\]/', $entryName)   // Windows drive letter
-                || preg_match('/(^|[\\/\\\\])\.\.([\\/\\\\]|$)/', $entryName) // .. segment anywhere
-                || str_contains($entryName, "\0")                    // null byte
-            ) {
-                $zip->close();
-                return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipPathTraversal')]);
-            }
-
-            if ($stat !== false) {
-                $size = (int) ($stat['size'] ?? 0);
-                if ($size > self::MAX_MODULE_ENTRY_BYTES) {
-                    $zip->close();
-                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipBombDetected')]);
-                }
-                $totalUncompressed += $size;
-                if ($totalUncompressed > self::MAX_MODULE_UNCOMPRESSED_BYTES) {
-                    $zip->close();
-                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.zipBombDetected')]);
-                }
-
-                // Entry-level symlink rejection (S_IFLNK in upper 16 bits of external_attr).
-                $extAttr = (int) ($stat['external_attr'] ?? 0);
-                if (($extAttr >> 16) & 0xA000) {
-                    $zip->close();
-                    return $this->response->setJSON(['status' => 'error', 'message' => lang('Methods.symlinkRejected')]);
-                }
-            }
+        // ── Pre-extraction validation (shared with the theme upload path) ──
+        $validation = (new ZipSecurityValidator())->validate($zip, self::MAX_MODULE_ENTRY_BYTES, self::MAX_MODULE_UNCOMPRESSED_BYTES);
+        if (!$validation['ok']) {
+            $zip->close();
+            $message = match ($validation['reason']) {
+                ZipSecurityValidator::ZIP_BOMB => lang('Methods.zipBombDetected'),
+                ZipSecurityValidator::SYMLINK  => lang('Methods.symlinkRejected'),
+                default                        => lang('Methods.zipPathTraversal'),
+            };
+            return $this->response->setJSON(['status' => 'error', 'message' => $message]);
         }
 
         // ── Extract to a dedicated quarantine directory ───────────

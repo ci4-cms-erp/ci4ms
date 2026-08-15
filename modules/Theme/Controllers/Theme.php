@@ -2,6 +2,8 @@
 
 namespace Modules\Theme\Controllers;
 
+use Modules\Backend\Libraries\ZipSecurityValidator;
+
 class Theme extends \Modules\Backend\Controllers\BaseController
 {
     public function index()
@@ -39,54 +41,31 @@ class Theme extends \Modules\Backend\Controllers\BaseController
             return redirect()->route('backendThemes')->withInput()->with('errors', [lang('Theme.zipOpenFailed')]);
         }
 
-        // ── Security: pre-extraction validation ──────────────────────
+        // ── Security: pre-extraction validation (shared with the module upload path) ──
+        $validation = (new ZipSecurityValidator())->validate($zip, self::MAX_THEME_ENTRY_BYTES, self::MAX_THEME_UNCOMPRESSED_BYTES);
+        if (!$validation['ok']) {
+            $zip->close();
+            $key = match ($validation['reason']) {
+                ZipSecurityValidator::ZIP_BOMB => 'Theme.zipBombDetected',
+                ZipSecurityValidator::SYMLINK  => 'Theme.symlinkRejected',
+                default                        => 'Theme.pathTraversalDetected',
+            };
+            return redirect()->route('backendThemes')->withInput()
+                ->with('errors', [lang($key, [$validation['entry'] ?? ''])]);
+        }
+
+        // Theme-specific per-entry checks: locate metadata (info.xml,
+        // screenshot.png at any depth) and restrict extensions under public/.
         $forbiddenEntries = [];
-        $totalUncompressed = 0;
-        $infoXmlIndex      = null;
-        $hasScreenshot     = false;
+        $infoXmlIndex     = null;
+        $hasScreenshot    = false;
 
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $entryName = $zip->getNameIndex($i);
-            $stat      = $zip->statIndex($i);
-
-            // 1. Reject absolute paths and any segment containing ..
-            if ($entryName === '' || preg_match('/^[\\/\\\\]/', $entryName) || preg_match('/(^|[\\/\\\\])\.\.([\\/\\\\]|$)/', $entryName)) {
-                $zip->close();
-                return redirect()->route('backendThemes')->withInput()
-                    ->with('errors', [lang('Theme.pathTraversalDetected', [$entryName])]);
-            }
-
-            // 2. Per-entry + total size caps (zip-bomb defense)
-            if ($stat !== false) {
-                $size = (int) ($stat['size'] ?? 0);
-                if ($size > self::MAX_THEME_ENTRY_BYTES) {
-                    $zip->close();
-                    return redirect()->route('backendThemes')->withInput()
-                        ->with('errors', [lang('Theme.zipBombDetected', [$entryName])]);
-                }
-                $totalUncompressed += $size;
-                if ($totalUncompressed > self::MAX_THEME_UNCOMPRESSED_BYTES) {
-                    $zip->close();
-                    return redirect()->route('backendThemes')->withInput()
-                        ->with('errors', [lang('Theme.zipBombDetected', [$entryName])]);
-                }
-            }
-
-            // 3. Symlink rejection: Unix file mode lives in the upper 16 bits
-            //    of external_attr; 0xA000 is S_IFLNK.
-            $extAttr = $stat['external_attr'] ?? 0;
-            if (((int) $extAttr >> 16) & 0xA000) {
-                $zip->close();
-                return redirect()->route('backendThemes')->withInput()
-                    ->with('errors', [lang('Theme.symlinkRejected', [$entryName])]);
-            }
-
-            // Skip dir entries for the remaining file-only checks.
-            if (substr($entryName, -1) === '/') {
+            if ($entryName === false || substr($entryName, -1) === '/') {
                 continue;
             }
 
-            // 4. Locate metadata files (info.xml and screenshot.png at any depth).
             $basename = strtolower(basename($entryName));
             if ($basename === 'info.xml' && $infoXmlIndex === null) {
                 $infoXmlIndex = $i;
@@ -94,7 +73,6 @@ class Theme extends \Modules\Backend\Controllers\BaseController
                 $hasScreenshot = true;
             }
 
-            // 5. Restrict file extensions under public/ to static assets only.
             $normalizedEntry = strtolower($entryName);
             if (strpos($normalizedEntry, 'public/') === 0) {
                 $ext = strtolower(pathinfo($entryName, PATHINFO_EXTENSION));
