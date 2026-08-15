@@ -233,6 +233,22 @@ if (!function_exists('hasFilesInFolder')) {
     }
 }
 
+if (!function_exists('permission_string')) {
+    /**
+     * Canonical RBAC permission identifier for a page + action.
+     *
+     * Single source of truth for the "<pagename>.<action>" string that
+     * Ci4MsAuthFilter checks via can() and that the permission-grant
+     * controllers persist. Always lowercases the pagename so a grant and the
+     * later authorization check can never diverge on case -- historically a
+     * privilege-escalation bug class.
+     */
+    function permission_string(string $pagename, string $action): string
+    {
+        return strtolower($pagename) . '.' . $action;
+    }
+}
+
 if (!function_exists('valid_template_slug')) {
     /**
      * True if $slug is a safe template/theme directory name.

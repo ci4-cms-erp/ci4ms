@@ -275,7 +275,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
 
             $roles = explode('|', $perm['roles']);
             foreach ($roleActionMap as $roleKey => $action) {
-                if (in_array($roleKey, $roles, true) && !auth()->user()->can($pageMap[$key] . '.' . $action))
+                if (in_array($roleKey, $roles, true) && !auth()->user()->can(permission_string($pageMap[$key], $action)))
                     return false;
             }
         }
@@ -339,10 +339,10 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
                     $roles = explode('|', $perm['roles']);
                     $pagename = $pageMap[$key];
 
-                    if (in_array('create_r', $roles)) $perms[] = $pagename . '.create';
-                    if (in_array('read_r', $roles)) $perms[] = $pagename . '.read';
-                    if (in_array('update_r', $roles)) $perms[] = $pagename . '.update';
-                    if (in_array('delete_r', $roles)) $perms[] = $pagename . '.delete';
+                    if (in_array('create_r', $roles)) $perms[] = permission_string($pagename, 'create');
+                    if (in_array('read_r', $roles)) $perms[] = permission_string($pagename, 'read');
+                    if (in_array('update_r', $roles)) $perms[] = permission_string($pagename, 'update');
+                    if (in_array('delete_r', $roles)) $perms[] = permission_string($pagename, 'delete');
                 }
                 $user->syncPermissions(...$perms);
                 cache()->delete("{$id}_permissions");

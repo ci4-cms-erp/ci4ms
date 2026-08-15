@@ -130,10 +130,10 @@ class AuthGroups extends ShieldAuthGroups
             $pageMap[$page->id] = $pagename;
 
             // Define all possible actions
-            $this->permissions[$pagename . '.create'] = $page->description . ' - Create';
-            $this->permissions[$pagename . '.read']   = $page->description . ' - Read';
-            $this->permissions[$pagename . '.update'] = $page->description . ' - Update';
-            $this->permissions[$pagename . '.delete'] = $page->description . ' - Delete';
+            $this->permissions[permission_string($pagename, 'create')] = $page->description . ' - Create';
+            $this->permissions[permission_string($pagename, 'read')]   = $page->description . ' - Read';
+            $this->permissions[permission_string($pagename, 'update')] = $page->description . ' - Update';
+            $this->permissions[permission_string($pagename, 'delete')] = $page->description . ' - Delete';
         }
 
         // 3. Load Matrix (Group - Permission mapping)
@@ -147,15 +147,15 @@ class AuthGroups extends ShieldAuthGroups
 
                 if (is_array($permsArray)) {
                     foreach ($permsArray as $permObj) {
-                        // Page ID'den sayfa ismini bul
+                        // Resolve the page name from its ID
                         if (isset($pageMap[$permObj['page_id']])) {
                             $pagename = $pageMap[$permObj['page_id']];
 
-                            // Hangi yetkiler true ise matrix'e ekle
-                            if (!empty($permObj['create_r'])) $this->matrix[$groupName][] = $pagename . '.create';
-                            if (!empty($permObj['read_r']))   $this->matrix[$groupName][] = $pagename . '.read';
-                            if (!empty($permObj['update_r'])) $this->matrix[$groupName][] = $pagename . '.update';
-                            if (!empty($permObj['delete_r'])) $this->matrix[$groupName][] = $pagename . '.delete';
+                            // Add each granted action to the matrix
+                            if (!empty($permObj['create_r'])) $this->matrix[$groupName][] = permission_string($pagename, 'create');
+                            if (!empty($permObj['read_r']))   $this->matrix[$groupName][] = permission_string($pagename, 'read');
+                            if (!empty($permObj['update_r'])) $this->matrix[$groupName][] = permission_string($pagename, 'update');
+                            if (!empty($permObj['delete_r'])) $this->matrix[$groupName][] = permission_string($pagename, 'delete');
                         }
                     }
                 }

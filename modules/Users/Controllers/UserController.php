@@ -228,7 +228,7 @@ class UserController extends \Modules\Backend\Controllers\BaseController
                     continue;
 
                 foreach ($roleActionMap as $roleKey => $action) {
-                    if (!empty($perm[$roleKey]) && !auth()->user()->can($pageMap[$pageId] . '.' . $action))
+                    if (!empty($perm[$roleKey]) && !auth()->user()->can(permission_string($pageMap[$pageId], $action)))
                         return false;
                 }
             }

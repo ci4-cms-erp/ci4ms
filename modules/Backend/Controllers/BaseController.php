@@ -121,7 +121,7 @@ class BaseController extends Controller
         $isSuperadmin = $user->inGroup('superadmin');
 
         foreach ($menuItems as $item) {
-            $permString = strtolower($item->pagename) . '.read';
+            $permString = permission_string($item->pagename, 'read');
 
             if ($isSuperadmin || $user->can($permString)) {
                 $item->maintenanceBadge = BackendMaintenance::moduleInMaintenance($maintenance, (string) $item->className);

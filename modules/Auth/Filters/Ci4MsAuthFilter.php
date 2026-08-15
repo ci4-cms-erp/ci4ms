@@ -60,7 +60,7 @@ class Ci4MsAuthFilter implements FilterInterface
             }
         }
 
-        $permissionString = strtolower($page->pagename) . '.' . $this->neededAction($page);
+        $permissionString = permission_string($page->pagename, $this->neededAction($page));
         if (! auth()->user()->can($permissionString)) {
             return service('response')->setStatusCode(403)->setBody(view('Modules\Backend\Views\errors\html\error_403'));
         }
