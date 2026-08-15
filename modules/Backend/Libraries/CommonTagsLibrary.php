@@ -13,9 +13,9 @@ class CommonTagsLibrary
      */
     protected $commonModel;
 
-    public function __construct(?CommonModel $commonModel = null)
+    public function __construct()
     {
-        $this->commonModel = $commonModel ?? new CommonModel();
+        $this->commonModel = new CommonModel();
     }
 
     /**

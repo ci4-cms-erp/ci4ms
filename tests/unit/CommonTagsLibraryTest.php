@@ -10,7 +10,7 @@ use Modules\Backend\Libraries\CommonTagsLibrary;
  *
  * CommonModel is mocked (checkTags' default `new CommonModel()` would open the
  * *default* group = the live database), so nothing here touches a real DB.
- * The mock is injected through the constructor.
+ * The mock is injected via reflection.
  *
  * Covers the two things the phase-4 pass changed:
  *   1. Invalid/empty JSON is now a no-op -- previously it deleted the item's
@@ -32,6 +32,15 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
             ->getMock();
     }
 
+    private function createLibraryWithMock(object $mockModel): CommonTagsLibrary
+    {
+        $lib = new CommonTagsLibrary();
+        $ref = new \ReflectionProperty(CommonTagsLibrary::class, 'commonModel');
+        $ref->setAccessible(true);
+        $ref->setValue($lib, $mockModel);
+        return $lib;
+    }
+
     // ── Invalid / empty payloads: must be a no-op (bug fix) ─────────────
 
     public function testInvalidJsonDoesNothingAndDoesNotThrow(): void
@@ -42,7 +51,7 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
         $mock->expects($this->never())->method('edit');
         $mock->expects($this->never())->method('selectOne');
 
-        (new CommonTagsLibrary($mock))->checkTags('{not valid json}', 'blog', '1');
+        $this->createLibraryWithMock($mock)->checkTags('{not valid json}', 'blog', '1');
         $this->assertTrue(true); // reached here => no exception
     }
 
@@ -53,7 +62,7 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
         $mock->expects($this->never())->method('remove');
         $mock->expects($this->never())->method('create');
 
-        (new CommonTagsLibrary($mock))->checkTags('not-json', 'blog', '7', 'pages', true);
+        $this->createLibraryWithMock($mock)->checkTags('not-json', 'blog', '7', 'pages', true);
         $this->assertTrue(true);
     }
 
@@ -63,7 +72,7 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
         $mock->expects($this->never())->method('remove');
         $mock->expects($this->never())->method('create');
 
-        (new CommonTagsLibrary($mock))->checkTags('', 'blog', '1', 'pages', true);
+        $this->createLibraryWithMock($mock)->checkTags('', 'blog', '1', 'pages', true);
         $this->assertTrue(true);
     }
 
@@ -74,7 +83,7 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
         // isUpdate defaults to false, so no remove either.
         $mock->expects($this->never())->method('remove');
 
-        (new CommonTagsLibrary($mock))->checkTags('[]', 'blog', '1');
+        $this->createLibraryWithMock($mock)->checkTags('[]', 'blog', '1');
         $this->assertTrue(true);
     }
 
@@ -85,7 +94,7 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
             ->with('tags_pivot', ['piv_id' => '5', 'tagType' => 'blog']);
         $mock->expects($this->never())->method('create');
 
-        (new CommonTagsLibrary($mock))->checkTags('[]', 'blog', '5', 'pages', true);
+        $this->createLibraryWithMock($mock)->checkTags('[]', 'blog', '5', 'pages', true);
     }
 
     // ── New tag creation + slug collision ──────────────────────────────
@@ -101,7 +110,7 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
             return count($created);
         });
 
-        (new CommonTagsLibrary($mock))->checkTags(json_encode([['id' => '', 'value' => 'Hello World']]), 'blog', '1');
+        $this->createLibraryWithMock($mock)->checkTags(json_encode([['id' => '', 'value' => 'Hello World']]), 'blog', '1');
 
         $this->assertSame('tags', $created[0][0]);
         $this->assertSame('Hello World', $created[0][1]['tag']);
@@ -124,7 +133,7 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
             return count($created);
         });
 
-        (new CommonTagsLibrary($mock))->checkTags(json_encode([['id' => '', 'value' => 'Hello World']]), 'blog', '1');
+        $this->createLibraryWithMock($mock)->checkTags(json_encode([['id' => '', 'value' => 'Hello World']]), 'blog', '1');
 
         $this->assertSame('hello-world-2', $created[0][1]['seflink']);
     }
@@ -139,7 +148,7 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
             return 1;
         });
 
-        (new CommonTagsLibrary($mock))->checkTags(json_encode([['id' => '', 'value' => 'php']]), 'blog', '1');
+        $this->createLibraryWithMock($mock)->checkTags(json_encode([['id' => '', 'value' => 'php']]), 'blog', '1');
 
         // Only a pivot row, never a new tag row.
         $this->assertSame(['tags_pivot'], $createdTables);
@@ -156,7 +165,7 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
             return count($created);
         });
 
-        (new CommonTagsLibrary($mock))->checkTags(json_encode([['id' => '', 'value' => '<b>bold</b>tag']]), 'blog', '1');
+        $this->createLibraryWithMock($mock)->checkTags(json_encode([['id' => '', 'value' => '<b>bold</b>tag']]), 'blog', '1');
 
         $this->assertSame('boldtag', $created[0][1]['tag']);
     }
@@ -169,6 +178,6 @@ final class CommonTagsLibraryTest extends CIUnitTestCase
         $mock->method('selectOne')->willReturn((object) ['id' => 3, 'tag' => 'news']);
         $mock->method('create')->willReturn(1);
 
-        (new CommonTagsLibrary($mock))->checkTags(json_encode([['id' => '', 'value' => 'news']]), 'blog', '9', 'pages', true);
+        $this->createLibraryWithMock($mock)->checkTags(json_encode([['id' => '', 'value' => 'news']]), 'blog', '9', 'pages', true);
     }
 }
