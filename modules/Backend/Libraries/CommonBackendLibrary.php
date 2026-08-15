@@ -43,7 +43,10 @@ class CommonBackendLibrary
     public function getDatatablesPagination(array $postData): array
     {
         $data = clearFilter($postData);
-        $searchString = trim(strip_tags($data['search']['value'] ?? ''));
+        // Strip tags from the RAW value: clearFilter() esc()-encodes strings,
+        // which would turn "<b>" into "&lt;b&gt;" and leave strip_tags nothing
+        // to remove. The result feeds a parameterized LIKE, not view output.
+        $searchString = trim(strip_tags($postData['search']['value'] ?? ''));
 
         $length = isset($data['length']) ? (int)$data['length'] : 10;
         $start = isset($data['start']) ? (int)$data['start'] : 0;
