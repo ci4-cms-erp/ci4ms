@@ -28,6 +28,17 @@ class SecurityAuthTest extends CIUnitTestCase
         // Setup the Database for all namespaces
         $migrate = \Config\Services::migrations();
         $migrate->setNamespace(null)->latest();
+
+        // An earlier feature test can leave a logged-in marker in the shared
+        // session singleton. A "guest" request here would then report
+        // loggedIn() === true with no loadable user, and Shield's
+        // ForcePasswordResetFilter (Filters/ForcePasswordResetFilter.php:46)
+        // crashes reading force_reset on that null user. Start each test from a
+        // clean auth/session state so this class does not depend on execution
+        // order.
+        $_SESSION = [];
+        \Config\Services::resetSingle('session');
+        \Config\Services::resetSingle('auth');
     }
 
     public function testGuestIsRedirectedToLoginFromBackend()
