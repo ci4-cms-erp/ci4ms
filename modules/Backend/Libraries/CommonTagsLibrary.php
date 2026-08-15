@@ -13,9 +13,9 @@ class CommonTagsLibrary
      */
     protected $commonModel;
 
-    public function __construct()
+    public function __construct(?CommonModel $commonModel = null)
     {
-        $this->commonModel = new CommonModel();
+        $this->commonModel = $commonModel ?? new CommonModel();
     }
 
     /**
@@ -28,8 +28,16 @@ class CommonTagsLibrary
      */
     public function checkTags(string $tags, string $type, string $insertedID, string $table = 'pages', bool $isUpdate = false)
     {
-        if ($isUpdate === true) $this->commonModel->remove('tags_pivot', ['piv_id' => $insertedID, 'tagType' => $type]);
         $jsons = json_decode($tags);
+        // Invalid/empty payload: bail out BEFORE deleting anything, otherwise a
+        // malformed POST would remove the item's existing tag links (isUpdate)
+        // and then fatal on foreach(null) -- data loss plus a crash.
+        if (!is_array($jsons) && !is_object($jsons)) {
+            return;
+        }
+
+        if ($isUpdate === true) $this->commonModel->remove('tags_pivot', ['piv_id' => $insertedID, 'tagType' => $type]);
+
         foreach ($jsons as $item) {
             if (!empty($item->id)) {
                 $value = strip_tags(trim((string) ($item->value ?? '')));
@@ -48,17 +56,7 @@ class CommonTagsLibrary
                 if (!empty($value)) {
                     $tag = $this->commonModel->selectOne('tags', ['tag' => $value]);
                     if (empty($tag) || $value != $tag->tag) {
-                        $max_url_increment = 10000;
-                        $link = null;
-                        if ($this->commonModel->isHave($table, ['seflink' => seflink($value, ['lowercase'])]) === 0) $link = seflink($value, ['lowercase']);
-                        else
-                            for ($i = 1; $i <= $max_url_increment; $i++) {
-                                $new_link = seflink($value, ['lowercase']) . '-' . $i;
-                                if ($this->commonModel->isHave($table, ['seflink' => $new_link]) === 0) {
-                                    $link = $new_link;
-                                    break;
-                                }
-                            }
+                        $link = $this->firstFreeSeflink($table, seflink($value, ['lowercase']));
                         $addedTagID = $this->commonModel->create('tags', ['tag' => $value, 'seflink' => $link]);
                         $this->commonModel->create('tags_pivot', ['tag_id' => $addedTagID, 'tagType' => $type, 'piv_id' => $insertedID]);
                     } else {
@@ -67,5 +65,32 @@ class CommonTagsLibrary
                 }
             }
         }
+    }
+
+    /**
+     * First unused seflink for $base under $table -- $base itself if free, else
+     * $base-1, $base-2, ... -- resolved from a single query instead of one
+     * COUNT per candidate (the old loop probed up to 10,000 times). Returns the
+     * lowest free suffix, identical to sequential probing. The LIKE fetch may
+     * return unrelated seflinks that merely contain $base; only exact "$base"
+     * and "$base-<n>" keys are consulted, so those are harmless.
+     */
+    private function firstFreeSeflink(string $table, string $base): string
+    {
+        $taken = [];
+        foreach ($this->commonModel->lists($table, 'seflink', [], 'id ASC', 0, 0, ['seflink' => $base]) as $row) {
+            $taken[$row->seflink] = true;
+        }
+
+        if (!isset($taken[$base])) {
+            return $base;
+        }
+
+        $i = 1;
+        while (isset($taken[$base . '-' . $i])) {
+            $i++;
+        }
+
+        return $base . '-' . $i;
     }
 }
