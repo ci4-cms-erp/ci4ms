@@ -201,9 +201,6 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
 
             if ($editResult && $this->commonModel->db->transStatus()) {
                 cache()->delete("shield_auth_dynamic_config");
-                foreach ($this->commonModel->lists('users', 'id') as $u) {
-                    cache()->delete("{$u->id}_permissions");
-                }
                 cache()->deleteMatching('backend_page_info_*');
                 return redirect()->route('groupList')->with('message', lang('Backend.updated', [$this->request->getPost('groupName')]));
             } else

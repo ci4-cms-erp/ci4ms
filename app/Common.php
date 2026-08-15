@@ -233,23 +233,6 @@ if (!function_exists('hasFilesInFolder')) {
     }
 }
 
-function sanitizePost(array $data, array $allowRaw = []): array
-{
-    $sanitized = [];
-    foreach ($data as $key => $value) {
-        if (in_array($key, $allowRaw)) {
-            $sanitized[$key] = $value; // trust raw (e.g., content from rich editor)
-        } elseif (is_array($value)) {
-            $sanitized[$key] = sanitizePost($value, $allowRaw);
-        } elseif (is_string($value)) {
-            $sanitized[$key] = esc(trim($value));
-        } else {
-            $sanitized[$key] = $value;
-        }
-    }
-    return $sanitized;
-}
-
 if (!function_exists('valid_template_slug')) {
     /**
      * True if $slug is a safe template/theme directory name.

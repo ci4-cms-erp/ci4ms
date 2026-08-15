@@ -500,9 +500,6 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         $this->commonModel->remove('modules', ['id' => $moduleId]);
         $fileResult = $installer->removeModuleFiles($module->name);
         cache()->delete('sidebar_menu');
-        foreach ($this->commonModel->lists('users', 'id') as $user) {
-            cache()->delete("{$user->id}_permissions");
-        }
 
         $message = lang('Methods.deleteModuleSuccess', [$module->name]);
         if (!$fileResult['success'])
