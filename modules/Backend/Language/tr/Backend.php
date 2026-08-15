@@ -211,4 +211,9 @@ return [
     'totalPages' => 'Toplam Sayfa',
     'siteName' => 'Site Adı',
     'date' => 'Tarih',
+
+    // Previously referenced in code without a definition
+    'home' => 'Anasayfa',
+    'noResults' => 'Sonuç bulunamadı',
+    'ownLanguage' => 'Dil',
 ];

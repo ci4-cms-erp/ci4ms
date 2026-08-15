@@ -52,4 +52,5 @@ return [
     'devGateCredentialsUsername' => 'Username',
     'devGateCredentialsPassword' => 'Password',
     'devGateCredentialsContinue' => 'Continue to site',
+    'slogan' => 'Slogan',
 ];

@@ -52,4 +52,5 @@ return [
     'devGateCredentialsUsername' => 'Kullanıcı Adı',
     'devGateCredentialsPassword' => 'Şifre',
     'devGateCredentialsContinue' => 'Siteye devam et',
+    'slogan' => 'Slogan',
 ];

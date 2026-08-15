@@ -76,4 +76,5 @@
     'cannotEditOwnAccount' => 'Kendi hesabınızı bu ekrandan düzenleyemezsiniz; profil sayfanızı kullanın.',
     'groupExceedsOwnGrant' => 'Kendinizde olmayan yetkilere sahip bir grubu atayamazsınız.',
     'cannotResetPeerPassword' => 'Superadmin yetkiniz olmadan bu ekrandan başka bir kullanıcının şifresini belirleyemezsiniz.',
+    'profileIMG' => 'Profil Resmi',
 ];

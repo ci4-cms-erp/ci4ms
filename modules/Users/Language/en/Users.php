@@ -76,4 +76,5 @@
     'cannotEditOwnAccount' => 'You cannot edit your own account from this screen; use your profile page instead.',
     'groupExceedsOwnGrant' => 'You cannot assign a group with permissions you do not have yourself.',
     'cannotResetPeerPassword' => 'You cannot set another user\'s password from this screen without superadmin privileges.',
+    'profileIMG' => 'Profile Image',
 ];

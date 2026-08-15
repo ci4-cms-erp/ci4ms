@@ -28,4 +28,6 @@ return [
     'confirmDelete' => 'Confirm Delete',
     'cspWarning' => 'If CodeIgniter 4 CSP (Content Security Policy) is enabled, the editor may not work properly.',
     'writeNotAllowed' => 'Writing to this location is not allowed. Only public/templates/ is editable.',
+    'dangerousFileType' => 'This file type is not allowed.',
+    'fileAlreadyExists' => 'A file with this name already exists.',
 ];

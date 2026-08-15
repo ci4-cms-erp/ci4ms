@@ -24,4 +24,5 @@ return [
     'invalidSlug'                 => 'info.xml dosyası geçerli bir <slug> tanımlamıyor. Slug en fazla 64 karakter ve [a-z0-9_-]+ desenine uymalı.',
     'tempDirExists'               => 'Önceki bir yükleme denemesi "{0}" teması için bir geçici dizin bıraktı. Yeniden denemeden önce silin.',
     'screenshotInvalid'           => 'Yüklenen arşivin içindeki screenshot.png geçerli bir PNG görseli değil.',
+    'tableDeleted' => 'Tablo silindi: {0}',
 ];

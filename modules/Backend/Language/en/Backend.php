@@ -211,4 +211,9 @@ return [
     'totalPages' => 'Total Pages',
     'siteName' => 'Site Name',
     'date' => 'Date',
+
+    // Previously referenced in code without a definition
+    'home' => 'Home',
+    'noResults' => 'No results found',
+    'ownLanguage' => 'Language',
 ];

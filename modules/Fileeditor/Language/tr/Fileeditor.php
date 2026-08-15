@@ -28,4 +28,6 @@ return [
     'confirmDelete' => 'Silme işlemini onaylıyor musunuz?',
     'cspWarning' => 'CodeIgniter 4 CSP (Content Security Policy) açıksa editör düzgün çalışmayabilir.',
     'writeNotAllowed' => 'Bu konuma yazma işlemine izin verilmiyor. Yalnızca public/templates/ düzenlenebilir.',
+    'dangerousFileType' => 'Bu dosya türüne izin verilmiyor.',
+    'fileAlreadyExists' => 'Bu isimde bir dosya zaten var.',
 ];
