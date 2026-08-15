@@ -7,13 +7,10 @@ class Tags extends \Modules\Backend\Controllers\BaseController
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = trim(strip_tags($data['search']['value']));
-            $like = [];
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $postData = [];
-            if (!empty($like))
-                $like = ['tag' => $like];
-            $results = $this->commonModel->lists('tags', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int) $data['length'], ($data['length'] == '-1') ? 0 : (int) $data['start'], $like);
+            $like = [];
+            $results = $this->commonModel->lists('tags', '*', $postData, 'id DESC', $parsed['length'], $parsed['start'], $like);
             $totalRecords = $this->commonModel->count('tags', $postData, $like);
             foreach ($results as $result) {
                 $result->actions = '<a href="' . route_to('tagUpdate', $result->id) . '"
@@ -22,7 +19,7 @@ class Tags extends \Modules\Backend\Controllers\BaseController
                                    class="btn btn-outline-danger btn-sm">' . lang('Backend.delete') . '</a>';
             }
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalRecords,
                 'aaData' => $results,

@@ -10,19 +10,16 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
     public function groupList($num = 1)
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
-            $data = clearFilter($this->request->getPost());
-            $like = $data['search']['value'];
-            $like = [];
+            $parsed = $this->commonBackendLibrary->getDatatablesPagination($this->request->getPost());
             $postData = ['group!=' => 'superadmin'];
-            if (!empty($like))
-                $like = ['title' => $like];
-            $results = $this->commonModel->lists('auth_groups', '*', $postData, 'id DESC', ($data['length'] == '-1') ? 0 : (int) $data['length'], ($data['length'] == '-1') ? 0 : (int) $data['start'], $like);
+            $like = [];
+            $results = $this->commonModel->lists('auth_groups', '*', $postData, 'id DESC', $parsed['length'], $parsed['start'], $like);
             $totalRecords = $this->commonModel->count('auth_groups', $postData, $like);
             foreach ($results as $result) {
                 $result->actions = '<a href="' . route_to('group_update', $result->id) . '" class="btn btn-outline-info btn-sm">' . lang('Backend.update') . '</a>';
             }
             $data = [
-                'draw' => intval($data['draw']),
+                'draw' => $parsed['draw'],
                 'iTotalRecords' => $totalRecords,
                 'iTotalDisplayRecords' => $totalRecords,
                 'aaData' => $results,

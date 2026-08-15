@@ -107,7 +107,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 setting()->set('App.logo', esc(trim(strip_tags($this->request->getPost('cLogo')))));
 
             setting()->set('App.contact', json_encode($data, JSON_UNESCAPED_UNICODE));
-            cache()->delete('settings');
+            $this->clearSettingsCache();
             return redirect()->route('settings')->with('message', lang('Backend.updated', [lang('Settings.companyInfos')]));
         } catch (\Exception $e) {
             return redirect()->route('settings')->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.companyInfos')]));
@@ -148,7 +148,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             return redirect()->route('settings')->withInput()->with('errors', $this->validator->getErrors());
         try {
             setting()->set('App.socialNetwork', json_encode($socialNetwork, JSON_UNESCAPED_UNICODE));
-            cache()->delete('settings');
+            $this->clearSettingsCache();
             return redirect()->route('settings')->withInput()->with('message', lang('Backend.updated', [lang('Settings.socialMedia')]));
         } catch (\Exception $e) {
             return redirect()->route('settings')->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.socialMedia')]));
@@ -182,7 +182,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             if ($this->request->getPost('mTls'))
                 $data['tls'] = true;
             setting()->set('App.mail', json_encode($data));
-            cache()->delete('settings');
+            $this->clearSettingsCache();
             return redirect()->route('settings')->withInput()->with('message', lang('Backend.updated', [lang('Settings.mailSettings')]));
         } catch (\Exception $e) {
             return redirect()->route('settings')->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.mailSettings')]));
@@ -246,7 +246,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 'path' => $themeName,
                 'name' => (string) $this->request->getPost('tName')
             ], JSON_UNESCAPED_UNICODE));
-            cache()->delete('settings');
+            $this->clearSettingsCache();
             return $this->respond(['result' => true]);
         } catch (\Exception $e) {
             return $this->respond(['result' => false], 500);
@@ -266,7 +266,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         try {
             $data = explode(',', $this->request->getPost('allowedFiles'));
             setting()->set('Security.allowedFiles', json_encode($data, JSON_UNESCAPED_UNICODE));
-            cache()->delete('settings');
+            $this->clearSettingsCache();
             return redirect()->route('settings')->with('message', lang('Backend.updated', [lang('Settings.fileTypes')]));
         } catch (\Exception $e) {
             return redirect()->route('settings')->withInput()->with('error', lang('Backend.notUpdated', [lang('Settings.fileTypes')]));
@@ -317,7 +317,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             $data = array_merge($current, $postSettings);
 
             setting()->set('App.templateInfos', json_encode($data, JSON_UNESCAPED_UNICODE));
-            cache()->delete('settings');
+            $this->clearSettingsCache();
 
             return redirect()->route('settings')->with('success', lang('Backend.updated', [lang('Settings.templateSettings')]));
         } catch (\Exception $e) {
@@ -335,7 +335,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 return $this->respond(['status' => 'error', 'errors' => $this->validator->getErrors()], 422);
             try {
                 setting()->set('Elfinder.convertWebp', (bool) $this->request->getPost('isActive'));
-                cache()->delete('settings');
+                $this->clearSettingsCache();
                 return $this->respond(['result' => (bool) $this->request->getPost('isActive')], 200);
             } catch (\Exception $e) {
                 return $this->fail(['pr' => false]);
@@ -378,7 +378,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
 
         try {
             setting()->set('App.siteLanguageMode', $this->request->getPost('mode'));
-            cache()->delete('settings');
+            $this->clearSettingsCache();
             cache()->delete('frontend_languages');
             cache()->delete('default_frontend_language');
             $langs = $this->commonModel->lists('languages');
@@ -420,7 +420,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             }
             try {
                 setting()->set('Auth.idleTimeoutEnabled', (bool) $this->request->getPost('isActive'));
-                cache()->delete('settings');
+                $this->clearSettingsCache();
                 return $this->respond(['status' => 'success']);
             } catch (\Exception $e) {
                 return $this->respond(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -437,7 +437,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
             }
             try {
                 setting()->set('Auth.idleTimeoutMinutes', (int) $this->request->getPost('minutes'));
-                cache()->delete('settings');
+                $this->clearSettingsCache();
                 return $this->respond(['status' => 'success', 'minutes' => (int) $this->request->getPost('minutes')]);
             } catch (\Exception $e) {
                 return $this->respond(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -471,7 +471,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
         try {
             $isActive = (bool) $this->request->getPost('isActive');
             setting()->set('Auth.geoLookupEnabled', $isActive);
-            cache()->delete('settings');
+            $this->clearSettingsCache();
 
             return $this->respond([
                 'status'    => 'success',
@@ -527,7 +527,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 'until' => ($all && $minutes > 0) ? time() + ($minutes * 60) : null,
                 'modules' => $modules,
             ], JSON_UNESCAPED_UNICODE));
-            cache()->delete('settings');
+            $this->clearSettingsCache();
 
             return $this->respond([
                 'status' => 'success',
@@ -594,6 +594,16 @@ class Settings extends \Modules\Backend\Controllers\BaseController
                 'message' => lang('Backend.notUpdated', [lang('Settings.cacheManagement')]),
             ], 500);
         }
+    }
+
+    /**
+     * Deletes the cached decoded settings blob. Every settings write goes
+     * through this so the next request re-reads from the database, and the
+     * invalidation lives in exactly one place.
+     */
+    private function clearSettingsCache(): void
+    {
+        cache()->delete('settings');
     }
 
     /**
