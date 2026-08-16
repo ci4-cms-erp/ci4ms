@@ -21,12 +21,12 @@ use Modules\Backup\Libraries\DbBackup;
  * (non-fatally, matching the existing "Unrecognized SQL skipped" pattern),
  * not applied, and the rest of the file must still be processed.
  *
- * DbBackup is constructed with $this->db explicitly (DatabaseTestTrait's own
- * connection) so every write it performs participates in this test's own
- * transaction and rolls back in tearDown() -- a bare `new DbBackup()` would
- * resolve its own connection independently and, while still pointed at
- * ci4ms_test under ENVIRONMENT === 'testing', would not share this test's
- * transaction state.
+ * DbBackup instantiates its own CommonModel (project style: no constructor
+ * DI), so makeDbBackup() reflection-points that CommonModel's connection at
+ * this test's transaction connection ($this->db). Every write DbBackup then
+ * makes participates in this test's transaction and rolls back in tearDown();
+ * a bare `new DbBackup()` would resolve its own connection independently and
+ * would not share this test's transaction state.
  *
  * @internal
  */
@@ -67,6 +67,21 @@ final class DbBackupRbacProtectionTest extends CIUnitTestCase
     }
 
     /**
+     * DbBackup takes no injected connection (project convention:
+     * `new CommonModel()` in the constructor), so bind its CommonModel to this
+     * test's transaction connection via reflection instead of passing it in.
+     */
+    private function makeDbBackup(): DbBackup
+    {
+        $dbBackup = new DbBackup();
+        $ref = new \ReflectionProperty(DbBackup::class, 'commonModel');
+        $ref->setAccessible(true);
+        $ref->getValue($dbBackup)->db = $this->db;
+
+        return $dbBackup;
+    }
+
+    /**
      * A restore file containing one statement that targets a protected RBAC
      * table (auth_groups_users) alongside one benign statement must: (1) not
      * fail the whole restore, (2) skip only the RBAC statement, (3) still
@@ -84,7 +99,7 @@ final class DbBackupRbacProtectionTest extends CIUnitTestCase
 
         $this->tmpSqlPath = $this->writeTmpSqlFile($sql);
 
-        $dbBackup = new DbBackup($this->db);
+        $dbBackup = $this->makeDbBackup();
         $result   = $dbBackup->restore($this->tmpSqlPath);
 
         $this->assertTrue($result, 'restore() must not fail the whole file just because one statement targets a protected RBAC table.');
@@ -115,7 +130,7 @@ final class DbBackupRbacProtectionTest extends CIUnitTestCase
 
         $this->tmpSqlPath = $this->writeTmpSqlFile($sql);
 
-        $dbBackup = new DbBackup($this->db);
+        $dbBackup = $this->makeDbBackup();
         $result   = $dbBackup->restore($this->tmpSqlPath);
 
         $this->assertTrue($result);

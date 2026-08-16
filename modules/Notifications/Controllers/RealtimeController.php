@@ -269,6 +269,8 @@ class RealtimeController extends \Modules\Backend\Controllers\BaseController
         // The poll loop only touches Redis; close the default DB connection opened by
         // BaseController's bootstrap (CommonModel) here so the worker doesn't hold an
         // idle connection for the duration of the TTL. There's no further DB access after the loop.
+        // Kept on db_connect(): CommonModel exposes no close()/connection-lifecycle
+        // wrapper, only query methods (lists/create/edit/remove/...).
         db_connect('default')->close();
 
         /** @var SignalStoreInterface $signal */

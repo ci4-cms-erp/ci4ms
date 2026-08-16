@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Modules\Backup\Libraries;
 
-use CodeIgniter\Database\ConnectionInterface;
-use Config\Database;
+use ci4commonmodel\CommonModel;
 
 class DbBackup
 {
-    protected $db;
+    protected $commonModel;
 
     /**
      * Table name suffixes (without any DBPrefix) that a restore file must
@@ -26,9 +25,14 @@ class DbBackup
         'auth_groups_permissions',
     ];
 
-    public function __construct(ConnectionInterface $db = null)
+    public function __construct()
     {
-        $this->db = $db ?? Database::connect();
+        // Dump and restore need raw SQL primitives -- query(), escape(),
+        // escapeIdentifiers(), DBPrefix, SHOW CREATE TABLE -- that CommonModel
+        // has no wrapper for, so this class reaches them through the
+        // CommonModel instance's own connection handle ($this->commonModel->db).
+        // Table discovery does go through CommonModel::getTableList() (backup()).
+        $this->commonModel = new CommonModel();
     }
 
     public function backup(array $params = [])
@@ -47,7 +51,7 @@ class DbBackup
         $prefs = array_merge($prefs, $params);
 
         if (empty($prefs['tables'])) {
-            $prefs['tables'] = $this->db->listTables();
+            $prefs['tables'] = $this->commonModel->getTableList();
         }
 
         if (! in_array($prefs['format'], ['gzip', 'zip', 'txt'], true)) {
@@ -94,10 +98,10 @@ class DbBackup
             }
 
             if ($prefs['add_drop']) {
-                $out .= 'DROP TABLE IF EXISTS ' . $this->db->escapeIdentifiers($table) . ';' . $prefs['newline'];
+                $out .= 'DROP TABLE IF EXISTS ' . $this->commonModel->db->escapeIdentifiers($table) . ';' . $prefs['newline'];
             }
 
-            $query = $this->db->query('SHOW CREATE TABLE ' . $this->db->escapeIdentifiers($table));
+            $query = $this->commonModel->db->query('SHOW CREATE TABLE ' . $this->commonModel->db->escapeIdentifiers($table));
             $row = $query->getRowArray();
 
             // Create Table column name can sometimes vary (e.g., Create View), taking the 2nd column
@@ -106,13 +110,13 @@ class DbBackup
             $out .= $createSql . ';' . $prefs['newline'] . $prefs['newline'];
 
             if ($prefs['add_insert']) {
-                $rows = $this->db->table($table)->get()->getResultArray();
+                $rows = $this->commonModel->db->table($table)->get()->getResultArray();
                 foreach ($rows as $row) {
                     $vals = [];
                     foreach ($row as $v) {
-                        $vals[] = $v === null ? 'NULL' : $this->db->escape($v);
+                        $vals[] = $v === null ? 'NULL' : $this->commonModel->db->escape($v);
                     }
-                    $out .= 'INSERT INTO ' . $this->db->escapeIdentifiers($table) . ' VALUES (' . implode(', ', $vals) . ');' . $prefs['newline'];
+                    $out .= 'INSERT INTO ' . $this->commonModel->db->escapeIdentifiers($table) . ' VALUES (' . implode(', ', $vals) . ');' . $prefs['newline'];
                 }
                 $out .= $prefs['newline'];
             }
@@ -165,7 +169,7 @@ class DbBackup
             'START TRANSACTION', 'COMMIT', 'ROLLBACK',
         ];
 
-        $this->db->query('SET FOREIGN_KEY_CHECKS = 0');
+        $this->commonModel->db->query('SET FOREIGN_KEY_CHECKS = 0');
 
         $stmtNum = 0;
         foreach ($this->splitStatements($file) as $statement) {
@@ -178,7 +182,7 @@ class DbBackup
                 if (preg_match($pattern, $trimmed)) {
                     log_message('error', "DbBackup::restore — Dangerous SQL blocked at statement {$stmtNum}: " . mb_substr($trimmed, 0, 100));
                     fclose($file);
-                    $this->db->query('SET FOREIGN_KEY_CHECKS = 1');
+                    $this->commonModel->db->query('SET FOREIGN_KEY_CHECKS = 1');
                     return false;
                 }
             }
@@ -207,10 +211,10 @@ class DbBackup
                 continue;
             }
 
-            $this->db->query($statement);
+            $this->commonModel->db->query($statement);
         }
 
-        $this->db->query('SET FOREIGN_KEY_CHECKS = 1');
+        $this->commonModel->db->query('SET FOREIGN_KEY_CHECKS = 1');
 
         fclose($file);
         return true;
@@ -234,11 +238,11 @@ class DbBackup
         }
 
         $tableName = strtolower($tableName);
-        // Read from the live connection rather than Config\Database::class
-        // directly: $this->db is the exact connection this statement will
-        // run against, so its DBPrefix can't drift from the group actually
-        // resolved at runtime (relevant under the 'tests' group override).
-        $prefix = strtolower((string) $this->db->DBPrefix);
+        // Read the prefix from CommonModel's own connection: it is the exact
+        // connection these statements run against, so its DBPrefix can't drift
+        // from the group actually resolved at runtime (relevant under the
+        // 'tests' group override).
+        $prefix = strtolower((string) $this->commonModel->db->DBPrefix);
 
         foreach (self::PROTECTED_RBAC_TABLES as $protected) {
             if ($tableName === $protected) {

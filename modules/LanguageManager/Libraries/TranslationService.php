@@ -36,7 +36,13 @@ class TranslationService
      */
     public function getTranslations(string $group, ?string $search = null, int $page = 1, int $perPage = 50): array
     {
-        $db = db_connect();
+        // The search branch needs an OR'd whereIn() with a closure subquery,
+        // which CommonModel::lists() cannot express, so the keys query stays on
+        // the query builder -- but reached through CommonModel's own connection
+        // ($this->commonModel->db) instead of a separate db_connect(). The
+        // per-key translations fetch below IS a plain whereIn and goes through
+        // CommonModel::lists().
+        $db = $this->commonModel->db;
         $prefix = $db->DBPrefix;
 
         $builder = $db->table("{$prefix}translation_keys k");
@@ -61,9 +67,7 @@ class TranslationService
         $keyIds = array_column($keys, 'id');
         $translations = [];
         if (!empty($keyIds)) {
-            $rows = $db->table("{$prefix}translations")
-                ->whereIn('key_id', $keyIds)
-                ->get()->getResult();
+            $rows = $this->commonModel->lists('translations', '*', [], 'id ASC', 0, 0, [], [], [], ['isReset' => false], ['key' => 'key_id', 'where' => $keyIds]);
             foreach ($rows as $r) {
                 $translations[$r->key_id][$r->language_code] = $r->value;
             }
@@ -86,21 +90,12 @@ class TranslationService
      */
     public function getGroups(): array
     {
-        $db = db_connect();
-        $groups = $db->table($db->prefixTable('translation_keys'))
-            ->select('group_name')
-            ->distinct()
-            ->orderBy('group_name')
-            ->get()->getResult();
+        $groups = $this->commonModel->lists('translation_keys', 'group_name', [], 'group_name', 0, 0, [], [], [], ['distinct' => true]);
 
         // If no groups in DB, try to scan system for initial groups
         if (empty($groups)) {
             $this->scanGroups();
-            $groups = $db->table($db->prefixTable('translation_keys'))
-                ->select('group_name')
-                ->distinct()
-                ->orderBy('group_name')
-                ->get()->getResult();
+            $groups = $this->commonModel->lists('translation_keys', 'group_name', [], 'group_name', 0, 0, [], [], [], ['distinct' => true]);
         }
 
         return $groups;
@@ -153,17 +148,16 @@ class TranslationService
      */
     public function saveTranslation(int $keyId, string $langCode, string $value): void
     {
-        $db = db_connect();
-        $table = $db->prefixTable('translations');
-
-        $existing = $db->table($table)
-            ->where(['key_id' => $keyId, 'language_code' => $langCode])
-            ->get()->getRow();
+        // (key_id, language_code) has a UNIQUE key (see
+        // 2026-03-03-194000_CreateLanguageManagerTables.php), so at most one
+        // row can match — selectOne()'s implicit ORDER BY id ASC cannot pick
+        // a different row than the original unordered lookup.
+        $existing = $this->commonModel->selectOne('translations', ['key_id' => $keyId, 'language_code' => $langCode]);
 
         if ($existing) {
-            $db->table($table)->where('id', $existing->id)->update(['value' => $value]);
+            $this->commonModel->edit('translations', ['value' => $value], ['id' => $existing->id]);
         } else {
-            $db->table($table)->insert([
+            $this->commonModel->create('translations', [
                 'key_id'        => $keyId,
                 'language_code' => $langCode,
                 'value'         => $value,
@@ -180,10 +174,11 @@ class TranslationService
      */
     public function addKey(string $group, string $keyName): ?int
     {
-        $db = db_connect();
-        $existing = $db->table($db->prefixTable('translation_keys'))
-            ->where(['group_name' => $group, 'key_name' => $keyName])
-            ->get()->getRow();
+        // (group_name, key_name) has a UNIQUE key (see
+        // 2026-03-03-194000_CreateLanguageManagerTables.php), so at most one
+        // row can match — selectOne()'s implicit ORDER BY id ASC cannot pick
+        // a different row than the original unordered lookup.
+        $existing = $this->commonModel->selectOne('translation_keys', ['group_name' => $group, 'key_name' => $keyName]);
         if ($existing) return (int) $existing->id;
 
         return (int) $this->commonModel->create('translation_keys', [
@@ -211,13 +206,17 @@ class TranslationService
      */
     public function export(string $langCode): array
     {
-        $db = db_connect();
-        $prefix = $db->DBPrefix;
-
-        $rows = $db->query("
+        // Kept on the raw connection: $langCode is an unvalidated route
+        // segment (Routes.php: 'translations/export/(:segment)') interpolated
+        // into a JOIN condition via a bound '?' placeholder. CommonModel's
+        // join $cond is a raw string with no parameter-binding support, so
+        // converting would mean swapping a bound placeholder for manual
+        // string escaping/concatenation — a regression on a
+        // security-sensitive, user-controlled input.
+        $rows = $this->commonModel->db->query("
             SELECT k.group_name, k.key_name, t.value
-            FROM {$prefix}translation_keys k
-            LEFT JOIN {$prefix}translations t ON k.id = t.key_id AND t.language_code = ?
+            FROM {$this->commonModel->db->DBPrefix}translation_keys k
+            LEFT JOIN {$this->commonModel->db->DBPrefix}translations t ON k.id = t.key_id AND t.language_code = ?
             WHERE k.key_name != '___initial_sync___'
             ORDER BY k.group_name, k.key_name
         ", [$langCode])->getResult();
@@ -261,9 +260,8 @@ class TranslationService
      */
     public function setDefault(int $id): void
     {
-        $db = db_connect();
-        $db->table($db->prefixTable('languages'))->update(['is_default' => 0]);
-        $db->table($db->prefixTable('languages'))->where('id', $id)->update(['is_default' => 1]);
+        $this->commonModel->edit('languages', ['is_default' => 0]);
+        $this->commonModel->edit('languages', ['is_default' => 1], ['id' => $id]);
         cache()->delete('default_frontend_language');
     }
 

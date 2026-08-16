@@ -143,6 +143,8 @@ class ModuleInstaller
             return $tables;
         }
 
+        // Kept on the raw connection: CommonModel has no getPrefix()/DBPrefix
+        // wrapper, only query methods (lists/create/edit/remove/...).
         $prefix = \Config\Database::connect()->getPrefix();
 
         foreach ($files as $file) {
@@ -171,6 +173,10 @@ class ModuleInstaller
     {
         $tables = $this->getModuleTables($moduleName);
         $stats = [];
+        // Kept on the raw connection: tableExists() has no CommonModel
+        // wrapper and gates the countAllResults() call below in the same
+        // loop, so splitting only the count into CommonModel::count() would
+        // fragment DB access across two objects for one method.
         $db = \Config\Database::connect();
         $forge = \Config\Database::forge();
 

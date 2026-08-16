@@ -304,12 +304,14 @@ class Theme extends \Modules\Backend\Controllers\BaseController
         $log = [];
         $tablesToDrop = $this->request->getPost('tables');
         if (!empty($tablesToDrop) && is_array($tablesToDrop)) {
-            $forge = \Config\Database::forge();
+            // tableExists() has no CommonModel wrapper, kept on the raw
+            // connection; the DROP TABLE itself goes through
+            // CommonModel::removeTable() (forge->dropTable($table, true)).
             $db = \Config\Database::connect();
             foreach ($tablesToDrop as $table) {
                 // Only delete tables that are allowed (belong to the theme)
                 if (in_array($table, $allowedTables) && $db->tableExists($table)) {
-                    $forge->dropTable($table, true);
+                    $this->commonModel->removeTable($table);
                     $log[] = "🗑️ " . lang('Theme.tableDeleted', [$table]);
                 }
             }

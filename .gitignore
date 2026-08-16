@@ -213,6 +213,13 @@ tests/Modules/Backup/*
 !tests/Modules/Logs/
 tests/Modules/Logs/*
 !tests/Modules/Logs/*Test.php
+# db_connect -> CommonModel query-equivalence locks.
+!tests/Modules/Pages/
+tests/Modules/Pages/*
+!tests/Modules/Pages/*Test.php
+!tests/Modules/LanguageManager/
+tests/Modules/LanguageManager/*
+!tests/Modules/LanguageManager/*Test.php
 !tests/_support/
 tests/_support/*
 !tests/_support/Settings/

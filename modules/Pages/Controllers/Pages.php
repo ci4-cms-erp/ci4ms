@@ -27,24 +27,19 @@ class Pages extends \Modules\Backend\Controllers\BaseController
             if (setting('App.siteLanguageMode') == 'single')
                 $locale = $defaultLocale;
 
-            $db = db_connect();
-            $builder = $db->table('pages m');
-            $builder->select('m.*, l.title, l.seflink');
-            $builder->join('pages_langs l', "l.pages_id = m.id AND l.lang = '{$locale}'", 'left');
+            $joins = [['table' => 'pages_langs l', 'cond' => "l.pages_id = m.id AND l.lang = '{$locale}'", 'type' => 'left']];
+            $like = !empty($parsed['searchString']) ? ['l.title' => $parsed['searchString']] : [];
 
-            if (!empty($parsed['searchString'])) {
-                $builder->like('l.title', $parsed['searchString']);
-            }
-
-            $totalRecords = $builder->countAllResults(false);
-            $builder->orderBy('m.id', 'DESC');
-
-            if ($parsed['length'] > 0) {
-                $builder->limit($parsed['length'], $parsed['start']);
-            }
-
-            $results = $builder->get()->getResult();
+            // countAllResults() ignores QBOrderBy/QBLimit internally, so a
+            // separate lists() call for the count is equivalent to reusing
+            // the same builder with countAllResults(false) as before.
+            $totalRecords = $this->commonModel->lists('pages m', 'm.*, l.title, l.seflink', [], 'm.id DESC', 0, 0, $like, [], $joins, ['count' => true]);
             $totalDisplayRecords = $totalRecords;
+
+            $limit = $parsed['length'] > 0 ? $parsed['length'] : 0;
+            $offset = $parsed['length'] > 0 ? $parsed['start'] : 0;
+
+            $results = $this->commonModel->lists('pages m', 'm.*, l.title, l.seflink', [], 'm.id DESC', $limit, $offset, $like, [], $joins);
 
             foreach ($results as $result) {
                 $result->status = '<input type="checkbox" name="my-checkbox" class="bswitch" ' . ((bool) $result->isActive === true ? 'checked' : '') . ' data-id="' . $result->id . '" data-off-color="danger" data-on-color="success">';
