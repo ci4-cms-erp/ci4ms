@@ -1,0 +1,62 @@
+name: 📚 Publish Wiki
+
+# GitHub serves the Wiki tab from a separate ci4ms.wiki.git repository, not from
+# the wiki/ directory in this repo, so the folder has to be mirrored into it.
+#
+# One-time prerequisite: the wiki repository only comes into existence after the
+# first page is saved through the web UI. Open
+# https://github.com/ci4-cms-erp/ci4ms/wiki, click "Create the first page" and
+# save it once — after that this workflow keeps it in sync.
+
+on:
+  push:
+    branches: [ master ]
+    paths: [ 'wiki/**' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-wiki
+  cancel-in-progress: false
+
+jobs:
+  publish-wiki:
+    name: Mirror wiki/ into the GitHub Wiki
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📥 Checkout wiki repository
+        env:
+          # Kept out of the command line so the token never reaches a process list
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          if ! git clone "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.wiki.git" wiki-repo; then
+            echo "::error::Wiki repository not found. Create the first wiki page through the web UI once, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: 🔄 Sync pages
+        run: |
+          # Delete removed pages too, but never touch the wiki repo's own .git
+          rsync -a --delete --exclude '.git' wiki/ wiki-repo/
+
+      - name: 📤 Commit and push
+        working-directory: wiki-repo
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet && git diff --cached --quiet && [ -z "$(git status --porcelain)" ]; then
+            echo "Wiki already up to date."
+            exit 0
+          fi
+
+          git add -A
+          git commit -m "docs(wiki): sync from ${GITHUB_SHA::7}"
+          git push

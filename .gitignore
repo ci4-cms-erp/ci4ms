@@ -259,6 +259,4 @@ node_modules
 graphify-out
 .claudeignore
 .ci4ms
-
-# Security disclosure reports (contain exploit PoCs / vulnerability details — never commit)
-ci4ms-security-reports-*.md
+docs/superpowers

@@ -83,7 +83,7 @@ abstract class BaseController extends Controller
         $map = [
             'pages'    => ['table' => 'pages_langs', 'fk' => 'pages_id', 'routePrefix' => ''],
             'blog'     => ['table' => 'blog_langs', 'fk' => 'blog_id', 'routePrefix' => 'blog/'],
-            'category' => ['table' => 'categories_langs', 'fk' => 'categories_id', 'routePrefix' => 'blog/category/'],
+            'category' => ['table' => 'categories_langs', 'fk' => 'categories_id', 'routePrefix' => 'category/'],
         ];
 
         $modulesPath = ROOTPATH . 'modules/';
@@ -234,6 +234,32 @@ abstract class BaseController extends Controller
 
             $this->defData['alternateLinks'][$t->lang] = site_url($prefix . $info['routePrefix'] . $seflink);
         }
+    }
+
+    /**
+     * Maps a seflink that belongs to some other language onto the same content's
+     * seflink in $locale. Returns null when the seflink is unknown or the content
+     * has no translation in $locale — the caller then serves a 404.
+     */
+    protected function resolveLocalizedUrl(string $type, string $seflink, string $locale): ?string
+    {
+        $map = $this->getModuleLinkMaps();
+        if (!isset($map[$type])) return null;
+
+        $info  = $map[$type];
+        $owner = $this->commonModel->selectOne($info['table'], ['seflink' => $seflink], $info['fk']);
+        if (empty($owner)) return null;
+
+        $fk     = $info['fk'];
+        $target = $this->commonModel->selectOne($info['table'], [$fk => $owner->$fk, 'lang' => $locale], 'seflink');
+        if (empty($target) || $target->seflink === $seflink) return null;
+
+        $isMulti = ($this->defData['settings']->siteLanguageMode ?? 'single') === 'multi';
+        $prefix  = $isMulti ? $locale . '/' : '';
+
+        if ($type === 'pages' && $owner->$fk == setting('App.homePage')) return site_url($prefix);
+
+        return site_url($prefix . $info['routePrefix'] . $target->seflink);
     }
 
     protected function seo()

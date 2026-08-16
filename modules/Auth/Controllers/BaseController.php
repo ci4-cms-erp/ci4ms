@@ -22,7 +22,7 @@ namespace Modules\Auth\Controllers;
  * @property \ci4commonmodel\CommonModel $commonModel
  */
 
-use ci4commonModel\CommonModel;
+use ci4commonmodel\CommonModel;
 use CodeIgniter\Controller;
 use Modules\Auth\Config\AuthConfig;
 

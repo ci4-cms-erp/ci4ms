@@ -124,6 +124,7 @@ writable/            Cache, logs, temporary files (must be writable)
 vendor/              Composer packages
 .docker/             Dockerfile, Apache, and PHP configuration
 docs/                Developer documentation
+wiki/                Operator wiki, mirrored into the GitHub Wiki tab
 ```
 
 Key files:
@@ -229,6 +230,7 @@ Private keys are never held by the application, never committed, and never prese
 - `docs/web-server-hardening.md` — Apache/nginx rules that stop uploaded files from executing. **Read this if you deploy on anything other than Apache** — `.htaccess` is ignored by nginx, Caddy and FrankenPHP.
 - `DOCKER_SETUP.md` — Docker environment configuration and usage.
 - `CHANGELOG.md` — Full release history.
+- [Wiki](https://github.com/ci4-cms-erp/ci4ms/wiki) — EN/TR operator guide (install, configure, harden, upgrade, troubleshoot). Source lives in `wiki/` and is published by `.github/workflows/publish-wiki.yml`.
 
 Questions or contributions? Open an issue or pull request.
 

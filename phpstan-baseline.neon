@@ -1,0 +1,751 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^@readonly property cannot have a default value\.$#'
+			identifier: property.readOnlyByPhpDocDefaultValue
+			count: 4
+			path: app/Config/Autoload.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''testing'' will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: app/Config/Database.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: app/Config/DefaultRoutes.php
+
+		-
+			message: '#^Variable \$routes might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: app/Config/DefaultRoutes.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Config/Email.php
+
+		-
+			message: '#^Parameter \#2 \$associative of function json_decode expects bool\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Config/Email.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: app/Config/Events.php
+
+		-
+			message: '#^Property Modules\\Notifications\\Config\\NotificationsConfig\:\:\$auditTargetGroup \(string\) on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.property
+			count: 1
+			path: app/Config/Events.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between ''testing'' and ''testing'' will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: app/Config/Events.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''development'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Config/Events.php
+
+		-
+			message: '#^PHPDoc type array\<string, array\<int\<0, max\>\|string, array\<string, string\>\|string\>\> of property Config\\Filters\:\:\$globals is not covariant with PHPDoc type array\{before\: array\<int\<0, max\>\|string, array\{except\: list\<string\>\|string\}\|string\>, after\: array\<int\<0, max\>\|string, array\{except\: list\<string\>\|string\}\|string\>\} of overridden property CodeIgniter\\Config\\Filters\:\:\$globals\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Config/Filters.php
+
+		-
+			message: '#^Property Config\\Filters\:\:\$globals \(array\<string, array\<int\<0, max\>\|string, array\<string, string\>\|string\>\>\) does not accept default value of type array\{before\: array\{0\: ''honeypot'', csrf\: array\{except\: array\{''newComment'', ''repliesComment'', ''loadMoreComments'', ''commentCaptcha''\}\}\}, after\: array\{0\: ''toolbar'', seofilter\: array\{except\: array\{''backend'', ''backend/\*'', ''install'', ''install/\*''\}\}, aifilter\: array\{except\: array\{''backend'', ''backend/\*'', ''install'', ''install/\*''\}\}\}\}\.$#'
+			identifier: property.defaultValue
+			count: 1
+			path: app/Config/Filters.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''production'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Config/Logger.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: app/Config/Routes.php
+
+		-
+			message: '#^Path in require\(\) "/Users/bertugfahriozer/devilbox/data/www/ci4ms/app/Config/testing/Routes\.php" is not a file or it does not exist\.$#'
+			identifier: require.fileNotFound
+			count: 1
+			path: app/Config/Routes.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''testing'' will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: app/Config/Routes.php
+
+		-
+			message: '#^Variable \$routes might not be defined\.$#'
+			identifier: variable.undefined
+			count: 30
+			path: app/Config/Routes.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''production'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Config/Security.php
+
+		-
+			message: '#^Variable \$routes might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: app/Config/templates/default/Routes.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Controllers\\BaseController\:\:\$helpers is not covariant with PHPDoc type list\<string\> of overridden property CodeIgniter\\Controller\:\:\$helpers\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Controllers/BaseController.php
+
+		-
+			message: '#^Variable \$ids in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: app/Controllers/BaseController.php
+
+		-
+			message: '#^Cannot access property \$id on array\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Controllers/Home.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Controllers/Home.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''development'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Controllers/Home.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Controllers/Home.php
+
+		-
+			message: '#^Parameter \#1 \$data of method App\\Controllers\\BaseController\:\:respond\(\) expects array\<string, mixed\>\|string\|null, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Controllers/templates/default/Forms.php
+
+		-
+			message: '#^Method App\\Filters\\ThrottleFilter\:\:after\(\) should return CodeIgniter\\HTTP\\ResponseInterface\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: app/Filters/ThrottleFilter.php
+
+		-
+			message: '#^Method App\\Filters\\ThrottleFilter\:\:before\(\) should return CodeIgniter\\HTTP\\RequestInterface\|CodeIgniter\\HTTP\\ResponseInterface\|string\|null but empty return statement found\.$#'
+			identifier: return.empty
+			count: 1
+			path: app/Filters/ThrottleFilter.php
+
+		-
+			message: '#^Method App\\Filters\\ThrottleFilter\:\:before\(\) should return CodeIgniter\\HTTP\\RequestInterface\|CodeIgniter\\HTTP\\ResponseInterface\|string\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: app/Filters/ThrottleFilter.php
+
+		-
+			message: '#^Cannot access property \$seflink on array\|object\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Libraries/CommonLibrary.php
+
+		-
+			message: '#^Cannot access property \$title on array\|object\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: app/Libraries/CommonLibrary.php
+
+		-
+			message: '#^Variable \$v might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: app/Libraries/CommonLibrary.php
+
+		-
+			message: '#^PHPDoc type array of property Modules\\Auth\\Controllers\\BaseController\:\:\$helpers is not covariant with PHPDoc type list\<string\> of overridden property CodeIgniter\\Controller\:\:\$helpers\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: modules/Auth/Controllers/BaseController.php
+
+		-
+			message: '#^Access to an undefined property CodeIgniter\\Shield\\Entities\\User\:\:\$active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: modules/Auth/Controllers/CustomActivationController.php
+
+		-
+			message: '#^Cannot access property \$id on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/Auth/Controllers/CustomActivationController.php
+
+		-
+			message: '#^Cannot access property \$user_id on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/Auth/Controllers/CustomActivationController.php
+
+		-
+			message: '#^Method Modules\\Auth\\Controllers\\LoginController\:\:loginView\(\) has invalid return type Modules\\Auth\\Controllers\\RedirectResponse\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/Auth/Controllers/LoginController.php
+
+		-
+			message: '#^Method Modules\\Auth\\Controllers\\LoginController\:\:loginView\(\) should return Modules\\Auth\\Controllers\\RedirectResponse\|string but returns CodeIgniter\\HTTP\\RedirectResponse\.$#'
+			identifier: return.type
+			count: 2
+			path: modules/Auth/Controllers/LoginController.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: modules/Auth/Controllers/LoginController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''development'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: modules/Auth/Controllers/LoginController.php
+
+		-
+			message: '#^Access to an undefined property CodeIgniter\\Shield\\Entities\\UserIdentity\:\:\$expires\.$#'
+			identifier: property.notFound
+			count: 1
+			path: modules/Auth/Controllers/MagicLinkController.php
+
+		-
+			message: '#^Access to an undefined property CodeIgniter\\Shield\\Entities\\UserIdentity\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: modules/Auth/Controllers/MagicLinkController.php
+
+		-
+			message: '#^Access to an undefined property CodeIgniter\\Shield\\Entities\\UserIdentity\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: modules/Auth/Controllers/MagicLinkController.php
+
+		-
+			message: '#^Function emailer not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: modules/Auth/Controllers/MagicLinkController.php
+
+		-
+			message: '#^Access to an undefined property CodeIgniter\\Shield\\Entities\\User\:\:\$own_language\.$#'
+			identifier: property.notFound
+			count: 1
+			path: modules/Auth/Filters/Ci4MsAuthFilter.php
+
+		-
+			message: '#^Method Modules\\Auth\\Filters\\Ci4MsAuthFilter\:\:after\(\) should return CodeIgniter\\HTTP\\ResponseInterface\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/Auth/Filters/Ci4MsAuthFilter.php
+
+		-
+			message: '#^Method Modules\\Auth\\Filters\\Ci4MsAuthFilter\:\:before\(\) should return CodeIgniter\\HTTP\\RequestInterface\|CodeIgniter\\HTTP\\ResponseInterface\|string\|null but empty return statement found\.$#'
+			identifier: return.empty
+			count: 1
+			path: modules/Auth/Filters/Ci4MsAuthFilter.php
+
+		-
+			message: '#^Method Modules\\Auth\\Filters\\Ci4MsAuthFilter\:\:before\(\) should return CodeIgniter\\HTTP\\RequestInterface\|CodeIgniter\\HTTP\\ResponseInterface\|string\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/Auth/Filters/Ci4MsAuthFilter.php
+
+		-
+			message: '#^Call to an undefined method CodeIgniter\\HTTP\\RequestInterface\:\:getUserAgent\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: modules/Auth/Filters/SessionTracker.php
+
+		-
+			message: '#^Method Modules\\Auth\\Filters\\SessionTracker\:\:after\(\) should return CodeIgniter\\HTTP\\ResponseInterface\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/Auth/Filters/SessionTracker.php
+
+		-
+			message: '#^Function singular not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: modules/Backend/Commands/Adminview.php
+
+		-
+			message: '#^PHPDoc type array of property Modules\\Backend\\Commands\\Adminview\:\:\$arguments is not covariant with PHPDoc type array\<string, string\> of overridden property CodeIgniter\\CLI\\BaseCommand\:\:\$arguments\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: modules/Backend/Commands/Adminview.php
+
+		-
+			message: '#^PHPDoc type array of property Modules\\Backend\\Commands\\Adminview\:\:\$options is not covariant with PHPDoc type array\<string, string\> of overridden property CodeIgniter\\CLI\\BaseCommand\:\:\$options\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: modules/Backend/Commands/Adminview.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(string\)\: mixed\)\|null, ''pascalize'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: modules/Backend/Commands/Adminview.php
+
+		-
+			message: '#^PHPDoc type array of property Modules\\Backend\\Commands\\GenerateRoute\:\:\$arguments is not covariant with PHPDoc type array\<string, string\> of overridden property CodeIgniter\\CLI\\BaseCommand\:\:\$arguments\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: modules/Backend/Commands/GenerateRoute.php
+
+		-
+			message: '#^PHPDoc type array of property Modules\\Backend\\Commands\\GenerateRoute\:\:\$options is not covariant with PHPDoc type array\<string, string\> of overridden property CodeIgniter\\CLI\\BaseCommand\:\:\$options\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: modules/Backend/Commands/GenerateRoute.php
+
+		-
+			message: '#^PHPDoc tag @return with type CodeIgniter\\HTTP\\ResponseInterface\|void is not subtype of native type CodeIgniter\\HTTP\\ResponseInterface\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: modules/Backend/Controllers/AJAX.php
+
+		-
+			message: '#^Parameter \#1 \$messages of method Modules\\Backend\\Controllers\\BaseController\:\:fail\(\) expects array\<string\>\|string, array\<string, false\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: modules/Backend/Controllers/AJAX.php
+
+		-
+			message: '#^PHPDoc type array of property Modules\\Backend\\Controllers\\BaseController\:\:\$helpers is not covariant with PHPDoc type list\<string\> of overridden property CodeIgniter\\Controller\:\:\$helpers\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: modules/Backend/Controllers/BaseController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''production'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: modules/Backend/Controllers/BaseController.php
+
+		-
+			message: '#^Variable \$templates on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: modules/Backend/Controllers/BaseController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''production'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: modules/Backend/Exceptions/BackendExceptionHandler.php
+
+		-
+			message: '#^Method Modules\\Backend\\Filters\\BackendLogFilter\:\:before\(\) should return CodeIgniter\\HTTP\\RequestInterface\|CodeIgniter\\HTTP\\ResponseInterface\|string\|null but empty return statement found\.$#'
+			identifier: return.empty
+			count: 2
+			path: modules/Backend/Filters/BackendLogFilter.php
+
+		-
+			message: '#^Method Modules\\Backend\\Filters\\BackendLogFilter\:\:before\(\) should return CodeIgniter\\HTTP\\RequestInterface\|CodeIgniter\\HTTP\\ResponseInterface\|string\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/Backend/Filters/BackendLogFilter.php
+
+		-
+			message: '#^Call to function method_exists\(\) with CodeIgniter\\Shield\\Entities\\User and ''inGroup'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: modules/Backend/Filters/BackendMaintenanceFilter.php
+
+		-
+			message: '#^Method Modules\\Backend\\Filters\\BackendMaintenanceFilter\:\:after\(\) should return CodeIgniter\\HTTP\\ResponseInterface\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/Backend/Filters/BackendMaintenanceFilter.php
+
+		-
+			message: '#^Method Modules\\Backend\\Filters\\BackendMaintenanceFilter\:\:before\(\) should return CodeIgniter\\HTTP\\RequestInterface\|CodeIgniter\\HTTP\\ResponseInterface\|string\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/Backend/Filters/BackendMaintenanceFilter.php
+
+		-
+			message: '#^Method Modules\\Backend\\Filters\\CsrfTokenRefreshFilter\:\:before\(\) should return CodeIgniter\\HTTP\\RequestInterface\|CodeIgniter\\HTTP\\ResponseInterface\|string\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/Backend/Filters/CsrfTokenRefreshFilter.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''production'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: modules/Backend/Helpers/ci4ms_helper.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$tablename$#'
+			identifier: parameter.notFound
+			count: 1
+			path: modules/Backend/Libraries/CommonTagsLibrary.php
+
+		-
+			message: '#^Parameter &\$error by\-ref type of method Modules\\Backend\\Validation\\CustomRules\:\:html_purify\(\) expects string\|null, list\<string\>\|string given\.$#'
+			identifier: parameterByRef.type
+			count: 1
+			path: modules/Backend/Validation/CustomRules.php
+
+		-
+			message: '#^Parameter &\$error by\-ref type of method Modules\\Backend\\Validation\\CustomRules\:\:phoneNumberVal\(\) expects string\|null, list\<string\>\|string given\.$#'
+			identifier: parameterByRef.type
+			count: 1
+			path: modules/Backend/Validation/CustomRules.php
+
+		-
+			message: '#^Function number_to_size not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: modules/Backup/Controllers/Backup.php
+
+		-
+			message: '#^Method Modules\\Blog\\Controllers\\Blog\:\:edit\(\) should return CodeIgniter\\HTTP\\RedirectResponse\|string but returns CodeIgniter\\HTTP\\ResponseInterface\.$#'
+			identifier: return.type
+			count: 1
+			path: modules/Blog/Controllers/Blog.php
+
+		-
+			message: '#^Method Modules\\Blog\\Controllers\\Blog\:\:validationRules\(\) invoked with 1 parameter, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: modules/Blog/Controllers/Blog.php
+
+		-
+			message: '#^Method Modules\\Blog\\Controllers\\Blog\:\:validationRules\(\) should return array but returns CodeIgniter\\HTTP\\RedirectResponse\.$#'
+			identifier: return.type
+			count: 2
+			path: modules/Blog/Controllers/Blog.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$id$#'
+			identifier: parameter.notFound
+			count: 1
+			path: modules/Blog/Controllers/Blog.php
+
+		-
+			message: '#^Call to function is_a\(\) with arguments class\-string\<Modules\\DashboardWidgets\\Libraries\\WidgetDataProviderInterface\>, ''Modules\\\\DashboardWidgets\\\\Libraries\\\\WidgetDataProviderInterface'' and true will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: modules/DashboardWidgets/Libraries/WidgetService.php
+
+		-
+			message: '#^Cannot access property \$active_cronjobs on array\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/DashboardWidgets/Libraries/WidgetService.php
+
+		-
+			message: '#^Cannot access property \$failed_cronjobs on array\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/DashboardWidgets/Libraries/WidgetService.php
+
+		-
+			message: '#^Cannot access property \$today_logs on array\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/DashboardWidgets/Libraries/WidgetService.php
+
+		-
+			message: '#^Cannot access property \$total_blogs on array\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/DashboardWidgets/Libraries/WidgetService.php
+
+		-
+			message: '#^Cannot access property \$total_comments on array\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/DashboardWidgets/Libraries/WidgetService.php
+
+		-
+			message: '#^Cannot access property \$total_pages on array\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/DashboardWidgets/Libraries/WidgetService.php
+
+		-
+			message: '#^Cannot access property \$total_users on array\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/DashboardWidgets/Libraries/WidgetService.php
+
+		-
+			message: '#^Method Modules\\DevGate\\Filters\\DevGateFilter\:\:after\(\) should return CodeIgniter\\HTTP\\ResponseInterface\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/DevGate/Filters/DevGateFilter.php
+
+		-
+			message: '#^Method Modules\\DevGate\\Filters\\DevGateFilter\:\:isAuthenticated\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: modules/DevGate/Filters/DevGateFilter.php
+
+		-
+			message: '#^Method Modules\\DevGate\\Filters\\DevGateFilter\:\:unauthorizedBody\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: modules/DevGate/Filters/DevGateFilter.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between ''testing'' and ''development'' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: modules/DevGate/Filters/DevGateFilter.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: modules/DevGate/Filters/DevGateFilter.php
+
+		-
+			message: '#^Function set_cookie not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: modules/Install/Controllers/Install.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: modules/Install/Controllers/Install.php
+
+		-
+			message: '#^Method Modules\\Install\\Filters\\InstallFilter\:\:after\(\) should return CodeIgniter\\HTTP\\ResponseInterface\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/Install/Filters/InstallFilter.php
+
+		-
+			message: '#^Method Modules\\Install\\Filters\\InstallFilter\:\:before\(\) should return CodeIgniter\\HTTP\\RequestInterface\|CodeIgniter\\HTTP\\ResponseInterface\|string\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: modules/Install/Filters/InstallFilter.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>pages_id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: modules/Install/Services/InstallService.php
+
+		-
+			message: '#^Function get_cookie not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: modules/LanguageManager/Filters/LocaleFilter.php
+
+		-
+			message: '#^Function set_cookie not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: modules/LanguageManager/Filters/LocaleFilter.php
+
+		-
+			message: '#^Return type \(void\) of method Modules\\LanguageManager\\Filters\\LocaleFilter\:\:after\(\) should be compatible with return type \(CodeIgniter\\HTTP\\ResponseInterface\|null\) of method CodeIgniter\\Filters\\FilterInterface\:\:after\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: modules/LanguageManager/Filters/LocaleFilter.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between ''testing'' and ''production'' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: modules/Media/Controllers/Media.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: modules/Methods/Libraries/ModuleInstaller.php
+
+		-
+			message: '#^Offset ''1'' does not exist on non\-empty\-list\<string\>\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: modules/Methods/Libraries/ModuleScanner.php
+
+		-
+			message: '#^Property Config\\Feature\:\:\$autoRoutesImproved \(bool\) on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.property
+			count: 1
+			path: modules/Methods/Libraries/ModuleScanner.php
+
+		-
+			message: '#^Method Modules\\MigrationManager\\Controllers\\MigrationManager\:\:index\(\) should return CodeIgniter\\HTTP\\ResponseInterface but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: modules/MigrationManager/Controllers/MigrationManager.php
+
+		-
+			message: '#^Call to function method_exists\(\) with CodeIgniter\\Shield\\Entities\\User and ''inGroup'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: modules/Settings/Controllers/Settings.php
+
+		-
+			message: '#^Method Modules\\Settings\\Controllers\\Settings\:\:templateSettings\(\) should return string but returns CodeIgniter\\HTTP\\ResponseInterface\.$#'
+			identifier: return.type
+			count: 1
+			path: modules/Settings/Controllers/Settings.php
+
+		-
+			message: '#^Parameter \#1 \$messages of method Modules\\Backend\\Controllers\\BaseController\:\:fail\(\) expects array\<string\>\|string, array\<string, false\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: modules/Settings/Controllers/Settings.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''testing'' and ''development'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: modules/Settings/Controllers/Settings.php
+
+		-
+			message: '#^Call to function in_array\(\) with arguments ''backendMaintenance''\|''defaultFrontendLang…''\|''frontendLanguages''\|''menus''\|''notifications''\|''permissions''\|''settings''\|''templatesList'', array\{''shield_auth_dynamic…''\} and true will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 3
+			path: modules/Settings/Libraries/CacheRegistry.php
+
+		-
+			message: '#^Offset 2 on array\{0\: int\<0, max\>, 1\: int\<0, max\>, 2\: int, 3\: string, mime\: string, channels\?\: int, bits\?\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: modules/Theme/Controllers/Theme.php
+
+		-
+			message: '#^Access to an undefined property CodeIgniter\\Shield\\Entities\\User\:\:\$firstname\.$#'
+			identifier: property.notFound
+			count: 2
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property CodeIgniter\\Shield\\Entities\\User\:\:\$surname\.$#'
+			identifier: property.notFound
+			count: 2
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property CodeIgniter\\Shield\\Models\\UserModel\:\:\$username\.$#'
+			identifier: property.notFound
+			count: 2
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot access property \$actions on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 6
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot access property \$firstname on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot access property \$fullname on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot access property \$groupName on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot access property \$id on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 7
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot access property \$status on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot access property \$status_message on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot access property \$surname on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot call method getGroups\(\) on array\<mixed\>\|object\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Cannot call method printDebugger\(\) on array\|float\|int\|string\|false\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^Method Modules\\Users\\Controllers\\UserController\:\:sessionsJson\(\) should return CodeIgniter\\HTTP\\Response but returns CodeIgniter\\HTTP\\ResponseInterface\.$#'
+			identifier: return.type
+			count: 1
+			path: modules/Users/Controllers/UserController.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$select with type array is incompatible with native type string\.$#'
+			identifier: parameter.phpDocType
+			count: 2
+			path: modules/Users/Models/UserscrudModel.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$skip with type null is incompatible with native type int\.$#'
+			identifier: parameter.phpDocType
+			count: 1
+			path: modules/Users/Models/UserscrudModel.php

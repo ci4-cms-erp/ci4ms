@@ -9,3 +9,4 @@ docs/ export-ignore
 .docker export-ignore
 DOCKER_SETUP.md export-ignore
 docker-compose.yml export-ignore
+graphify-out/graph.json merge=graphify

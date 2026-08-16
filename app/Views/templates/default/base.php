@@ -111,7 +111,7 @@
                                         if ($activeLang->code != $lang->code) { ?>
                                             <li>
                                                 <a class="dropdown-item d-flex align-items-center gap-2 py-2"
-                                                    href="<?php echo esc($targetUrl, 'url') ?>">
+                                                    href="<?php echo esc($targetUrl) ?>">
                                                     <span
                                                         class="fi fi-<?php echo esc($lang->code === 'en' ? 'gb' : $lang->code, 'attr') ?> rounded-1"></span>
                                                     <?php echo esc($lang->title) ?>
@@ -150,7 +150,7 @@
                             href="#!"><?php echo lang('Frontend.learn_more') ?></a>
                         <a class="link-light small text-decoration-none" href="#!">Terms</a>
                         <a class="link-light small text-decoration-none"
-                            href="<?php echo base_url('contact') ?>"><?php echo lang('Frontend.contact') ?></a>
+                            href="<?php echo esc(locale_url('contact')) ?>"><?php echo lang('Frontend.contact') ?></a>
                     </div>
                 </div>
             </div>

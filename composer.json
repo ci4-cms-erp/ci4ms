@@ -58,7 +58,10 @@
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit",
+        "stan": "phpstan analyse --no-progress",
+        "stan:deep": "phpstan analyse --no-progress --level=9",
+        "stan:baseline": "phpstan analyse --no-progress --generate-baseline=phpstan-baseline.neon"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

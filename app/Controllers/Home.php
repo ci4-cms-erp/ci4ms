@@ -57,16 +57,26 @@ class Home extends BaseController
                 [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
                 ['isReset' => true]
             );
-            // Fall back to the default language if there's no translation
-            if (empty($pages) && $locale !== $defaultLang) {
-                $pages = $this->commonModel->lists(
-                    'pages',
-                    'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
-                    ['pages_langs.seflink' => $seflink, 'pages_langs.lang' => $defaultLang,'pages.isActive'=>1],
-                    'pages.id DESC', 1, 0, [], [],
-                    [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
-                    ['isReset' => true]
-                );
+            if (empty($pages)) {
+                if (($this->defData['settings']->siteLanguageMode ?? 'single') === 'multi') {
+                    // The slug may belong to another language: send the visitor to
+                    // the same content's slug in the requested locale rather than
+                    // serving it under the wrong one. No translation is a real 404.
+                    $target = $this->resolveLocalizedUrl('pages', $seflink, $locale);
+                    if ($target !== null) return redirect()->to($target, 301);
+                } elseif ($locale !== $defaultLang) {
+                    // Single-language mode has no locale in the URL to redirect to,
+                    // and App.defaultLocale defaults to 'en' while the content rows
+                    // may use another language, so fall back to the default language.
+                    $pages = $this->commonModel->lists(
+                        'pages',
+                        'pages.*, pages_langs.title, pages_langs.content, pages_langs.seo, pages_langs.seflink',
+                        ['pages_langs.seflink' => $seflink, 'pages_langs.lang' => $defaultLang,'pages.isActive'=>1],
+                        'pages.id DESC', 1, 0, [], [],
+                        [['table' => 'pages_langs', 'cond' => 'pages_langs.pages_id = pages.id', 'type' => 'inner']],
+                        ['isReset' => true]
+                    );
+                }
             }
         }
 
@@ -236,7 +246,11 @@ class Home extends BaseController
             $this->calculateAlternateLinks('blog', (int)$this->defData['infos']->id);
 
             return view('templates/' . $this->defData['settings']->templateInfos->path . '/blog/post', $this->defData);
-        } else return show_404();
+        } else {
+            $target = $this->resolveLocalizedUrl('blog', strip_tags(trim($seflink)), $locale);
+            if ($target !== null) return redirect()->to($target, 301);
+            return show_404();
+        }
     }
 
     public function tagList(string $seflink, int $page = 1)
@@ -292,7 +306,11 @@ class Home extends BaseController
             ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id", 'type' => 'inner']
         ]);
 
-        if (empty($categoriesArray)) return show_404();
+        if (empty($categoriesArray)) {
+            $target = $this->resolveLocalizedUrl('category', $seflink, $locale);
+            if ($target !== null) return redirect()->to($target, 301);
+            return show_404();
+        }
 
         $this->defData['category'] = $categoriesArray[0];
         $this->defData['category']->seo = json_decode($this->defData['category']->seo);

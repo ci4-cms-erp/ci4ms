@@ -1,0 +1,32 @@
+includes:
+    # 188 pre-existing level-5 findings. Regenerate with:
+    #   composer stan:baseline
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+    paths:
+        - app
+        - modules
+    bootstrapFiles:
+        # CI4 defines ROOTPATH/ENVIRONMENT and loads the common helpers here.
+        # Without it PHPStan reports lang()/view()/ROOTPATH as undefined.
+        - vendor/codeigniter4/framework/system/Test/bootstrap.php
+    excludePaths:
+        analyseAndScan:
+            - app/Views/*
+            - modules/*/Views/*
+            - modules/*/Database/Migrations/*
+    treatPhpDocTypesAsCertain: false
+    # A baseline entry that stops matching must not fail the run. Without this the
+    # gate fires spuriously whenever PHPStan reports a known error under a different
+    # identifier (e.g. class.notFound vs class.nameCase as the classmap warms).
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # Module route files are included by CI4 inside a scope that defines $routes.
+        # Every make:module scaffold emits this shape, so a new module must not trip
+        # the Stop gate on day one.
+        -
+            identifier: variable.undefined
+            path: modules/*/Config/Routes.php
+    tmpDir: writable/cache/phpstan

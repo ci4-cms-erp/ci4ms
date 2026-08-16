@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Libraries;
 
-use ci4commonModel\CommonModel;
+use ci4commonmodel\CommonModel;
 use Modules\Auth\Config\AuthConfig as Auth;
 
 class CommonLibrary
@@ -233,10 +233,10 @@ class CommonLibrary
                 $title = ucfirst(explode('/', $title)[0]);
             }
 
-            return [['title' => $homepage->title, 'url' => site_url()], ['title' => $title, 'url' => current_url()]];
+            return [['title' => $homepage->title, 'url' => locale_url()], ['title' => $title, 'url' => current_url()]];
         }
 
-        $breadcrumbs = [['title' => $homepage->title, 'url' => site_url()]];
+        $breadcrumbs = [['title' => $homepage->title, 'url' => locale_url()]];
         $tmpCurrentMenu = $current_menu;
 
         $path = [];
@@ -282,7 +282,7 @@ class CommonLibrary
     {
         $locale = \Config\Services::request()->getLocale();
         $homepage = $this->getHomepageBreadcrumb();
-        $breadcrumbs = [['title' => $homepage->title, 'url' => site_url()]];
+        $breadcrumbs = [['title' => $homepage->title, 'url' => locale_url()]];
 
         $blogArray = $this->commonModel->lists('blog', 'blog.*, blog_langs.title, blog_langs.seflink', ['blog.id' => $id], 'blog.id ASC', 1, 0, [], [], [
             ['table' => 'blog_langs', 'cond' => "blog_langs.blog_id = blog.id AND blog_langs.lang = '{$locale}'", 'type' => 'inner']
@@ -302,9 +302,9 @@ class CommonLibrary
             ]
         ]);
         if ($blog) {
-            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => locale_url('blog')];
             if (!empty($category)) {
-                $breadcrumbs[] = ['title' => $category[0]->title, 'url' => site_url('category/' . $category[0]->seflink)];
+                $breadcrumbs[] = ['title' => $category[0]->title, 'url' => locale_url('category/' . $category[0]->seflink)];
             }
             $breadcrumbs[] = ['title' => $blog->title, 'url' => current_url()];
         }
@@ -315,13 +315,13 @@ class CommonLibrary
     {
         $locale = \Config\Services::request()->getLocale();
         $homepage = $this->getHomepageBreadcrumb();
-        $breadcrumbs = [['title' => $homepage->title, 'url' => site_url()]];
+        $breadcrumbs = [['title' => $homepage->title, 'url' => locale_url()]];
         $categoryArray = $this->commonModel->lists('categories', 'categories.id, categories_langs.title', ['categories.id' => $id], 'categories.id ASC', 1, 0, [], [], [
             ['table' => 'categories_langs', 'cond' => "categories_langs.categories_id = categories.id AND categories_langs.lang = '{$locale}'", 'type' => 'inner']
         ]);
         $category = !empty($categoryArray) ? $categoryArray[0] : null;
         if ($category) {
-            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => locale_url('blog')];
             $breadcrumbs[] = ['title' => $category->title, 'url' => current_url()];
         }
         return $breadcrumbs;
@@ -330,10 +330,10 @@ class CommonLibrary
     private function getTagBreadcrumbs($id)
     {
         $homepage = $this->getHomepageBreadcrumb();
-        $breadcrumbs = [['title' => $homepage->title, 'url' => site_url()]];
+        $breadcrumbs = [['title' => $homepage->title, 'url' => locale_url()]];
         $tag = $this->commonModel->selectOne('tags', ['id' => $id]);
         if ($tag) {
-            $breadcrumbs[] = ['title' => 'Blog', 'url' => site_url('blog')];
+            $breadcrumbs[] = ['title' => 'Blog', 'url' => locale_url('blog')];
             $breadcrumbs[] = ['title' => $tag->tag, 'url' => current_url()];
         }
         return $breadcrumbs;

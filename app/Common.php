@@ -59,6 +59,24 @@ if (!function_exists('show_403')) {
     }
 }
 
+if (!function_exists('locale_url')) {
+    /**
+     * site_url() for frontend content links. In multi-language mode the active
+     * locale is prepended, so a link never depends on the visitor's site_locale
+     * cookie to land in the right language.
+     *
+     * @param string $path
+     * @return string
+     */
+    function locale_url(string $path = ''): string
+    {
+        $settings = (object) cache('settings');
+        if (($settings->siteLanguageMode ?? 'single') !== 'multi') return site_url($path);
+
+        return site_url(\Config\Services::request()->getLocale() . '/' . ltrim($path, '/'));
+    }
+}
+
 if (!function_exists('seflink')) {
     /**
      * Generates a slug from a given string.
