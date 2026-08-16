@@ -10,6 +10,7 @@
     'groupList' => 'Yetkiler',
     'addGroupPerms' => 'Grup Yetkisi Ekleme',
     'profile' => 'Profil',
+    'logout'=>'Çıkış Yap',
     'updateGroupPerms' => 'Grup Yetkisi Güncelleme',
     'specialAuthUser' => 'Kullanıcıya özel yetki verme',
     'updateUser' => 'Kullanıcı Güncelleme',

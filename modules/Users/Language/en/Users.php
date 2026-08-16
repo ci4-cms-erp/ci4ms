@@ -8,6 +8,7 @@
     'perms' => 'Permissions',
     'addGroupPerms' => 'Add Group Permission',
     'profile' => 'Profile',
+    'logout'=>'Logout',
     'updateGroupPerms' => 'Update Group Permission',
     'specialAuthUser' => 'Grant User-Specific Permission',
     'updateUser' => 'Update User',
