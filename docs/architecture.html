@@ -329,6 +329,10 @@
           layer. Modules lean on helpers such as <code>lists</code>,
           <code>selectOne</code>, <code>create</code>, <code>createMany</code>,
           <code>edit</code>, <code>remove</code>, and <code>isHave</code>.
+          Module controllers and libraries should go through
+          <code>CommonModel</code> rather than calling <code>db_connect()</code>
+          directly; a handful of call sites doing raw <code>db_connect()</code>
+          were migrated to the shared wrapper for consistency.
         </p>
         <p>
           The backend <code>BaseController</code> instantiates
@@ -394,8 +398,17 @@
             <strong>Authorization tables:</strong>
             <code>auth_permissions_pages</code> (module/page CRUD flags) and
             <code>auth_users_permissions</code> (user overrides).
-            <code>Modules\Methods</code> manages these tables and can auto-scan
-            routes to populate permissions.
+            <code>Modules\Methods</code> manages these tables, enforces a
+            <code>className</code>/<code>methodName</code> collision guard on
+            create/update, and can auto-scan routes to populate permissions. A
+            DB-level <code>UNIQUE</code> constraint on
+            <code>auth_permissions_pages(className, methodName)</code> (via a
+            generated column, since the table legitimately contains
+            <code>('', '')</code> virtual-parent rows) closes the remaining
+            TOCTOU race between two concurrent writes. Every
+            <code>{pagename}.{action}</code> permission string is produced by
+            the single <code>permission_string()</code> helper in
+            <code>app/Common.php</code>.
           </li>
           <li>
             <strong>Audit Trail:</strong> Backend activity is logged via
@@ -551,17 +564,30 @@
               <td>24h</td>
             </tr>
             <tr>
-              <td><code>{userId}_permissions</code></td>
-              <td>Per-user permission flags</td>
-              <td>Until invalidated</td>
-            </tr>
-            <tr>
               <td><code>notif_unread_{userId}</code></td>
               <td>Per-user unread notification count</td>
               <td>60s</td>
             </tr>
           </tbody>
         </table>
+        <p>
+          <code>{userId}_permissions</code> is <strong>not</strong> a live
+          cache: nothing in the codebase ever calls
+          <code>cache()->save()</code> with that key format, so a lookup
+          against it is always a miss. A few permission-changing actions
+          (<code>PermgroupController::user_perms()</code>,
+          <code>PermgroupController::update()</code>,
+          <code>UserController::update_user()</code>) still call
+          <code>cache()->delete("{$id}_permissions")</code> as a harmless
+          no-op. The RBAC cache that actually matters is
+          <code>shield_auth_dynamic_config</code> (Shield's dynamic
+          groups/permissions config, written in
+          <code>Modules\Auth\Config\AuthGroups</code>), cleared by
+          <code>Backup::restore()</code> and <code>PermgroupController</code>
+          after any group/permission change; it is on
+          <code>CacheRegistry</code>'s protected list and can never be
+          cleared through the backend Cache Management panel.
+        </p>
         <p>
           Clear all caches with <code>php spark cache:clear</code> or
           selectively via <code>cache()->delete($key)</code>.

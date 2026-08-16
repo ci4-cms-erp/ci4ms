@@ -156,7 +156,7 @@ composer test     # runs PHPUnit (configure test suite under tests/)
 - Permissions live in `auth_permissions_pages` (CRUD flags stored as JSON) and `auth_users_permissions` (user overrides).
 - `Modules\Methods\Controllers\Methods::moduleScan()` inspects defined routes and maps them to permission records.
 - After adding a backend route, either run the module scan to sync permissions, or insert a record manually into `auth_permissions_pages` with matching controller/method names.
-- Clear cached permission keys after changes: `php spark cache:clear` or `cache()->delete("{$id}_permissions")`.
+- Clear the RBAC cache after permission/group changes: `php spark cache:clear` or `cache()->delete('shield_auth_dynamic_config')` (Shield's dynamic groups/permissions config — the actual RBAC cache key; `{$id}_permissions` is legacy and nothing populates it).
 
 Recommended workflow when adding a module:
 

@@ -542,8 +542,12 @@ composer outdated</code></pre>
           <li>Create migrations/seeds for new tables if required.</li>
         </ol>
         <p>
-          Clear cached permissions with <code>php spark cache:clear</code> or
-          <code>cache()->delete("{userId}_permissions")</code>.
+          Clear the RBAC cache after permission/group changes with
+          <code>php spark cache:clear</code> or
+          <code>cache()->delete('shield_auth_dynamic_config')</code>
+          (Shield's dynamic groups/permissions config — the actual RBAC
+          cache key; <code>{userId}_permissions</code> is legacy and nothing
+          populates it).
         </p>
       </section>
 

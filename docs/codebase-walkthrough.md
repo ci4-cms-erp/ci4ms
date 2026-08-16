@@ -158,7 +158,7 @@ modules/<Name>/
 
 - Uses **Gregwar/Captcha** library with custom styling (green background, dark text, no lines)
 - Captcha phrase stored in session flashdata
-- **In development mode**, captcha validation is bypassed (`if (ENVIRONMENT === 'development') $captchaCheck = true`)
+- **Captcha bypass requires two conditions, not one**: `ENVIRONMENT === 'development'` **and** the `Auth.captchaBypassInDevelopment` setting (seeded `false`) both have to hold (`if (ENVIRONMENT === 'development' && setting('Auth.captchaBypassInDevelopment')) $captchaCheck = true`). Production can never bypass regardless of the setting, and a development install only bypasses if an operator explicitly opts in.
 - Login credentials extracted from `setting('Auth.validFields')`
 - Supports "remember me" via Shield's `$authenticator->remember($remember)`
 - After login, checks for pending 2FA actions (`hasAction()`)
@@ -600,7 +600,9 @@ erDiagram
 | `menus`                | File cache | Front-end navigation    | Menu reorder operation                  |
 | `sidebar_menu`         | 24 hours   | Backend sidebar items   | Not auto-cleared (requires cache clear) |
 | `backend_page_info_*`  | 1 hour     | Permission page lookups | Not auto-cleared                        |
-| `{userId}_permissions` | Runtime    | User permission strings | Permission group/user update            |
+| `shield_auth_dynamic_config` | Runtime | Shield's dynamic RBAC config (groups/permissions) | Permission group/user update, `Backup::restore()`; protected from the backend Cache Management panel |
+
+`{userId}_permissions` is **not** a live cache — nothing calls `cache()->save()` with that key format. A few permission-changing actions still call `cache()->delete("{$id}_permissions")` as a harmless no-op against a key that was never populated; the actual RBAC cache is `shield_auth_dynamic_config` above.
 
 ---
 

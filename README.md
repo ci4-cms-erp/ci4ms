@@ -232,34 +232,9 @@ Private keys are never held by the application, never committed, and never prese
 
 Questions or contributions? Open an issue or pull request.
 
-## 🏆 Security Hall of Fame
+## 🏆 Acknowledgments
 
-A huge thank you to the security researchers who have helped make **ci4ms** more secure by finding and reporting vulnerabilities.
+- **Security researchers** who reported vulnerabilities → **[SECURITY_HALL_OF_FAME.md](SECURITY_HALL_OF_FAME.md)**
+- **Community bug reporters** who caught functional regressions → **[BUG_REPORTERS.md](BUG_REPORTERS.md)**
 
-| Contributor | Contribution | Date |
-| :--- | :--- | :--- |
-| **[Lars van Mil](https://github.com/Far-Horizons)** | Identified Critical RCE and Information Disclosure vulnerabilities. | Jan 2026 |
-| **[0xAlchemist](https://github.com/bugmithlegend)** | Identified Critical Stored DOM XSS vulnerabilities across Company Info, Social Media, and Mail Settings modules, and a Session Invalidation flaw, leading to Account Takeover, Privilege Escalation, and potential Platform Compromise. | Feb 2026 |
-| **[peeefour](https://github.com/peeefour)** | Identified Stored DOM XSS vulnerabilities leading to Account Takeover. | Feb 2026 |
-| **[Hunter.](https://github.com/LAW6ZX7)** | Identified Critical Stored XSS in Backend & Blog modules allowing Session Hijacking. | Feb 2026 |
-| **[m1scher](https://github.com/m1scher)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
-| **[alpernae](https://github.com/alpernae)** | Assisted with vulnerability triaging and security testing. | Feb 2026 |
-| **[offset](https://github.com/offset)** | Identified Critical vulnerabilities including multiple Stored XSS (Blog & Pages content via broken `html_purify` validation), Authorization Bypass in Fileeditor destructive operations (delete/rename extension allowlist missing), Install Guard Bypass, and CRLF Injection. | Apr – May 2026 |
-| **[fg0x0](https://github.com/fg0x0)** | Identified Critical Arbitrary File Write (Zip Slip RCE) vulnerabilities in Theme::upload and Backup::restore modules. | Apr 2026 |
-| **[0xAlchemist](https://github.com/bugmithlegend)** , **[peeefour](https://github.com/peeefour)** and **[DexterHK](https://github.com/DexterHK)** | Identified Critical Full Account Takeover and Privilege Escalation via Stored DOM Blind XSS in Backup Management (v2). | Apr 2026 |
-| **[dapickle](https://github.com/dapickle)** | Identified Critical Authenticated RCE in Theme installation, Arbitrary Database Table Drop in Theme module, and a Session Management Bypass. | Apr 2026 |
-| **[iltosec](https://github.com/iltosec)** | Identified Broken Access Control in Media module, Unsafe Reflection in Dashboard Widgets, RCE via template-function parsing in Pages, and Stored XSS in Pages Cover Image URL leading to Account Takeover (the residual instance of the same Cover Image URL Stored XSS class in Blog Categories was subsequently hardened as well). | Jun 2026 |
-
-> If you find a security vulnerability, please report it via [Security Policy](SECURITY.md).
-
-## 🐞 Bug Reporters
-
-Thanks to the community members who report functional bugs and help us catch regressions before they hit more users.
-
-| Contributor | Contribution | Date |
-| :--- | :--- | :--- |
-| **[spreaderman](https://github.com/spreaderman)** | Reported two installation-blocking regressions in v0.31.10.0: the web installer returning `404 GET install/dbsetup` after the configuration step, and `php spark ci4ms:setup` aborting on the `users.profileIMG` migration due to a `TEXT` column with a default value (rejected by MySQL/MariaDB strict mode). | May 2026 |
-| **[SIENSIS](https://github.com/SIENSIS)** | Reported the fresh-install web installer failing silently because `.env` is written mid-request: migrations ran against an empty database name and the encrypter raised a "needs a starter key" error. | Jul 2026 |
-| **[SIENSIS](https://github.com/SIENSIS)** | Reported that every login crashed with a 500 when a DNS-level blocker (e.g. Pi-hole) or an outage made the `ip-api.com` geo lookup unreachable — a failed fetch returned `false` and `json_decode(false)` raised an uncaught `TypeError` under `strict_types`. This led to replacing the third-party call with a local, opt-in geo lookup. | Jul 2026 |
-
-> Found a non-security bug? Please [open an issue](https://github.com/ci4-cms-erp/ci4ms/issues) with reproduction steps.
+Found a security vulnerability? See the [Security Policy](SECURITY.md) — reports go through GitHub's private vulnerability reporting. Found a non-security bug? Please [open an issue](https://github.com/ci4-cms-erp/ci4ms/issues) with reproduction steps.

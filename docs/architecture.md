@@ -19,7 +19,7 @@ Every request passes through `app/Filters/Ci4ms.php`:
 
 ## CommonModel Abstraction
 
-Almost every module uses `bertugfahriozer/ci4commonmodel`'s `CommonModel` for CRUD. Core helpers: `lists`, `selectOne`, `create`, `createMany`, `edit`, `remove`, `isHave`, `count`. Backend `BaseController` instances instantiate `CommonModel` once and share it via `$this->commonModel`.
+Almost every module uses `bertugfahriozer/ci4commonmodel`'s `CommonModel` for CRUD. Core helpers: `lists`, `selectOne`, `create`, `createMany`, `edit`, `remove`, `isHave`, `count`. Backend `BaseController` instances instantiate `CommonModel` once and share it via `$this->commonModel`. Module controllers and libraries should go through `CommonModel` rather than calling `db_connect()` directly; a handful of call sites doing raw `db_connect()` were migrated to the shared wrapper for consistency.
 
 ## Authentication & Authorization
 
@@ -35,9 +35,10 @@ Authentication is powered by **CodeIgniter Shield** (`codeigniter4/shield`):
   - Logged-in user lookup via `Modules\Users\Models\UserscrudModel::loggedUser()`.
   - Navigation data (from `AuthLibrary::sidebarNavigation()`), settings, encrypter, mail config, and default view data (`$this->defData`).
 - Authorization tables:
-  - `auth_permissions_pages` defines module/page permissions (stored as JSON CRUD flags).
+  - `auth_permissions_pages` defines module/page permissions (stored as JSON CRUD flags); a DB-level `UNIQUE` constraint on `(className, methodName)` (via a generated column, since MariaDB/MySQL have no partial-index syntax and the table legitimately contains `('', '')` virtual-parent rows) prevents two concurrent `Modules\Methods` writes from registering colliding routes.
   - `auth_users_permissions` stores user-specific overrides.
-  - `Modules\Methods` manages these tables and can auto-scan routes to populate permissions.
+  - `Modules\Methods` manages these tables, enforces a `className`/`methodName` collision guard on create/update, and can auto-scan routes to populate permissions.
+  - Every `{pagename}.{action}` permission string is produced by the single `permission_string(string $pagename, string $action): string` helper in `app/Common.php` rather than being assembled ad hoc per call site.
 - Backend activity is logged via `Modules\Backend\Filters\BackendLogFilter` (IP, user agent, action, module) for audit trail purposes.
 - Inactive administrative sessions are secured via `Modules\Auth\Controllers\LockController` which locks the session and sets a `locked_at` timestamp.
 - **Session geo lookup (local, opt-in):** `Modules\Auth\Models\UserSessionModel::recordLogin()` can enrich a session with approximate city/region/country. Lookups run entirely against a **local** DB-IP City Lite database (MMDB) via `Modules\Auth\Libraries\GeoLocator` (`maxmind-db/reader`) — the IP address never leaves the server. The feature is gated by the `Auth.geoLookupEnabled` setting (default `false`) and returns `null` on any failure, so it never breaks login. The database is downloaded/refreshed with `php spark ci4ms:geoip-update` (atomic swap, `flock`-guarded, monthly cron); the file lives outside the web root under `writable/geoip/`. DB-IP data is CC BY 4.0 and requires attribution.
@@ -96,8 +97,9 @@ public string $supportDirectory = __DIR__ . '/../../vendor/codeigniter4/framewor
 |---|---|---|
 | `settings` | Decoded JSON settings values | 24h |
 | `menus_{locale}` | Per-locale frontend menu tree | 24h |
-| `{userId}_permissions` | Per-user permission flags | Until invalidated |
 | `notif_unread_{userId}` | Per-user unread notification count | 60s |
+
+`{userId}_permissions` is **not** a live cache: nothing in the codebase ever calls `cache()->save()` with that key format, so a lookup against it is always a miss. A few permission-changing actions (`PermgroupController::user_perms()`, `PermgroupController::update()`, `UserController::update_user()`) still call `cache()->delete("{$id}_permissions")` as a harmless no-op — deleting a key that was never populated. The RBAC cache that actually matters is `shield_auth_dynamic_config` (Shield's dynamic groups/permissions config, written in `Modules\Auth\Config\AuthGroups`), cleared by `Backup::restore()` and `PermgroupController` after any group/permission change; it is on `CacheRegistry`'s protected list and can never be cleared through the backend Cache Management panel. The `*_permissions` glob family in `CacheRegistry` is kept for forward compatibility with the manual clear panel, not because anything currently populates it.
 
 Clear all caches with `php spark cache:clear` or selectively via `cache()->delete($key)`.
 
