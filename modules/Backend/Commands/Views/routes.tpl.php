@@ -68,6 +68,10 @@ $routes->get('robots.txt', '\ci4seopro\Controllers\Search\RobotsController::inde
 // Sitemap INDEX/s
 $routes->get('sitemap.xml', '\ci4seopro\Controllers\Search\SitemapController::index');
 $routes->get('sitemap-(:segment).xml', '\ci4seopro\Controllers\Search\SitemapController::chunk/$1');
+// ci4seopro registers these itself, but its routes are discovered after this file,
+// so the (:any) catch-all below would claim them first.
+$routes->get('sitemap.xsl', '\ci4seopro\Controllers\Search\SitemapStyleController::xsl');
+$routes->get('sitemap.css', '\ci4seopro\Controllers\Search\SitemapStyleController::css');
 // AI
 $routes->get('.well-known/ai.txt', '\ci4seopro\Controllers\Ai\AiTxtController::index');
 $routes->get('llms.txt', '\ci4seopro\Controllers\Ai\AiTxtController::index');

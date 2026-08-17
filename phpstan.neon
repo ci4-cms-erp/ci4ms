@@ -1,5 +1,5 @@
 includes:
-    # 188 pre-existing level-5 findings. Regenerate with:
+    # 190 pre-existing level-5 findings. Regenerate with:
     #   composer stan:baseline
     - phpstan-baseline.neon
 

@@ -23,17 +23,30 @@ jobs:
           # Create .env from the template 'env' file
           cp env .env
 
-          # Configure for Docker CI environment
+          # Configure for Docker CI environment.
+          #
+          # The app and PHPUnit need SEPARATE schemas. ci4ms:setup migrates the whole
+          # schema into the app's database, and PHPUnit then migrates again into its
+          # own — pointing both at ci4ms_test made every DB-backed test die with
+          # "Table 'ci4ms_users' already exists". The tests group must keep a name
+          # containing "ci4ms_test": CIUnitTestCase guards refuse to run otherwise.
           cat >> .env << 'EOF'
           CI_ENVIRONMENT=development
           app.baseURL='http://localhost/'
           database.default.hostname=db
-          database.default.database=ci4ms_test
+          database.default.database=ci4ms_app
           database.default.username=ci4ms_user
           database.default.password=ci4ms_pass
           database.default.DBDriver=MySQLi
           database.default.DBPrefix=ci4ms_
           database.default.port=3306
+          database.tests.hostname=db
+          database.tests.database=ci4ms_test
+          database.tests.username=ci4ms_user
+          database.tests.password=ci4ms_pass
+          database.tests.DBDriver=MySQLi
+          database.tests.DBPrefix=ci4ms_
+          database.tests.port=3306
           encryption.key=hex2bin:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2
           EOF
 
@@ -54,8 +67,15 @@ jobs:
             echo "Attempt $i/30 - waiting..."
             sleep 5
           done
+          # The compose file only creates ci4ms_test (used by PHPUnit); the app needs
+          # its own schema so the two never migrate over each other.
+          docker exec ci4ms_db mariadb -u root -pci4ms_secret -e \
+            "CREATE DATABASE IF NOT EXISTS ci4ms_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; \
+             GRANT ALL ON ci4ms_app.* TO 'ci4ms_user'@'%'; FLUSH PRIVILEGES;"
+
           # Final verification
           docker exec ci4ms_db mariadb -u ci4ms_user -pci4ms_pass -e "SELECT 1;" ci4ms_test
+          docker exec ci4ms_db mariadb -u ci4ms_user -pci4ms_pass -e "SELECT 1;" ci4ms_app
           echo "✅ Database connection verified."
 
       - name: 📦 Install Composer dependencies
@@ -85,6 +105,15 @@ jobs:
             exit 1
           fi
 
+      - name: 📂 Re-apply permissions after setup
+        run: |
+          # ci4ms:setup runs as root through docker exec, so everything it creates
+          # under writable/ (log file, session, cache) is owned by root. Apache runs
+          # as www-data and then cannot even append to its own error log, which is
+          # why a failing request used to leave no trace in the CI4 log at all.
+          docker exec ci4ms_app chown -R www-data:www-data writable
+          docker exec ci4ms_app chmod -R 775 writable
+
       - name: 🧹 PHP syntax check
         run: |
           echo "Running PHP syntax check..."
@@ -99,27 +128,34 @@ jobs:
       - name: 🌐 Check HTTP response (Homepage)
         run: |
           sleep 3
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
+          # Keep the body instead of discarding it. ci4ms:setup rewrites .env with
+          # CI_ENVIRONMENT=production, so this is usually the generic error page —
+          # but it still distinguishes an application error from a proxy/Apache one,
+          # and the CI4 log (readable now that permissions are re-applied) carries
+          # the stack trace.
+          STATUS=$(curl -s -o /tmp/home.html -w "%{http_code}" http://localhost)
           echo "HTTP Status: $STATUS"
           # 200 = page rendered, 302 = redirect, 401 = auth required (all mean app is running)
           if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 401 ]; then
             echo "✅ Application is responding correctly."
           else
             echo "❌ Unexpected HTTP status: $STATUS"
-            docker compose logs app
+            echo "=== RESPONSE BODY ==="
+            sed -e 's/<[^>]*>//g' /tmp/home.html | grep -v '^[[:space:]]*$' | head -60
             exit 1
           fi
 
       - name: 🔒 Check backend responds
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L http://localhost/backend)
+          STATUS=$(curl -s -o /tmp/backend.html -w "%{http_code}" -L http://localhost/backend)
           echo "Backend HTTP Status: $STATUS"
           # 200 = login page, 302 = redirect to login, 401 = auth required (all valid)
           if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 401 ]; then
             echo "✅ Backend is responding correctly."
           else
             echo "❌ Backend unexpected status: $STATUS"
-            docker compose logs app
+            echo "=== RESPONSE BODY ==="
+            sed -e 's/<[^>]*>//g' /tmp/backend.html | grep -v '^[[:space:]]*$' | head -60
             exit 1
           fi
 
@@ -137,7 +173,10 @@ jobs:
           docker compose logs db
           echo ""
           echo "=== CI4 LOG ==="
-          docker exec ci4ms_app cat writable/logs/log-$(date +%Y-%m-%d).log 2>/dev/null || echo "No CI4 log file found."
+          # Glob rather than guess today's date: the runner's date and the
+          # container's can differ, and a run spanning midnight writes two files.
+          docker exec ci4ms_app sh -c 'ls -la writable/logs/ 2>/dev/null; cat writable/logs/log-*.log 2>/dev/null' \
+            || echo "No CI4 log file found."
 
       - name: 🛑 Stop and clean up containers
         if: always()

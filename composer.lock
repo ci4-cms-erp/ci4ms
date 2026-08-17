@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "507c10ac39ebb604ea315c644733cd27",
+    "content-hash": "4a799c69533e58edef330eb026df5baa",
     "packages": [
         {
             "name": "bertugfahriozer/ci4commonmodel",
@@ -51,16 +51,16 @@
         },
         {
             "name": "bertugfahriozer/ci4seopro",
-            "version": "v1.2.0",
+            "version": "v1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bertugfahriozer/ci4seopro.git",
-                "reference": "51c3396f3150b8e1648a6a627cc8a484a4381753"
+                "reference": "22188092010c515540e6be5603651fe888112962"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bertugfahriozer/ci4seopro/zipball/51c3396f3150b8e1648a6a627cc8a484a4381753",
-                "reference": "51c3396f3150b8e1648a6a627cc8a484a4381753",
+                "url": "https://api.github.com/repos/bertugfahriozer/ci4seopro/zipball/22188092010c515540e6be5603651fe888112962",
+                "reference": "22188092010c515540e6be5603651fe888112962",
                 "shasum": ""
             },
             "require": {
@@ -123,9 +123,9 @@
             ],
             "support": {
                 "issues": "https://github.com/bertugfahriozer/ci4seopro/issues",
-                "source": "https://github.com/bertugfahriozer/ci4seopro/tree/v1.2.0"
+                "source": "https://github.com/bertugfahriozer/ci4seopro/tree/v1.3.1"
             },
-            "time": "2026-06-02T20:45:21+00:00"
+            "time": "2026-07-31T22:11:44+00:00"
         },
         {
             "name": "bertugfahriozer/sql2migration",

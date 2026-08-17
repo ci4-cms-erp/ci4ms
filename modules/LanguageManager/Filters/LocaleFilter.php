@@ -79,9 +79,13 @@ class LocaleFilter implements FilterInterface
         $segments = $uri->getSegments();
         $firstSegment = $segments[0] ?? '';
 
-        // Skip static files (css, js, images, etc)
+        // Skip static files (css, js, images, etc) and machine-readable endpoints.
+        // xml/xsl/txt/json cover sitemap.xml, its sitemap.xsl stylesheet, robots.txt,
+        // llms.txt and the feeds: prefixing those with a locale points them at routes
+        // that do not exist, which is how /sitemap.xsl started 404ing while the
+        // already-listed /sitemap.css kept working.
         $path = $uri->getPath();
-        if (preg_match('/\.(js|css|gif|jpg|jpeg|png|ico|svg|woff|woff2|ttf|eot|map)$/i', $path)) {
+        if (preg_match('/\.(js|css|gif|jpg|jpeg|png|ico|svg|woff|woff2|ttf|eot|map|xml|xsl|txt|json)$/i', $path)) {
             return;
         }
 

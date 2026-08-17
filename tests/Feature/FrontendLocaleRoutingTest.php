@@ -179,9 +179,12 @@ class FrontendLocaleRoutingTest extends CIUnitTestCase
      * The testing environment runs in single-language mode (app/Config/Routes.php
      * blanks $settings there), so this exercises the real single-mode route.
      *
-     * Config\App::$defaultLocale falls back to 'en', so getLocale() is 'en' even on
-     * a Turkish site whose pages_langs rows are all 'tr'. Without the default-language
-     * fallback in Home::index() every page on such a site 404s.
+     * Config\App::$defaultLocale falls back to 'en', so getLocale() can differ from
+     * the language a site's pages_langs rows actually use. Without the
+     * default-language fallback in Home::index() every page on such a site 404s.
+     *
+     * The content language is derived from the active locale rather than hardcoded,
+     * so the mismatch this covers holds however the environment resolves getLocale().
      */
     public function testSingleModeServesContentStoredUnderTheSiteDefaultLanguage(): void
     {
@@ -194,10 +197,12 @@ class FrontendLocaleRoutingTest extends CIUnitTestCase
             'siteName' => 'CI4MS Test System',
         ]);
         cache()->clean();
-        cache()->save('default_frontend_language', 'tr', 300);
+
+        $contentLang = service('request')->getLocale() === 'tr' ? 'en' : 'tr';
+        cache()->save('default_frontend_language', $contentLang, 300);
 
         $pageId = $this->model->create('pages', [
-            'locale'       => 'tr',
+            'locale'       => $contentLang,
             'creationDate' => date('Y-m-d H:i:s'),
             'isActive'     => 1,
             'inMenu'       => 0,
@@ -206,7 +211,7 @@ class FrontendLocaleRoutingTest extends CIUnitTestCase
         ]);
         $this->model->create('pages_langs', [
             'pages_id' => $pageId,
-            'lang'     => 'tr',
+            'lang'     => $contentLang,
             'title'    => 'Locale routing fixture page',
             'seflink'  => 'locale-test-single-page',
             'content'  => 'fixture',
@@ -214,12 +219,6 @@ class FrontendLocaleRoutingTest extends CIUnitTestCase
         ]);
 
         try {
-            $this->assertNotSame(
-                'tr',
-                service('request')->getLocale(),
-                'fixture assumption violated: this test only means something while getLocale() differs from the content language',
-            );
-
             $result = $this->call('get', '/locale-test-single-page');
             $this->assertSame(200, $result->response()->getStatusCode());
 

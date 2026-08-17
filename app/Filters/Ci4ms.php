@@ -42,7 +42,10 @@ class Ci4ms implements FilterInterface
             return redirect()->to($protocol . $_SERVER['SERVER_NAME'] . '/install');
 
         }
-        if ((bool) cache()->get('settings')['maintenanceMode'] === true)
+        // Config\Filters warms the settings cache, but it swallows any failure and
+        // leaves the cache empty. Indexing null here then fataled the whole request,
+        // which is how a freshly installed site could 500 on its very first hit.
+        if ((bool) (cache()->get('settings')['maintenanceMode'] ?? false) === true)
             return redirect()->route('maintenance-mode');
     }
 
