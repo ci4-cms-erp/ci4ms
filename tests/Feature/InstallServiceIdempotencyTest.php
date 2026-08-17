@@ -88,6 +88,20 @@ final class InstallServiceIdempotencyTest extends CIUnitTestCase
             $before[$table] = $commonModel->count($table);
         }
 
+        // Bu test "kimlik eksik AMA içerik dolu" senaryosunu ölçer. İçerik
+        // tablolarından biri boşsa `createDefaultData()` o bloğu DOĞRU şekilde
+        // çalıştırır (yazacak içerik yok demektir), dolayısıyla aşağıdaki
+        // "içeriğe dokunulmadı" iddiası guard'ı değil boş şemayı ölçmüş olur.
+        // Aynı gerekçe, aynı desen: testCreateDefaultDataIsNoOpWhenEverythingAlreadyExists.
+        $emptyContentTables = array_keys(array_filter($before, static fn(int $count): bool => $count === 0));
+        if ($emptyContentTables !== []) {
+            $this->markTestSkipped(sprintf(
+                'ci4ms_test içerik tabloları boş (%s); "kimlik eksik ama içerik dolu"'
+                . ' senaryosu bu ortamda gözlemlenemiyor.',
+                implode(', ', $emptyContentTables),
+            ));
+        }
+
         $originalGroup = $commonModel->selectOne('auth_groups', ['group' => 'superadmin']);
         $originalLinks = $db->table('auth_groups_users')->where('group', 'superadmin')->get()->getResult();
 
