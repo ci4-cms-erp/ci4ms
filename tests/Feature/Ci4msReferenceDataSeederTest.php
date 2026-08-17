@@ -56,23 +56,65 @@ final class Ci4msReferenceDataSeederTest extends CIUnitTestCase
      * (gerçek no-op). `pages` bu testin başında boş ya da dolu olsun fark
      * etmez -- ikisinde de geçerlidir.
      *
+     * Seeder'ın yazdıkları `testFreshRunPopulatesDynamicIds` ile AYNI
+     * snapshot/restore disipliniyle geri alınır. Bu metod eskiden hiçbir şeyi
+     * geri almıyordu ve paylaşımlı `ci4ms_test` şemasında alfabetik olarak
+     * `InstallTest`/`InstallerHardeningTest`'ten ÖNCE koştuğu için ikisini de
+     * düşürüyordu: `settings.siteName` seeder'ın sabit `'CI4MS'` değerinde
+     * kalıyordu (`createDefaultData()` settings dolu olduğu için no-op'lar), ve
+     * `Auth.captchaBypassInDevelopment` satırı var olduğu için config-default
+     * fallback testi ölçmek istediği yolu artık ölçemiyordu.
+     *
      * @return void
      */
     public function testSeederIsIdempotent(): void
     {
         $commonModel = new CommonModel();
+        $db          = \Config\Database::connect();
 
-        \Config\Database::seeder()->call(Ci4msReferenceDataSeeder::class);
-        $afterFirst = $commonModel->count('pages');
+        $tables = ['languages', 'pages', 'pages_langs', 'blog', 'blog_langs', 'menu', 'settings'];
 
-        \Config\Database::seeder()->call(Ci4msReferenceDataSeeder::class);
-        $afterSecond = $commonModel->count('pages');
+        $snapshot = [];
+        foreach ($tables as $table) {
+            $result           = $db->table($table)->get();
+            $snapshot[$table] = $result === false ? [] : $result->getResultArray();
+        }
 
-        $this->assertSame(
-            $afterFirst,
-            $afterSecond,
-            'İkinci seeder çalıştırması no-op olmalı ve pages satır sayısını değiştirmemeli.',
-        );
+        $db->disableForeignKeyChecks();
+
+        try {
+            \Config\Database::seeder()->call(Ci4msReferenceDataSeeder::class);
+            $afterFirst = $commonModel->count('pages');
+
+            \Config\Database::seeder()->call(Ci4msReferenceDataSeeder::class);
+            $afterSecond = $commonModel->count('pages');
+
+            $this->assertSame(
+                $afterFirst,
+                $afterSecond,
+                'İkinci seeder çalıştırması no-op olmalı ve pages satır sayısını değiştirmemeli.',
+            );
+        } finally {
+            foreach ($tables as $table) {
+                $db->table($table)->truncate();
+            }
+            foreach ($tables as $table) {
+                if ($snapshot[$table] !== []) {
+                    $db->table($table)->insertBatch($snapshot[$table]);
+                }
+            }
+
+            $db->enableForeignKeyChecks();
+        }
+
+        // Restore sağlaması: her tablo testten önceki satır sayısına dönmüş olmalı.
+        foreach ($tables as $table) {
+            $this->assertSame(
+                count($snapshot[$table]),
+                $commonModel->count($table),
+                sprintf('"%s" tablosu testten önceki satır sayısına dönmedi.', $table),
+            );
+        }
     }
 
     /**

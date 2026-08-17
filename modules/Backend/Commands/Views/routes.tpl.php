@@ -81,10 +81,14 @@ $routes->get('feed-(:segment).xml', '\ci4seopro\Controllers\Feed\FeedController:
 $routes->get('feed-(:segment).json', '\ci4seopro\Controllers\Feed\FeedController::show/$1');
 
 // For custom HTML verification files (e.g. googleXXXX.html)
-$routes->get('(:segment).html', 'Search\VerificationController::html/$1');
+// These resolved to App\Controllers\*, which does not exist — they have to name
+// the package's classes like every other ci4seopro route in this file, and they
+// have to stay declared here because the (:any) catch-all below is registered
+// before the package's own routes are discovered.
+$routes->get('(:segment).html', '\ci4seopro\Controllers\Search\VerificationController::html/$1');
 // .well-known/*
-$routes->get('.well-known/(:segment)', 'Search\VerificationController::wellKnown/$1');
-$routes->get('seo/health', 'Seo\HealthController::index');
+$routes->get('.well-known/(:segment)', '\ci4seopro\Controllers\Search\VerificationController::wellKnown/$1');
+$routes->get('seo/health', '\ci4seopro\Controllers\Search\HealthController::index');
 
 /*
  * @var RouteCollection $routes

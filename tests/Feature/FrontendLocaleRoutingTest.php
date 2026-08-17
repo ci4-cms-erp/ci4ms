@@ -185,17 +185,24 @@ class FrontendLocaleRoutingTest extends CIUnitTestCase
      *
      * The content language is derived from the active locale rather than hardcoded,
      * so the mismatch this covers holds however the environment resolves getLocale().
+     *
+     * Rendering a real page needs a provisioned ci4ms_test (settings.templateInfos,
+     * the contact/socialNetwork rows Home::index builds its schema from). This used
+     * to call InstallService::createDefaultData() to guarantee that, but on an empty
+     * schema that call creates the superadmin identity and createDefaultData() then
+     * no-ops for every later caller — which silently broke InstallTest's own
+     * assertion that it can create 'testadmin'. Skipping instead of provisioning
+     * follows InstallServiceIdempotencyTest: never leave the shared schema changed.
      */
     public function testSingleModeServesContentStoredUnderTheSiteDefaultLanguage(): void
     {
-        (new \Modules\Install\Services\InstallService())->createDefaultData([
-            'fname'    => 'Locale',
-            'sname'    => 'Fixture',
-            'username' => 'localefixture',
-            'email'    => 'localefixture@example.com',
-            'password' => 'SuperSecret123!',
-            'siteName' => 'CI4MS Test System',
-        ]);
+        if ($this->model->count('settings') === 0) {
+            $this->markTestSkipped(
+                'ci4ms_test is not provisioned, so a frontend page cannot render here;'
+                . ' provisioning it from this test would change state other suites depend on.',
+            );
+        }
+
         cache()->clean();
 
         $contentLang = service('request')->getLocale() === 'tr' ? 'en' : 'tr';
