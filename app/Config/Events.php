@@ -57,7 +57,14 @@ Events::on('pre_system', static function (): void {
 });
 
 Events::on('ci4ms.audit', static function (array $e) {
-    if (($e['severity'] ?? '') !== 'warning') {
+    $severity = $e['severity'] ?? '';
+
+    // No reference to Notifications\Config\NotificationMessage::SEVERITIES
+    // here on purpose: this listener must not fatal in an install with the
+    // Notifications module removed. 'warning' and 'critical' are spelled out
+    // literally, matching the string-FQCN + null-safe + try/catch idiom
+    // below.
+    if (!is_string($severity) || !in_array($severity, ['warning', 'critical'], true)) {
         return;
     }
 
@@ -65,7 +72,7 @@ Events::on('ci4ms.audit', static function (array $e) {
 
     try {
         service('notifier')?->notify('audit.' . ($e['action'] ?? 'event'))
-            ->severity('warning')
+            ->severity($severity)
             ->title($e['message'] ?? '')
             ->url($e['url'] ?? null)
             ->toGroup($group)

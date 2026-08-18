@@ -322,8 +322,16 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             $groupNames = array_column($groups, 'group');
 
             // Delegation ceiling: must run before any write below.
-            if (!auth()->user()->inGroup('superadmin') && !$this->actorMayAssignGroup($groupNames))
+            if (!auth()->user()->inGroup('superadmin') && !$this->actorMayAssignGroup($groupNames)) {
+                \CodeIgniter\Events\Events::trigger('ci4ms.audit', [
+                    'severity' => 'critical',
+                    'action'   => 'rbac.delegationCeilingRejected',
+                    'message'  => lang('Users.auditPermsDelegationRejected', [auth()->user()->username, $u->username]),
+                    'url'      => route_to('update_user', $id),
+                ]);
+
                 return $this->failForbidden(lang('Users.groupExceedsOwnGrant'));
+            }
 
             $data = [
                 'email' => $this->request->getPost('email'),
@@ -342,6 +350,17 @@ class UserController extends \Modules\Backend\Controllers\BaseController
             if ($user->save($u)) {
                 $u->syncGroups(...$groupNames);
                 cache()->delete("{$id}_permissions");
+
+                $passwordWasReset = !empty($this->request->getPost('password'));
+                \CodeIgniter\Events\Events::trigger('ci4ms.audit', [
+                    'severity' => 'warning',
+                    'action'   => 'rbac.userUpdated',
+                    'message'  => $passwordWasReset
+                        ? lang('Users.auditUserUpdatedWithPasswordReset', [auth()->user()->username, $u->username, implode(', ', $groupNames)])
+                        : lang('Users.auditUserUpdated', [auth()->user()->username, $u->username, implode(', ', $groupNames)]),
+                    'url'      => route_to('update_user', $id),
+                ]);
+
                 return redirect()->route('users')->with('message', lang('Backend.updated', [$data['username']]));
             } else return redirect()->route('update_user', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$data['username']]));
         }

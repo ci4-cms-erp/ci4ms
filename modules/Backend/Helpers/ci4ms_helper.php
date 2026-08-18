@@ -93,3 +93,29 @@ if (!function_exists('showError')) {
             ->setBody($body);
     }
 }
+
+if (!function_exists('rbac_cache_flush')) {
+    /**
+     * Invalidates both RBAC caches Ci4MsAuthFilter reads from, atomically.
+     *
+     * The value here is not saving two lines at each call site -- it is
+     * guaranteeing the pair is always cleared together. Splitting them (one
+     * cache()->delete() call without the other) is exactly the class of bug
+     * this closes: `shield_auth_dynamic_config` holds the group/permission
+     * matrix (Ci4MsAuthFilter reads it via AuthGroups::loadFromDatabase()),
+     * `backend_page_info_*` holds the per-route page lookup
+     * (Ci4MsAuthFilter.php:36-46, 3600s TTL) -- clearing only one leaves the
+     * other bayat for up to an hour after a permission change. Defined in
+     * app/Common.php, not modules/Backend/Helpers/ci4ms_helper.php, because
+     * this file loads with the framework bootstrap everywhere -- including
+     * filters (permission_string() above is itself called from
+     * Modules\Auth\Filters\Ci4MsAuthFilter::before()) -- whereas
+     * modules/Backend's helper only autoloads through BaseController's
+     * $helpers, i.e. controllers only.
+     */
+    function rbac_cache_flush(): void
+    {
+        cache()->delete('shield_auth_dynamic_config');
+        cache()->deleteMatching('backend_page_info_*');
+    }
+}

@@ -31,4 +31,6 @@ return [
     'restoreForbidden' => 'Veritabanı yedeğini geri yükleme yetkiniz yok.',
     'invalidFileName' => 'Geçersiz dosya adı.',
     'fileNotFound' => 'Dosya bulunamadı.',
+    'auditBackupRestored' => 'Veritabanı yedeği {0} tarafından geri yüklendi.',
+    'auditRestoreRbacStatementsSkipped' => 'Geri yükleme sırasında korumalı yetki tablolarını hedefleyen {0} ifade uygulanmadı.',
 ];

@@ -74,4 +74,6 @@ return [
     'symlinkRejected' => 'Yüklenen arşiv sembolik bağ içeriyor. Modül paketlerinde symlink kullanımına izin verilmez.',
     'classNameMethodNameDuplicate' => 'Bu controller ve metot kombinasyonu zaten başka bir izin sayfasına kayıtlı.',
     'moduleRequired' => 'Lütfen geçerli bir modül seçin.',
+    'auditPermissionPageCreated' => '"{1}" izin sayfası {0} tarafından oluşturuldu.',
+    'auditPermissionPageUpdated' => '"{1}" izin sayfası {0} tarafından güncellendi.',
 ];

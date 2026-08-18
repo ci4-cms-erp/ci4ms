@@ -111,6 +111,9 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                     'typeOfPermissions' => $roles
                 ])
             ) {
+                rbac_cache_flush();
+                $this->auditMethodEvent('rbac.permissionPageCreated', lang('Methods.auditPermissionPageCreated', [auth()->user()->username, $this->request->getPost('pagename')]));
+
                 return redirect()->route('methodList')->with('success', lang('Backend.created', [$this->request->getPost('pagename')]));
             } else
                 return redirect()->route('methodCreate')->withInput()->with('error', lang('Backend.notCreated', [$this->request->getPost('pagename')]));
@@ -169,6 +172,9 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 ], ['id' => $pk])
             ) {
                 cache()->delete('sidebar_menu');
+                rbac_cache_flush();
+                $this->auditMethodEvent('rbac.permissionPageUpdated', lang('Methods.auditPermissionPageUpdated', [auth()->user()->username, $this->request->getPost('pagename')]));
+
                 return redirect()->route('methodList')->with('success', lang('Backend.updated', [$this->request->getPost('pagename')]));
             } else
                 return redirect()->route('methodUpdate', [$pk])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('pagename')]));
@@ -188,6 +194,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         $isChanged = $scanner->runScan();
 
         if ($isChanged) {
+            rbac_cache_flush();
             return $this->respondCreated(['result' => true]);
         } else {
             return $this->respond(['result' => false]);
@@ -471,6 +478,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         $this->commonModel->remove('modules', ['id' => $moduleId]);
         $fileResult = $installer->removeModuleFiles($module->name);
         cache()->delete('sidebar_menu');
+        rbac_cache_flush();
 
         $message = lang('Methods.deleteModuleSuccess', [$module->name]);
         if (!$fileResult['success'])
@@ -479,6 +487,21 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         return $this->respond([
             'status' => 'success',
             'message' => $message,
+        ]);
+    }
+
+    /**
+     * Fires the `ci4ms.audit` event for an auth_permissions_pages mutation
+     * (`Fileeditor::triggerFileevent()` pattern,
+     * modules/Fileeditor/Controllers/Fileeditor.php:97-105).
+     */
+    private function auditMethodEvent(string $action, string $message): void
+    {
+        \CodeIgniter\Events\Events::trigger('ci4ms.audit', [
+            'severity' => 'warning',
+            'action'   => $action,
+            'message'  => $message,
+            'url'      => base_url('backend/methods'),
         ]);
     }
 

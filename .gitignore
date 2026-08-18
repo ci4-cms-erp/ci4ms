@@ -220,6 +220,10 @@ tests/Modules/Pages/*
 !tests/Modules/LanguageManager/
 tests/Modules/LanguageManager/*
 !tests/Modules/LanguageManager/*Test.php
+# i18n Language parity (EN/TR key-set, ICU formatting) regression locks.
+!tests/Modules/i18n/
+tests/Modules/i18n/*
+!tests/Modules/i18n/*Test.php
 !tests/_support/
 tests/_support/*
 !tests/_support/Settings/

@@ -172,6 +172,7 @@ class DbBackup
         $this->commonModel->db->query('SET FOREIGN_KEY_CHECKS = 0');
 
         $stmtNum = 0;
+        $skippedRbacStatements = 0;
         foreach ($this->splitStatements($file) as $statement) {
             $stmtNum++;
             $trimmed = trim($statement);
@@ -207,6 +208,7 @@ class DbBackup
             // RBAC table. Skip only this statement, non-fatally, matching
             // the "Unrecognized SQL skipped" pattern above.
             if ($this->targetsProtectedRbacTable($trimmed)) {
+                $skippedRbacStatements++;
                 log_message('warning', "DbBackup::restore — Statement targeting protected RBAC table skipped at statement {$stmtNum}: " . mb_substr($trimmed, 0, 100));
                 continue;
             }
@@ -217,6 +219,25 @@ class DbBackup
         $this->commonModel->db->query('SET FOREIGN_KEY_CHECKS = 1');
 
         fclose($file);
+
+        // One aggregate event per restore, never one per statement: a crafted
+        // dump can carry thousands of RBAC statements and the listener
+        // (app/Config/Events.php) turns every event into a stored superadmin
+        // notification. Raised after FOREIGN_KEY_CHECKS is back on because the
+        // listener writes rows over this same shared connection.
+        // 'warning', not 'critical': this system's own full backup dumps the
+        // auth_* tables (backup() falls back to the complete table list), so
+        // skipped RBAC statements are the norm on a routine restore, and
+        // 'critical' bypasses per-user mute preferences (Notifier::applyPreferences()).
+        if ($skippedRbacStatements > 0) {
+            \CodeIgniter\Events\Events::trigger('ci4ms.audit', [
+                'severity' => 'warning',
+                'action'   => 'rbac.backupRestoreStatementsSkipped',
+                'message'  => lang('Backup.auditRestoreRbacStatementsSkipped', [$skippedRbacStatements]),
+                'url'      => base_url('backend/backup'),
+            ]);
+        }
+
         return true;
     }
 

@@ -31,4 +31,6 @@ return [
     'restoreForbidden' => 'You do not have permission to restore a database backup.',
     'invalidFileName' => 'Invalid file name.',
     'fileNotFound' => 'File not found.',
+    'auditBackupRestored' => 'Database backup was restored by {0}.',
+    'auditRestoreRbacStatementsSkipped' => 'Restore ignored {0} statement(s) that targeted protected permission tables.',
 ];

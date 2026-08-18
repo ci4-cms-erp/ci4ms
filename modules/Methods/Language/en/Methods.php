@@ -74,4 +74,6 @@ return [
     'symlinkRejected' => 'Uploaded archive contains a symbolic link. Symlinks are not allowed in module packages.',
     'classNameMethodNameDuplicate' => 'This controller and method combination is already registered to another permission page.',
     'moduleRequired' => 'Please select a valid module.',
+    'auditPermissionPageCreated' => 'Permission page "{1}" was created by {0}.',
+    'auditPermissionPageUpdated' => 'Permission page "{1}" was updated by {0}.',
 ];

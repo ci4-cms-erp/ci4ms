@@ -141,6 +141,14 @@ class Backup extends \Modules\Backend\Controllers\BaseController
                 cache()->delete('settings');
                 cache()->delete('shield_auth_dynamic_config');
                 cache()->delete('sidebar_menu');
+
+                \CodeIgniter\Events\Events::trigger('ci4ms.audit', [
+                    'severity' => 'warning',
+                    'action'   => 'rbac.backupRestored',
+                    'message'  => lang('Backup.auditBackupRestored', [auth()->user()->username]),
+                    'url'      => base_url('backend/backup'),
+                ]);
+
                 return redirect()->route('backup')->with('message', lang('Backup.dbRestore'));
             }
         }

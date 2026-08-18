@@ -407,7 +407,7 @@ service('notifier')
 | `TARGETS_MAX` | `200` | Max target directives (users + groups) in one publication. Each directive is one INSERT plus one `notif_unread_*` cache sweep, and PHP's default `max_input_vars` (1000) sets the ceiling an attacker would otherwise reach. Over it the composer refuses the publication (fail-closed) rather than trimming the audience. |
 | `EXCLUDE_USERS_MAX` | `500` | Max user ids in one row's `exclude_users` list (≈ 4 KB, far below the 65 535-byte `TEXT` limit). Over it `InAppChannel` skips the write (`exclusion-too-large`, `critical`) instead of truncating — with `strictOn = false` an overflowing value is cut silently and a broken sentinel CSV fails open. Checked on the union of explicit and derived exclusions. |
 | `CONN_CAP_FALLBACK` | `6` | Fail-closed cap applied when `$realtimeConnCapDefault` holds the invalid value `0`. A constant on purpose, so `.env` cannot be the source of a broken value; must match the shipped `$realtimeConnCapDefault`. |
-| `$auditTargetGroup` | `'superadmin'` | Shield group that receives `ci4ms.audit` warnings. |
+| `$auditTargetGroup` | `'superadmin'` | Shield group that receives `ci4ms.audit` warning and critical events. |
 | `$preferenceTypes` | `['audit' => 'Notifications.prefTypeAudit']` | Types offered on the opt-out screen (exact type **or** type prefix) → language key. Also the only source `PreferenceController::save()` accepts — any other `type` is dropped. A module publishing a new type adds its slug here plus the label in `Language/{en,tr}/Notifications.php`. |
 | `$preferenceChannels` | `['*']` | Channel keys offered on the opt-out screen. Only `'*'` for now: `inapp` is the sole channel that persists a row, and the realtime signal carries neither user nor type, so a per-user realtime mute could not be enforced on the read path. |
 | `$channels` | `inapp`, `realtime`, `email`, `webhook` | Base slug → channel-class map (`realtime` is gated by `$realtimeEnabled`). |
@@ -466,12 +466,12 @@ A "read" candidate is any notification older than the threshold that has **at le
 
 Apart from the [composer screen](#sending-a-notification-from-the-backend-composer), where an administrator sends deliberately, notifications are not produced from a route. The sole **automatic** trigger is the `ci4ms.audit` listener in `app/Config/Events.php`:
 
-- It fires only for events with `severity === 'warning'`.
-- It dispatches via the builder to the group in `NotificationsConfig::$auditTargetGroup` (default `superadmin`):
+- It fires for events with `severity === 'warning'` or `severity === 'critical'`; any other value is dropped silently.
+- It dispatches via the builder to the group in `NotificationsConfig::$auditTargetGroup` (default `superadmin`), passing the event's own severity through:
 
   ```php
   service('notifier')?->notify('audit.' . $action)
-      ->severity('warning')
+      ->severity($severity) // 'warning' or 'critical', from the event payload
       ->title($message)
       ->url($url)
       ->toGroup($group)

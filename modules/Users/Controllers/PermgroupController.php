@@ -38,6 +38,11 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
      * "superadmin" name and post-transform uniqueness are re-checked here
      * against the transformed value before the row is written.
      *
+     * perms[] must be an array of ['roles' => string] rows; a non-array
+     * perms payload or a malformed row is rejected fail-closed (see
+     * isWellFormedPermsRow()), superadmin included -- a malformed payload
+     * cannot come from this method's own form.
+     *
      * @return \CodeIgniter\HTTP\ResponseInterface|string Redirect on POST, rendered view on GET
      */
     public function group_create()
@@ -69,14 +74,24 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             ];
 
             $pageMap = $this->getPageNameMap();
+            $postedPerms = $this->request->getPost('perms');
 
-            if (!auth()->user()->inGroup('superadmin') && !$this->actorGrantsSubsetOfOwnPermissions($pageMap, $this->request->getPost('perms')))
+            if (!is_array($postedPerms))
+                return redirect()->route('group_create')->withInput()->with('errors', lang('Users.permsMalformed'));
+
+            if (!auth()->user()->inGroup('superadmin') && !$this->actorGrantsSubsetOfOwnPermissions($pageMap, $postedPerms)) {
+                $this->auditRbacEvent('critical', 'rbac.delegationCeilingRejected', lang('Users.auditPermsDelegationRejected', [auth()->user()->username, $newGroup]), route_to('group_create'));
+
                 return redirect()->route('group_create')->withInput()->with('errors', lang('Users.permsExceedOwnGrant'));
+            }
 
             $permissions = [];
-            foreach ($this->request->getPost('perms') as $key => $perm) {
+            foreach ($postedPerms as $key => $perm) {
                 if (!isset($pageMap[$key]))
                     continue;
+
+                if (!$this->isWellFormedPermsRow($perm))
+                    return redirect()->route('group_create')->withInput()->with('errors', lang('Users.permsMalformed'));
 
                 $roles = explode('|', $perm['roles']);
                 $permissions[] = [
@@ -93,8 +108,12 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             $result = $this->commonModel->create('auth_groups', $data);
             if (empty($result))
                 return redirect()->route('group_create')->withInput()->with('errors', lang('Backend.notCreated', [$this->request->getPost('groupName')]));
-            else
+            else {
+                rbac_cache_flush();
+                $this->auditRbacEvent('warning', 'rbac.groupCreated', lang('Users.auditGroupCreated', [auth()->user()->username, $newGroup]), route_to('groupList'));
+
                 return redirect()->to(route_to('groupList'))->with('message', lang('Backend.created', [$this->request->getPost('groupName')]));
+            }
         }
         $methodsModel = new \Modules\Methods\Models\MethodsModel();
         $this->defData['modules'] = $methodsModel->getActiveModules();
@@ -112,6 +131,11 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
      * (G4), and an actor may not rename a group they currently belong to
      * (G5). G4/G5 are gated on the name actually changing so that editing a
      * group's description/permissions without renaming it never trips them.
+     *
+     * perms[] must be an array of ['roles' => string] rows; a non-array
+     * perms payload or a malformed row is rejected fail-closed (see
+     * isWellFormedPermsRow()), superadmin included -- a malformed payload
+     * cannot come from this method's own form.
      *
      * @param int $id auth_groups.id of the group being updated
      *
@@ -150,14 +174,24 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
                 return $this->failForbidden(lang('Users.cannotEditOwnGroupName'));
 
             $pageMap = $this->getPageNameMap();
+            $postedPerms = $this->request->getPost('perms');
 
-            if (!auth()->user()->inGroup('superadmin') && !$this->actorGrantsSubsetOfOwnPermissions($pageMap, $this->request->getPost('perms')))
+            if (!is_array($postedPerms))
+                return $this->failForbidden(lang('Users.permsMalformed'));
+
+            if (!auth()->user()->inGroup('superadmin') && !$this->actorGrantsSubsetOfOwnPermissions($pageMap, $postedPerms)) {
+                $this->auditRbacEvent('critical', 'rbac.delegationCeilingRejected', lang('Users.auditPermsDelegationRejected', [auth()->user()->username, $oldGroupName]), route_to('group_update', $id));
+
                 return $this->failForbidden(lang('Users.permsExceedOwnGrant'));
+            }
 
             $permissions = [];
-            foreach ($this->request->getPost('perms') as $key => $perm) {
+            foreach ($postedPerms as $key => $perm) {
                 if (!isset($pageMap[$key]))
                     continue;
+
+                if (!$this->isWellFormedPermsRow($perm))
+                    return $this->failForbidden(lang('Users.permsMalformed'));
 
                 $roles = explode('|', $perm['roles']);
                 $permissions[] = [
@@ -197,8 +231,9 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             $this->commonModel->db->transComplete();
 
             if ($editResult && $this->commonModel->db->transStatus()) {
-                cache()->delete("shield_auth_dynamic_config");
-                cache()->deleteMatching('backend_page_info_*');
+                rbac_cache_flush();
+                $this->auditRbacEvent('warning', 'rbac.groupUpdated', lang('Users.auditGroupUpdated', [auth()->user()->username, $newGroup]), route_to('groupList'));
+
                 return redirect()->route('groupList')->with('message', lang('Backend.updated', [$this->request->getPost('groupName')]));
             } else
                 return redirect()->route('group_update', [$id])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('groupName')]));
@@ -258,9 +293,9 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
      * (see context.md F-1; getPageNameMap()'s docblock).
      *
      * @param array<int, string>                      $pageMap     auth_permissions_pages.id => lowercase pagename, from getPageNameMap()
-     * @param array<int|string, array{roles: string}> $postedPerms Raw perms[] POST payload (page_id => ['roles' => 'role_r|role_r'])
+     * @param array<int|string, array{roles: string}> $postedPerms Raw perms[] POST payload (page_id => ['roles' => 'role_r|role_r']); a malformed row (see isWellFormedPermsRow()) is fail-closed rejected, not skipped
      *
-     * @return bool True if every requested action maps to a permission string the actor already has
+     * @return bool True if every requested action maps to a permission string the actor already has; false if a row is malformed or exceeds the actor's own grant
      */
     private function actorGrantsSubsetOfOwnPermissions(array $pageMap, array $postedPerms): bool
     {
@@ -270,6 +305,9 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
             if (!isset($pageMap[$key]))
                 continue;
 
+            if (!$this->isWellFormedPermsRow($perm))
+                return false;
+
             $roles = explode('|', $perm['roles']);
             foreach ($roleActionMap as $roleKey => $action) {
                 if (in_array($roleKey, $roles, true) && !auth()->user()->can(permission_string($pageMap[$key], $action)))
@@ -278,6 +316,56 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
         }
 
         return true;
+    }
+
+    /**
+     * True if $perm is a well-formed perms[<page_id>] row.
+     *
+     * The create/update/userPerms forms only ever post a string 'roles'
+     * value (pipe-joined permission keys) for a row -- plain checkboxes
+     * with no hidden fallback, confirmed against create.php:191,
+     * update.php:240 and userPerms.php:191 and their inline JS. A row that
+     * fails this check cannot come from those forms, so every caller
+     * (actorGrantsSubsetOfOwnPermissions() and the three perms[] write
+     * loops below) fail-closed rejects it -- superadmin included -- instead
+     * of silently skipping it like an unrecognized page_id.
+     *
+     * FRAGILE: this condition assumes 'roles' is perms[<id>]'s only field;
+     * if a second field is ever added to one of those views, revisit it.
+     *
+     * @param mixed $perm Raw perms[<page_id>] POST value.
+     *
+     * @return bool True if $perm is an array carrying a string 'roles' key.
+     */
+    private function isWellFormedPermsRow(mixed $perm): bool
+    {
+        return is_array($perm) && isset($perm['roles']) && is_string($perm['roles']);
+    }
+
+    /**
+     * Fires the `ci4ms.audit` event for an RBAC mutation or a rejected
+     * delegation-ceiling attempt on this controller's screens (the
+     * `Fileeditor::triggerFileevent()` pattern,
+     * modules/Fileeditor/Controllers/Fileeditor.php:97-105). Unlike that
+     * fixed-severity producer, this one needs both 'warning' (successful
+     * group/permission mutations) and 'critical' (a rejected
+     * actorGrantsSubsetOfOwnPermissions() attempt -- Notifier.php:470-479
+     * makes 'critical' notifications impossible to mute, unlike 'warning').
+     * $url is caller-supplied (route_to(), not a hardcoded base_url() path)
+     * because this controller's three screens (group_create, group_update/
+     * $id, user_perms/$id) live under modules/Users/Config/Routes.php's
+     * `backend/users` group, each at a different sub-path.
+     *
+     * @param 'warning'|'critical' $severity
+     */
+    private function auditRbacEvent(string $severity, string $action, string $message, string $url): void
+    {
+        \CodeIgniter\Events\Events::trigger('ci4ms.audit', [
+            'severity' => $severity,
+            'action'   => $action,
+            'message'  => $message,
+            'url'      => $url,
+        ]);
     }
 
     /**
@@ -292,6 +380,11 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
      * permission set. The self-target and subset guards below must run
      * before any write, including the empty-perms path that wipes all of the
      * target's direct permissions via syncPermissions() with no arguments.
+     *
+     * perms[] must be an array of ['roles' => string] rows; a non-array
+     * perms payload or a malformed row is rejected fail-closed (see
+     * isWellFormedPermsRow()), superadmin included -- a malformed payload
+     * cannot come from this method's own form.
      *
      * @param int $id users.id of the account whose direct permissions are being edited
      *
@@ -315,16 +408,24 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
                 $pageMap = $this->getPageNameMap();
                 $postedPerms = $this->request->getPost('perms') ?? [];
 
+                if (!is_array($postedPerms))
+                    return $this->failForbidden(lang('Users.permsMalformed'));
+
                 // Delegation ceiling: a non-superadmin actor may only grant
                 // permissions that are a subset of their own effective
                 // permissions. Must run before any write, including the
                 // empty-perms wipe path below.
-                if (!auth()->user()->inGroup('superadmin') && !$this->actorGrantsSubsetOfOwnPermissions($pageMap, $postedPerms))
+                if (!auth()->user()->inGroup('superadmin') && !$this->actorGrantsSubsetOfOwnPermissions($pageMap, $postedPerms)) {
+                    $this->auditRbacEvent('critical', 'rbac.delegationCeilingRejected', lang('Users.auditPermsDelegationRejected', [auth()->user()->username, $user->username]), route_to('user_perms', $id));
+
                     return $this->failForbidden(lang('Users.permsExceedOwnGrant'));
+                }
 
                 if (empty($postedPerms)) {
                     $user->syncPermissions();
                     cache()->delete("{$id}_permissions");
+                    $this->auditRbacEvent('warning', 'rbac.userPermsUpdated', lang('Users.auditUserPermsUpdated', [auth()->user()->username, $user->username]), route_to('user_perms', $id));
+
                     return redirect()->route('users')->with('message', lang('Backend.updated', [$user->username]));
                 }
 
@@ -332,6 +433,9 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
                 foreach ($postedPerms as $key => $perm) {
                     if (!isset($pageMap[$key]))
                         continue;
+
+                    if (!$this->isWellFormedPermsRow($perm))
+                        return $this->failForbidden(lang('Users.permsMalformed'));
 
                     $roles = explode('|', $perm['roles']);
                     $pagename = $pageMap[$key];
@@ -343,6 +447,7 @@ class PermgroupController extends \Modules\Backend\Controllers\BaseController
                 }
                 $user->syncPermissions(...$perms);
                 cache()->delete("{$id}_permissions");
+                $this->auditRbacEvent('warning', 'rbac.userPermsUpdated', lang('Users.auditUserPermsUpdated', [auth()->user()->username, $user->username]), route_to('user_perms', $id));
 
                 return redirect()->route('users')->with('message', lang('Backend.updated', [$user->username]));
             } catch (\Exception $e) {
