@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Modules\MigrationManager\Libraries;
+namespace Modules\Backend\Libraries;
 
 /**
  * Migration/seed run lock.
@@ -25,15 +25,21 @@ namespace Modules\MigrationManager\Libraries;
  * TTL/heartbeat concept becomes unnecessary with `flock()`, because lock
  * ownership is no longer tied to file content/a timestamp but to an open
  * file description tracked by the kernel itself.
- * `UpdateService::acquireLock()`/`releaseLock()` STILL carries the SAME
- * TTL/TOCTOU flaw — this was deliberately left out of this task's scope and
- * requires a separate user decision.
+ * `UpdateService::acquireLock()`/`releaseLock()` used to carry the SAME
+ * TTL/TOCTOU flaw; it has since been migrated to take this same class
+ * (with its own lock file path, see `UpdateService::applyUpdate()`) instead
+ * of reimplementing TTL/mtime locking.
  *
  * It does NOT REPLACE the `$lock` flag in `app/Config/Migrations.php` (that
- * flag is deliberately left off) — this class is only an
- * application-level concurrency lock for `MigrationManager` module's own
- * run endpoints (and the `Modules\Backend\Commands\Ci4msMigrate` CLI
- * command).
+ * flag is deliberately left off) — this class was originally
+ * `Modules\MigrationManager`'s own application-level concurrency lock for
+ * its run endpoints (and the `Modules\Backend\Commands\Ci4msMigrate` CLI
+ * command), and was moved here to `Modules\Backend\Libraries` (the shared
+ * library location, see `ZipSecurityValidator` for the same pattern) so
+ * `Modules\Settings\Libraries\UpdateService`'s self-update flow could take
+ * it too, without either module reimplementing flock-based locking or
+ * `Modules\Settings` depending on `Modules\MigrationManager`. Each consumer
+ * uses its own lock file path — the lock is never shared across them.
  *
  * Platform constraint: `flock()` is NOT RELIABLE on network filesystems
  * such as NFS. The lock file is kept under `WRITEPATH` (`writable/locks/`)

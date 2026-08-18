@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Modules\MigrationManager;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use Modules\MigrationManager\Libraries\RunLock;
+use Modules\Backend\Libraries\RunLock;
 
 /**
  * `RunLock` çalıştırma kilidinin `acquire()`/`release()` davranışı.
@@ -414,12 +414,12 @@ final class RunLockTest extends CIUnitTestCase
     private function writeChildLockHolderScript(): string
     {
         $scriptPath        = sys_get_temp_dir() . '/ci4ms_runlock_child_' . bin2hex(random_bytes(6)) . '.php';
-        $runLockSourcePath = ROOTPATH . 'modules/MigrationManager/Libraries/RunLock.php';
+        $runLockSourcePath = ROOTPATH . 'modules/Backend/Libraries/RunLock.php';
 
         $source = '<?php' . "\n"
             . '[$scriptSelf, $lockFile, $readyFile, $sleepSeconds] = $argv;' . "\n"
             . 'require ' . var_export($runLockSourcePath, true) . ';' . "\n"
-            . '$lock = new \\Modules\\MigrationManager\\Libraries\\RunLock($lockFile);' . "\n"
+            . '$lock = new \\Modules\\Backend\\Libraries\\RunLock($lockFile);' . "\n"
             . 'if (!$lock->acquire()) {' . "\n"
             . '    file_put_contents($readyFile, \'ACQUIRE_FAILED\');' . "\n"
             . '    exit(1);' . "\n"

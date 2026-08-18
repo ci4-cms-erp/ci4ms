@@ -6,7 +6,7 @@ namespace Tests\Modules\Backend;
 
 use Config\Database;
 use Modules\Backend\Commands\Ci4msMigrate;
-use Modules\MigrationManager\Libraries\RunLock;
+use Modules\Backend\Libraries\RunLock;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use ReflectionMethod;
@@ -518,7 +518,7 @@ final class Ci4msMigrateCommandTest extends CIUnitTestCase
      * FAZ 8: `RunLock` moved from TTL/mtime semantics to
      * `flock(LOCK_EX|LOCK_NB)` and its `release()` intentionally never
      * `unlink()`s the lock file anymore (see
-     * `modules/MigrationManager/Libraries/RunLock.php:154-188` — deleting a
+     * `modules/Backend/Libraries/RunLock.php:154-188` — deleting a
      * flock()'d file is a classic TOCTOU/inode-reuse hazard). The lock file
      * is therefore expected to still be present on disk after `run()`
      * finishes; only a fresh `acquire()` on the same path proves the flock

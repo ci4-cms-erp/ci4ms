@@ -6,6 +6,7 @@ namespace Modules\Settings\Libraries;
 
 use CodeIgniter\HTTP\CURLRequest;
 use Config\Services;
+use Modules\Backend\Libraries\RunLock;
 use Modules\Settings\Config\UpdateKeys;
 
 /**
@@ -25,9 +26,6 @@ class UpdateService
     /** Largest release asset or single source file the updater will hold in memory. */
     private const MAX_BODY_BYTES = 8388608;
 
-    /** Seconds after which an update lock is considered stale. */
-    private const LOCK_TTL = 300;
-
     /** GitHub tag names the updater accepts; anything else is attacker controlled text. */
     private const TAG_PATTERN = '/^v?\d+(?:\.\d+){1,3}$/';
 
@@ -42,7 +40,6 @@ class UpdateService
 
     private string $repo = 'ci4-cms-erp/ci4ms';
     private CURLRequest $client;
-    private string $lockFile;
     private string $backupBaseDir;
     private ManifestVerifier $verifier;
 
@@ -62,7 +59,6 @@ class UpdateService
             'timeout'         => 15,
             'connect_timeout' => 5,
         ]);
-        $this->lockFile = WRITEPATH . 'ci4ms_update.lock';
         $this->backupBaseDir = WRITEPATH . 'backups/';
         $this->keyring = config(UpdateKeys::class)->keys;
         $this->verifier = new ManifestVerifier($this->keyring);
@@ -343,6 +339,25 @@ class UpdateService
      * without anything being written, and the installation would never pull
      * that update again.
      *
+     * Concurrency: guarded by `Modules\Backend\Libraries\RunLock` at
+     * `WRITEPATH.'locks/updater.lock'` — its own path, never shared with
+     * `Modules\MigrationManager`'s or `Ci4msMigrate`'s lock file. `acquire()`
+     * is checked before any write; `release()` runs in a `finally` covering
+     * both the success path and the `catch (\Exception)` rollback path, so
+     * an uncaught `\Error`/`TypeError` also releases the lock instead of
+     * leaving it held.
+     *
+     * Do not drop that `finally` on the grounds that the lock frees itself
+     * anyway. It does today, but only by accident of shape: `$lock` is a local,
+     * so unwinding the stack drops its refcount to zero, the file handle closes
+     * and flock lets go. Assign `$lock` to a property, capture it in a closure,
+     * or bind it to a reference and that implicit release disappears — the lock
+     * file just stays held until the process dies. `finally` ties the release to
+     * control flow rather than to object lifetime, which is the only version of
+     * it that survives refactoring; deleting it turns
+     * `UpdateServiceRunLockTest::testTheLockIsFreeBeforeApplyUpdateDestroysItsLocals`
+     * red.
+     *
      * @param string                $latestVersion
      * @param array                 $filesContent    [path => content]
      * @param array                 $allChangedFiles Raw file list with status
@@ -361,7 +376,8 @@ class UpdateService
             return ['result' => false, 'message' => lang('Settings.updateSignatureInvalid')];
         }
 
-        if (!$this->acquireLock()) {
+        $lock = new RunLock(WRITEPATH . 'locks/updater.lock');
+        if (!$lock->acquire()) {
             return ['result' => false, 'message' => lang('Settings.updateInProgress')];
         }
 
@@ -423,7 +439,6 @@ class UpdateService
             $this->runMigrations();
             cache()->clean();
 
-            $this->releaseLock();
             return [
                 'result'        => true,
                 'applied_count' => count($appliedFiles),
@@ -433,8 +448,9 @@ class UpdateService
 
         } catch (\Exception $e) {
             $this->rollback($backupDir, $appliedFiles);
-            $this->releaseLock();
             return ['result' => false, 'message' => $e->getMessage()];
+        } finally {
+            $lock->release();
         }
     }
 
@@ -869,36 +885,6 @@ class UpdateService
     private function gitBlobSha(string $content): string
     {
         return sha1('blob ' . strlen($content) . "\0" . $content);
-    }
-
-    /**
-     * Acquires the update lock atomically.
-     *
-     * fopen('xb') is race-free: with the file_exists() + file_put_contents()
-     * pair, two requests could "acquire" the lock at the same time.
-     */
-    private function acquireLock(): bool
-    {
-        // Clean up locks older than 5 minutes
-        if (file_exists($this->lockFile) && time() - filemtime($this->lockFile) > self::LOCK_TTL) {
-            @unlink($this->lockFile);
-        }
-
-        $handle = @fopen($this->lockFile, 'xb');
-        if ($handle === false) {
-            return false;
-        }
-
-        fwrite($handle, (string) time());
-
-        return fclose($handle);
-    }
-
-    private function releaseLock(): void
-    {
-        if (file_exists($this->lockFile)) {
-            @unlink($this->lockFile);
-        }
     }
 
     private function ensureDirectory(string $path): void

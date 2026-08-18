@@ -14,8 +14,8 @@ use CodeIgniter\Shield\Test\AuthenticationTesting;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use Config\App;
+use Modules\Backend\Libraries\RunLock;
 use Modules\MigrationManager\Controllers\MigrationManager;
-use Modules\MigrationManager\Libraries\RunLock;
 use ReflectionProperty;
 
 /**

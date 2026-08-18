@@ -9,7 +9,7 @@ use CodeIgniter\CLI\CLI;
 use CodeIgniter\CLI\SignalTrait;
 use Config\Database;
 use Config\Services;
-use Modules\MigrationManager\Libraries\RunLock;
+use Modules\Backend\Libraries\RunLock;
 
 /**
  * Applies all pending migrations across every namespace (App + Modules\*)
@@ -28,16 +28,20 @@ use Modules\MigrationManager\Libraries\RunLock;
  * gives no such trail. This command is a standalone, re-runnable,
  * audited version of the migrate step in `ci4ms:setup`. Idempotent.
  *
- * Concurrency: this command now takes the same `Modules\MigrationManager\
- * Libraries\RunLock` the web run endpoints use
+ * Concurrency: this command takes the same `Modules\Backend\Libraries\
+ * RunLock` the web run endpoints use
  * (`Controllers/MigrationManager.php:94-103,134-143`) so a CLI run and a
- * superadmin web run can't stomp on each other. This is a deliberate,
- * user-approved reverse dependency from `Modules\Backend` onto
- * `Modules\MigrationManager` — accepted because the alternative (a
- * duplicated locking library) was worse. The dependency is soft: a
- * `class_exists()` guard (`runLockClassName()`/`createRunLock()`) means
- * this command still runs, unlocked, on an install with
- * `Modules\MigrationManager` removed.
+ * superadmin web run can't stomp on each other. `RunLock` lives in
+ * `Modules\Backend\Libraries` (moved there from `Modules\MigrationManager`
+ * so `Modules\Settings\Libraries\UpdateService`'s self-update flow could
+ * also take it, each with its own lock file path), so this is no longer a
+ * cross-module dependency. The `class_exists()` guard
+ * (`runLockClassName()`/`createRunLock()`) is kept as a test seam — it lets
+ * a test subclass override `runLockClassName()` to force the "run lock
+ * class not found" branch and exercise `createRunLock()`'s `null` path
+ * (`tests/Modules/Backend/Ci4msMigrateCommandTest.php:700-707`) — it is no
+ * longer a real "is the module installed" check, since `RunLock` is now
+ * native to this same module.
  *
  * Usage: php spark ci4ms:migrate
  */
@@ -86,8 +90,10 @@ class Ci4msMigrate extends BaseCommand
      * rolling back the previous batch — this is surfaced explicitly via
      * `CLI::error()`, not left implicit.
      *
-     * Acquires `Modules\MigrationManager\Libraries\RunLock` (via
-     * `createRunLock()`, `null` if that module isn't installed) BEFORE
+     * Acquires `Modules\Backend\Libraries\RunLock` (via
+     * `createRunLock()`, `null` if the run lock class can't be found — see
+     * the class docblock's "Concurrency" note on the `class_exists()` test
+     * seam) BEFORE
      * constructing the migration runner, so a CLI run can't race a
      * superadmin web run of the same lock and no runner is built at all
      * when the lock is already held. `createRunLock()` can throw
@@ -129,7 +135,7 @@ class Ci4msMigrate extends BaseCommand
      * true no-op: it does not call `flock()`/`fclose()` again on an
      * already-closed handle, which would otherwise raise a PHP `E_WARNING`
      * ("supplied resource is not a valid stream resource")
-     * (`modules/MigrationManager/Libraries/RunLock.php::acquire()/release()`).
+     * (`modules/Backend/Libraries/RunLock.php::acquire()/release()`).
      *
      * @param array<int|string, string|null> $params
      *
@@ -199,11 +205,13 @@ class Ci4msMigrate extends BaseCommand
      *
      * Extracted into its own method purely for testability: a test
      * subclass can override this to return a non-existent FQCN and exercise
-     * the `class_exists() === false` branch of `createRunLock()`. Returning
-     * a class-constant string here is safe even if `Modules\MigrationManager`
-     * is fully removed — `::class` on an unresolved name is just a string
-     * literal, it does not trigger autoloading and does not require the
-     * class to exist.
+     * the `class_exists() === false` branch of `createRunLock()` — this is
+     * the test seam the class docblock's "Concurrency" note describes;
+     * `RunLock` now lives in this same module (`Modules\Backend\Libraries`),
+     * so in production this branch is effectively unreachable. Returning a
+     * class-constant string here is safe regardless — `::class` on an
+     * unresolved name is just a string literal, it does not trigger
+     * autoloading and does not require the class to exist.
      *
      * @return class-string
      */
@@ -213,23 +221,23 @@ class Ci4msMigrate extends BaseCommand
     }
 
     /**
-     * Produces the run lock used by `run()`, or `null` if
-     * `Modules\MigrationManager` isn't installed.
+     * Produces the run lock used by `run()`, or `null` if the run lock
+     * class named by `runLockClassName()` can't be found (see that method's
+     * docblock and the class docblock's "Concurrency" note on the
+     * `class_exists()` test seam).
      *
-     * Return type is deliberately `?object`, not `?RunLock` — this file
-     * lives in `Modules\Backend` and must not carry a hard type reference
-     * to a class in `Modules\MigrationManager`; the reverse dependency this
-     * command takes on that module is soft (`class_exists()` guarded), and
-     * the method signature reflects that.
+     * Return type is deliberately `?object`, not `?RunLock`: `runLockClassName()`
+     * is overridable by test subclasses to name a class that may not exist,
+     * so this method's signature stays loosely typed to match.
      *
-     * @return RunLock|null Instance of `Modules\MigrationManager\Libraries\RunLock`, or `null`.
+     * @return RunLock|null Instance of `Modules\Backend\Libraries\RunLock`, or `null`.
      */
     protected function createRunLock(): ?object
     {
         $lockClass = $this->runLockClassName();
 
         if (!class_exists($lockClass)) {
-            CLI::write('running without a run lock: Modules\\MigrationManager not installed', 'dark_gray');
+            CLI::write('running without a run lock: run lock class not found', 'dark_gray');
 
             return null;
         }

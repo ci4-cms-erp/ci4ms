@@ -8,8 +8,8 @@ use CodeIgniter\Events\Events;
 use Config\Database;
 use Config\Services;
 use Modules\Backend\Controllers\BaseController;
+use Modules\Backend\Libraries\RunLock;
 use Modules\MigrationManager\Libraries\MigrationInspector;
-use Modules\MigrationManager\Libraries\RunLock;
 use Modules\MigrationManager\Libraries\SeederScanner;
 
 /**

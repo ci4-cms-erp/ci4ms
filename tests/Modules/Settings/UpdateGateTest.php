@@ -391,6 +391,12 @@ final class UpdateGateTest extends CIUnitTestCase
     /**
      * applyUpdate() refuses every unsigned hash map and leaves the filesystem untouched.
      *
+     * assertSignedContent() rejects all three cases before applyUpdate() ever
+     * constructs its `RunLock`, so this covers the early-return branch, not
+     * lock acquisition/release itself — the lock's own lifecycle (acquire,
+     * release, contention) is covered by
+     * tests/Modules/Settings/UpdateServiceRunLockTest.php.
+     *
      * @return void
      */
     public function testApplyUpdateRejectsUnsignedContentWithoutTouchingDisk(): void
@@ -398,7 +404,7 @@ final class UpdateGateTest extends CIUnitTestCase
         $this->trustPublisher();
 
         $content    = "probe content\n";
-        $lockFile   = WRITEPATH . 'ci4ms_update.lock';
+        $lockFile   = WRITEPATH . 'locks/updater.lock';
         $probeFile  = ROOTPATH . self::PROBE_PATH;
         $backupsBefore = $this->backupDirectories();
 
@@ -416,7 +422,7 @@ final class UpdateGateTest extends CIUnitTestCase
         }
 
         $this->assertSame($backupsBefore, $this->backupDirectories(), 'applyUpdate() must not create a backup directory when it rejects');
-        $this->assertFileDoesNotExist($lockFile, 'applyUpdate() must not leave an update lock behind');
+        $this->assertFileDoesNotExist($lockFile, 'applyUpdate() must not leave an update lock file behind — it never reaches RunLock::acquire() on this branch');
         $this->assertFileDoesNotExist($probeFile, 'applyUpdate() must not write the probe file');
         $this->assertFileDoesNotExist($probeFile . '.update_tmp', 'applyUpdate() must not leave a temp file behind');
         $this->assertNotSame([], $this->loggedAt('critical'));
@@ -712,6 +718,11 @@ final class UpdateGateTest extends CIUnitTestCase
      * assertSignedContent() is vacuously true for an empty set, so the empty set
      * has to be rejected on its own or the version bump happens with zero writes.
      *
+     * This is the empty-set early return, which happens before applyUpdate()
+     * ever constructs its `RunLock`, so this covers that branch, not lock
+     * acquisition/release itself — the lock's own lifecycle (acquire, release,
+     * contention) is covered by tests/Modules/Settings/UpdateServiceRunLockTest.php.
+     *
      * @return void
      */
     public function testApplyUpdateRejectsAnEmptyFileSetWithSignedHashes(): void
@@ -720,7 +731,7 @@ final class UpdateGateTest extends CIUnitTestCase
 
         $backupsBefore = $this->backupDirectories();
         $envelope      = $this->envFingerprint();
-        $lockFile      = WRITEPATH . 'ci4ms_update.lock';
+        $lockFile      = WRITEPATH . 'locks/updater.lock';
 
         $result = (new UpdateService(new StubCurlRequest()))->applyUpdate(
             self::NEW_VERSION,
@@ -733,7 +744,7 @@ final class UpdateGateTest extends CIUnitTestCase
         $this->assertSame(lang('Settings.updateSignatureInvalid'), $result['message']);
         $this->assertArrayNotHasKey('applied_count', $result);
         $this->assertSame($backupsBefore, $this->backupDirectories(), 'no backup directory may be created');
-        $this->assertFileDoesNotExist($lockFile, 'no update lock may be left behind');
+        $this->assertFileDoesNotExist($lockFile, 'no update lock file may be left behind — it never reaches RunLock::acquire() on this branch');
         $this->assertSame($envelope, $this->envFingerprint(), '.env must keep its version');
         $this->assertNotSame([], $this->loggedAt('critical'));
     }
