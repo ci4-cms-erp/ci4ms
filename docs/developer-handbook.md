@@ -156,7 +156,7 @@ composer test     # runs PHPUnit (configure test suite under tests/)
 - Permissions live in `auth_permissions_pages` (CRUD flags stored as JSON) and `auth_users_permissions` (user overrides).
 - `Modules\Methods\Controllers\Methods::moduleScan()` inspects defined routes and maps them to permission records.
 - After adding a backend route, either run the module scan to sync permissions, or insert a record manually into `auth_permissions_pages` with matching controller/method names.
-- Clear the RBAC cache after permission/group changes: `php spark cache:clear` or `cache()->delete('shield_auth_dynamic_config')` (Shield's dynamic groups/permissions config — the actual RBAC cache key; `{$id}_permissions` is legacy and nothing populates it).
+- Clear the RBAC caches after permission/group changes by calling `rbac_cache_flush()` (`app/Common.php`), not by deleting either key on its own. `Ci4MsAuthFilter` reads two: `shield_auth_dynamic_config` (Shield's dynamic groups/permissions config, 24h) and `backend_page_info_*` (the per-route `auth_permissions_pages` row, 1h). Clearing one leaves the other stale for up to its TTL, which is how a permission change can appear to take effect and still be enforced against the old matrix. `php spark cache:clear` drops everything.
 
 Recommended workflow when adding a module:
 

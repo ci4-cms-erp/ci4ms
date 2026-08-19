@@ -412,8 +412,8 @@ Seeds all essential data:
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | **auth_groups**            | Creates `superadmin` group (id=1)                                                                                                           |
 | **users**                  | Creates admin user with hashed password                                                                                                     |
-| **modules**                | 12 default modules: Backend, Blog, Fileeditor, Media, Menu, Methods, ModulesInstaller, Pages, Settings, Theme, Users, Logs                  |
-| **auth_permissions_pages** | **84 permission entries** mapping every backend route to its controller, method, CRUD flags, navigation settings                            |
+| **modules**                | Not a fixed list: `ModuleScanner::runScan()` discovers every directory under `modules/` and registers it, so the row count follows the tree on disk (19 as shipped)              |
+| **auth_permissions_pages** | Written by the same scan, one row per backend route (controller, method, CRUD flags, navigation settings). The count tracks the routes actually registered, so it moves whenever a module is added or removed |
 | **pages**                  | 3 default pages: Hakkımızda (About), İletişim (Contact), Anasayfa (Home)                                                                    |
 | **menu**                   | 4 default menu items                                                                                                                        |
 | **settings**               | 10 default settings: template info, site name, logo, social networks, contact, mail config, Google Maps, security, slogan, maintenance mode |
@@ -441,11 +441,13 @@ Seeds all essential data:
 - Upload new themes (ZIP extraction)
 - Template selection handled via Settings module
 
-### 14.4 ModulesInstaller Module
+### 14.4 Module ZIP Installation (Methods Module)
 
-- Upload new modules as ZIP files
-- Extracts to `modules/` directory
-- After upload, use Methods `moduleScan` to register routes/permissions
+There is no `Modules\ModulesInstaller`; it was folded into `Modules\Methods` in 0.31.0.0. The upload path is `Modules\Methods\Libraries\ModuleInstaller`:
+
+- Uploads are validated by `Modules\Backend\Libraries\ZipSecurityValidator` (Zip-Slip, symlink entries, drive-letter paths, null bytes) before extraction
+- Extracts to the `modules/` directory and runs the package's own migrations, reporting what actually ran by diffing `getHistory()`
+- `Methods::moduleScan()` then registers routes/permissions and flushes the RBAC caches
 
 ### 14.5 Logs Module
 
@@ -598,9 +600,9 @@ erDiagram
 | ---------------------- | ---------- | ----------------------- | --------------------------------------- |
 | `settings`             | File cache | All system settings     | Any settings update                     |
 | `menus`                | File cache | Front-end navigation    | Menu reorder operation                  |
-| `sidebar_menu`         | 24 hours   | Backend sidebar items   | Not auto-cleared (requires cache clear) |
-| `backend_page_info_*`  | 1 hour     | Permission page lookups | Not auto-cleared                        |
-| `shield_auth_dynamic_config` | Runtime | Shield's dynamic RBAC config (groups/permissions) | Permission group/user update, `Backup::restore()`; protected from the backend Cache Management panel |
+| `sidebar_menu`         | 24 hours   | Backend sidebar items   | `Methods` (status toggle, update, module delete), `ModuleScanner`, `Backup::restore()` |
+| `backend_page_info_*`  | 1 hour     | Permission page lookups | `rbac_cache_flush()`, from `PermgroupController::group_create()`/`group_update()` and `Methods::create()`/`update()`/`delete()`/`moduleScan()` |
+| `shield_auth_dynamic_config` | 24 hours | Shield's dynamic RBAC config (groups/permissions) | `rbac_cache_flush()` (same call sites as above), `Backup::restore()`; protected from the backend Cache Management panel |
 
 `{userId}_permissions` is **not** a live cache — nothing calls `cache()->save()` with that key format. A few permission-changing actions still call `cache()->delete("{$id}_permissions")` as a harmless no-op against a key that was never populated; the actual RBAC cache is `shield_auth_dynamic_config` above.
 

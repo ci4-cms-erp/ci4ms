@@ -15,7 +15,9 @@ ci4ms caches several hot values so it doesn't re-query the database or re-render
 | `settings` | Decoded application settings | 24h |
 | `menus_{locale}` | Per-locale frontend menu tree | 24h |
 | `notif_unread_{userId}` | Per-user unread notification count | 60s |
-| `shield_auth_dynamic_config` | Shield's dynamic RBAC config | — |
+| `sidebar_menu` | Backend sidebar items | 24h |
+| `shield_auth_dynamic_config` | Shield's dynamic RBAC config (group/permission matrix) | 24h |
+| `backend_page_info_*` | Per-route permission row the authorization filter looks up | 1h |
 
 Clear everything at once with:
 
@@ -23,7 +25,7 @@ Clear everything at once with:
 php spark cache:clear
 ```
 
-You'll need this after changing settings, permissions, or menus outside of the backend UI (the backend itself invalidates the relevant keys on save). The backend Settings page also has a "Cache Management" panel that lets administrators selectively clear specific caches by logical name; `shield_auth_dynamic_config` is deliberately excluded from that selective-clear list and can only be reset through a full `php spark cache:clear`.
+You'll need this after changing settings, permissions, or menus outside of the backend UI (the backend itself invalidates the relevant keys on save). The last two keys are the pair the authorization filter reads on every backend request, and the backend always clears them **together** — if you ever change permission rows directly in the database, clear both (or run `php spark cache:clear`), because dropping only one leaves the other in force for up to an hour. The backend Settings page also has a "Cache Management" panel that lets administrators selectively clear specific caches by logical name; `shield_auth_dynamic_config` is deliberately excluded from that selective-clear list and can only be reset through a full `php spark cache:clear`.
 
 ### Installing themes
 
@@ -53,7 +55,9 @@ ci4ms, her istekte aynı veriyi tekrar sorgulamamak/render etmemek için birkaç
 | `settings` | Decode edilmiş uygulama ayarları | 24s |
 | `menus_{locale}` | Locale bazlı ön yüz menü ağacı | 24s |
 | `notif_unread_{userId}` | Kullanıcı bazlı okunmamış bildirim sayısı | 60sn |
-| `shield_auth_dynamic_config` | Shield'in dinamik RBAC yapılandırması | — |
+| `sidebar_menu` | Backend kenar çubuğu öğeleri | 24s |
+| `shield_auth_dynamic_config` | Shield'in dinamik RBAC yapılandırması (grup/izin matrisi) | 24s |
+| `backend_page_info_*` | Yetki filtresinin baktığı route bazlı izin satırı | 1s |
 
 Hepsini tek seferde temizlemek için:
 
@@ -61,7 +65,7 @@ Hepsini tek seferde temizlemek için:
 php spark cache:clear
 ```
 
-Backend UI dışından ayar, izin veya menü değişikliği yaptıysanız buna ihtiyacınız olur (backend'in kendisi kayıt sırasında ilgili anahtarları zaten geçersiz kılar). Backend Settings sayfasında ayrıca yöneticilerin belirli cache'leri mantıksal isimle seçerek temizleyebildiği bir "Cache Management" paneli vardır; `shield_auth_dynamic_config` bu seçmeli temizleme listesinden bilinçli olarak hariç tutulmuştur ve yalnızca tam bir `php spark cache:clear` ile sıfırlanabilir.
+Backend UI dışından ayar, izin veya menü değişikliği yaptıysanız buna ihtiyacınız olur (backend'in kendisi kayıt sırasında ilgili anahtarları zaten geçersiz kılar). Son iki anahtar, yetki filtresinin her backend isteğinde okuduğu çifttir ve backend bunları her zaman **birlikte** temizler — izin satırlarını doğrudan veritabanında değiştirirseniz ikisini birden temizleyin (ya da `php spark cache:clear` çalıştırın); yalnızca birini düşürmek diğerini bir saate kadar yürürlükte bırakır. Backend Settings sayfasında ayrıca yöneticilerin belirli cache'leri mantıksal isimle seçerek temizleyebildiği bir "Cache Management" paneli vardır; `shield_auth_dynamic_config` bu seçmeli temizleme listesinden bilinçli olarak hariç tutulmuştur ve yalnızca tam bir `php spark cache:clear` ile sıfırlanabilir.
 
 ### Tema yükleme
 

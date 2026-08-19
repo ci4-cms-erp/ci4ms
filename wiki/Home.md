@@ -10,7 +10,7 @@ This wiki is written for **operators, installers, and end users** running a ci4m
 
 - [Installation](Installation.md) — requirements, web installer, and CLI setup
 - [Configuration](Configuration.md) — environment, caches, themes and modules
-- [Security Hardening](Security-Hardening.md) — closing the open register endpoint, production mode, captcha, DevGate, web-server rules
+- [Security Hardening](Security-Hardening.md) — closing the open register endpoint, production mode, captcha, DevGate, audit notifications, web-server rules
 - [Upgrading](Upgrading.md) — updating an existing installation
 - [Troubleshooting](Troubleshooting.md) — common problems and fixes
 
@@ -34,7 +34,7 @@ Bu wiki, ci4ms çalıştıran **operatörler, kurulumcular ve son kullanıcılar
 
 - [Kurulum](Installation.md) — gereksinimler, web installer ve CLI kurulumu
 - [Yapılandırma](Configuration.md) — ortam, cache'ler, tema ve modül yükleme
-- [Güvenlik Sertleştirme](Security-Hardening.md) — açık register endpoint'ini kapatma, production modu, captcha, DevGate, web-server kuralları
+- [Güvenlik Sertleştirme](Security-Hardening.md) — açık register endpoint'ini kapatma, production modu, captcha, DevGate, denetim bildirimleri, web-server kuralları
 - [Yükseltme](Upgrading.md) — mevcut bir kurulumu güncelleme
 - [Sorun Giderme](Troubleshooting.md) — sık karşılaşılan sorunlar ve çözümleri
 

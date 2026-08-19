@@ -542,12 +542,18 @@ composer outdated</code></pre>
           <li>Create migrations/seeds for new tables if required.</li>
         </ol>
         <p>
-          Clear the RBAC cache after permission/group changes with
-          <code>php spark cache:clear</code> or
-          <code>cache()->delete('shield_auth_dynamic_config')</code>
-          (Shield's dynamic groups/permissions config — the actual RBAC
-          cache key; <code>{userId}_permissions</code> is legacy and nothing
-          populates it).
+          Clear the RBAC caches after permission/group changes by calling
+          <code>rbac_cache_flush()</code> (<code>app/Common.php</code>), not by
+          deleting either key on its own. <code>Ci4MsAuthFilter</code> reads
+          two: <code>shield_auth_dynamic_config</code> (Shield's dynamic
+          groups/permissions config, 24h) and
+          <code>backend_page_info_*</code> (the per-route
+          <code>auth_permissions_pages</code> row, 1h). Clearing one leaves the
+          other stale for up to its TTL, which is how a permission change can
+          appear to take effect and still be enforced against the old matrix.
+          <code>php spark cache:clear</code> drops everything;
+          <code>{userId}_permissions</code> is legacy and nothing populates
+          it.
         </p>
       </section>
 

@@ -24,6 +24,7 @@ CI4MS is a CodeIgniter 4-based CMS skeleton that delivers a production-ready, mo
 - **Automatic Updates:** Modernized `UpdateService` provides a "One-Click Update" system with atomic file operations, automated GitHub version discovery (bypassing 300-file limits), and secure rollback management.
 - **Signed Updates (fail-closed):** Every file an update writes must appear in a `manifest.json` carrying a detached **Ed25519** signature from a key your installation already trusts, with a per-file SHA-256 check on top. A compromise of the GitHub account, the release, or the CDN is not enough to push code — the publisher's **offline** private key is required. There is no "continue anyway" option, downgrades through the updater are refused, and the shipped keyring is **empty on purpose**, so auto-update stays off until you add a key you have verified. See [Release Signing & Trusted Keys](#release-signing--trusted-keys).
 - **Security Architecture:** Global CSRF protection across all AJAX endpoints, strict HTTP security headers (CSP, HSTS, X-Frame-Options), executable file upload blacklists, and HTMLPurifier sanitization to prevent XSS and RCE attacks.
+- **Migration & seed runner:** `Modules\MigrationManager` lists every migration namespace with its applied/pending state and runs migrations or `WebRunnableSeeder` seeds from the backend. Superadmin-only behind three independent layers, namespaces matched against a server-side allowlist built from disk, concurrent runs serialised with a `flock()` lock, and every run recorded in `migration_runs` and announced to superadmins over `ci4ms.audit`.
 - **Backup Support:** Updates automatically trigger a full backup of modified files before applying patches, with a dedicated management interface for restores.
 - **Theme system:** The `public/templates/*` structure and the `Modules\Theme` module enable installing or upgrading themes from ZIP packages.
 - **Setup & automation:** Offers a web-based installer (`/install`) plus a single CLI command (`php spark ci4ms:setup`) for automated installation, default data seeding, and route generation. Module scaffolding is available via `php spark make:module`.
@@ -151,13 +152,14 @@ Key files:
 | Users            | User & role management     | Shield groups, reset tracking                         |
 | Methods          | Route → permission mapping | Module toggling, router scan                          |
 | Logs             | Log viewer                 | Browses CodeIgniter log files inside the backend      |
-| ModulesInstaller | Module ZIP installer       | Upload + cache invalidation                           |
 | Theme            | Theme manager              | ZIP upload, DB migration support, duplicate checks    |
 | Install          | Web installer              | Creates `.env`, triggers migrations                   |
 | Backup           | Database backup manager    | Create, download, and restore with SQL sanitization   |
 | DashboardWidgets | Dashboard statistics       | Modular widget system for admin overview              |
 | LanguageManager  | Language file manager      | Edit and manage translation files from the backend    |
 | Notifications    | In-app admin notifications | Bell dropdown, single-global-row targeting (user / group / broadcast), optional Redis-backed SSE realtime, per-user opt-out screen |
+| MigrationManager | Migration & seed runner    | Superadmin-only; per-namespace applied/pending state, `WebRunnableSeeder` contract, `flock` run lock, `migration_runs` audit trail |
+| DevGate          | Development-only access gate | Basic-Auth wall for non-production environments; the installer generates and hashes a random password |
 
 See `docs/architecture.md` for deeper architectural notes.
 
@@ -181,7 +183,7 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 
 ## Developer Notes
 
-- **Cache keys**: `settings` (24h), `menus_{locale}` (per-locale, 24h), `{userId}_permissions`. Clear with `php spark cache:clear` or `cache()->delete()`.
+- **Cache keys**: `settings` (24h), `menus_{locale}` (per-locale, 24h), `sidebar_menu` (24h), and the two the authorization filter reads — `shield_auth_dynamic_config` (24h, Shield's group/permission matrix) and `backend_page_info_*` (1h, per-route page rows). Clear with `php spark cache:clear` or `cache()->delete()`. After any RBAC write, call `rbac_cache_flush()` (`app/Common.php`) rather than deleting either key on its own: `Ci4MsAuthFilter` reads both, so clearing one leaves the other stale for up to its TTL.
 - **Base controller**: Extend `Modules\Backend\Controllers\BaseController` for new backend controllers; it prepares session user, navigation, mail settings, and shared data.
 - **Permissions**: Register new secured routes in `Modules\Methods` (or via the database) so the permission filter recognizes them.
 - **Slug generation**: `seflink()` handles transliteration (including Turkish characters).
@@ -192,7 +194,7 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 ## Testing & Maintenance
 
 - `composer test` — runs PHPUnit.
-- The GitHub Actions workflow (`.github/workflows/docker-test.yaml`) automatically builds the Docker image and runs migrations on every push to `master`.
+- The GitHub Actions workflow (`.github/workflows/docker-test.yml`) automatically builds the Docker image and runs migrations on every push to `master`.
 - **Maintenance mode**: When `settings.maintenanceMode.scalar == 1`, the `Ci4ms` filter redirects visitors to `maintenance-mode`.
 - **Security**: `Fileeditor` enforces `realpath` guards and a dangerous extension blacklist (`.php`, `.phtml`, `.phar`, `.htaccess`) to prevent RCE; destructive operations (`deleteFileOrFolder`, `renameFile`) additionally validate against an extension allowlist to block renaming or deleting critical application files. `Backup` restore uses SQL statement whitelist to block malicious queries (`LOAD_FILE`, `GRANT`, etc.). `HTMLPurifier` config is hardened against XSS bypass (`data:` URIs blocked, `CSS.Trusted` disabled) and `CustomRules::getClean()` output is persisted on every `create` and `update` flow in Blog and Pages controllers to prevent Stored XSS. All `$_SERVER` reads replaced with CI4 `base_url()`/`site_url()` helpers. Configure `App.php::$proxyIPs` if behind Cloudflare/Nginx.
 

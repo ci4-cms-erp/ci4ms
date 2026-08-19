@@ -568,6 +568,21 @@
               <td>Per-user unread notification count</td>
               <td>60s</td>
             </tr>
+            <tr>
+              <td><code>sidebar_menu</code></td>
+              <td>Backend sidebar items</td>
+              <td>24h</td>
+            </tr>
+            <tr>
+              <td><code>shield_auth_dynamic_config</code></td>
+              <td>Shield's dynamic group/permission matrix</td>
+              <td>24h</td>
+            </tr>
+            <tr>
+              <td><code>backend_page_info_*</code></td>
+              <td>Per-route <code>auth_permissions_pages</code> row</td>
+              <td>1h</td>
+            </tr>
           </tbody>
         </table>
         <p>
@@ -579,12 +594,26 @@
           <code>PermgroupController::update()</code>,
           <code>UserController::update_user()</code>) still call
           <code>cache()->delete("{$id}_permissions")</code> as a harmless
-          no-op. The RBAC cache that actually matters is
-          <code>shield_auth_dynamic_config</code> (Shield's dynamic
-          groups/permissions config, written in
-          <code>Modules\Auth\Config\AuthGroups</code>), cleared by
-          <code>Backup::restore()</code> and <code>PermgroupController</code>
-          after any group/permission change; it is on
+          no-op. The RBAC caches that actually matter are two, and
+          <code>Ci4MsAuthFilter</code> reads <strong>both</strong> on every
+          backend request: <code>shield_auth_dynamic_config</code> (Shield's
+          dynamic groups/permissions config, written in
+          <code>Modules\Auth\Config\AuthGroups</code>, 24h) and
+          <code>backend_page_info_*</code> (the per-route
+          <code>auth_permissions_pages</code> row the filter looks up by
+          <code>className</code>/<code>methodName</code>, 1h). Because a stale
+          half is as wrong as a stale whole, they are always cleared
+          <strong>together</strong> through <code>rbac_cache_flush()</code>
+          (<code>app/Common.php</code>) &mdash; never one on its own. Its call
+          sites are every RBAC write:
+          <code>PermgroupController::group_create()</code>/<code>group_update()</code>
+          and
+          <code>Methods::create()</code>/<code>update()</code>/<code>delete()</code>/<code>moduleScan()</code>.
+          The helper lives in <code>app/Common.php</code> rather than
+          <code>modules/Backend/Helpers/</code>, because the latter only
+          autoloads through <code>BaseController::$helpers</code> (controllers
+          only), while these keys are consumed in a filter.
+          <code>shield_auth_dynamic_config</code> is on
           <code>CacheRegistry</code>'s protected list and can never be
           cleared through the backend Cache Management panel.
         </p>

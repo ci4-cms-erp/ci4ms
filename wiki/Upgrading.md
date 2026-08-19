@@ -15,6 +15,8 @@ Back up `public/uploads/`, your database, and `.env` before any major upgrade. T
    php spark migrate --all
    ```
 
+   Two alternatives exist and both leave a record `migrate --all` does not. `php spark ci4ms:migrate` runs the same thing and additionally writes a row to `migration_runs`, so the run appears in the backend's history. The **Migration Manager** screen (superadmin only) does the same from the browser and lets you apply a single namespace instead of all of them; concurrent runs are serialised, so a CLI run and a panel run cannot overlap. Neither offers rollback — several ci4ms migrations have an intentionally empty `down()`, so restore your database backup instead if a migration goes wrong.
+
 3. Clear all caches so stale settings/menus/permissions don't linger:
 
    ```bash
@@ -47,6 +49,8 @@ Herhangi bir büyük yükseltmeden önce `public/uploads/`, veritabanınızı ve
    ```bash
    php spark migrate --all
    ```
+
+   İki alternatif var ve ikisi de `migrate --all`'ın bırakmadığı bir kayıt bırakır. `php spark ci4ms:migrate` aynı işi yapar, ek olarak `migration_runs` tablosuna bir satır yazar; böylece koşu backend'deki geçmişte görünür. **Migration Manager** ekranı (yalnızca superadmin) aynısını tarayıcıdan yapar ve hepsi yerine tek bir namespace'i uygulamanıza izin verir; eşzamanlı koşular sıraya alınır, yani bir CLI koşusu ile panel koşusu üst üste binemez. İkisi de geri alma (rollback) sunmaz — bazı ci4ms migration'larının `down()` metodu bilinçli olarak boştur, dolayısıyla bir migration ters giderse veritabanı yedeğinizi geri yükleyin.
 
 3. Eski ayar/menü/izin verilerinin kalmaması için tüm cache'leri temizleyin:
 

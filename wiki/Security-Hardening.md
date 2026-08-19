@@ -50,6 +50,19 @@ php -r "echo password_hash('yourpassword', PASSWORD_BCRYPT);"
 
 ...and paste it into `modules/DevGate/Config/DevGate.php`. See the [DevGate module README](../modules/DevGate/README.md) for full configuration details (plaintext vs. hashed passwords, excluding paths).
 
+### Audit notifications
+
+Privilege-affecting actions raise a `ci4ms.audit` event that is delivered to the `superadmin` group as an in-app notification (bell dropdown). You do not have to switch this on — it is wired by default.
+
+Two severities reach you:
+
+- **`critical`** — a rejected privilege-escalation attempt. This fires when an account holding a permission-editing permission tries to grant itself or another user more access than it holds. The request is refused either way; the notification is how you find out it was made. **These cannot be muted**: the per-user opt-out screen deliberately cannot filter `critical` events.
+- **`warning`** — a successful privilege-affecting change: a group created or updated, a user's groups or password changed, a permission page added or edited, a database backup restored (including a count of the RBAC statements the restore refused to replay), a migration or seed run, a file edited through the backend file editor.
+
+Two things follow from this for an operator. First, a `critical` notification is worth investigating even though the attempt failed — it means an account with backend access is probing the delegation ceiling. Second, a burst of `warning` events you did not initiate is the earliest signal you get that a backend account has been taken over.
+
+Superadmins can review the full list in the bell dropdown; notifications are also what `Backup::restore()` uses to tell you that RBAC rows in a restored dump were skipped rather than applied.
+
 ### Web-server hardening
 
 Beyond application-level settings, ci4ms ships defense-in-depth `.htaccess` rules that block PHP execution inside upload directories (`public/templates/`, `public/media/`, `public/uploads/`) — but **these only work on Apache**. If you deploy on nginx, Caddy, or FrankenPHP, `.htaccess` is silently ignored and you must add the equivalent rules to your server config manually. [docs/web-server-hardening.md](../docs/web-server-hardening.md) covers:
@@ -114,6 +127,19 @@ php -r "echo password_hash('yourpassword', PASSWORD_BCRYPT);"
 ```
 
 ...ve bunu `modules/DevGate/Config/DevGate.php` içine yapıştırın. Tam yapılandırma detayları (düz metin ve hash'lenmiş şifreler, yol hariç tutma) için [DevGate modülü README](../modules/DevGate/README.md) dosyasına bakın.
+
+### Denetim bildirimleri
+
+Yetkiyi etkileyen işlemler, `superadmin` grubuna uygulama içi bildirim (zil menüsü) olarak iletilen bir `ci4ms.audit` olayı üretir. Bunu açmanız gerekmez — varsayılan olarak bağlıdır.
+
+Size iki önem derecesi ulaşır:
+
+- **`critical`** — reddedilmiş bir yetki yükseltme denemesi. İzin düzenleme yetkisi olan bir hesap, kendisine veya başka bir kullanıcıya sahip olduğundan fazla yetki vermeye çalıştığında tetiklenir. İstek her hâlükârda reddedilir; bildirim, denemenin yapıldığını öğrenme yolunuzdur. **Bunlar susturulamaz**: kullanıcı bazlı bildirim kapatma ekranı `critical` olayları bilinçli olarak filtreleyemez.
+- **`warning`** — yetkiyi etkileyen başarılı bir değişiklik: grup oluşturma veya güncelleme, bir kullanıcının gruplarının veya parolasının değişmesi, izin sayfası ekleme/düzenleme, veritabanı yedeği geri yükleme (geri yüklemenin uygulamayı reddettiği RBAC ifadelerinin sayısı dahil), migration veya seed koşusu, backend dosya düzenleyicisinden dosya değişikliği.
+
+Operatör açısından bundan iki sonuç çıkar. Birincisi, deneme başarısız olsa bile bir `critical` bildirimi incelemeye değer — backend erişimi olan bir hesabın delegasyon tavanını yokladığı anlamına gelir. İkincisi, sizin başlatmadığınız bir `warning` yığını, bir backend hesabının ele geçirildiğine dair alacağınız en erken sinyaldir.
+
+Superadmin'ler tam listeyi zil menüsünden inceleyebilir; `Backup::restore()` de geri yüklenen bir dump içindeki RBAC satırlarının uygulanmayıp atlandığını size bu bildirimlerle söyler.
 
 ### Web-server sertleştirme
 
