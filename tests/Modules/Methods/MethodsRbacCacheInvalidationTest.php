@@ -23,7 +23,8 @@ use Tests\Support\Notifications\FakeDispatchNotifier;
 /**
  * Behavioural locks for B-3: every auth_permissions_pages mutation in
  * Modules\Methods\Controllers\Methods must invalidate BOTH RBAC caches
- * Ci4MsAuthFilter reads from, via rbac_cache_flush() (app/Common.php:289-293).
+ * Ci4MsAuthFilter reads from, via rbac_cache_flush()
+ * (modules/Backend/Helpers/ci4ms_helper.php:97-128).
  *
  * Four call sites are covered, one test each:
  *   Methods.php:114 create()       -> testCreateFlushesRbacCachesOnSuccess
@@ -105,6 +106,7 @@ final class MethodsRbacCacheInvalidationTest extends CIUnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        helper('Modules\Backend\Helpers\ci4ms');
 
         $this->assertStringContainsString(
             'ci4ms_test',
@@ -538,7 +540,7 @@ final class MethodsRbacCacheInvalidationTest extends CIUnitTestCase
 
         $config  = config(App::class);
         $request = new IncomingRequest($config, new SiteURI($config), null, new UserAgent());
-        $request->setMethod('POST');
+        $request = $request->withMethod('POST');
         $request->setGlobal('post', $post);
         $request->setGlobal('request', $post);
 

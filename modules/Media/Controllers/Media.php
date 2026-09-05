@@ -33,7 +33,12 @@ class Media extends \Modules\Backend\Controllers\BaseController
      */
     private const WRITE_COMMANDS = [
         'mkdir', 'mkfile', 'rename', 'rm', 'upload', 'paste', 'duplicate',
-        'archive', 'extract', 'resize', 'chmod', 'put', 'edit', 'netmount',
+        'archive', 'extract', 'resize', 'chmod', 'put', 'netmount', 'editor',
+        // 'trash'/'restore' are client-side UI macros, not real elFinder server
+        // commands (elFinder.class.php's $commands table has no such keys) —
+        // the writes they trigger already go through 'paste'/'rm' above. Kept
+        // as documented dead entries instead of silently dropped so a future
+        // reader doesn't mistake their absence for an oversight.
         'trash', 'restore',
     ];
 
@@ -55,8 +60,8 @@ class Media extends \Modules\Backend\Controllers\BaseController
      */
     private const DENIED_EXTENSIONS = [
         'php', 'php0', 'php1', 'php2', 'php3', 'php4', 'php5', 'php6', 'php7', 'php8', 'php9',
-        'phtml', 'phar', 'phps', 'pht', 'inc', 'cgi', 'pl', 'py', 'jsp', 'asp', 'aspx',
-        'sh', 'bat', 'exe', 'htaccess', 'htpasswd', 'ini',
+        'phtml', 'phtm', 'phar', 'phps', 'pht', 'phpt', 'inc', 'cgi', 'pl', 'py', 'jsp', 'asp', 'aspx',
+        'sh', 'bat', 'exe', 'htaccess', 'htpasswd', 'ini', 'shtml', 'shtm', 'stm', 'hta',
     ];
 
     /**
@@ -103,9 +108,19 @@ class Media extends \Modules\Backend\Controllers\BaseController
         // calls allowPutMime() at mkfile() — but it only stops `.php`; see
         // DENIED_EXTENSIONS for why that is not enough.)
         // Therefore, we check the cmd parameter BEFORE reaching elFinder.
-        // getPost('cmd') is intentional: the route is POST-only and elFinder
-        // reads the command from the POST body. Do NOT switch to getVar() —
-        // it would introduce a parsing inconsistency with elFinder.
+        // getPost('cmd') only sees the request BODY. elFinderConnector::run()
+        // (elFinderConnector.class.php:320-321) actually resolves the command
+        // from array_merge($_GET, $_POST), so `POST ...?cmd=mkdir` with no
+        // `cmd` in the body sails past this check (isWriteBlocked('') is
+        // false). That gap is NOT this method's security boundary: Layer 3's
+        // `disabled` list (self::WRITE_COMMANDS) and elfinderAccess()'s own
+        // authoritative write=false guarantee (see its docblock below) reject
+        // the command anyway, and the same request shape never registers the
+        // upload.presave listener either — elFinder only binds a handler
+        // whose command name matches $_POST['cmd']/$_GET['cmd']. Layer 2 is
+        // an early-403 convenience for the common case, not a guarantee; do
+        // not remove Layer 3 or elfinderAccess() on the assumption Layer 2
+        // already covers this.
         $cmd = $this->request->getPost('cmd') ?? '';
         if ($this->isWriteBlocked($cmd)) {
             return $this->response
@@ -139,15 +154,42 @@ class Media extends \Modules\Backend\Controllers\BaseController
                 ) + $this->volumeSecurityOptions($allowedFiles, $disabled)
             ),
             'bind' => array(
+                // elFinder passes $name straight from the request's `name[]`
+                // field here — before nameAccepted()/allowCreate() ever run —
+                // so this closure must defend itself: basename() first,
+                // isDeniedName() next, then a realpath-verified write boundary
+                // before ever touching disk via SimpleImage.
                 'upload.presave' => array(function (&$thash, &$name, $tmpname, $elfinder, $volume) {
+                    $name = basename($name);
+
+                    if ($this->isDeniedName($name)) {
+                        throw new \elFinderTriggerException();
+                    }
+
                     if ((bool)($this->defData['settings']->convertWebp ?? false)===true) {
                         $char_map = ['.jpg' => '.webp', '.png' => '.webp', '.jpeg' => '.webp'];
                         $ext = strtolower(strrchr($name, '.'));
                         if (in_array($ext, array('.jpg', '.jpeg', '.png'))) {
                             $webpName = str_replace(array_keys($char_map), $char_map, $name);
-                            $webpPath = dirname($tmpname) . DIRECTORY_SEPARATOR . $webpName;
-                            $img = new \claviska\SimpleImage();
-                            $img->fromFile($tmpname)->toFile($webpPath, 'image/webp', ['quality' => 80]);
+
+                            $tmpDir = realpath(dirname($tmpname));
+                            $webpPath = $tmpDir !== false ? $tmpDir . DIRECTORY_SEPARATOR . $webpName : false;
+
+                            // Path-boundary check by realpath equality, not string
+                            // prefix (CLAUDE.md Fileeditor convention): $webpPath
+                            // does not exist yet, so its *parent* is resolved and
+                            // compared against the source tmp dir instead.
+                            if ($tmpDir === false || $webpPath === false || realpath(dirname($webpPath)) !== $tmpDir) {
+                                throw new \elFinderTriggerException();
+                            }
+
+                            try {
+                                $img = new \claviska\SimpleImage();
+                                $img->fromFile($tmpname)->toFile($webpPath, 'image/webp', ['quality' => 80]);
+                            } catch (\Throwable $e) {
+                                throw new \elFinderTriggerException();
+                            }
+
                             $name = $webpName;
                             $tmpname = $webpPath;
                         }
@@ -156,12 +198,16 @@ class Media extends \Modules\Backend\Controllers\BaseController
             )
         );
 
-        // CI4 Shield auth + backendGuard already protect the session.
-        // elFinder's internal CSRF was bypassed because it conflicts with the CI4 session.
-        $connector = new class(new \elFinder($opts)) extends \elFinderConnector {
-            protected function validateCsrfToken(): bool { return true; }
-            protected function issueCsrfToken(): string { return ''; }
-        };
+        // elFinder's own CSRF protection (X-elFinder-CSRF header, random_bytes(32)
+        // token, hash_equals() validation, 900s TTL) runs on top of CI4 Shield
+        // auth + backendGuard. elFinderSession::start() only calls session_start()
+        // when session_status() !== PHP_SESSION_ACTIVE, so it does not conflict
+        // with the already-active CI4 session — there is no reason to disable it.
+        // This endpoint is CSRF-excepted from CI4's own token only
+        // (MediaConfig::$csrfExcept) because elFinderConnector::output() exits
+        // the request before CI4's after-filters (which rotate the CI4 token)
+        // ever run; elFinder's independent token mechanism is the real guard here.
+        $connector = new \elFinderConnector(new \elFinder($opts));
         $connector->run();
 
         // Unreachable in practice — elFinderConnector::output() ends in exit();
@@ -221,8 +267,39 @@ class Media extends \Modules\Backend\Controllers\BaseController
             'uploadOrder'   => array('deny', 'allow'),
             'uploadMaxSize' => self::UPLOAD_MAX_SIZE,
             'accessControl' => array($this, 'elfinderAccess'),
+            'acceptedName'  => array($this, 'isNameAccepted'),
             'disabled'      => $disabled,
         );
+    }
+
+    /**
+     * elFinder acceptedName validator — the write-path counterpart to
+     * elfinderAccess().
+     *
+     * elFinderVolumeDriver::nameAccepted() calls this on every write path,
+     * including upload(), which never reaches allowCreate()/accessControl()
+     * (only mkdir/mkfile/rename/paste/archive do). Without this, isDeniedName()
+     * is never consulted for uploads and DENIED_EXTENSIONS is bypassable via
+     * multi-segment names such as `shell.php.png`.
+     *
+     * Also preserves elFinder's own default acceptedName behaviour (reject
+     * empty names and names starting with '.') since this callable replaces
+     * that default outright rather than adding to it — dropping it would
+     * weaken an existing control instead of only adding a new one.
+     *
+     * Must be public: elFinderVolumeDriver::nameAccepted() invokes it as an
+     * external array callable (`is_callable([$this, 'isNameAccepted'])`),
+     * exactly like elfinderAccess() below — protected visibility makes
+     * is_callable() report false from that external scope and silently
+     * turns this into a no-op (elFinder falls back to accepting everything).
+     *
+     * @param string $name Candidate file or directory name.
+     *
+     * @return bool True when the name may be written; false to reject it.
+     */
+    public function isNameAccepted(string $name): bool
+    {
+        return $name !== '' && $name[0] !== '.' && ! $this->isDeniedName($name);
     }
 
     protected function isDeniedName(string $basename): bool

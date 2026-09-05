@@ -105,17 +105,24 @@ if (!function_exists('rbac_cache_flush')) {
      * matrix (Ci4MsAuthFilter reads it via AuthGroups::loadFromDatabase()),
      * `backend_page_info_*` holds the per-route page lookup
      * (Ci4MsAuthFilter.php:36-46, 3600s TTL) -- clearing only one leaves the
-     * other bayat for up to an hour after a permission change. Defined in
-     * app/Common.php, not modules/Backend/Helpers/ci4ms_helper.php, because
-     * this file loads with the framework bootstrap everywhere -- including
-     * filters (permission_string() above is itself called from
-     * Modules\Auth\Filters\Ci4MsAuthFilter::before()) -- whereas
-     * modules/Backend's helper only autoloads through BaseController's
-     * $helpers, i.e. controllers only.
+     * other stale for up to an hour after a permission change.
+     *
+     * This stays here, not in app/Common.php, because all six call sites --
+     * Methods::create()/update()/moduleScan()/moduleDelete()
+     * (modules/Methods/Controllers/Methods.php:114,175,197,481) and
+     * PermgroupController::group_create()/group_update()
+     * (modules/Users/Controllers/PermgroupController.php:112,234) -- are
+     * backend controller methods extending
+     * Modules\Backend\Controllers\BaseController, whose initController()
+     * loads this file's $helpers on every request. Calling this from a
+     * context that skips that bootstrap (a filter, a CLI command, a
+     * service) fatals with `Call to undefined function rbac_cache_flush()`;
+     * verify the helper is loaded there before adding a new call site.
      */
     function rbac_cache_flush(): void
     {
         cache()->delete('shield_auth_dynamic_config');
+        // deleteMatching() needs a pattern-capable handler (File/Redis/Predis/APCu); Memcached/Wincache throw BadMethodCallException instead of silently no-op'ing.
         cache()->deleteMatching('backend_page_info_*');
     }
 }

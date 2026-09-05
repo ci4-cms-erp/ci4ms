@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Tests\Modules\Media;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use elFinderVolumeLocalFileSystem;
 use Modules\Media\Controllers\Media;
 use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionMethod;
-use ReflectionObject;
 use ReflectionProperty;
 
 /**
@@ -20,11 +18,16 @@ use ReflectionProperty;
  * permission layer entirely, so the extension gate is the only thing standing
  * between that user and a script file inside the public web root.
  *
- * The gate exists because the MIME allowlist does not cover this case, which
- * testTheMimeAllowlistAloneAcceptsScriptExtensions() documents against the real
- * elFinder driver: elFinder maps only `php` to text/x-php internally, so every
- * other script extension resolves to text/plain — a MIME `settings.allowedFiles`
- * permits — and .phtml/.php5/.pht/.phar sail through.
+ * The gate exists because the MIME allowlist does not cover every dangerous
+ * extension, which testTheMimeAllowlistAloneAcceptsScriptExtensions() documents
+ * against the real, mounted elFinder driver: elFinderVolumeDriver ships a
+ * built-in `staticMimeMap` default (elFinderVolumeDriver.class.php:276-294)
+ * that forces `php`, `pht`, `php3`-`php5`/`php7`-`php9`, `phtml` and `phar` to
+ * text/x-php once mount() actually runs — those extensions are already MIME-
+ * blocked without this gate. What that built-in table does not cover — `.phps`,
+ * `.inc`, `.ini`, `.php6` and double-extension names whose *last* segment is an
+ * allowed image extension (`shell.php.jpg`, `a.php.png`) — resolves to
+ * text/plain and sails through on MIME alone.
  *
  * Nothing here touches the filesystem, the database or the elFinder connector
  * (whose output routine calls exit()).
@@ -214,16 +217,28 @@ final class MediaUploadGateTest extends CIUnitTestCase
     }
 
     /**
-     * Documents why the extension gate is load-bearing rather than belt-and-braces.
-     *
-     * If this ever fails, elFinder's MIME handling changed — re-read the gate's
-     * justification before assuming it can be relaxed.
+     * Documents why the extension gate is load-bearing rather than belt-and-braces
+     * — against a REAL, mounted elFinderVolumeLocalFileSystem, not an isolated
+     * reflection call. An earlier version of this test set uploadAllow/uploadDeny
+     * directly on a never-mounted volume via reflection: mount()/configure() never
+     * ran, so elFinderVolumeDriver's built-in `staticMimeMap` default (which forces
+     * `.phtml`/`.phar`/`.pht`/`.php3-9` to text/x-php) never merged into `mimeMap`,
+     * and the test wrongly concluded those extensions sailed through as
+     * text/plain. They do not, once mounted — the residual gap is narrower than
+     * that: see mimeGateAccepts() and the class docblock above.
      */
     public function testTheMimeAllowlistAloneAcceptsScriptExtensions(): void
     {
+        $this->assertFalse(
+            $this->mimeGateAccepts('shell.phtml'),
+            "elFinder's own staticMimeMap already forces .phtml to text/x-php once " .
+            'mount() runs for real; if this flips to true, elFinder changed its ' .
+            'built-in table and the gate documentation above needs revisiting.',
+        );
+
         $accepted = [];
 
-        foreach (['shell.php', 'shell.phtml', 'shell.php5', 'shell.pht', 'shell.phar'] as $name) {
+        foreach (['x.phps', 'x.inc', 'x.ini', 'x.php6', 'shell.php.jpg', 'a.php.png'] as $name) {
             if ($this->mimeGateAccepts($name)) {
                 $accepted[] = $name;
             }
@@ -231,12 +246,12 @@ final class MediaUploadGateTest extends CIUnitTestCase
 
         $this->assertNotEmpty(
             $accepted,
-            'The MIME allowlist now refuses every script extension; the extension gate may be reviewable',
+            'The MIME allowlist now refuses every extension DENIED_EXTENSIONS covers; the extension gate may be reviewable',
         );
         $this->assertContains(
-            'shell.phtml',
+            'x.phps',
             $accepted,
-            'phtml is the canonical case: unknown to elFinder, resolves to text/plain, allowed by settings',
+            "phps is the canonical case: outside staticMimeMap's fixed list, resolves to text/plain, allowed by settings",
         );
 
         foreach ($accepted as $name) {
@@ -282,30 +297,95 @@ final class MediaUploadGateTest extends CIUnitTestCase
     }
 
     /**
-     * Runs a name through elFinder's own MIME gate with this project's settings.
+     * Runs a name through a REAL, mounted elFinder upload chain with only the
+     * MIME allowlist active (uploadAllow/uploadDeny/uploadOrder) — no
+     * acceptedName callable — to isolate what the MIME layer alone accepts.
+     *
+     * Deliberately NOT the production configuration: Media::volumeSecurityOptions()
+     * always sets 'acceptedName' (Media.php:260). mount() must run for real so
+     * elFinderVolumeDriver's built-in staticMimeMap default actually merges into
+     * mimeMap — an isolated call to mimetype()/allowPutMime() on a never-mounted
+     * volume skips that merge and reports the wrong result, which is exactly the
+     * bug this test used to have (see the class docblock above).
      */
     private function mimeGateAccepts(string $name): bool
     {
-        $volume     = new elFinderVolumeLocalFileSystem();
-        $reflection = new ReflectionObject($volume);
+        $root = sys_get_temp_dir() . '/ci4ms-media-qa-mime-' . bin2hex(random_bytes(6));
+        mkdir($root, 0777, true);
 
-        $config = [
-            'uploadAllow' => ['image/x-ms-bmp', 'image/gif', 'image/jpeg', 'image/png', 'image/x-icon', 'text/plain', 'image/webp'],
-            'uploadDeny'  => ['all'],
-            'uploadOrder' => ['deny', 'allow'],
-        ];
+        try {
+            $opts = [
+                'debug' => false,
+                'roots' => [
+                    [
+                        'driver'      => 'LocalFileSystem',
+                        'path'        => $root,
+                        'URL'         => 'http://localhost/media/',
+                        'uploadDeny'  => ['all'],
+                        'uploadAllow' => ['image/x-ms-bmp', 'image/gif', 'image/jpeg', 'image/png', 'image/x-icon', 'text/plain', 'image/webp'],
+                        'uploadOrder' => ['deny', 'allow'],
+                    ],
+                ],
+            ];
 
-        foreach ($config as $name_ => $value) {
-            $property = $reflection->getProperty($name_);
-            $property->setAccessible(true);
-            $property->setValue($volume, $value);
+            $_SERVER['REQUEST_METHOD'] = 'POST';
+            $_POST['cmd']              = 'upload';
+
+            $elfinder = new \elFinder($opts);
+            $this->assertTrue($elfinder->loaded(), 'sandbox volume failed to mount: ' . implode('; ', $elfinder->mountErrors));
+
+            $openArgs = [];
+            foreach ($elfinder->commandArgsList('open') as $key => $required) {
+                $openArgs[$key] = '';
+            }
+            $openArgs['init'] = true;
+            $open             = $elfinder->exec('open', $openArgs);
+
+            $src = tempnam($root, 'src');
+            file_put_contents($src, "not a real image or script, just plain bytes\n");
+
+            $uploadArgs = [];
+            foreach ($elfinder->commandArgsList('upload') as $key => $required) {
+                if ($key === 'FILES') {
+                    continue;
+                }
+                $uploadArgs[$key] = '';
+            }
+            $uploadArgs['target'] = $open['cwd']['hash'];
+            $uploadArgs['FILES']  = ['upload' => [
+                'name'     => [$name],
+                'type'     => ['application/octet-stream'],
+                'tmp_name' => [$src],
+                'error'    => [0],
+                'size'     => [filesize($src)],
+            ]];
+
+            $result = $elfinder->exec('upload', $uploadArgs);
+
+            return ! empty($result['added']);
+        } finally {
+            $this->removeDirectory($root);
+        }
+    }
+
+    /**
+     * Recursively deletes a sandbox directory created under sys_get_temp_dir().
+     */
+    private function removeDirectory(string $dir): void
+    {
+        if (! is_dir($dir)) {
+            return;
         }
 
-        $mimetype = $reflection->getMethod('mimetype');
-        $mimetype->setAccessible(true);
-        $allowPut = $reflection->getMethod('allowPutMime');
-        $allowPut->setAccessible(true);
+        $items = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST,
+        );
 
-        return (bool) $allowPut->invoke($volume, $mimetype->invoke($volume, $name, true));
+        foreach ($items as $item) {
+            $item->isDir() ? rmdir($item->getPathname()) : unlink($item->getPathname());
+        }
+
+        rmdir($dir);
     }
 }

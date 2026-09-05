@@ -264,3 +264,4 @@ graphify-out
 .claudeignore
 .ci4ms
 docs/superpowers
+.graphifyignore

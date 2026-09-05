@@ -120,6 +120,12 @@ Key methods:
 | `show_404()` / `show_403()`   | Custom error views                                                 |
 | `compressAndOverwriteImage()` | Image optimization (resize + WebP conversion)                      |
 | `hasFilesInFolder($dir)`      | Checks if directory has any files                                  |
+| `clear2darray($array)`        | Drops empty sub-arrays from a 2D array (e.g. blank rows submitted from repeatable form fields), then re-indexes the result |
+| `locale_url($path)`           | `site_url()` wrapper for frontend content links; prepends the active locale when `siteLanguageMode` is `multi`, so a link doesn't depend on the visitor's locale cookie |
+| `_printr($data, $title)` / `_printrDie($data, $title)` | Debug dump helpers — wrap `print_r()` output in ad-hoc HTML styling; `_printrDie()` also calls `die()` after printing |
+| `permission_string($pagename, $action)` | Builds the canonical `{pagename}.{action}` RBAC identifier (always lowercases `$pagename`); single source of truth used by both permission-grant controllers and `Ci4MsAuthFilter`'s `can()` check |
+| `valid_template_slug($slug)`  | Whitelists template/theme directory slugs (`[a-z0-9_-]+`, max 64 chars) before they're used in a filesystem path |
+| `resolve_template_path($base, $slug)` | Resolves a template slug against a trusted base directory and confirms the realpath stays inside it; returns `null` on any path-traversal attempt |
 
 ---
 
@@ -235,6 +241,9 @@ Every backend module controller extends this. It:
 
 - **`nestable()`**: Renders drag-and-drop nestable HTML for menu management (recursive)
 - **`format_number()`**: Formats numbers to 2 decimal places
+- **`randomPassword()`**: Generates an 8-character random alphanumeric password
+- **`showError(int $statusCode = 404, ?string $message = null)`**: Global helper function (not a controller method) that renders the module's own themed error view (`error_{code}.php`, falling back to `production`/`error_exception` if no matching view exists) as a `ResponseInterface`. A near-identical `protected` method of the same name and signature also exists on `Modules\Backend\Controllers\BaseController` (`BaseController.php:150`) — the `return $this->showError(...)` calls elsewhere in the backend (Blog, Categories, Tags, Pages, `PermgroupController`) resolve to *that* method, not this helper. This helper's only real caller is `Modules\Auth\Controllers\CustomActivationController` (bare `showError()`, no `$this->`)
+- **`rbac_cache_flush()`**: Clears both RBAC cache keys `Ci4MsAuthFilter` reads on every backend request — `shield_auth_dynamic_config` and `backend_page_info_*` — together; deleting one without the other reproduces the exact stale-cache bug this function exists to close
 
 ---
 
@@ -248,7 +257,7 @@ Every backend module controller extends this. It:
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `users()`                           | DataTables server-side processing; excludes superadmins; shows groups, actions (update, blacklist, reset password, special perms, delete) |
 | `create_user()`                     | Creates user with hashed password, sends activation email |
-| `update_user($id)`                  | **⚠️ Note**: Contains `dd()` debug call on line 172 — appears to be WIP                                                                   |
+| `update_user($id)`                  | Updates a peer account — self-edit and superadmin targets are rejected; enforces a delegation ceiling via `actorMayAssignGroup()` so the actor can't grant a group beyond their own access; non-superadmin actors are blocked from resetting another user's password; emits `ci4ms.audit` events on success and on delegation-ceiling rejection |
 | `user_del($id)`                     | Soft delete (sets `deleted_at` + status to `deleted`)                                                                                     |
 | `profile()`                         | Self-service profile update; if email changes, sends re-activation email                                                                  |
 | `ajax_blackList_post()`             | Bans user: creates `black_list_users` record, sets status to `banned`                                                                     |
@@ -601,7 +610,7 @@ erDiagram
 | `settings`             | File cache | All system settings     | Any settings update                     |
 | `menus`                | File cache | Front-end navigation    | Menu reorder operation                  |
 | `sidebar_menu`         | 24 hours   | Backend sidebar items   | `Methods` (status toggle, update, module delete), `ModuleScanner`, `Backup::restore()` |
-| `backend_page_info_*`  | 1 hour     | Permission page lookups | `rbac_cache_flush()`, from `PermgroupController::group_create()`/`group_update()` and `Methods::create()`/`update()`/`delete()`/`moduleScan()` |
+| `backend_page_info_*`  | 1 hour     | Permission page lookups | `rbac_cache_flush()`, from `PermgroupController::group_create()`/`group_update()` and `Methods::create()`/`update()`/`moduleDelete()`/`moduleScan()` |
 | `shield_auth_dynamic_config` | 24 hours | Shield's dynamic RBAC config (groups/permissions) | `rbac_cache_flush()` (same call sites as above), `Backup::restore()`; protected from the backend Cache Management panel |
 
 `{userId}_permissions` is **not** a live cache — nothing calls `cache()->save()` with that key format. A few permission-changing actions still call `cache()->delete("{$id}_permissions")` as a harmless no-op against a key that was never populated; the actual RBAC cache is `shield_auth_dynamic_config` above.

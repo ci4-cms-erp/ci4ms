@@ -7,7 +7,8 @@ namespace Tests\Modules\Backend;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
- * Unit contract for the rbac_cache_flush() helper (app/Common.php:289-293).
+ * Unit contract for the rbac_cache_flush() helper
+ * (modules/Backend/Helpers/ci4ms_helper.php:97-128).
  *
  * The helper's whole reason to exist is that BOTH RBAC caches
  * Modules\Auth\Filters\Ci4MsAuthFilter reads from are invalidated together:
@@ -20,10 +21,10 @@ use CodeIgniter\Test\CIUnitTestCase;
  * The two keys are asserted in SEPARATE test methods on purpose. A single
  * method holding both assertions would go red for either mutation and could
  * not distinguish "the shield delete was dropped" from "the deleteMatching
- * was dropped"; with one method per line, deleting app/Common.php:291 reds
- * only testFlushDeletesTheShieldAuthDynamicConfigKey and deleting :292 reds
- * only testFlushDeletesEveryBackendPageInfoKey (mutation matrix M1/M2, see
- * context.md).
+ * was dropped"; with one method per line, deleting ci4ms_helper.php:124 reds
+ * only testFlushDeletesTheShieldAuthDynamicConfigKey and deleting
+ * ci4ms_helper.php:126 reds only testFlushDeletesEveryBackendPageInfoKey
+ * (mutation matrix M1/M2, see context.md).
  *
  * No DatabaseTestTrait: the helper touches the cache exclusively, so this
  * class must not open a DB connection or migrate anything. The cache handler
@@ -44,6 +45,19 @@ final class RbacCacheFlushHelperTest extends CIUnitTestCase
     private array $writtenKeys = [];
 
     /**
+     * Loads the helper by hand: this class instantiates no controller, so
+     * BaseController::initController() never runs and rbac_cache_flush()
+     * would otherwise be undefined.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        helper('Modules\Backend\Helpers\ci4ms');
+    }
+
+    /**
      * Removes every key this test primed, whether or not the helper did.
      *
      * @return void
@@ -59,7 +73,7 @@ final class RbacCacheFlushHelperTest extends CIUnitTestCase
     }
 
     /**
-     * Locks app/Common.php:291 -- cache()->delete('shield_auth_dynamic_config').
+     * Locks ci4ms_helper.php:124 -- cache()->delete('shield_auth_dynamic_config').
      *
      * @return void
      */
@@ -81,7 +95,7 @@ final class RbacCacheFlushHelperTest extends CIUnitTestCase
     }
 
     /**
-     * Locks app/Common.php:292 -- cache()->deleteMatching('backend_page_info_*').
+     * Locks ci4ms_helper.php:126 -- cache()->deleteMatching('backend_page_info_*').
      *
      * Two matching keys, not one: deleteMatching() is a pattern delete, and a
      * single key could also be cleared by a plain delete() of that exact

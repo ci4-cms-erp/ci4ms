@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo esc(str_replace('_', '-', service('language')->getLocale()), 'attr') ?>">
 
 <head>
     <meta charset="utf-8">

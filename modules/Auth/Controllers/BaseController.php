@@ -38,7 +38,7 @@ class BaseController extends Controller
      *
      * @var array
      */
-    protected $helpers = [];
+    protected $helpers = ['Modules\Backend\Helpers\ci4ms'];
 
     /**
      * Constructor.

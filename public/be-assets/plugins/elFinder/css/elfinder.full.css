@@ -1,8 +1,8 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.67 (2.1-src Nightly: 94b5e89b0) (2026-05-07)
+ * Version 2.1.70 (2026-08-03)
  * http://elfinder.org
- *
+ * 
  * Copyright 2009-2026, Studio 42
  * Licensed under a 3-clauses BSD license
  */
@@ -467,7 +467,7 @@
 .elfinder-dialog-edit .elfinder-toast > div {
     width: 280px;
 }
-
+ 
 .elfinder-edit-onlineconvert-button {
     display: inline-block;
     width: 180px;

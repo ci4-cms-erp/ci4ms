@@ -590,8 +590,7 @@
           cache: nothing in the codebase ever calls
           <code>cache()->save()</code> with that key format, so a lookup
           against it is always a miss. A few permission-changing actions
-          (<code>PermgroupController::user_perms()</code>,
-          <code>PermgroupController::update()</code>,
+          (<code>PermgroupController::user_perms()</code> and
           <code>UserController::update_user()</code>) still call
           <code>cache()->delete("{$id}_permissions")</code> as a harmless
           no-op. The RBAC caches that actually matter are two, and
@@ -604,15 +603,22 @@
           <code>className</code>/<code>methodName</code>, 1h). Because a stale
           half is as wrong as a stale whole, they are always cleared
           <strong>together</strong> through <code>rbac_cache_flush()</code>
-          (<code>app/Common.php</code>) &mdash; never one on its own. Its call
+          (<code>modules/Backend/Helpers/ci4ms_helper.php</code>) &mdash; never
+          one on its own. Its call
           sites are every RBAC write:
           <code>PermgroupController::group_create()</code>/<code>group_update()</code>
           and
-          <code>Methods::create()</code>/<code>update()</code>/<code>delete()</code>/<code>moduleScan()</code>.
-          The helper lives in <code>app/Common.php</code> rather than
-          <code>modules/Backend/Helpers/</code>, because the latter only
-          autoloads through <code>BaseController::$helpers</code> (controllers
-          only), while these keys are consumed in a filter.
+          <code>Methods::create()</code>/<code>update()</code>/<code>moduleDelete()</code>/<code>moduleScan()</code>.
+          The helper lives in
+          <code>modules/Backend/Helpers/ci4ms_helper.php</code>, which is safe
+          because all six call sites are backend controllers that extend
+          <code>BaseController</code>, and CI4's <code>initController()</code>
+          loads <code>$helpers</code>
+          (<code>modules/Backend/Controllers/BaseController.php:43</code>)
+          before any controller method runs. Calling it from a context that
+          doesn't load that helper &mdash; a filter, a CLI command, a service
+          &mdash; would fatal with <code>Call to undefined function</code>;
+          confirm the helper is loaded there before adding a new call site.
           <code>shield_auth_dynamic_config</code> is on
           <code>CacheRegistry</code>'s protected list and can never be
           cleared through the backend Cache Management panel.
@@ -735,11 +741,13 @@
         <h2>Media, File Management &amp; Logs</h2>
         <ul>
           <li>
-            <code>Modules\Media</code> integrates elFinder (v2.1.67) with MIME allowlists,
+            <code>Modules\Media</code> integrates elFinder (v2.1.70) with MIME allowlists,
             trash handling, and optional WebP conversion via
-            <code>claviska/simpleimage</code>. elFinder's internal CSRF
-            validation is bypassed since CI4 Shield's session auth and
-            <code>backendGuard</code> filter already protect the connector.
+            <code>claviska/simpleimage</code>. elFinder's own CSRF
+            protection (an independent <code>X-elFinder-CSRF</code> token, 900s
+            TTL) is left enabled; the endpoint is only excepted from CI4's
+            <em>own</em> CSRF filter because the connector's <code>exit()</code>
+            output prevents CI4's after-filters from ever running on this route.
           </li>
           <li>
             <code>Modules\Fileeditor</code> offers in-project file

@@ -58,7 +58,7 @@
     border-bottom: 1px solid #8bcbb7 !important;
 }
 .elfinder-buttonset {
-    margin-right: 15px !important;
+    margin-right: 11px !important; /* was 12px, 15px before that (4px vendor default originally) -- see media.php:106-169 for the full measured history. Real-browser measurement at 12px put the 1-row requirement at 1201px against this 1205px container (4px headroom); only 6 of the 7 toolbar groups carry this margin (search sits in its own box, not a .elfinder-buttonset), and that 6x coefficient is confirmed by both real data points solving to the same 1129px base (1219 - 6*15 = 1201 - 6*12 = 1129). Applying it here: 1129 + 6*11 = 1195px required, confirmed with a real-browser width probe this round (1195px single-lines, 1194px wraps) -- the threshold is exact. The container itself read 1204px this round vs. 1205px the round above (1px read-to-read noise), so headroom is ~9-10px, not a fixed number; reconfirm before cutting further -- one more button (~28px) or group (~25px chrome at this margin) already overruns it. */
     background: #ffffff !important;
     border: 1px solid #8bcbb7 !important;
     border-radius: 8px !important;
@@ -74,20 +74,13 @@
 }
 .elfinder-button:hover {
     background: #f5faf6 !important;
-    box-shadow: none !important;
-}
-.elfinder-button.elfinder-button-active {
-    background: #eaf5f2 !important; /* Very soft version of #2da592 */
-    box-shadow: inset 0 0 0 1px #8bcbb7 !important;
+    box-shadow: inset 0 0 0 1px #2da592 !important; /* accent ring, not filter: 3.04:1 vs white (WCAG 3:1 UI-component target), icon color untouched. */
 }
 .elfinder-button-icon {
-    opacity: 0.7 !important;
-    filter: sepia(1) hue-rotate(150deg) saturate(0.5); /* Soften the default black sprite */
+    opacity: 1 !important; /* was 0.7 + desaturating filter: dropped contrast to near/below WCAG 3:1 on the light toolbar */
 }
-.elfinder-button:hover .elfinder-button-icon,
-.elfinder-button.elfinder-button-active .elfinder-button-icon {
-    opacity: 1 !important;
-    filter: sepia(1) hue-rotate(150deg) saturate(2); /* Bring out teal on hover */
+.elfinder-button:hover .elfinder-button-icon {
+    opacity: 1 !important; /* filter removed: sepia()+hue-rotate() forced every icon toward one teal hue on hover, so the red "delete" icon lost its danger color at the exact moment of interaction. Icon now keeps its native color; hover feedback comes from the .elfinder-button:hover background rule above. Selector no longer pairs with the toolbar's "active" state class: elFinder's view-toggle swaps icons instead of adding one, so that half never matched (0 hits for the class name across the whole vendor JS). */
 }
 
 /* --- Sidebar (Navigation Tree) --- */
@@ -115,15 +108,104 @@
     color: #123a49 !important;
 }
 
+/* --- Narrow viewport: collapse the navbar to avoid horizontal overflow ---
+   elFinder's own width-responsive navbar path is device-gated (elfinder.full.js
+   ~19281 `if (fm.UA.Mobile)`), so it never fires in a narrowed desktop browser
+   window; the JS-side workzone fitsize() (elfinder.full.js ~23038) only ever
+   adjusts height, never width. Width collapse is left entirely to CSS, so it
+   has to happen here.
+
+   Breakpoint derivation (viewport width, not container width):
+   - Below 992px, AdminLTE's own .content-wrapper already goes margin-left:0
+     (adminlte.min.css, .sidebar-mini's @media (max-width:991.98px) rule) —
+     the outer admin sidebar becomes an off-canvas overlay and stops eating
+     into the page width, so it can be ignored below that point.
+   - Fixed horizontal loss inside the page at that point: .content{padding:0
+     .5rem} = 16px (adminlte.min.css) + .elfinder-cwd-wrapper{padding:2px} =
+     4px (elfinder.full.css:1471-1476) = 20px. .card-body has the Bootstrap
+     p-0 utility in modules/Media/Views/media.php, and .premium-card/.card
+     add no horizontal padding or margin of their own, so nothing else is
+     subtracted.
+   - Content-area floor: 300px. Judgment call, not a vendor constant — about
+     2.5x elFinder's own smallest grid-tile width (elfinder.full.css:1673,
+     .elfinder-cwd-size1 .elfinder-cwd-file = 120px) and enough for a legible
+     list-view name+size+date row.
+   - Stage 1 (230px navbar): viewport < 230 + 20 + 300 = 550px.
+   - Stage 2 (160px navbar, see below): viewport < 160 + 20 + 300 = 480px.
+   Above 550px (and always at the >=1200px range this theme is normally used
+   at) neither rule matches, so the navbar stays at the vendor's unmodified
+   230px default.
+
+   The width rule below (Stage 1, 160px) carries NO !important, on purpose --
+   it used to, and that was itself a bug, not a safety margin. elFinder's
+   navbar drag-resize handle (elfinder.full.js:19242, minWidth 150/maxWidth
+   500, active on any non-mobile UA regardless of viewport) writes its live
+   width via a PLAIN, non-!important inline style during drag
+   (jquery-ui.js:11516 _applyChanges -> jquery-ui.js:11532
+   `this.helper.css(props)`). An inline style always outranks a selector
+   rule unless that rule is !important, so a !important width here meant a
+   manual drag inside the 550-480px band looked inert: the user could drag,
+   the inline write happened, and this rule kept winning anyway, pinning the
+   navbar at 160px regardless. Dropping !important lets that inline write
+   through, which is the actual fix.
+   This does not reopen the fight with elfinder.full.css's un-!important
+   `width: 230px` (elfinder.full.css:3497, `.elfinder .elfinder-navbar`,
+   same specificity (0,2,0) as this rule's identical selector): source
+   order still decides that tie, and it's still decided in this rule's
+   favor, confirmed by reading the actual load path rather than assuming it.
+   elfinder.full.css is a static <link> in media.php's <head> (media.php:8),
+   loaded and parsed before `$(document).ready()` (media.php:41) ever runs.
+   This file, by contrast, is only ever reached through the `cssAutoLoad`
+   array passed into the `elfinder()` call inside that same ready handler
+   (media.php:50) -- and because that call passes no `themes` option,
+   elFinder registers the array as its synthesized 'default' theme
+   (elfinder.full.js:1213-1234, `self.options.themes.default.cssurls`)
+   instead of loading it immediately. That theme is applied once elFinder's
+   own `cssloaded` flag flips true (elfinder.full.js:5830-5834, the
+   fallback path taken here because cssAutoLoad is an array, not `true`),
+   which in turn calls `changeTheme('default')` (elfinder.full.js:1295-1301)
+   -> `self.loadCss(themeObj.cssurls, ...)` (elfinder.full.js:10488) ->
+   `$('head').append(link)` (elfinder.full.js:10081, inside `loadCss`).
+   That `append()` is what actually inserts this file's <link>, and it does
+   so strictly after the static <link> tags already sitting in <head> from
+   the initial page render -- so at equal specificity, this file's rule is
+   the one that was added last and wins the cascade tie without needing
+   !important.
+   `display: none !important` on the Stage 2 (479px) rule below is
+   untouched and still deliberate: the element is hidden there, so no drag
+   can target it and there is no inline-style fight to lose. */
+@media (max-width: 549px) {
+    .elfinder .elfinder-navbar {
+        max-width: 160px; /* not `width`, on purpose, and still no !important. `width: 160px` here used to win the cascade against elfinder.full.css's un-!important `width: 230px` (elfinder.full.css:3497-3499) on source order at equal specificity -- but jQuery UI's drag-resize handle (elfinder.full.js:19242, minWidth 150/maxWidth 500) writes its live width as a PLAIN, non-!important INLINE style during drag (jquery-ui.js:11516 _applyChanges -> jquery-ui.js:11532 `this.helper.css(props)`), and an inline style always outranks any selector-based `width` rule regardless of source order. So once the user drags past 160px and then narrows the viewport below this breakpoint, that recorded inline width (also replayed from the saved-state localStorage key `media-elfinder-navbarWidthelfinder` on load, e.g. `style="width:400px"`) would win outright and reopen the exact horizontal overflow this @media block exists to prevent.
+           `max-width` is a different property, so it never enters that fight: elfinder.full.css declares no `max-width` anywhere for `.elfinder-navbar` (grepped, only the `width: 230px` above), so this is the only rule setting it, and it always applies as a used-value clamp on top of whatever cascade wins `width` -- vendor's 230px default, or the drag handle's inline value -- regardless of which one that is or how it got there (CSS2.1 10.4: "if 'width' is greater than 'max-width', the used value of 'width' is set to the value of 'max-width'"). Net effect: a drag that lands at or below 160px (still above elFinder's own drag-resize floor of 150px, elfinder.full.js:19244) is unaffected and tracks live as before; a drag past 160px is visually capped at 160px while still narrow, so no overflow -- but the inline style itself keeps the larger value, so once the viewport widens back past 550px and this rule stops applying, the navbar jumps straight to that recorded width with no further dragging needed. Accepted: matches user intent (their last drag) the moment there's room for it again, and the alternative (rewriting the inline style, or reintroducing !important on `width`) was the DOM-mutation/stuck-drag combination this rule specifically moved away from. */
+    }
+}
+@media (max-width: 479px) {
+    .elfinder .elfinder-navbar {
+        display: none !important; /* even the narrowed 160px navbar no longer leaves the 300px content floor below this width; .elfinder-cwd-wrapper (float layout, elfinder.full.css:3523 .elfinder-navbar{float:left}) reflows to the full row width once the float is removed from flow. .elfinder-navdock needs no matching rule: it ships hidden by default in this project (no extra volumes/places configured, elfinder.full.js:19317 `$(this).hide()`), and it self-syncs to the navbar's width via the wzresize handler whenever it is shown. User-facing cost: the folder tree (root "media" + Trash) is no longer reachable below this width; toolbar actions and breadcrumb navigation remain available. */
+    }
+}
+
 /* --- Main Workspace (CWD) --- */
 .elfinder-cwd {
     background: #ffffff !important;
 }
-.elfinder-cwd-wrapper {
-    padding: 15px !important;
-}
+/* No .elfinder-cwd-wrapper padding here on purpose: .elfinder-cwd is position:absolute
+   (elfinder.full.css:1483-1484, top:0/left:0), so it sits at the wrapper's padding-box
+   corner regardless of padding, while the sticky header table is normal flow and gets
+   inset by the wrapper's padding (elfinder.full.css:1471-1476, vendor default padding: 2px).
+   Adding wrapper padding here (previously 15px) reintroduces that 15px header/data offset
+   and widens scrollWidth beyond clientWidth. Vendor's own 2px default applies unmodified. */
 
-/* ICON VIEW (Grid) */
+/* ICON VIEW (Grid)
+   3-state contrast vs white (WCAG relative-luminance formula, verified with a
+   throwaway script this session, not eyeballed):
+     state     fill                         border
+     resting   transparent/white  ~1.00:1   transparent            n/a
+     hover     #f5faf6             1.06:1   #2da592 (was #8bcbb7)  3.04:1 (was 1.85:1)
+     selected  #8bcbb7             1.85:1   #2da592                3.04:1
+   Border is the primary non-text UI signal here (WCAG 1.4.11 wants 3:1); the
+   old hover border #8bcbb7 (1.85:1) failed it, fixed below. */
 .elfinder-cwd-file {
     border-radius: 12px !important;
     padding: 12px !important;
@@ -131,13 +213,13 @@
     border: 1px solid transparent !important;
 }
 .elfinder-cwd-file:hover {
-    background: #f5faf6 !important;
-    border-color: #8bcbb7 !important;
+    background: #f5faf6 !important; /* 1.06:1 vs white — a weak cue alone, but combined with the border + elevation below it's enough; see the 3-state table above .elfinder-cwd-file. */
+    border-color: #2da592 !important; /* WCAG 1.4.11 non-text-contrast floor is 3:1; the old #8bcbb7 was 1.85:1, failing it. #2da592 is 3.04:1 and is already this theme's "interactive/focus" accent everywhere else (toolbar button hover ring above, search-input focus border below, navbar active state, dialog close hover) — reusing it here is consistent, not a shortcut. Trade-off, evaluated deliberately: this makes the hover border identical to .ui-selected's border (#2da592, same value, see below). No in-family shade both clears 3:1 by a real margin AND reads as visually distinct from #2da592: the first shade on #8bcbb7's own hue/saturation to cross 3:1 lands at ~3.0-3.4:1 only ~2-4 luminance-% away from #2da592 (an RGB delta of ~25-30 units on an 0-255 scale, computed this session) — too close to register as a different color, so it is not a real alternative. Hover vs. selected stays distinguishable through the three channels that already differ and are untouched here: fill (near-white #f5faf6, 1.06:1, vs solid teal #8bcbb7, 1.85:1, on .ui-selected below), the box-shadow, and the -2px lift transform below — .ui-selected has none of those three. */
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(18, 58, 73, 0.04) !important;
 }
-.elfinder-cwd-file.ui-state-selected {
-    background: #eaf5f2 !important; /* Soft version of #2da592 */
+.elfinder-cwd-file.ui-selected { /* elFinder 2.1.70's own JS hardcodes clSelected='ui-selected' (elfinder.full.js:15375) and applies it via addClass()/removeClass() everywhere selection is toggled (e.g. elfinder.full.js:17394,17408); the jQuery-UI-state-prefixed variant this selector used to target has 0 hits anywhere in the vendor plugin dir, so that rule never matched. */
+    background: #8bcbb7 !important; /* was #eaf5f2 (1.11:1 vs white) — matched to the list view's .ui-selected fill below (same #8bcbb7 value) so selection reads identically in both views: 1.85:1 vs white, clearly above dinlenme (transparent/white, 1.00:1) and hover (#f5faf6, 1.06:1) above. */
     border-color: #2da592 !important;
     box-shadow: 0 4px 15px rgba(45, 165, 146, 0.15) !important;
 }
@@ -149,39 +231,51 @@
     padding: 2px 4px !important;
     border-radius: 4px !important;
 }
-.elfinder-cwd-file.ui-state-selected .elfinder-cwd-filename {
-    background: transparent !important;
+.elfinder-cwd-file.ui-selected .elfinder-cwd-filename {
+    background: transparent !important; /* inherits the tile's #8bcbb7 fill above (same pair as list view): #123a49 text on #8bcbb7 is 6.56:1, clears WCAG AA (4.5:1). */
     color: #123a49 !important;
     font-weight: 600 !important;
 }
 
 /* LIST VIEW (Table) */
+.elfinder-cwd-view-list .elfinder-cwd-filename {
+    padding-left: 23px !important; /* vendor reserves this space for the row icon (elfinder.full.css:2588-2590); the unqualified .elfinder-cwd-filename rule above sets padding: 2px 4px for icon/grid view and was overriding it, covering ~16px of the name in list view. Longhand only touches padding-left so the branded color/size/top-bottom padding from the base rule still apply here; grid view is untouched because this selector requires .elfinder-cwd-view-list. */
+}
 .elfinder-cwd-view-list .elfinder-cwd-file {
     border-radius: 0 !important;
     padding: 0 !important;
-    border: none !important;
-    border-bottom: 1px solid #f5faf6 !important;
+    border: none !important; /* border-bottom used to live here and never painted: the table is border-collapse:separate (elfinder.full.css:2417) with border-spacing:0 (elfinder.full.css:2420), and under that model only cell (td) boxes are painted individually — the tr box itself is not. High-zoom screenshot of a row boundary confirmed solid white. Separator moved to the "> td" rule below, which is the layer that actually renders. */
+}
+.elfinder-cwd-view-list .elfinder-cwd-file > td {
+    border-bottom: 1px solid #AEDBCD !important; /* real row separator (moved from the tr rule above, see its comment). Color is #AEDBCD, not the #8bcbb7 used for other borders throughout this file (dialog titlebar, toolbar, buttonset, navbar, context menu, search input), because #8bcbb7 is also .ui-selected's fill below: a same-color separator on a selected row is 1.00:1 against its own background — invisible, and it erases the line between two contiguous multi-selected rows entirely. #AEDBCD contrasts 1.52:1 vs white (resting row, still far above the pre-fix 1.06:1 floor) and 1.22:1 vs #8bcbb7 (selected row fill, faint but present), at the cost of losing distinction on a row that is itself hovered (#AEDBCD-on-#AEDBCD, 1:1) — accepted because a hovered/selected row's own fill-color edge against its un-hovered/un-selected neighbor already marks the boundary without needing the border stroke to be visible on top of it. */
+    color: #123a49 !important; /* Row-wide typography fix: without this, only the name column (.elfinder-cwd-filename, :225-232) carried the theme's #123a49 text -- every other column (Yetkiler/Değiştirildi/Boyut/Tür) fell through to jQuery UI's `.ui-widget-content{color:#222}` (jquery-ui.min.css; elFinder's root node is given that class at elfinder.full.js:5228), rendering two different colors in one row. This does not touch the filename text itself: .elfinder-cwd-filename is a nested span inside the first <td> with its own explicit color/font-size (:225-232), a descendant rule that targets that inner element directly and keeps winning on that element regardless of what this parent <td> rule declares -- only the four columns that had no such override actually change. font-weight is deliberately left out: the filename's 500/600 weight (:228, :236) stays the row's one bold accent, matching this task's "renk/boyut ailesi" scope, not weight. Contrast (WCAG relative-luminance, computed this session): #123a49 vs white 12.16:1, vs the list-hover fill #AEDBCD (:254) 8.00:1, vs the list-selected fill #8bcbb7 (:259) 6.56:1 -- all clear the AA 4.5:1 floor with wide margin. */
+    font-size: 0.85rem !important; /* Same value AND unit as .elfinder-cwd-filename's own font-size (:227, 0.85rem) so both column families resolve to the same 13.6px regardless of the root <html> font-size. An em value here would instead ride elFinder's own 18px base (elfinder.full.css:987 `div.elfinder{font-size:18px}`) -- the vendor default this fixes, elfinder.full.css:3468 `.elfinder-cwd-view-list td{font-size:.7em}` = 18px*.7 = 12.6px, the measured vendor value that used to render alongside the name column's 13.6px in the same row -- and would drift from the filename's rem-based value if either base ever changed independently. */
 }
 .elfinder-cwd-view-list .elfinder-cwd-file:hover {
-    background: #f5faf6 !important;
+    background: #AEDBCD !important; /* was #8bcbb7 (1.85:1 vs white) — identical to .ui-selected below, so hovering read no stronger than a persisted selection. Now a 70% tint of #8bcbb7 over the row's white background: 1.52:1 vs white, still well above the pre-fix 1.06:1 floor (hover must stay visible), but strictly between resting (white, ~1:1) and .ui-selected below (1.85:1). */
     transform: none !important;
     box-shadow: none !important;
 }
-.elfinder-cwd-view-list .elfinder-cwd-file.ui-state-selected {
-    background: #eaf5f2 !important;
+.elfinder-cwd-view-list .elfinder-cwd-file.ui-selected {
+    background: #8bcbb7 !important; /* was #eaf5f2 (1.11:1 vs white) — weaker than the .hover rule above (1.85:1 at the time), so a persistent selection read softer than a transient hover despite winning the cascade. #8bcbb7 (1.85:1 vs white) landing selected above the hover fill (1.52:1) with room to spare. Text contrast on this bg: #123a49 6.56:1, vendor's #222 (elfinder.full.css:4349,4359) 8.58:1 — both clear WCAG AA (4.5:1). NOTE: this declaration never actually reaches the screen. elFinder's own select handler (elfinder.full.js:17394, "$this.addClass(clSelected).children().addClass(clHover)") adds jQuery UI's ui-state-hover class to every <td> child of a selected row, and per the table background painting order (CSS2.1 17.5.1) cell backgrounds always paint over row backgrounds. The pixel actually on screen comes from the "> td.ui-state-hover" rule below (same #8bcbb7 value); this rule is kept as a defensive fallback in case some future td lacks the vendor class, not the active paint path. */
     border-color: transparent !important;
-    box-shadow: inset 2px 0 0 0 #2da592 !important;
 }
-.elfinder-cwd-table td {
-    padding: 12px 8px !important;
-    color: #123a49 !important;
-    font-size: 0.85rem !important;
+.elfinder-cwd-view-list .elfinder-cwd-file.ui-selected > td.ui-state-hover {
+    /* Neutralizes jQuery UI smoothness's .ui-state-hover rule (public/be-assets/plugins/jquery-ui/themes/smoothness/jquery-ui.min.css: "border:1px solid #999;background:#dadada url(images/ui-bg_glass_75_dadada_1x400.png) 50% 50% repeat-x"). elFinder's select handler (elfinder.full.js:17394) adds that class to every <td> in a selected list row so, without this override, the cell layer paints vendor's flat gray #dadada + glass PNG on top of the .ui-selected background above and the theme color never shows. Both background-color and background-image are cleared — clearing only the image would still leave #dadada underneath. */
+    background: #8bcbb7 !important;
+    background-image: none !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-left: none !important; /* border-bottom is intentionally left undeclared here so the shared "> td" separator rule above keeps drawing the row line even on a selected row; only the vendor's 3-side #999 outline is cleared. */
+}
+.elfinder-cwd-view-list .elfinder-cwd-file.ui-selected > td:first-child {
+    box-shadow: inset 2px 0 0 0 #2da592 !important; /* left accent stripe, moved here from the tr.ui-selected rule above where it was declared but never visible: a box-shadow painted at the row (tr) layer sits behind the cell's own opaque background (same table-painting-order issue as the background above), so the first <td> (elfinder.full.js:15508, the "elfinder-col-name" cell) covered it completely at the row's left edge. Declared on the cell itself instead, where an inset shadow paints above the cell's own background (CSS Backgrounds & Borders: inset shadows paint above background, below border) and is no longer a lower layer a sibling box can hide. */
 }
 .elfinder-cwd-view-list table thead td {
     background: #f5faf6 !important;
     color: #123a49 !important;
     font-weight: 600 !important;
-    padding: 12px 8px !important;
+    padding: 4px 8px !important; /* vendor ships 4px 14px (elfinder.full.css:2482) and reserves the header band from that vertical value (fixTableHeader() reads htr.outerHeight(true), elfinder.full.js:16340-16341); 12px was pushing the rendered header past that reserve and eating into row 1. Vertical matched to vendor's 4px, horizontal 8px kept (theme choice). */
     border: none !important;
     border-bottom: 1px solid #8bcbb7 !important;
 }

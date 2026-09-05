@@ -183,7 +183,7 @@ Standard CodeIgniter commands (`php spark db:seed`, `php spark key:generate`, et
 
 ## Developer Notes
 
-- **Cache keys**: `settings` (24h), `menus_{locale}` (per-locale, 24h), `sidebar_menu` (24h), and the two the authorization filter reads — `shield_auth_dynamic_config` (24h, Shield's group/permission matrix) and `backend_page_info_*` (1h, per-route page rows). Clear with `php spark cache:clear` or `cache()->delete()`. After any RBAC write, call `rbac_cache_flush()` (`app/Common.php`) rather than deleting either key on its own: `Ci4MsAuthFilter` reads both, so clearing one leaves the other stale for up to its TTL.
+- **Cache keys**: `settings` (24h), `menus_{locale}` (per-locale, 24h), `sidebar_menu` (24h), and the two the authorization filter reads — `shield_auth_dynamic_config` (24h, Shield's group/permission matrix) and `backend_page_info_*` (1h, per-route page rows). Clear with `php spark cache:clear` or `cache()->delete()`. After any RBAC write, call `rbac_cache_flush()` (`modules/Backend/Helpers/ci4ms_helper.php`) rather than deleting either key on its own: `Ci4MsAuthFilter` reads both, so clearing one leaves the other stale for up to its TTL.
 - **Base controller**: Extend `Modules\Backend\Controllers\BaseController` for new backend controllers; it prepares session user, navigation, mail settings, and shared data.
 - **Permissions**: Register new secured routes in `Modules\Methods` (or via the database) so the permission filter recognizes them.
 - **Slug generation**: `seflink()` handles transliteration (including Turkish characters).

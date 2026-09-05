@@ -543,7 +543,8 @@ composer outdated</code></pre>
         </ol>
         <p>
           Clear the RBAC caches after permission/group changes by calling
-          <code>rbac_cache_flush()</code> (<code>app/Common.php</code>), not by
+          <code>rbac_cache_flush()</code>
+          (<code>modules/Backend/Helpers/ci4ms_helper.php</code>), not by
           deleting either key on its own. <code>Ci4MsAuthFilter</code> reads
           two: <code>shield_auth_dynamic_config</code> (Shield's dynamic
           groups/permissions config, 24h) and

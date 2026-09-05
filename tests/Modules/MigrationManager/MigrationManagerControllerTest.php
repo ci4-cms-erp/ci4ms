@@ -72,6 +72,7 @@ final class MigrationManagerControllerTest extends CIUnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        helper('Modules\Backend\Helpers\ci4ms');
 
         $this->assertStringContainsString(
             'ci4ms_test',
@@ -424,7 +425,7 @@ final class MigrationManagerControllerTest extends CIUnitTestCase
     {
         $config  = config(App::class);
         $request = new IncomingRequest($config, new SiteURI($config), null, new UserAgent());
-        $request->setMethod('POST');
+        $request = $request->withMethod('POST');
         // getPost() 'post' bucket'ını okur, Validation::withRequest() ise getVar()
         // -> fetchGlobal('request', ...) ayrı bir bucket okur; bu controller
         // Controller::validate() kullanmasa da diğer dosyalardaki established

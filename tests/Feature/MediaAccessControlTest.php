@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use CodeIgniter\Test\CIUnitTestCase;
 use Modules\Media\Controllers\Media;
+use ReflectionClass;
 use ReflectionClassConstant;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -64,6 +65,69 @@ final class MediaAccessControlTest extends CIUnitTestCase
                 $cmd,
                 $this->writeCommands(),
                 "PoC command '{$cmd}' is missing from Media::WRITE_COMMANDS."
+            );
+        }
+    }
+
+    /**
+     * Commands elFinder's own $commands table lists but this test treats as
+     * read-only / non-write-capable (MEDIUM-2 audit classification, upgrade
+     * 2.1.70). Every real command must land in exactly one of this list or
+     * Media::WRITE_COMMANDS -- a command in neither is new since the last
+     * elFinder upgrade and unclassified.
+     *
+     * @var list<string>
+     */
+    private const KNOWN_READ_ONLY_COMMANDS = [
+        'abort', 'callback', 'dim', 'file', 'get', 'info', 'ls', 'open',
+        'parents', 'search', 'size', 'subdirs', 'tmb', 'tree', 'url', 'zipdl',
+    ];
+
+    /**
+     * Entries Media::WRITE_COMMANDS keeps that are NOT real elFinder server
+     * commands: client-side UI macros whose actual writes already go through
+     * 'paste'/'rm' (see Media.php:37-41 for the full rationale).
+     *
+     * @var list<string>
+     */
+    private const KNOWN_DEAD_WRITE_ENTRIES = ['trash', 'restore'];
+
+    /**
+     * Verifies Media::WRITE_COMMANDS against elFinder's OWN $commands table
+     * (vendor/studio-42/elfinder/php/elFinder.class.php) programmatically --
+     * not against a hardcoded copy of the table -- so a future elFinder
+     * upgrade that adds, removes or renames a command breaks this test instead
+     * of silently drifting. $commands is read via getDefaultProperties(),
+     * which reflects the class's declared literal default without needing to
+     * instantiate \elFinder (whose constructor has side effects: sessions,
+     * temp dirs, volume mounting).
+     */
+    public function testWriteCommandsStayInSyncWithTheRealElfinderCommandTable(): void
+    {
+        $defaults = (new ReflectionClass(\elFinder::class))->getDefaultProperties();
+        $this->assertArrayHasKey('commands', $defaults, 'elFinder::$commands is gone or renamed -- this test needs updating for the new source of truth.');
+
+        $realCommands = array_keys($defaults['commands']);
+        $writeCommands = $this->writeCommands();
+
+        foreach ($writeCommands as $cmd) {
+            if (in_array($cmd, self::KNOWN_DEAD_WRITE_ENTRIES, true)) {
+                continue;
+            }
+            $this->assertContains(
+                $cmd,
+                $realCommands,
+                "Media::WRITE_COMMANDS lists '{$cmd}', but elFinder's \$commands table no longer has it -- " .
+                'remove the stale entry, or add it to KNOWN_DEAD_WRITE_ENTRIES with a documented reason.'
+            );
+        }
+
+        foreach ($realCommands as $cmd) {
+            $this->assertTrue(
+                in_array($cmd, $writeCommands, true) || in_array($cmd, self::KNOWN_READ_ONLY_COMMANDS, true),
+                "elFinder command '{$cmd}' is neither in Media::WRITE_COMMANDS nor in this test's " .
+                'KNOWN_READ_ONLY_COMMANDS -- classify it: a write-capable command must be added to ' .
+                'Media::WRITE_COMMANDS (Layer 2/3 defense-in-depth), a read-only one to KNOWN_READ_ONLY_COMMANDS.'
             );
         }
     }

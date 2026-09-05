@@ -22,8 +22,9 @@
 </IfModule>
 
 # Block direct access to script-like extensions regardless of server config.
-# (case-insensitive)
-<FilesMatch "(?i)\.(php[0-9]?|phtml|phar|phps|pht|inc|cgi|pl|py|jsp|asp|aspx|sh|bat|exe|htaccess|htpasswd|user\.ini|ini)$">
+# (case-insensitive; also matches when the extension is a middle segment,
+# e.g. shell.php.png, not just the final one)
+<FilesMatch "(?i)\.(php[0-9]?|phtml|phtm|phar|phps|pht|phpt|inc|cgi|pl|py|jsp|asp|aspx|sh|bat|exe|htaccess|htpasswd|user\.ini|ini|shtml|shtm|stm|hta)(?:\.|$)">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

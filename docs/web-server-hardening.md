@@ -27,7 +27,7 @@ server section of your site config (or include them from a snippet):
 # ── Block PHP execution inside user-writable directories ──
 # Mirror of public/{media,uploads,templates}/.htaccess.
 
-location ~* ^/(media|uploads|templates)/.*\.(php[0-9]?|phtml|phar|phps|pht|inc|cgi|pl|py|jsp|asp|aspx|sh|bat|exe|htaccess|htpasswd|user\.ini|ini)$ {
+location ~* ^/(media|uploads|templates)/.*\.(php[0-9]?|phtml|phtm|phar|phps|pht|phpt|inc|cgi|pl|py|jsp|asp|aspx|sh|bat|exe|htaccess|htpasswd|user\.ini|ini|shtml|shtm|stm|hta)(?:\.|$) {
     deny all;
     return 403;
 }

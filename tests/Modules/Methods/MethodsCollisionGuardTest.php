@@ -58,6 +58,7 @@ final class MethodsCollisionGuardTest extends CIUnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        helper('Modules\Backend\Helpers\ci4ms');
 
         $this->assertStringContainsString(
             'ci4ms_test',
@@ -321,7 +322,7 @@ final class MethodsCollisionGuardTest extends CIUnitTestCase
 
         $config  = config(App::class);
         $request = new IncomingRequest($config, new SiteURI($config), null, new UserAgent());
-        $request->setMethod('POST');
+        $request = $request->withMethod('POST');
         $request->setGlobal('post', $post);
         $request->setGlobal('request', $post);
 
