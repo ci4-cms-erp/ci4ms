@@ -24,6 +24,12 @@ return [
     'siteName' => '站点名称',
     'siteUrl' => '站点网址',
     'siteSlogan' => '网站标语',
+    // Environment
+    'environment' => '环境',
+    'environmentProduction' => '生产环境（推荐）',
+    'environmentDevelopment' => '开发环境',
+    'environmentHint' => '对于除您的本地计算机之外的任何服务器，请选择生产环境。',
+    'environmentDevelopmentConfirm' => '如果您在可公开访问的服务器上安装此软件，请不要选择此选项。',
     'siteNamePlaceholder' => '您的网站名称在这里',
     'siteSloganPlaceholder' => '你的口号在这里',
 ];

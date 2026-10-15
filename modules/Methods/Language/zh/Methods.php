@@ -54,4 +54,7 @@ return [
     'invalidZipFile' => '上传的文件不是有效的 ZIP 文件。',
     'invalidZipPath' => '目标目录不可写，且无法创建。',
     'zipExtractError' => '解压 ZIP 文件时出错：{0}',
+    'moduleManagementForbidden' => '您没有权限执行模块管理操作。',
+    'permissionManagementForbidden' => '您没有权限管理权限页面。',
+    'permissionPageProtected' => '无法对核心系统模块或其权限页面执行此操作。',
 ];

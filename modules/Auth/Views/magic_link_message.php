@@ -8,7 +8,7 @@ echo $this->section('content') ?>
         <div class="card-body">
             <p class="login-box-msg"><?php echo lang('Auth.useMagicLink') ?></p>
 
-            <p><b><?php echo lang('Auth.checkYourEmail') ?></b></p>
+            <p><b><?php echo lang('Auth.magicLinkSentIfRegistered') ?></b></p>
 
             <p><?php echo lang('Auth.magicLinkDetails', [setting('Auth.magicLinkLifetime') / 60]) ?></p>
         </div>

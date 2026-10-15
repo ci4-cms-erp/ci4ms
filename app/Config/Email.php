@@ -151,7 +151,14 @@ class Email extends BaseConfig
             $this->SMTPHost = $mailConfig->server ?? '';
             $this->SMTPUser = $mailConfig->address ?? '';
             $this->SMTPPort = (int) ($mailConfig->port ?? 587);
-            $this->SMTPCrypto = $mailConfig->tls ?? 'tls'; // ssl veya tls
+            // Kayıtlı `tls` bool'dur; CI4 STARTTLS için === 'tls' ister. 465'te CI4 zaten örtük tls:// açar,
+            // orada 'tls' vermek ek STARTTLS gönderip bağlantıyı bozar.
+            $tls = $mailConfig->tls ?? true;
+            if ($tls === 'ssl') {
+                $this->SMTPCrypto = 'ssl';
+            } else {
+                $this->SMTPCrypto = ($tls && $this->SMTPPort !== 465) ? 'tls' : '';
+            }
 
             if (! empty($mailConfig->password)) {
                 try {

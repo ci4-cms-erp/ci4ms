@@ -161,7 +161,7 @@ class Settings extends \Modules\Backend\Controllers\BaseController
     public function mailSettingsPost()
     {
         $valData = [
-            'mServer' => ['label' => lang('Settings.mailServer'), 'rules' => 'required|alpha_dash'],
+            'mServer' => ['label' => lang('Settings.mailServer'), 'rules' => 'required|valid_host'],
             'mPort' => ['label' => lang('Settings.mailPort'), 'rules' => 'required|is_natural_no_zero'],
             'mAddress' => ['label' => lang('Settings.mailAddress'), 'rules' => 'required|valid_email'],
             'mPwd' => ['label' => lang('Settings.mailPassword'), 'rules' => 'required']

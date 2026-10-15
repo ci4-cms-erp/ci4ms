@@ -16,21 +16,22 @@ class Ci4msSetup extends BaseCommand
     protected $usage       = 'php spark ci4ms:setup [options]';
 
     protected $options = [
-        '--fname'    => 'Admin first name',
-        '--sname'    => 'Admin last name',
-        '--email'    => 'Admin email address',
-        '--username' => 'Admin username',
-        '--password' => 'Admin password',
-        '--dbHost'   => 'Database hostname (default: localhost)',
-        '--dbName'   => 'Database name',
-        '--dbUser'   => 'Database username',
-        '--dbPass'   => 'Database password',
-        '--dbDriver' => 'Database driver (default: MySQLi)',
-        '--dbPrefix' => 'Database table prefix (default: ci4ms_)',
-        '--dbPort'   => 'Database port (default: 3306)',
-        '--siteName' => 'Site name',
-        '--baseUrl'  => 'Base URL (e.g. https://example.com)',
-        '--slogan'   => 'Site slogan (optional)',
+        '--fname'       => 'Admin first name',
+        '--sname'       => 'Admin last name',
+        '--email'       => 'Admin email address',
+        '--username'    => 'Admin username',
+        '--password'    => 'Admin password',
+        '--dbHost'      => 'Database hostname (default: localhost)',
+        '--dbName'      => 'Database name',
+        '--dbUser'      => 'Database username',
+        '--dbPass'      => 'Database password',
+        '--dbDriver'    => 'Database driver (default: MySQLi)',
+        '--dbPrefix'    => 'Database table prefix (default: ci4ms_)',
+        '--dbPort'      => 'Database port (default: 3306)',
+        '--siteName'    => 'Site name',
+        '--baseUrl'     => 'Base URL (e.g. https://example.com)',
+        '--slogan'      => 'Site slogan (optional)',
+        '--environment' => 'Deployment environment: production or development (default: production)',
     ];
 
     /**
@@ -159,6 +160,25 @@ class Ci4msSetup extends BaseCommand
             }
         }
 
+        // Deployment environment. Fail-safe allowlist: anything other than
+        // an explicit "development" (including a missing/invalid flag or an
+        // empty prompt answer) resolves to "production" — see
+        // resolveEnvironmentChoice(). This mirrors the web installer
+        // (Install.php), which stopped writing CI_ENVIRONMENT=development
+        // unconditionally after GHSA-x7rh-7w4r-xf6m / GHSA-wpxm-393r-vvx9
+        // (development error pages dump $_SERVER, including DB credentials).
+        if ($this->nonInteractive) {
+            $environment = $this->resolveEnvironmentChoice($cliArgs['environment'] ?? 'production');
+        } else {
+            $environment = $this->resolveEnvironmentChoice(
+                CLI::prompt('Deployment environment [production/development]', 'production')
+            );
+        }
+
+        if ($environment === 'development') {
+            CLI::write('  WARNING: development environment exposes debug details (including DB credentials via error pages) and must never be used on a publicly reachable server.', 'red');
+        }
+
         // ─────────────────────────────────────────────────────────────
         // SUMMARY — Proceed?
         // ─────────────────────────────────────────────────────────────
@@ -170,6 +190,7 @@ class Ci4msSetup extends BaseCommand
         CLI::write("  DB Host   : {$dbHost}:{$dbPort}  /  DB: {$dbName}  /  Driver: {$dbDriver}");
         CLI::write("  Admin     : {$name} {$surname} <{$email}> @ {$username}");
         CLI::write("  Slogan    : " . ($slogan !== '' ? $slogan : '(not set)'));
+        CLI::write("  Environment: {$environment}");
         CLI::write('');
 
         if (!$this->nonInteractive) {
@@ -212,7 +233,7 @@ class Ci4msSetup extends BaseCommand
         $cspEnabledValue = $isHttps ? 'true' : 'false #Content Security Policy';
 
         $updates = [
-            'CI_ENVIRONMENT'                     => 'production',
+            'CI_ENVIRONMENT'                     => $environment,
             'app.forceGlobalSecureRequests'      => $forceSecureValue,
             'app.CSPEnabled'                     => $cspEnabledValue,
             'app.baseURL'                        => '\'' . $baseUrl . '\'',
@@ -249,7 +270,7 @@ class Ci4msSetup extends BaseCommand
             'app.supportedLocales'               => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
             'app.negotiateLocale'                => 'true',
             'app.appTimezone'                    => '\'Europe/Istanbul\'',
-            'app.version'                        => '0.33.2.0',
+            'app.version'                        => '0.36.0.0',
         ];
 
         if (!$this->updateEnvSettings($updates)) {
@@ -259,6 +280,7 @@ class Ci4msSetup extends BaseCommand
 
         $this->generateEncryptionKey();
         CLI::write('  ✓ .env file written and encryption key generated.', 'green');
+        $this->restrictEnvPermissions();
 
         // ─────────────────────────────────────────────────────────────
         // 5. MIGRATION
@@ -410,6 +432,18 @@ class Ci4msSetup extends BaseCommand
     }
 
     /**
+     * Normalizes a raw environment string to an allowlisted value.
+     * Fail-safe: anything outside {production, development} — including
+     * empty input — resolves to 'production'. Never falls back to
+     * 'development'.
+     */
+    private function resolveEnvironmentChoice(string $raw): string
+    {
+        $value = strtolower(trim($raw));
+        return in_array($value, ['production', 'development'], true) ? $value : 'production';
+    }
+
+    /**
      * Read a value from the existing .env file
      */
     private function getEnvValue(string $key, string $default = ''): string
@@ -511,6 +545,53 @@ class Ci4msSetup extends BaseCommand
 
         file_put_contents($envPath, $contents);
         return true;
+    }
+
+    /**
+     * Best-effort hardens the freshly written `.env` file: narrows its mode
+     * to 0640 and, if possible, aligns its group with whichever group
+     * already owns `writable/`.
+     *
+     * Unlike the web installer (`Install::restrictEnvPermissions()`), the
+     * process running `php spark ci4ms:setup` is not guaranteed to be the
+     * same user/group as the web server that will later read `.env` — e.g.
+     * this project's own CI (`.github/workflows/docker-test.yml`) runs this
+     * command as root via `docker exec` while Apache serves the site as
+     * www-data. A hard 0600 owner-only mode would make `.env` unreadable to
+     * the web server in exactly that scenario. `writable/` is expected to
+     * already be owned by the web server user/group before this command
+     * runs — that same CI workflow enforces it via a prior
+     * `chown -R www-data:www-data writable` step, and it is a precondition
+     * of every ci4ms install, containerized or bare metal — so mirroring
+     * its group onto `.env` is a reasonable, distro-agnostic proxy for "the
+     * group the web server can read" without hardcoding a user name like
+     * www-data/apache/http/nginx. This is a best-effort signal, not a
+     * guarantee: `filegroup()` can fail, or simply return a group that
+     * happens to match the CLI user without actually being the web
+     * server's group — so the operator is told to verify manually
+     * regardless of the outcome, and neither step aborts an
+     * otherwise-successful install on failure.
+     *
+     * @return void
+     */
+    private function restrictEnvPermissions(): void
+    {
+        $envPath = ROOTPATH . '.env';
+
+        $writableGroup = @filegroup(WRITEPATH);
+        if ($writableGroup !== false && @chgrp($envPath, $writableGroup)) {
+            CLI::write('  ✓ .env group aligned with writable/.', 'green');
+        } else {
+            CLI::write('  ! Could not align .env group with writable/; leaving its current group as-is.', 'yellow');
+        }
+
+        if (@chmod($envPath, 0640)) {
+            CLI::write('  ✓ .env permissions restricted to 0640.', 'green');
+        } else {
+            CLI::write('  ! Could not restrict .env permissions to 0640.', 'yellow');
+        }
+
+        CLI::write('  i If your web server runs as a different user than this shell, verify it can still read .env before going live.', 'light_gray');
     }
 
     /**

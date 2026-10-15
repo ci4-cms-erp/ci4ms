@@ -31,7 +31,7 @@ class CustomActivationController extends BaseController
             $identities->delete($identity->id);
 
             // 5. Success, redirect to login page
-            return redirect()->to(config('Auth')->loginRedirect())->with('message', lang('Auth.emailActivationuccess'));
+            return redirect()->to(config('Auth')->loginRedirect())->with('message', lang('Auth.emailActivationSuccess'));
         }
 
         return showError();

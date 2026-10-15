@@ -15,7 +15,7 @@ return [
     // Registration
     'registerDisabled' => 'Sorry, new user accounts are not allowed at this time.',
     'registerSuccess' => 'Welcome aboard! Please login with your new credentials.',
-    'emailActivationuccess' => 'Welcome back! Your email has been confirmed. You can now sign in.',
+    'emailActivationSuccess' => 'Welcome back! Your email has been confirmed. You can now sign in.',
     'registerCLI' => 'New user created: {0}, #{1}',
 
     // Activation
@@ -30,7 +30,9 @@ return [
     'badAttempt' => 'Unable to log you in. Please check your credentials.',
     'loginBlock' => 'Your login has been suspended. Please contact the IT department. ',
     'loginSuccess' => 'Welcome back!',
-    'invalidPassword' => 'Unable to log you in. Please check your password.',
+    'invalidPassword' => 'Unable to log you in. Please check your credentials.',
+    'loginFailed' => 'Unable to log you in. Please check your credentials.',
+    'magicLinkSentIfRegistered' => 'If an account is registered at this address, a login link has been sent.',
 
     // Forgotten Passwords
     'forgotDisabled' => 'The password reset option has been disabled.',
@@ -94,6 +96,7 @@ return [
     'newPasswordRepeat' => 'Repeat New Password',
     'resetPassword' => 'Reset Password',
     'badCaptcha' => 'Captcha is wrong.',
+    'captchaLabel' => 'Captcha',
     'generatePasswordMessage' => 'You are just one step away from your new password, create your password now.',
     'forgotPasswordMessage' => 'Forgot your password? You can easily get a new one here with your email address.',
     'loginMessage'          => 'Please log in to start your session',

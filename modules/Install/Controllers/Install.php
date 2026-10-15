@@ -25,6 +25,37 @@ class Install extends Controller
                 return redirect()->route('install')->withInput()->with('errors', ['install' => lang('Install.invalidNonce')]);
             }
 
+            // Kalem B (verifier Bulgu #3, normalizasyon asimetrisi): CLI
+            // installer'ın Ci4msSetup::resolveEnvironmentChoice()'ının
+            // yaptığı gibi (trim + lowercase) `environment` değerini
+            // doğrulamadan *önce* normalize et, böylece aynı girdi (örn.
+            // "DEVELOPMENT" veya boşluklu) iki installer'da da aynı sonucu
+            // versin -- CLI kabul ederken bu validator'ın onu tümden
+            // reddetmesi yerine. normalizeEnvironmentInput() yalnız
+            // casing/whitespace normalize eder, allowlist'i genişletmez --
+            // aşağıdaki `in_list[production,development]` hâlâ
+            // {production, development} dışındaki her şeyi reddeder, ve
+            // daha aşağıdaki (değişmeyen) fail-safe ternary hâlâ
+            // 'production'a düşer. Normalize edilmiş değer getPost()'tan
+            // (asla getVar()/$_REQUEST'ten değil) alınıp validate()
+            // çalışmadan önce Request::setGlobal() ile hem 'post' hem
+            // 'request' superglobal bucket'larına yansıtılıyor --
+            // framework'ün zaten var olan, public bir API'si (bu projenin
+            // kendi testleri de kullanıyor, bkz.
+            // tests/Modules/Backend/InstallerHardeningTest.php::dispatchInstall()) --
+            // böylece validate()'in gördüğü değer (getVar()->'request'
+            // bucket'ı) ile aşağıda getPost('environment')'ın döndürdüğü
+            // değer (->'post' bucket'ı) bu alan için asla ayrışamaz; bu,
+            // re-audit'in bu alana özel GET/POST desync gözlemini de yan
+            // etki olarak kapatıyor.
+            $normalizedEnvironment = $this->normalizeEnvironmentInput((string) $this->request->getPost('environment'));
+            $postGlobals = (array) ($this->request->getPost() ?? []);
+            $postGlobals['environment'] = $normalizedEnvironment;
+            $this->request->setGlobal('post', $postGlobals);
+            $requestGlobals = (array) ($this->request->getVar() ?? []);
+            $requestGlobals['environment'] = $normalizedEnvironment;
+            $this->request->setGlobal('request', $requestGlobals);
+
             $valData = [
                 'baseUrl' => ['label' => lang('Install.baseUrl'), 'rules' => 'required|valid_url'],
                 'host' => ['label' => lang('Install.databaseHost'), 'rules' => 'required|max_length[255]|regex_match[/^[a-zA-Z0-9._-]+$/]'],
@@ -39,9 +70,25 @@ class Install extends Controller
                 'username' => ['label' => lang('Backend.username'), 'rules' => 'required|alpha_numeric|min_length[3]|max_length[50]'],
                 'password' => ['label' => lang('Install.password'), 'rules' => 'required|min_length[8]'],
                 'email' => ['label' => lang('Install.email'), 'rules' => 'required|valid_email|max_length[255]'],
-                'siteName' => ['label' => lang('Backend.siteName'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]']
+                'siteName' => ['label' => lang('Backend.siteName'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]'],
+                'environment' => ['label' => lang('Install.environment'), 'rules' => 'required|in_list[production,development]'],
             ];
             if ($this->request->getPost('slogan')) $valData['slogan'] = ['label' => lang('Install.slogan'), 'rules' => 'required|alpha_numeric_space|max_length[255]|regex_match[/^[^<>{}=]+$/u]'];
+
+            // Kalem A (verifier Bulgu #2): `development` seçildiğinde
+            // operatörün "herkese açık sunucu" onay kutusunu işaretlemesini
+            // zorunlu kıl. CI4 4.7'de `required_if` kuralı yok (doğrulandı:
+            // `grep -n "function required_if" vendor/codeigniter4/framework/system/Validation/Rules.php vendor/codeigniter4/framework/system/Validation/StrictRules/Rules.php`
+            // -> eşleşme yok), bu yüzden koşul tıpkı hemen yukarıdaki
+            // opsiyonel `slogan` alanı gibi ifade ediliyor: kural yalnız
+            // koşul sağlandığında $valData'ya ekleniyor. Yukarıdaki
+            // normalizeEnvironmentInput() çağrısı sayesinde zaten normalize
+            // edilmiş değeri okuyor, yani "DEVELOPMENT"/" development " de
+            // checkbox'ı zorunlu kılıyor, yalnız tam küçük harf "development"
+            // değil.
+            if ($this->request->getPost('environment') === 'development') {
+                $valData['environmentDevelopmentConfirm'] = ['label' => lang('Install.environmentDevelopmentConfirm'), 'rules' => 'required'];
+            }
 
             if ($this->validate($valData) === false) return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
 
@@ -54,8 +101,9 @@ class Install extends Controller
                 ? 'true'
                 : 'false #Set this to true after enabling HTTPS in production.';
 
+            $environment = $this->request->getPost('environment');
             $updates = [
-                'CI_ENVIRONMENT' => 'production',
+                'CI_ENVIRONMENT' => in_array($environment, ['production', 'development'], true) ? $environment : 'production',
                 'app.baseURL' => '\'' . $this->request->getPost('baseUrl') . '\'',
                 'app.forceGlobalSecureRequests' => $isHttps ? 'true' : 'false #Set to true after enabling HTTPS.',
                 'database.default.hostname' => $this->request->getPost('host'),
@@ -91,9 +139,33 @@ class Install extends Controller
                 'app.supportedLocales' => '["ar","de","en","es","fr","hi","ja","pt","ru","tr","zh"]',
                 'app.negotiateLocale' => 'true',
                 'app.appTimezone' => '\'Europe/Istanbul\'',
-                'app.version' => '0.33.2.0'
+                'app.version' => '0.36.0.0'
             ];
-            if ($this->copyEnvFile() && $this->updateEnvSettings($updates)) $this->generateEncryptionKey();
+            /*
+             * Kalem C (verifier Bulgu #4): copyEnvFile()/updateEnvSettings()
+             * return `true` on success but `['error' => ...]` -- a
+             * non-empty, therefore truthy, array -- on failure, so
+             * `if ($this->copyEnvFile() && $this->updateEnvSettings($updates))`
+             * evaluated to true unconditionally and was never actually a
+             * gate. Comparing with `=== true` makes it real: an encryption
+             * key is only generated once .env is known to have been both
+             * copied AND customized with the operator's values, so a broken
+             * write pipeline never gets a fresh key written into an .env
+             * this code doesn't trust the contents of. restrictEnvPermissions()
+             * still runs unconditionally below regardless of that outcome,
+             * because whatever ended up on disk at this point -- the freshly
+             * copied template, or a partially customized .env from a prior
+             * attempt -- may already carry secrets, and narrowing its
+             * permissions is always safe to attempt (a no-op, logged, if the
+             * file was never created at all -- see restrictEnvPermissions()'s
+             * own docblock). The broader pattern of these two helpers
+             * returning a truthy array on failure instead of false is
+             * pre-existing and out of scope here; see context.md.
+             */
+            if ($this->copyEnvFile() === true && $this->updateEnvSettings($updates) === true) {
+                $this->generateEncryptionKey();
+            }
+            $this->restrictEnvPermissions();
 
 
             $installData = [
@@ -134,6 +206,21 @@ class Install extends Controller
         }
 
         return view('Modules\Install\Views\install', ['installNonce' => $nonce]);
+    }
+
+    /**
+     * Normalizes the submitted `environment` value (trim + lowercase) so
+     * casing/whitespace variants of an otherwise-valid choice (e.g.
+     * "DEVELOPMENT", " development ") produce the same outcome as this
+     * installer's CLI counterpart, Ci4msSetup::resolveEnvironmentChoice().
+     * Pure normalization only -- it does NOT enforce the allowlist;
+     * `in_list[production,development]` in $valData (and the unchanged
+     * fail-safe ternary building $updates['CI_ENVIRONMENT']) still reject
+     * anything outside {production, development} after this runs.
+     */
+    private function normalizeEnvironmentInput(string $raw): string
+    {
+        return strtolower(trim($raw));
     }
 
     private function updateEnvSettings(array $updates)
@@ -189,6 +276,34 @@ class Install extends Controller
         config('Encryption')->key = hex2bin(substr($key, 8));
 
         return true;
+    }
+
+    /**
+     * Narrows the freshly written `.env` file to owner-only access (0600).
+     *
+     * `.env` carries the database password and `encryption.key` in
+     * plaintext; the `env` template it was copied from ships 0644
+     * (world-readable), so until this runs, anything reachable by another
+     * local user or vhost on a shared host can read it. This is always
+     * safe to call here: this controller method IS the process handling
+     * the current `/install` POST (the php-fpm/apache worker), so whatever
+     * user `copyEnvFile()` ran as a few lines above is unconditionally the
+     * file's owner — narrowing to owner-only can never lock the web server
+     * out of its own file, unlike the CLI installer (see
+     * `Ci4msSetup::restrictEnvPermissions()`), where the shell running
+     * `php spark ci4ms:setup` can be a different user than the one serving
+     * the site, so it uses a looser 0640 plus group alignment instead.
+     * Best-effort: a chmod failure (read-only filesystem, restrictive
+     * open_basedir, …) must not turn an otherwise-successful install into
+     * a failed one, so it is only logged.
+     *
+     * @return void
+     */
+    private function restrictEnvPermissions(): void
+    {
+        if (!@chmod(ROOTPATH . '.env', 0600)) {
+            log_message('warning', "Could not restrict '.env' file permissions to 0600.");
+        }
     }
 
     private function dbsetup(array $installData)

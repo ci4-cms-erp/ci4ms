@@ -37,8 +37,6 @@ class SessionTracker implements FilterInterface
             return;
         }
 
-        $hasRememberToken = isset($_COOKIE['remember_token']) && ! empty($_COOKIE['remember_token']);
-
         $session   = session();
         $sessionId = $session->get('ci4ms_session_tracker_id');
 
@@ -67,7 +65,7 @@ class SessionTracker implements FilterInterface
                 return redirect()->route('login')->with('error', lang('Users.currentSessionTerminated'));
             }
 
-            if (! $hasRememberToken && ! empty($exists['locked_at'])) {
+            if (! empty($exists['locked_at'])) {
                 $currentUrl = $request->getUri()->getPath();
                 if (! str_starts_with($currentUrl, '/backend/lock')) {
                     return redirect()->to('/backend/lock?redirect=' . urlencode($currentUrl));

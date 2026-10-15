@@ -71,6 +71,32 @@ class Ci4MsAuthFilter implements FilterInterface
         $neededAction = 'read';
         $pagePermissions = \json_decode($page->typeOfPermissions, true, 512, JSON_UNESCAPED_UNICODE) ?? [];
 
+        // Guards against a non-array $pagePermissions throwing a TypeError in
+        // array_key_exists() below. Two distinct input classes reach here,
+        // and this guard's effect on each is different:
+        //
+        // 1. Malformed/syntactically invalid JSON (e.g. "{oops"): json_decode()
+        //    returns null, and the line above (`?? []`) already converts that
+        //    to []. This guard changes NOTHING for this class -- it was
+        //    already fail-open ($neededAction stays 'read') before this guard
+        //    existed, purely from the `?? []` on the line above.
+        //
+        // 2. Syntactically valid JSON holding a scalar (e.g. "5", "true"):
+        //    json_decode() returns the scalar itself, not null, so `?? []`
+        //    never triggers. Before this guard existed, array_key_exists()
+        //    below would throw a TypeError for this class -- an unintentional
+        //    fail-closed (the crash meant the request was never authorized).
+        //    With this guard, is_array() catches the scalar and resets it to
+        //    [], so $neededAction stays at its 'read' default and the request
+        //    IS authorized. For this class the guard doesn't just prevent the
+        //    crash -- it flips the outcome from fail-closed to fail-open.
+        //
+        // Fail-open (for both classes above) is a separate, user-owned policy
+        // decision -- not changed by this guard, not addressed here.
+        if (! is_array($pagePermissions)) {
+            $pagePermissions = [];
+        }
+
         if (array_key_exists('read_r', $pagePermissions) && $pagePermissions['read_r'] == 1) {
             $neededAction = 'read';
         }

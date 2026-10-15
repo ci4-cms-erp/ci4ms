@@ -265,3 +265,11 @@ graphify-out
 .ci4ms
 docs/superpowers
 .graphifyignore
+strix_runs
+task-*
+.aider.conf.yml
+.local_ai
+.agents
+skills-lock.json
+.impeccable
+CONSTANTS.md

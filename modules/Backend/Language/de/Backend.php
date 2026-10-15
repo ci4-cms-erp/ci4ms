@@ -87,6 +87,8 @@ return [
     'ipFormatsDifferent' => 'IP-Formate sind nicht identisch. <b>{0}</b>',
     'leftValueNotGreater' => 'Der linke Wert darf nicht größer oder gleich dem rechten Wert sein. <b>{0}</b>',
     'invalidPhoneNumber' => 'Die Telefonnummer ist nicht im richtigen Format. Bitte schreiben Sie sie im richtigen Format.',
+    'invalidPermissionTypes' => 'Ungültige Berechtigungstypen. Wählen Sie einen oder mehrere: create, read, update, delete.',
+    'invalidHost' => 'Ungültiger Host. Geben Sie einen Hostnamen (z. B. smtp.example.com) oder eine IP-Adresse ohne Port und Protokoll ein.',
     'success' => 'Erfolg',
     'error' => 'Fehler',
     'showColumns' => 'Spalten',
@@ -131,4 +133,6 @@ return [
     'errCdSeconds' => 'Sekunden',
     // sidebar maintenance badge
     'menuInMaintenance' => 'In Wartung',
+    // Development mode warning
+    'developmentModeWarning' => 'Diese Website läuft im ENTWICKLUNGS-Modus. Debug-Details (einschließlich Datenbankanmeldedaten) können auf Fehlerseiten angezeigt werden. Verwenden Sie diesen Modus niemals auf einem öffentlich zugänglichen Server.',
 ];

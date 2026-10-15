@@ -32,6 +32,13 @@ return [
     'siteUrl' => 'Site URL',
     'siteSlogan' => 'Site Sloganı',
 
+    // Environment
+    'environment' => 'Ortam',
+    'environmentProduction' => 'Üretim (önerilen)',
+    'environmentDevelopment' => 'Geliştirme',
+    'environmentHint' => 'Kendi yerel makineniz dışındaki her sunucu için Üretim seçeneğini kullanın.',
+    'environmentDevelopmentConfirm' => 'Bu siteyi herkese açık bir sunucuya kuruyorsanız bunu seçmeyin.',
+
     // Placeholders
     'siteNamePlaceholder' => 'Site adınız buraya',
     'siteSloganPlaceholder' => 'Sloganınız buraya',

@@ -198,9 +198,16 @@ final class MethodsCreateModuleIdTest extends CIUnitTestCase
     }
 
     /**
-     * Creates an actor with no group membership -- resolveModuleId() and the
-     * validation rules under test do not depend on the actor's own
-     * permissions.
+     * Creates an actor with superadmin membership.
+     *
+     * resolveModuleId() and the validation rules under test do not depend on
+     * the actor's own permissions, but create() now gates on
+     * inGroup('superadmin') before reaching either -- see the
+     * superadmin/PROTECTED_MODULES lock on the permission-row editor.
+     * Find-or-create mirrors MethodsRbacCacheInvalidationTest::createActor():
+     * auth_groups.group carries a UNIQUE index, so a blind create() would
+     * collide with a "superadmin" row already present on the shared,
+     * non-refreshed ci4ms_test schema.
      */
     private function createActor(): int
     {
@@ -217,7 +224,23 @@ final class MethodsCreateModuleIdTest extends CIUnitTestCase
         ]);
         $users->save($user);
 
-        return (int) $users->getInsertID();
+        $userId = (int) $users->getInsertID();
+
+        $existingSuperadmin = $this->commonModel->selectOne('auth_groups', ['group' => 'superadmin']);
+        if ($existingSuperadmin === null) {
+            $this->commonModel->create('auth_groups', [
+                'group'       => 'superadmin',
+                'description' => 'superadmin',
+            ]);
+        }
+
+        $this->commonModel->create('auth_groups_users', [
+            'user_id'    => $userId,
+            'group'      => 'superadmin',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return $userId;
     }
 
     /**

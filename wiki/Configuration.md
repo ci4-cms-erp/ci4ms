@@ -4,7 +4,7 @@ One-sentence purpose: what to check and adjust after installation — environmen
 
 ### Environment
 
-`.env`'s `CI_ENVIRONMENT` setting controls whether the site runs in `development` or `production` mode. The web installer writes `CI_ENVIRONMENT = production` automatically during setup, but it's worth confirming the value directly in `.env` after installation, especially if you set it up via the CLI (`php spark ci4ms:setup`) rather than the web installer. Running in `development` enables the debug toolbar and detailed error/stack-trace output — see [Security Hardening](Security-Hardening.md) for why this matters in production.
+`.env`'s `CI_ENVIRONMENT` setting controls whether the site runs in `development` or `production` mode. Both installation paths ask you to choose it explicitly rather than picking it for you silently: `production` is the pre-selected default in the web installer and the default answer in `php spark ci4ms:setup`, and picking `development` requires an extra confirmation (a checkbox in the web installer, a printed warning in the CLI) before the install proceeds. Still, confirm the value directly in `.env` after installation. Running in `development` enables the debug toolbar and detailed error/stack-trace output, and the backend itself shows a permanent warning banner to superadmin accounts whenever it detects `ENVIRONMENT === 'development'` — see [Security Hardening](Security-Hardening.md) for why this matters in production.
 
 ### Caches
 
@@ -40,11 +40,13 @@ Every theme archive **must** contain both `info.xml` (metadata, including the th
 
 New feature modules are dropped under `modules/<Name>/` — no code change is required elsewhere, since `app/Config/Autoload.php` scans the `modules/` directory at boot and registers each folder's namespace automatically. After adding a module with new backend routes, run a **Module Scan** from the Methods section of the backend (or insert the permission record manually) so the permission filter recognizes the new routes — otherwise every request to them returns a 403, even for superadmin. See [Troubleshooting](Troubleshooting.md).
 
+The Methods section also lets you upload a module ZIP or create one via the UI directly — both of those, and deleting an installed module, require the `superadmin` group specifically; a non-superadmin account with only Methods permissions gets a 403 on these three actions even if it can reach the rest of the Methods screen. See [Security Hardening — Module and permission management lockdown](Security-Hardening.md#module-and-permission-management-lockdown) for why, and for a gap in Module Scan's own gating worth knowing about if you delegate Methods access.
+
 ## Türkçe
 
 ### Ortam
 
-`.env` dosyasındaki `CI_ENVIRONMENT` ayarı sitenin `development` mi yoksa `production` modunda mı çalıştığını belirler. Web installer, kurulum sırasında `.env`'e otomatik olarak `CI_ENVIRONMENT = production` yazar; ancak özellikle CLI ile (`php spark ci4ms:setup`) kurulum yaptıysanız, kurulumdan sonra bu değeri `.env` içinde doğrudan teyit etmekte fayda var. `development` modunda çalışmak debug toolbar'ı ve ayrıntılı hata/stack-trace çıktısını etkinleştirir — bunun production'da neden önemli olduğu için [Güvenlik Sertleştirme](Security-Hardening.md) sayfasına bakın.
+`.env` dosyasındaki `CI_ENVIRONMENT` ayarı sitenin `development` mi yoksa `production` modunda mı çalıştığını belirler. Her iki kurulum yolu da bu değeri sizden açıkça sorar, sessizce seçmez: web installer'da `production` önceden seçili varsayılandır, `php spark ci4ms:setup`'ta da varsayılan yanıttır; `development` seçmek ise kurulum devam etmeden önce ek bir onay ister (web installer'da onay kutusu, CLI'da yazdırılan bir uyarı). Yine de kurulumdan sonra bu değeri `.env` içinde doğrudan teyit edin. `development` modunda çalışmak debug toolbar'ı ve ayrıntılı hata/stack-trace çıktısını etkinleştirir; ayrıca backend, `ENVIRONMENT === 'development'` olduğunu tespit ettiğinde superadmin hesaplarına kalıcı bir uyarı bandı gösterir — bunun production'da neden önemli olduğu için [Güvenlik Sertleştirme](Security-Hardening.md) sayfasına bakın.
 
 ### Cache'ler
 
@@ -79,3 +81,5 @@ Her tema arşivi beklenen konumda hem `info.xml` (tema slug'ı dahil metadata) h
 ### Modül yükleme
 
 Yeni özellik modülleri `modules/<Name>/` altına bırakılır — başka hiçbir yerde kod değişikliği gerekmez, çünkü `app/Config/Autoload.php` başlangıçta `modules/` dizinini tarar ve her klasörün namespace'ini otomatik kaydeder. Yeni backend route'ları olan bir modül eklendikten sonra, izin filtresinin yeni route'ları tanıması için backend'deki Methods bölümünden bir **Module Scan** (Modül Tarama) çalıştırın (veya izin kaydını elle ekleyin) — aksi halde bu route'lara yapılan her istek, superadmin dahil, 403 döner. Bkz. [Sorun Giderme](Troubleshooting.md).
+
+Methods bölümü ayrıca doğrudan UI üzerinden bir modül ZIP'i yükleme veya modül oluşturma imkanı da sunar — bunların ikisi de, kurulu bir modülü silmek de dahil olmak üzere, özel olarak `superadmin` grubunu gerektirir; yalnızca Methods izinleri olan superadmin dışı bir hesap, Methods ekranının geri kalanına erişebilse bile bu üç işlemde 403 alır. Nedeni ve Methods erişimini devrederseniz bilmeniz gereken Module Scan'in kendi kapısındaki bir boşluk için bkz. [Güvenlik Sertleştirme — Modül ve izin yönetiminin kilitlenmesi](Security-Hardening.md#modül-ve-izin-yönetiminin-kilitlenmesi).

@@ -440,14 +440,6 @@ $(document).ready(function () {
     return;
   }
 
-  // Remember me aktifse lock screen devre dışı
-  var hasRemember = document.cookie.split(";").some(function (c) {
-    return c.trim().indexOf("remember_token=") === 0;
-  });
-  if (hasRemember) {
-    return;
-  }
-
   var IDLE_MS = (window.CI4MS_IDLE_MINUTES || 15) * 60 * 1000;
   var idleTimer = null;
   var isLocked = false;

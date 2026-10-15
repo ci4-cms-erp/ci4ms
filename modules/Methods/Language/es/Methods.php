@@ -54,4 +54,7 @@ return [
     'invalidZipFile' => 'El archivo subido no es un archivo ZIP válido.',
     'invalidZipPath' => 'El directorio de destino no tiene permisos de escritura y no se pudo crear.',
     'zipExtractError' => 'Ocurrió un error al extraer el archivo ZIP: {0}',
+    'moduleManagementForbidden' => 'No tiene permiso para realizar operaciones de gestión de módulos.',
+    'permissionManagementForbidden' => 'No tiene permiso para gestionar las páginas de permisos.',
+    'permissionPageProtected' => 'Esta acción no se puede realizar en un módulo central del sistema ni en sus páginas de permisos.',
 ];

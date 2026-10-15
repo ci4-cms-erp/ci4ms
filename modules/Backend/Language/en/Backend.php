@@ -124,6 +124,8 @@ return [
     'operations' => 'Operations',
     'warning' => 'Warning',
     'htmlPurifierNotFound' => 'Html Purifier Not Found',
+    'invalidPermissionTypes' => 'Invalid permission types. Select one or more: create, read, update, delete.',
+    'invalidHost' => 'Invalid host. Enter a hostname (e.g. smtp.example.com) or an IP address, without a port or protocol.',
     'requiredContent' => 'Required Content',
     'published' => 'Content published',
     'drafted' => 'Content drafted',
@@ -211,6 +213,9 @@ return [
     'totalPages' => 'Total Pages',
     'siteName' => 'Site Name',
     'date' => 'Date',
+
+    // Development mode warning
+    'developmentModeWarning' => 'This site is running in DEVELOPMENT mode. Debug details (including database credentials) may be exposed on error pages. Never use this mode on a publicly accessible server.',
 
     // Previously referenced in code without a definition
     'home' => 'Home',

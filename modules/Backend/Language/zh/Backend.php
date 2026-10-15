@@ -87,6 +87,8 @@ return [
     'ipFormatsDifferent' => 'IP 格式不相同。<b>{0}</b>',
     'leftValueNotGreater' => '左侧的值不能大于或等于右侧的值。<b>{0}</b>',
     'invalidPhoneNumber' => '电话号码格式不正确。请以正确格式填写。',
+    'invalidPermissionTypes' => '无效的权限类型。请选择一个或多个: create, read, update, delete.',
+    'invalidHost' => '主机无效。请输入主机名(例如 smtp.example.com)或 IP 地址,不要包含端口或协议。',
     'success' => '成功',
     'error' => '错误',
     'showColumns' => '显示列',
@@ -131,4 +133,6 @@ return [
     'errCdSeconds' => '秒',
     // sidebar maintenance badge
     'menuInMaintenance' => '维护中',
+    // Development mode warning
+    'developmentModeWarning' => '此网站在开发模式下运行。调试详细信息（包括数据库凭据）可能会在错误页面上泄露。切勿在可公开访问的服务器上使用此模式。',
 ];

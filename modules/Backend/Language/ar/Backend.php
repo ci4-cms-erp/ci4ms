@@ -87,6 +87,8 @@ return [
     'ipFormatsDifferent' => 'تنسيقات IP ليست متماثلة. <b>{0}</b>',
     'leftValueNotGreater' => 'القيمة اليسرى لا يمكن أن تكون أكبر من أو تساوي القيمة اليمنى. <b>{0}</b>',
     'invalidPhoneNumber' => 'رقم الهاتف ليس بالتنسيق الصحيح. يرجى كتابته بالتنسيق الصحيح.',
+    'invalidPermissionTypes' => 'أنواع الأذونات غير صحيحة. اختر واحدة أو أكثر: create, read, update, delete.',
+    'invalidHost' => 'عنوان المضيف غير صالح. أدخل اسم مضيف (مثل smtp.example.com) أو عنوان IP، دون منفذ أو بروتوكول.',
     'success' => 'نجاح',
     'error' => 'خطأ',
     'showColumns' => 'الأعمدة',
@@ -131,4 +133,6 @@ return [
     'errCdSeconds' => 'ثوانٍ',
     // sidebar maintenance badge
     'menuInMaintenance' => 'قيد الصيانة',
+    // Development mode warning
+    'developmentModeWarning' => 'يعمل هذا الموقع في وضع التطوير. قد يتم الكشف عن تفاصيل التصحيح (بما في ذلك بيانات اعتماد قاعدة البيانات) على صفحات الخطأ. لا تستخدم هذا الوضع على خادم يمكن الوصول إليه علنًا.',
 ];

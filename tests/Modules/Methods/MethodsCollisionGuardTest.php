@@ -15,6 +15,7 @@ use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use Config\App;
 use Modules\Methods\Controllers\Methods;
+use ReflectionClassConstant;
 use ReflectionProperty;
 
 /**
@@ -72,6 +73,40 @@ final class MethodsCollisionGuardTest extends CIUnitTestCase
         cache()->clean();
 
         $this->commonModel = new CommonModel('tests');
+
+        // Fixture precondition: createPermissionPageRow() hardcodes
+        // module_id=2, assuming it resolves to the non-protected "Backup"
+        // module. Every collision-guard test below relies on update()'s
+        // PROTECTED_MODULES gate NOT tripping on this row -- if the seeded
+        // id ever drifts, this fails loudly here instead of every test
+        // below silently exercising the wrong (403) deny path.
+        //
+        // The id/name checks alone are NOT sufficient: they only prove
+        // modules.id=2 still resolves to a module literally named "Backup"
+        // -- they never ask whether "Backup" is still absent from
+        // Methods::PROTECTED_MODULES. If 'Backup' were ever added to that
+        // constant, both checks below would stay green (the id still
+        // exists, its name is still "Backup") while every test in this file
+        // silently started exercising the PROTECTED_MODULES 403 deny path
+        // instead of the collision-guard logic under test -- the whole
+        // suite would go vacuous without a single red test to reveal it
+        // (confirmed by mutation: adding 'Backup' to PROTECTED_MODULES left
+        // these two asserts green and every downstream test green). The
+        // third assert below closes that gap by asserting the actual
+        // invariant this fixture depends on -- 'Backup' not being a member
+        // of PROTECTED_MODULES -- read via reflection so it can never drift
+        // from the production constant (same technique as
+        // MethodsPermissionRowSuperadminGateTest::protectedModuleId()).
+        $fixtureModule = $this->commonModel->selectOne('modules', ['id' => 2]);
+        $this->assertNotNull($fixtureModule, 'Fixture precondition: modules.id=2 must exist in ci4ms_test.');
+        $this->assertSame('Backup', $fixtureModule->name, 'Fixture precondition: modules.id=2 must be the non-protected "Backup" module.');
+
+        $protectedModules = (new ReflectionClassConstant(Methods::class, 'PROTECTED_MODULES'))->getValue();
+        $this->assertNotContains(
+            $fixtureModule->name,
+            $protectedModules,
+            "Fixture precondition: '{$fixtureModule->name}' (modules.id=2) must NOT be in Methods::PROTECTED_MODULES -- if it ever is, update()'s PROTECTED_MODULES gate would 403 every test in this file instead of exercising the collision guard, and the id/name checks above would not catch it.",
+        );
 
         $this->db->transStart();
     }
@@ -217,9 +252,12 @@ final class MethodsCollisionGuardTest extends CIUnitTestCase
      * integer -- see modules/Methods/Views/form.php) via
      * Methods::resolveModuleId(), so a valid `moduleName` is now required
      * for create() to reach the INSERT at all. The sql_mode relaxation is
-     * gone; module id 1 ("Backend") is reused here because it is the same
-     * fixture value createPermissionPageRow() below already relies on for
-     * every other test in this file.
+     * gone; module id 1 ("Backend") is used directly via the `moduleName`
+     * POST field -- create() has no PROTECTED_MODULES check (only
+     * update()/index() do), so any valid module id works here. This is
+     * unrelated to createPermissionPageRow()'s module_id=2 fixture below,
+     * which exists solely to keep update()'s PROTECTED_MODULES gate from
+     * tripping on rows this file creates directly in the DB.
      */
     public function testCreatePersistsTypeOfPermissionsAsValidJson(): void
     {
@@ -254,9 +292,16 @@ final class MethodsCollisionGuardTest extends CIUnitTestCase
     }
 
     /**
-     * Creates an actor with no group membership -- classNameMethodNameCollides()
-     * and the validation rules under test do not depend on the actor's own
-     * permissions (unlike F1/F4), so a bare authenticated user is enough.
+     * Creates an actor with superadmin membership.
+     *
+     * classNameMethodNameCollides() and the validation rules under test do
+     * not depend on the actor's own permissions, but create()/update() now
+     * gate on inGroup('superadmin') before reaching either -- see the
+     * superadmin/PROTECTED_MODULES lock on the permission-row editor.
+     * Find-or-create mirrors MethodsRbacCacheInvalidationTest::createActor():
+     * auth_groups.group carries a UNIQUE index, so a blind create() would
+     * collide with a "superadmin" row already present on the shared,
+     * non-refreshed ci4ms_test schema.
      */
     private function createActor(): int
     {
@@ -273,7 +318,23 @@ final class MethodsCollisionGuardTest extends CIUnitTestCase
         ]);
         $users->save($user);
 
-        return (int) $users->getInsertID();
+        $userId = (int) $users->getInsertID();
+
+        $existingSuperadmin = $this->commonModel->selectOne('auth_groups', ['group' => 'superadmin']);
+        if ($existingSuperadmin === null) {
+            $this->commonModel->create('auth_groups', [
+                'group'       => 'superadmin',
+                'description' => 'superadmin',
+            ]);
+        }
+
+        $this->commonModel->create('auth_groups_users', [
+            'user_id'    => $userId,
+            'group'      => 'superadmin',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return $userId;
     }
 
     private function createPermissionPageRow(string $className, string $methodName, string $pagename): int
@@ -289,7 +350,9 @@ final class MethodsCollisionGuardTest extends CIUnitTestCase
             'inNavigation'      => 0,
             'isBackoffice'      => 1,
             'typeOfPermissions' => json_encode(['read_r' => true], JSON_UNESCAPED_UNICODE),
-            'module_id'         => 1,
+            // 2 = "Backup" in ci4ms_test, not in Methods::PROTECTED_MODULES
+            // -- see the setUp() precondition assert above.
+            'module_id'         => 2,
         ]);
     }
 

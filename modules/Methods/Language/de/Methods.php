@@ -54,4 +54,7 @@ return [
     'invalidZipFile' => 'Die hochgeladene Datei ist keine gültige ZIP-Datei.',
     'invalidZipPath' => 'Das Zielverzeichnis ist nicht beschreibbar und konnte nicht erstellt werden.',
     'zipExtractError' => 'Beim Extrahieren der ZIP-Datei ist ein Fehler aufgetreten: {0}',
+    'moduleManagementForbidden' => 'Sie haben keine Berechtigung zur Durchführung von Modulverwaltungsvorgängen.',
+    'permissionManagementForbidden' => 'Sie haben keine Berechtigung zur Verwaltung von Berechtigungsseiten.',
+    'permissionPageProtected' => 'Diese Aktion kann nicht für ein Kernsystemmodul oder dessen Berechtigungsseiten ausgeführt werden.',
 ];

@@ -24,6 +24,12 @@ return [
     'siteName' => 'اسم الموقع',
     'siteUrl' => 'عنوان URL للموقع',
     'siteSlogan' => 'شعار الموقع',
+    // Environment
+    'environment' => 'البيئة',
+    'environmentProduction' => 'الإنتاج (موصى به)',
+    'environmentDevelopment' => 'التطوير',
+    'environmentHint' => 'اختر الإنتاج لأي خادم بخلاف جهازك المحلي.',
+    'environmentDevelopmentConfirm' => 'إذا كنت تثبت هذا على خادم يمكن الوصول إليه علنًا، فلا تختر هذا.',
     'siteNamePlaceholder' => 'اسم موقعك هنا',
     'siteSloganPlaceholder' => 'شعارك هنا',
 ];

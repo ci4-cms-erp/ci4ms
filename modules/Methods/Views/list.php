@@ -60,15 +60,17 @@ foreach ($modules as $m) {
         <button class="btn btn-sm btn-outline-info" id="moduleScan">
             <i class="fas fa-sync-alt mr-1"></i> <?php echo lang('Methods.scanModules') ?>
         </button>
-        <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modal-create-module">
-            <i class="fas fa-plus mr-1"></i> <?php echo lang('Methods.createModule') ?>
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-success" data-toggle="modal" data-target="#modal-default">
-            <i class="fas fa-upload mr-1"></i> <?php echo lang('Methods.uploadModule') ?>
-        </button>
-        <a href="<?php echo route_to('methodCreate') ?>" class="btn btn-sm btn-outline-secondary">
-            <?php echo lang('Backend.add') ?>
-        </a>
+        <?php if ($logged_in_user && $logged_in_user->inGroup('superadmin')): ?>
+            <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modal-create-module">
+                <i class="fas fa-plus mr-1"></i> <?php echo lang('Methods.createModule') ?>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-success" data-toggle="modal" data-target="#modal-default">
+                <i class="fas fa-upload mr-1"></i> <?php echo lang('Methods.uploadModule') ?>
+            </button>
+            <a href="<?php echo route_to('methodCreate') ?>" class="btn btn-sm btn-outline-secondary">
+                <?php echo lang('Backend.add') ?>
+            </a>
+        <?php endif; ?>
         <div class="ml-auto d-flex gap-5">
             <button class="btn btn-sm btn-outline-dark" id="expandAll" title="Tümünü Aç">
                 <i class="fas fa-expand-alt"></i>
@@ -133,12 +135,14 @@ foreach ($modules as $m) {
                         <div class="m-toggle-group">
                             <span
                                 class="m-toggle-label module-toggle-label"><?php echo $module->active ? lang('Backend.active') : lang('Backend.passive') ?></span>
-                            <label class="toggle-switch m-0">
-                                <input type="checkbox" class="module-toggle-input" <?php echo $module->active ? 'checked' : '' ?>>
-                                <span class="toggle-slider"></span>
-                            </label>
+                            <?php if (!$isProtected && $logged_in_user && $logged_in_user->inGroup('superadmin')): ?>
+                                <label class="toggle-switch m-0">
+                                    <input type="checkbox" class="module-toggle-input" <?php echo $module->active ? 'checked' : '' ?>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            <?php endif; ?>
                         </div>
-                        <?php if (!$isProtected): ?>
+                        <?php if (!$isProtected && $logged_in_user && $logged_in_user->inGroup('superadmin')): ?>
                             <button class="m-btn-delete btn-delete-module" data-module-id="<?php echo $module->id ?>"
                                 title="<?php echo lang('Methods.deleteModule') ?>">
                                 <i class="fas fa-trash-alt"></i>
@@ -208,17 +212,21 @@ foreach ($modules as $m) {
                                                 class="m-status-pill <?php echo $page->isActive ? 'm-status-active' : 'm-status-inactive' ?> status-badge">
                                                 <?php echo $page->isActive ? lang('Backend.active') : lang('Backend.passive') ?>
                                             </span>
-                                            <label class="toggle-switch page-toggle">
-                                                <input type="checkbox" <?php echo $page->isActive ? 'checked' : '' ?>>
-                                                <span class="toggle-slider"></span>
-                                            </label>
+                                            <?php if (!$isProtected && $logged_in_user && $logged_in_user->inGroup('superadmin')): ?>
+                                                <label class="toggle-switch page-toggle">
+                                                    <input type="checkbox" <?php echo $page->isActive ? 'checked' : '' ?>>
+                                                    <span class="toggle-slider"></span>
+                                                </label>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <div class="m-page-actions">
-                                                <a href="<?php echo !empty($page->id) ? route_to('methodUpdate', $page->id) : '#' ?>"
-                                                    class="m-btn-edit">
-                                                    <?php echo lang('Backend.update') ?>
-                                                </a>
+                                                <?php if (!$isProtected && $logged_in_user && $logged_in_user->inGroup('superadmin')): ?>
+                                                    <a href="<?php echo !empty($page->id) ? route_to('methodUpdate', $page->id) : '#' ?>"
+                                                        class="m-btn-edit">
+                                                        <?php echo lang('Backend.update') ?>
+                                                    </a>
+                                                <?php endif; ?>
                                             </div>
                                         </td>
                                     </tr>
@@ -232,6 +240,7 @@ foreach ($modules as $m) {
     </div>
     <div id="noResultsMessage" class="m-empty-state" style="display:none"><i
             class="fas fa-search"></i><?php echo lang('Methods.noResults') ?></div>
+    <?php if ($logged_in_user && $logged_in_user->inGroup('superadmin')): ?>
     <div class="modal fade" id="modal-default">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content" style="border-radius:14px;overflow:hidden">
@@ -325,6 +334,7 @@ foreach ($modules as $m) {
             </form>
         </div>
     </div>
+    <?php endif; ?>
 </section>
 <?php echo $this->endSection();
 echo $this->section('javascript');
@@ -444,6 +454,7 @@ echo script_tag("be-assets/plugins/dropzone/min/dropzone.min.js"); ?>
         });
         $('#moduleFilter, #statusFilter').on('change', runFilter);
 
+        <?php if ($logged_in_user && $logged_in_user->inGroup('superadmin')): ?>
         // ═══════════════════════════════════════════════════════════
         // Dropzone
         // ═══════════════════════════════════════════════════════════
@@ -500,6 +511,7 @@ echo script_tag("be-assets/plugins/dropzone/min/dropzone.min.js"); ?>
         document.querySelector("#actions .cancel").onclick = function () {
             myDropzone.removeAllFiles(true);
         };
+        <?php endif; ?>
 
         // ═══════════════════════════════════════════════════════════
         // Module Scan

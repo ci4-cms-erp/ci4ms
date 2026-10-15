@@ -97,6 +97,8 @@ return [
     'ipFormatsDifferent' => 'IP formatları aynı değil. <b>{0}</b>',
     'leftValueNotGreater' => 'Soldaki değer sağdakinden büyük yada eşit olamaz. <b>{0}</b>',
     'invalidPhoneNumber' => 'Telefon Numarası Uygun formatta değil. Lütfen doğru formatta yazınız.',
+    'invalidPermissionTypes' => 'Geçersiz yetki türleri. Aşağıdakilerden bir veya daha fazlasını seçiniz: create, read, update, delete.',
+    'invalidHost' => 'Geçersiz sunucu adresi. Port veya protokol olmadan bir ana makine adı (ör. smtp.example.com) ya da IP adresi girin.',
     'htmlPurifierNotFound' => 'HTMLPurifier kütüphanesi bulunamadı. Lütfen "composer require ezyang/htmlpurifier" çalıştırın.',
     'success' => 'Başarılı !',
     'error' => 'Hata !',
@@ -211,6 +213,9 @@ return [
     'totalPages' => 'Toplam Sayfa',
     'siteName' => 'Site Adı',
     'date' => 'Tarih',
+
+    // Development mode warning
+    'developmentModeWarning' => 'Bu site GELİŞTİRME modunda çalışıyor. Hata sayfalarında veritabanı kimlik bilgileri dahil hata ayıklama bilgileri açığa çıkabilir. Bu modu herkese açık bir sunucuda asla kullanmayın.',
 
     // Previously referenced in code without a definition
     'home' => 'Anasayfa',

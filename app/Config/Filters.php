@@ -79,7 +79,10 @@ class Filters extends BaseFilters
      * List of filter aliases that are always
      * applied before and after every request.
      *
-     * @var array<string, array<string, array<string, string>>>|array<string, list<string>>
+     * @var array{
+     *    before: array<int<0, max>|string, array{except: list<string>|string}|string>,
+     *    after: array<int<0, max>|string, array{except: list<string>|string}|string>
+     * }
      */
     public array $globals = [
         'before' => [
@@ -195,7 +198,7 @@ class Filters extends BaseFilters
 
         $this->aliases['throttle']   = \App\Filters\ThrottleFilter::class;
         $this->aliases['auth-rates'] = \Modules\Auth\Filters\AuthThrottleFilter::class;
-        
+
         foreach ($directories as $directory) {
             if (is_dir($directory)) {
                 foreach (glob("$directory/*.php") as $file) {

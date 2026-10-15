@@ -54,4 +54,7 @@ return [
     'invalidZipFile' => 'الملف الذي تم تحميله ليس ملف ZIP صالحاً.',
     'invalidZipPath' => 'دليل الوجهة غير قابل للكتابة ولا يمكن إنشاؤه.',
     'zipExtractError' => 'حدث خطأ أثناء استخراج ملف ZIP: {0}',
+    'moduleManagementForbidden' => 'ليس لديك إذن لإجراء عمليات إدارة الوحدات.',
+    'permissionManagementForbidden' => 'ليس لديك إذن لإدارة صفحات الأذونات.',
+    'permissionPageProtected' => 'لا يمكن تنفيذ هذا الإجراء على وحدة نظام أساسية أو صفحات أذوناتها.',
 ];

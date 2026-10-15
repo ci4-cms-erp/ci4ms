@@ -24,6 +24,12 @@ return [
     'siteName' => 'जगह का नाम',
     'siteUrl' => 'साइट URL',
     'siteSlogan' => 'साइट का नारा',
+    // Environment
+    'environment' => 'पर्यावरण',
+    'environmentProduction' => 'उत्पादन (अनुशंसित)',
+    'environmentDevelopment' => 'विकास',
+    'environmentHint' => 'अपने स्थानीय मशीन के अलावा किसी भी सर्वर के लिए उत्पादन चुनें।',
+    'environmentDevelopmentConfirm' => 'यदि आप इसे सार्वजनिक रूप से सुलभ सर्वर पर स्थापित कर रहे हैं, तो इसे न चुनें।',
     'siteNamePlaceholder' => 'आपकी साइट का नाम यहां',
     'siteSloganPlaceholder' => 'आपका नारा यहाँ',
 ];

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Modules\Auth\Controllers;
 
 use CodeIgniter\Events\Events;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\I18n\Time;
@@ -56,7 +57,7 @@ class MagicLinkController extends BaseController
      */
     public function loginView()
     {
-        if (! setting('Auth.allowMagicLinkLogins')) {
+        if (!setting('Auth.allowMagicLinkLogins')) {
             return redirect()->route('login')->with('error', lang('Auth.magicLinkDisabled'));
         }
 
@@ -70,28 +71,29 @@ class MagicLinkController extends BaseController
     /**
      * Receives the email from the user, creates the hash
      * to a user identity, and sends an email to the given
-     * email address.
+     * email address. Unknown accounts and SMTP failures render the same generic
+     * message as success, so the response never reveals whether the account exists.
      *
-     * @return RedirectResponse|string
+     * @return RedirectResponse|string RedirectResponse only for disabled feature or invalid input
      */
     public function loginAction()
     {
-        if (! setting('Auth.allowMagicLinkLogins')) {
+        if (!setting('Auth.allowMagicLinkLogins')) {
             return redirect()->route('login')->with('error', lang('Auth.magicLinkDisabled'));
         }
 
         // Validate email format
         $rules = $this->getValidationRules();
-        if (! $this->validateData($this->request->getPost(), $rules, [], config('Auth')->DBGroup)) {
+        if (!$this->validateData($this->request->getPost(), $rules, [], config('Auth')->DBGroup)) {
             return redirect()->route('magic-link')->with('errors', $this->validator->getErrors());
         }
 
         // Check if the user exists
         $email = $this->request->getPost('email');
-        $user  = $this->provider->findByCredentials(['email' => $email]);
+        $user = $this->provider->findByCredentials(['email' => $email]);
 
         if ($user === null) {
-            return redirect()->route('magic-link')->with('error', lang('Auth.invalidEmail', [$email]));
+            return $this->displayMessage();
         }
 
         /** @var UserIdentityModel $identityModel */
@@ -106,8 +108,8 @@ class MagicLinkController extends BaseController
 
         $identityModel->insert([
             'user_id' => $user->id,
-            'type'    => Session::ID_TYPE_MAGIC_LINK,
-            'secret'  => $token,
+            'type' => Session::ID_TYPE_MAGIC_LINK,
+            'secret' => $token,
             'expires' => Time::now()->addSeconds(setting('Auth.magicLinkLifetime')),
         ]);
 
@@ -116,7 +118,7 @@ class MagicLinkController extends BaseController
 
         $ipAddress = $request->getIPAddress();
         $userAgent = (string) $request->getUserAgent();
-        $date      = Time::now()->toDateTimeString();
+        $date = Time::now()->toDateTimeString();
 
         // Send the user an email with the code
         helper('email');
@@ -133,7 +135,7 @@ class MagicLinkController extends BaseController
         if ($email->send(false) === false) {
             log_message('error', $email->printDebugger(['headers']));
 
-            return redirect()->route('magic-link')->with('error', lang('Auth.unableSendEmailToUser', [$user->email]));
+            return $this->displayMessage();
         }
 
         // Clear the email
@@ -155,8 +157,12 @@ class MagicLinkController extends BaseController
      */
     public function verify(): RedirectResponse
     {
-        if (! setting('Auth.allowMagicLinkLogins')) {
+        if (!setting('Auth.allowMagicLinkLogins')) {
             return redirect()->route('login')->with('error', lang('Auth.magicLinkDisabled'));
+        }
+
+        if ($this->request->getUserAgent()->isRobot()) {
+            throw PageNotFoundException::forPageNotFound();
         }
 
         $token = $this->request->getGet('token');

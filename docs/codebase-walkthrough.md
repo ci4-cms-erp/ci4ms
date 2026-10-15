@@ -55,7 +55,7 @@ graph TD
    - Converts controller FQCN to `className` format: `\Modules\Users\Controllers\UserController` → `-Modules-Users-Controllers-UserController`
    - Looks up `auth_permissions_pages` where `className` + `methodName` match (result cached for 1 hour)
    - **Superadmin**: Always allowed if page exists in DB
-   - **Others**: Determines needed action (`read`/`create`/`update`/`delete`) from HTTP method + method name pattern, builds permission string like `Users.userList.read`, checks via `$user->can($permissionString)`
+   - **Others**: Determines needed action (`read`/`create`/`update`/`delete`) from the page row's `typeOfPermissions` JSON flags (`create_r`/`read_r`/`update_r`/`delete_r`) via `neededAction()` — checked in `read → update → delete → create` order, so if more than one flag is set the last match wins (`create_r` beats everything); builds permission string like `users.userlist.read` (always lowercased), checks via `$user->can($permissionString)`
 3. **Backend BaseController `initController()`**: Loads `CommonModel`, `BackendConfig`, `Encrypter`, builds `$defData` with auth config, logged-in user, navigation sidebar, page title, settings, URI info
 4. **Module controller** handles the request
 
@@ -163,11 +163,14 @@ modules/<Name>/
 ### 5.1 [LoginController.php](modules/Auth/Controllers/LoginController.php)
 
 - Uses **Gregwar/Captcha** library with custom styling (green background, dark text, no lines)
-- Captcha phrase stored in session flashdata
+- Captcha phrase stored in session flashdata (written only by `loginView()`; flashdata lives for one request)
+- The captcha check is fail-closed: `getValidationRules()` appends `captcha => required|regex_match[/^[^<>{}]*$/u]` to Shield's `getLoginRules()` (which has no captcha rule), and `loginAction()` rejects an empty or `null` expected value and compares with `hash_equals()`. The earlier loose `==` let a POST with no `captcha` field pass as `null == null`; see the `CHANGELOG.md` entry. `required` applies in every environment — the development bypass below skips only whether the value is correct, not whether the field is present.
 - **Captcha bypass requires two conditions, not one**: `ENVIRONMENT === 'development'` **and** the `Auth.captchaBypassInDevelopment` setting (seeded `false`) both have to hold (`if (ENVIRONMENT === 'development' && setting('Auth.captchaBypassInDevelopment')) $captchaCheck = true`). Production can never bypass regardless of the setting, and a development install only bypasses if an operator explicitly opts in.
 - Login credentials extracted from `setting('Auth.validFields')`
 - Supports "remember me" via Shield's `$authenticator->remember($remember)`
 - After login, checks for pending 2FA actions (`hasAction()`)
+- `loginAction()` no longer prints `$result->reason()` to the caller at all (GHSA-ppvr-272j-ggvv): every `!$result->isOK()` outcome — no such account, wrong password, or a banned account with the right password — now flashes the same constant key, `lang('Auth.loginFailed')`. The real reason still goes to `log_message('warning', ...)` for an operator, keyed by IP and a masked identifier, never the response. `Auth.loginFailed` lives in `modules/Auth/Language/<locale>/Auth.php` (all 11 locales) — a key Shield doesn't ship, so there's no vendor-namespace merge race to lose the way the earlier `app/Language/<locale>/Auth.php` override attempt eventually did; see `docs/developer-handbook.md`'s "Coding Guidelines" section and the `CHANGELOG.md` entry for the full trace. The response-timing gap between the failure paths (the nonexistent-account branch never calls `Passwords::verify()`) is a separate, still-open side channel — see the `CHANGELOG.md` entry.
+- `MagicLinkController` (a fork of Shield's controller, same enumeration class on the `backend/login/magic-link` endpoint, GHSA-cwhg-7xgv-343q): `loginAction()` returns `displayMessage()` — the same 200 view rendering `Auth.magicLinkSentIfRegistered` — for an unknown account, an SMTP failure and a successful send; an unknown account generates no token, writes no identity and sends no mail, and SMTP failures go to the log only. `verify()` rejects robot user agents with a 404 (`isRobot()`). Two items are still open and tracked in the `CHANGELOG.md` entry: the synchronous `send()` leaves a timing difference between existing and nonexistent accounts, and `verify()` does not run Shield's login-action flow (harmless while `actions['login']` is `null`, a 2FA bypass if it is ever enabled).
 
 ### 5.2 [ActionController.php](modules/Auth/Controllers/ActionController.php)
 
@@ -193,13 +196,11 @@ flowchart TD
     L -->|No| M["Redirect /backend/403"]
 ```
 
-**Action determination logic** (lines 60-68):
+**Action determination logic** (`neededAction()`, lines 69-97):
 
-- `GET` → `read`
-- `POST` + method name contains `create` → `create`
-- `POST` + method name contains `update` → `update`
-- `POST` + method name contains `delete` → `delete`
-- `POST` + other → `update` (default)
+- Reads the page row's `typeOfPermissions` JSON column (`create_r`/`read_r`/`update_r`/`delete_r` flags) — not the HTTP method or method name
+- Defaults to `read`; the four flags are checked in a fixed order — `read_r` → `update_r` → `delete_r` → `create_r` — and each `true` flag overwrites the previous result, so when more than one flag is set, `create_r` wins
+- Non-array/malformed JSON silently falls back to the `read` default (fail-open, tracked as GHSA-5j8q)
 
 ### 5.4 [AuthConfig.php](modules/Auth/Config/AuthConfig.php)
 
@@ -305,6 +306,8 @@ auth_users_permissions (user-specific overrides)
 This is how CI4MS auto-discovers new routes when you add a new module — you just run the module scan from the backend UI.
 
 **`index()`** also handles toggling module/page active status via AJAX.
+
+**`create()`**/**`update()`** write new/existing `auth_permissions_pages` rows from the method form. Along with `index()`'s POST+AJAX toggle branch, both are `superadmin`-only: `pagename`/`className`/`methodName`/`typeOfPermissions` are exactly the columns `Ci4MsAuthFilter` reads per request to decide authorization (className+methodName locate the row, pagename+typeOfPermissions decide the verdict), so a lesser actor able to write them could remap any route's authorization to a permission they already hold. The pre-existing `classNameMethodNameCollides()` guard only blocks a duplicate `(className, methodName)` pair — it does not stop a `pagename`/`typeOfPermissions` change on an already-registered row, which is what the superadmin gate closes. `update()` and `index()`'s POST branch also refuse to touch a row belonging to a `PROTECTED_MODULES` module, even for superadmin. `index()`'s GET branch (the page list) is deliberately left open to `read` permission, so it doesn't disappear for operators without the gate.
 
 ---
 
@@ -694,7 +697,7 @@ Settings use CI4's `setting()` service which stores to the `settings` DB table. 
 ## 20. Important Notes & Gotchas
 
 > [!NOTE]
-> **CSRF exceptions** are scattered across module configs. When adding a new AJAX endpoint, remember to add it to the module's `Config/<Module>Config.php` `$csrfExcept` array, OR include the CSRF token in the AJAX request headers.
+> **CSRF exceptions** are scattered across module configs. When adding a new AJAX endpoint, the preferred path is to send the CSRF token with the request; adding it to the module's `Config/<Module>Config.php` `$csrfExcept` array is a last resort and must not be used for state-changing POSTs (the lock-screen POSTs sat in `$csrfExcept` for exactly that reason and were later removed).
 
 > [!TIP]
 > **Adding a new module**: Create the module directory structure → add routes with `backendGuard` filter and `'role'` option → run `moduleScan` from the backend Methods page → assign permissions to groups.

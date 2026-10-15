@@ -1,25 +1,25 @@
 <?php if (session()->has('message')) : ?>
 	<div class="alert alert-success">
-		<?php echo session('message') ?>
+		<?php echo esc(session('message')) ?>
 	</div>
 <?php endif ?>
 
 <?php if (session()->has('warning')) : ?>
 	<div class="alert alert-warning">
-		<?php echo session('warning') ?>
+		<?php echo esc(session('warning')) ?>
 	</div>
 <?php endif ?>
 
 <?php if (session()->has('error')) : ?>
 	<div class="alert alert-danger">
-		<?php echo session('error') ?>
+		<?php echo esc(session('error')) ?>
 	</div>
 <?php endif ?>
 
 <?php if (session()->has('errors')) : ?>
 	<ul class="alert alert-danger list-unstyled">
 		<?php foreach (session('errors') as $error) : ?>
-			<li><?php echo $error ?></li>
+			<li><?php echo esc($error) ?></li>
 		<?php endforeach ?>
 	</ul>
 <?php endif ?>

@@ -87,6 +87,8 @@ return [
     'ipFormatsDifferent' => 'Форматы IP не совпадают. <b>{0}</b>',
     'leftValueNotGreater' => 'Левое значение не может быть больше или равно правому. <b>{0}</b>',
     'invalidPhoneNumber' => 'Номер телефона указан в неправильном формате. Пожалуйста, напишите в правильном формате.',
+    'invalidPermissionTypes' => 'Неверные типы разрешений. Выберите один или более: create, read, update, delete.',
+    'invalidHost' => 'Недопустимый хост. Введите имя хоста (например, smtp.example.com) или IP-адрес без порта и протокола.',
     'success' => 'Успех',
     'error' => 'Ошибка',
     'showColumns' => 'Колонки',
@@ -131,4 +133,6 @@ return [
     'errCdSeconds' => 'Секунды',
     // sidebar maintenance badge
     'menuInMaintenance' => 'На обслуживании',
+    // Development mode warning
+    'developmentModeWarning' => 'Этот сайт работает в режиме РАЗРАБОТКИ. Сведения отладки (включая учетные данные базы данных) могут быть открыты на страницах ошибок. Никогда не используйте этот режим на общедоступном сервере.',
 ];

@@ -26,6 +26,18 @@ class Methods extends \Modules\Backend\Controllers\BaseController
         'Media',
         'Menu'
     ];
+    /**
+     * Lists auth_permissions_pages rows and, on POST+AJAX, toggles the
+     * isActive flag of a module or of a single permission page.
+     *
+     * The GET branch (page list) stays open to `read` permission. The
+     * POST+AJAX branch is superadmin-only and, same rationale as
+     * create()/update(), refuses to touch a PROTECTED_MODULES module or any
+     * of its pages — checked via both the `module_id` and `page_id` POST
+     * paths independently, since either can arrive on its own.
+     *
+     * @return \CodeIgniter\HTTP\ResponseInterface|string
+     */
     public function index()
     {
         if ($this->request->is('post') && $this->request->isAJAX()) {
@@ -38,6 +50,37 @@ class Methods extends \Modules\Backend\Controllers\BaseController
                 $valData['page_id'] = ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero'];
             if ($this->validate($valData) === false)
                 return $this->fail($this->validator->getErrors());
+
+            // Third-layer guard, kept even though the route filter and
+            // Modules\Methods permission entry should already gate this action:
+            // if either is misconfigured or bypassed, this is what stops an
+            // authenticated-but-non-superadmin user from flipping the
+            // `isActive` flag on a module or a single auth_permissions_pages
+            // row (see Modules\MigrationManager\Controllers\MigrationManager
+            // class docblock for the same rationale). Never remove this check.
+            if (!auth()->user()->inGroup('superadmin')) {
+                return $this->failForbidden(lang('Methods.permissionManagementForbidden'));
+            }
+
+            $moduleIdPost = $this->request->getPost('module_id');
+            if (!empty($moduleIdPost)) {
+                $targetModule = $this->commonModel->selectOne('modules', ['id' => $moduleIdPost]);
+                if (!empty($targetModule) && in_array($targetModule->name, self::PROTECTED_MODULES, true)) {
+                    return $this->failForbidden(lang('Methods.permissionPageProtected'));
+                }
+            }
+
+            $pageIdPost = $this->request->getPost('page_id');
+            if (!empty($pageIdPost)) {
+                $targetPage = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pageIdPost]);
+                if (!empty($targetPage)) {
+                    $targetPageModule = $this->commonModel->selectOne('modules', ['id' => $targetPage->module_id]);
+                    if (!empty($targetPageModule) && in_array($targetPageModule->name, self::PROTECTED_MODULES, true)) {
+                        return $this->failForbidden(lang('Methods.permissionPageProtected'));
+                    }
+                }
+            }
+
             $flag = false;
             if (!empty($this->request->getPost('module_id')) && $this->commonModel->edit('modules', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['id' => $this->request->getPost('module_id')]) && $this->commonModel->edit('auth_permissions_pages', ['isActive' => $this->request->getPost('status') == 'inactive' ? false : true], ['module_id' => $this->request->getPost('module_id')]))
                 $flag = true;
@@ -57,6 +100,13 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     /**
      * Creates a new auth_permissions_pages row from the method form.
      *
+     * Superadmin-only: pagename/className/methodName/typeOfPermissions are
+     * exactly the fields Ci4MsAuthFilter reads to decide whether a request is
+     * authorized (see Ci4MsAuthFilter::before()), so a lower-privileged actor
+     * with access to this form could otherwise remap any route's
+     * authorization to itself. The gate covers the GET (form) branch too —
+     * intentional, not just the POST submit.
+     *
      * className/methodName are the exact keys Ci4MsAuthFilter uses to look up
      * the authorization row for a request, so a new row is refused if it would
      * collide with an already-registered controller/method pair (see
@@ -66,12 +116,25 @@ class Methods extends \Modules\Backend\Controllers\BaseController
      * auth_permissions_pages.module_id is NOT NULL with no default and carries
      * a foreign key to modules(id).
      *
-     * @return \CodeIgniter\HTTP\RedirectResponse|string
+     * @return \CodeIgniter\HTTP\RedirectResponse|\CodeIgniter\HTTP\ResponseInterface|string
      */
     public function create()
     {
+        // Third-layer guard, kept even though the route filter and
+        // Modules\Methods permission entry should already gate this action:
+        // if either is misconfigured or bypassed, this is what stops an
+        // authenticated-but-non-superadmin user from creating a new
+        // auth_permissions_pages row with attacker-chosen
+        // pagename/className/methodName/typeOfPermissions — exactly the
+        // fields Ci4MsAuthFilter reads to authorize a request (see
+        // Modules\MigrationManager\Controllers\MigrationManager class
+        // docblock for the same rationale). Never remove this check.
+        if (!auth()->user()->inGroup('superadmin')) {
+            return $this->failForbidden(lang('Methods.permissionManagementForbidden'));
+        }
+
         if ($this->request->is('post')) {
-            if ($this->validate($this->validationRules()) === false)
+            if ($this->validateData($this->request->getPost(), $this->validationRules()) === false)
                 return redirect()->route('methodCreate')->withInput()->with('errors', $this->validator->getErrors());
 
             $className = esc(strip_tags(trim((string) $this->request->getPost('className'))));
@@ -126,18 +189,45 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     /**
      * Updates an existing auth_permissions_pages row from the method form.
      *
+     * Superadmin-only, same rationale as create(): the row being written
+     * feeds Ci4MsAuthFilter's authorization decision directly. Additionally
+     * refuses to touch a row belonging to a PROTECTED_MODULES module — even
+     * for superadmin — mirroring the moduleDelete()/moduleInfo() "this
+     * module is never touched" rule. Both gates cover the GET (form) branch
+     * too, not just POST.
+     *
      * Same className/methodName collision guard as create(); a match against
      * a DIFFERENT row is refused, a match against the row's own current pk is
      * allowed (submitting the form unchanged must not be blocked).
      *
      * @param int $pk auth_permissions_pages.id
      *
-     * @return \CodeIgniter\HTTP\RedirectResponse|string
+     * @return \CodeIgniter\HTTP\RedirectResponse|\CodeIgniter\HTTP\ResponseInterface|string
      */
     public function update(int $pk)
     {
+        // Third-layer guard, kept even though the route filter and
+        // Modules\Methods permission entry should already gate this action:
+        // if either is misconfigured or bypassed, this is what stops an
+        // authenticated-but-non-superadmin user from rewriting an EXISTING
+        // auth_permissions_pages row's pagename/className/methodName/
+        // typeOfPermissions and remapping any route's authorization to
+        // itself (see Modules\MigrationManager\Controllers\MigrationManager
+        // class docblock for the same rationale). Never remove this check.
+        if (!auth()->user()->inGroup('superadmin')) {
+            return $this->failForbidden(lang('Methods.permissionManagementForbidden'));
+        }
+
+        $targetPage = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pk]);
+        if (!empty($targetPage)) {
+            $targetModule = $this->commonModel->selectOne('modules', ['id' => $targetPage->module_id]);
+            if (!empty($targetModule) && in_array($targetModule->name, self::PROTECTED_MODULES, true)) {
+                return $this->failForbidden(lang('Methods.permissionPageProtected'));
+            }
+        }
+
         if ($this->request->is('post')) {
-            if ($this->validate($this->validationRules()) === false)
+            if ($this->validateData($this->request->getPost(), $this->validationRules()) === false)
                 return redirect()->route('methodUpdate', [$pk])->withInput()->with('errors', $this->validator->getErrors());
 
             $className = esc(strip_tags(trim((string) $this->request->getPost('className'))));
@@ -179,7 +269,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             } else
                 return redirect()->route('methodUpdate', [$pk])->withInput()->with('error', lang('Backend.notUpdated', [$this->request->getPost('pagename')]));
         }
-        $this->defData['method'] = $this->commonModel->selectOne('auth_permissions_pages', ['id' => $pk]);
+        $this->defData['method'] = $targetPage;
         $this->defData['methods'] = $this->commonModel->lists('auth_permissions_pages', '*', ['id!=' => $pk, 'inNavigation' => true], 'pagename ASC');
         $this->defData['modules'] = $this->commonModel->lists('modules');
         return view('Modules\Methods\Views\form', $this->defData);
@@ -211,6 +301,19 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     {
         if (!$this->request->isAJAX())
             return $this->failForbidden();
+
+        // Third-layer guard, kept even though the route filter and
+        // Modules\Methods permission entry should already gate this action:
+        // if either is misconfigured or bypassed, this is what stops an
+        // authenticated-but-non-superadmin user from uploading a module ZIP
+        // whose Config/Routes.php gets `require`d unconditionally on the
+        // next request — i.e. remote code execution (see
+        // Modules\MigrationManager\Controllers\MigrationManager class
+        // docblock for the same rationale). Never remove this check.
+        if (!auth()->user()->inGroup('superadmin')) {
+            return $this->failForbidden(lang('Methods.moduleManagementForbidden'));
+        }
+
         $file = $this->request->getFile('modules');
 
         if (!$file->isValid() || $file->getClientExtension() !== 'zip') {
@@ -348,6 +451,18 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     public function moduleCreate()
     {
         if (!$this->request->isAJAX()) return $this->failForbidden();
+
+        // Third-layer guard, kept even though the route filter and
+        // Modules\Methods permission entry should already gate this action:
+        // if either is misconfigured or bypassed, this is what stops an
+        // authenticated-but-non-superadmin user from running `make:module`
+        // and writing a new module's files straight to disk (see
+        // Modules\MigrationManager\Controllers\MigrationManager class
+        // docblock for the same rationale). Never remove this check.
+        if (!auth()->user()->inGroup('superadmin')) {
+            return $this->failForbidden(lang('Methods.moduleManagementForbidden'));
+        }
+
         $valData = ([
             'module_name' => ['label' => lang('Methods.moduleName'), 'rules' => 'required|alpha_dash'],
         ]);
@@ -429,6 +544,17 @@ class Methods extends \Modules\Backend\Controllers\BaseController
     {
         if (!$this->request->isAJAX() || !$this->request->is('post'))
             return $this->failForbidden();
+
+        // Third-layer guard, kept even though the route filter and
+        // Modules\Methods permission entry should already gate this action:
+        // if either is misconfigured or bypassed, this is what stops an
+        // authenticated-but-non-superadmin user from dropping a module's
+        // tables and deleting its files from disk (see
+        // Modules\MigrationManager\Controllers\MigrationManager class
+        // docblock for the same rationale). Never remove this check.
+        if (!auth()->user()->inGroup('superadmin')) {
+            return $this->failForbidden(lang('Methods.moduleManagementForbidden'));
+        }
 
         $valData = [
             'module_id' => ['label' => lang('Backend.id'), 'rules' => 'required|is_natural_no_zero'],
@@ -524,7 +650,7 @@ class Methods extends \Modules\Backend\Controllers\BaseController
             'sefLink' => ['label' => '', 'rules' => 'required|regex_match[/^[^<>{}]*$/u]'],
             'className' => ['label' => '', 'rules' => 'permit_empty|regex_match[/^[A-Za-z0-9_\-]*$/]'],
             'methodName' => ['label' => '', 'rules' => 'permit_empty|regex_match[/^[A-Za-z0-9_\-]*$/]'],
-            'typeOfPermissions' => ['label' => '', 'rules' => 'required']
+            'typeOfPermissions' => ['label' => '', 'rules' => 'required|permissionActionList']
         ];
     }
 

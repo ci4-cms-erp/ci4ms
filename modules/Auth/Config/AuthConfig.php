@@ -6,7 +6,7 @@ use CodeIgniter\Config\BaseConfig;
 
 class AuthConfig extends BaseConfig
 {
-    public $csrfExcept = ['backend/lock', 'backend/lock/*'];
+    public $csrfExcept = [];
 
     public $filters = [
         'auth-rates' => [

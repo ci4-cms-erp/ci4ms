@@ -24,6 +24,12 @@ return [
     'siteName' => 'サイト名',
     'siteUrl' => 'サイトURL',
     'siteSlogan' => 'サイトのスローガン',
+    // Environment
+    'environment' => '環境',
+    'environmentProduction' => '本番環境（推奨）',
+    'environmentDevelopment' => '開発環境',
+    'environmentHint' => 'ご使用のローカルマシン以外のすべてのサーバーについて、本番環境を選択します。',
+    'environmentDevelopmentConfirm' => 'これを公開アクセス可能なサーバーにインストールしている場合、これを選択しないでください。',
     'siteNamePlaceholder' => 'サイト名はここにあります',
     'siteSloganPlaceholder' => 'あなたのスローガンはここにあります',
 ];

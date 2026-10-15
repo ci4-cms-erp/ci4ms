@@ -509,6 +509,60 @@ composer outdated</code></pre>
             languages are currently supported.
           </li>
           <li>
+            <strong>Overriding a vendor package's language strings:</strong>
+            <code>app/Language/&lt;locale&gt;/&lt;File&gt;.php</code> beats
+            every other namespace, including vendor packages. CI4's
+            <code>Language::requireFile()</code> merges each namespace's copy
+            of a language file with <code>array_replace_recursive()</code>,
+            last-loaded wins, and <code>FileLocator::search()</code> always
+            appends <code>App</code>-namespace matches last regardless of
+            registration order — editing only the module's own
+            <code>Language/</code> file is not enough when a vendor package
+            (Shield) ships a same-named file for the same key. This is how
+            GHSA-ppvr-272j-ggvv's first fix attempt shipped with zero runtime
+            effect. A second attempt added
+            <code>app/Language/&lt;locale&gt;/Auth.php</code> override files,
+            which did win the merge for the two keys they equalized — but
+            that override worked key-by-key, not file-by-file, so it silently
+            missed a third divergent key (the ban message) and would have
+            missed any future Shield key too.
+            <strong
+              >The fix that actually shipped abandoned the language layer for
+              this problem entirely</strong
+            >: <code>LoginController::loginAction()</code> stopped reading
+            <code>$result-&gt;reason()</code> and prints one constant,
+            module-local key instead (<code>Auth.loginFailed</code>, added to
+            <code>modules/Auth/Language/&lt;locale&gt;/Auth.php</code> — a key
+            Shield doesn't ship, so there's no merge race to lose); the
+            now-redundant <code>app/Language/&lt;locale&gt;/Auth.php</code>
+            override files were deleted. Lesson: if a vendor string needs to
+            diverge at one call site, don't fight the vendor package for a key
+            in the language layer — give that call site its own module-local
+            key and stop reading the vendor's message there. See
+            <code>CHANGELOG.md</code> for the full trace. The same trap
+            recurred on the sibling magic-link endpoint
+            (GHSA-cwhg-7xgv-343q):
+            <code>Auth.checkYourEmail</code>, <code>magicLinkDetails</code>,
+            <code>invalidEmail</code> and <code>unableSendEmailToUser</code>
+            exist only in Shield's vendor <code>Auth.php</code>, so the fix
+            gave <code>MagicLinkController</code> a module-local key,
+            <code>Auth.magicLinkSentIfRegistered</code>, instead of editing any
+            of them.
+          </li>
+          <li>
+            <strong
+              >A module's language files live in that module's own
+              <code>Language/</code>, not <code>app/Language/</code>:</strong
+            >
+            <code>modules/&lt;Module&gt;/Language/&lt;locale&gt;/&lt;File&gt;.php</code>
+            is the only home for a module's translations.
+            <code>app/Language/</code> is reserved for app-wide strings
+            (<code>CLI</code>, <code>Errors</code>, <code>Frontend</code>,
+            <code>Pager</code>) and is not a place to keep a per-module
+            override — see the point above for why that pattern proved
+            fragile in practice.
+          </li>
+          <li>
             <strong>Testing:</strong> Run <code>composer test</code>; add
             linting tooling if desired.
           </li>
@@ -522,6 +576,42 @@ composer outdated</code></pre>
           JSON flags) and <code>auth_users_permissions</code> (overrides). The
           <code>Modules\Methods\Controllers\Methods::moduleScan()</code> command
           inspects routes and helps keep permissions in sync.
+        </p>
+        <p>
+          Editing an <code>auth_permissions_pages</code> row —
+          <code>Methods::create()</code>, <code>update()</code>, or the
+          active/inactive toggle in <code>index()</code>'s POST+AJAX branch —
+          is <code>superadmin</code>-only. Those columns
+          (<code>pagename</code>, <code>className</code>,
+          <code>methodName</code>, <code>typeOfPermissions</code>) are the
+          same ones <code>Ci4MsAuthFilter</code> reads to authorize every
+          request, so the check has to live in the controller: a route filter
+          can't validate a request against a DB row the request itself is
+          allowed to rewrite. <code>update()</code> and <code>index()</code>'s
+          POST branch additionally refuse to touch a row belonging to a core
+          <code>PROTECTED_MODULES</code> module, even for superadmin.
+        </p>
+        <p>
+          <code>typeOfPermissions</code> must decode to a JSON object of four
+          CRUD booleans (<code>create_r</code>/<code>read_r</code>/
+          <code>update_r</code>/<code>delete_r</code>). The write-side shape
+          check lives in
+          <code>Modules\Backend\Validation\CustomRules::permissionActionList()</code>
+          — a module-local rule class under
+          <code>modules/Backend/Validation/</code>, auto-discovered by
+          <code>app/Config/Validation.php</code>'s <code>$ruleSets</code>
+          construction, which scans every module's own
+          <code>Validation/*.php</code> and registers each class found there
+          (the pattern to follow for a new module's own custom rule: drop the
+          class under <code>modules/&lt;Name&gt;/Validation/</code>, no config
+          wiring needed). It rejects a non-array, empty, or out-of-vocabulary
+          <code>typeOfPermissions</code> submission on
+          <code>Methods::create()</code>/<code>update()</code>. On the read
+          side, <code>Ci4MsAuthFilter::neededAction()</code> guards against a
+          non-array decode result but still defaults to <code>'read'</code>
+          when the column holds syntactically malformed JSON (GHSA-5j8q) — a
+          known, deliberately deferred gap pending a maintainer decision on
+          the right failure mode.
         </p>
         <p><strong>Workflow for a new module:</strong></p>
         <ol>

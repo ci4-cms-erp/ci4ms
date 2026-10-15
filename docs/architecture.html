@@ -400,14 +400,34 @@
             <code>auth_users_permissions</code> (user overrides).
             <code>Modules\Methods</code> manages these tables, enforces a
             <code>className</code>/<code>methodName</code> collision guard on
-            create/update, and can auto-scan routes to populate permissions. A
+            create/update, and can auto-scan routes to populate permissions.
+            <code>create()</code>, <code>update()</code> and the POST+AJAX
+            branch of <code>index()</code> (the active/inactive toggle) are
+            <code>superadmin</code>-only:
+            <code>pagename</code>/<code>className</code>/<code>methodName</code>/<code>typeOfPermissions</code>
+            are exactly what <code>Ci4MsAuthFilter</code> reads to authorize a
+            request, so a lesser actor able to write them could remap any
+            route's authorization to a permission they already hold.
+            <code>update()</code> and <code>index()</code>'s POST branch also
+            refuse to touch a row belonging to a
+            <code>PROTECTED_MODULES</code> module, enforced even for
+            superadmin; <code>index()</code>'s GET branch stays open to
+            <code>read</code> permission. A
             DB-level <code>UNIQUE</code> constraint on
             <code>auth_permissions_pages(className, methodName)</code> (via a
             generated column, since the table legitimately contains
             <code>('', '')</code> virtual-parent rows) closes the remaining
-            TOCTOU race between two concurrent writes. Every
-            <code>{pagename}.{action}</code> permission string is produced by
-            the single <code>permission_string()</code> helper in
+            TOCTOU race between two concurrent writes. The
+            <code>typeOfPermissions</code> JSON column's shape is validated on
+            write by
+            <code>Modules\Backend\Validation\CustomRules::permissionActionList()</code>
+            (rejects non-array, empty, or out-of-vocabulary values); on read,
+            <code>Ci4MsAuthFilter::neededAction()</code> guards against a
+            non-array decode result but still falls back to a permissive
+            <code>'read'</code> default when the column holds syntactically
+            malformed JSON (GHSA-5j8q) — a known, deliberately deferred gap.
+            Every <code>{pagename}.{action}</code> permission string is
+            produced by the single <code>permission_string()</code> helper in
             <code>app/Common.php</code>.
           </li>
           <li>
@@ -1475,8 +1495,12 @@
             (<code>info.xml</code>, <code>screenshot.png</code>).
           </li>
           <li>
-            Captcha auto-disables in development via the environment check in
-            the login controller.
+            The login captcha is never disabled automatically. It is bypassed
+            only when both <code>ENVIRONMENT === 'development'</code> and
+            <code>Auth.captchaBypassInDevelopment</code> (default
+            <code>false</code>) are set, and the bypass skips only the
+            correctness check; the <code>captcha</code> field stays
+            <code>required</code> in every environment.
           </li>
           <li>
             Use <code>php spark ci4ms:setup</code> in CI pipelines instead of

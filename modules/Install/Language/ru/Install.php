@@ -24,6 +24,12 @@ return [
     'siteName' => 'Название сайта',
     'siteUrl' => 'URL-адрес сайта',
     'siteSlogan' => 'Слоган сайта',
+    // Environment
+    'environment' => 'Окружение',
+    'environmentProduction' => 'Рабочая среда (рекомендуется)',
+    'environmentDevelopment' => 'Разработка',
+    'environmentHint' => 'Выберите «Рабочую среду» для любого сервера, кроме вашего локального компьютера.',
+    'environmentDevelopmentConfirm' => 'Если вы устанавливаете это на общедоступный сервер, не выбирайте это.',
     'siteNamePlaceholder' => 'Название вашего сайта здесь',
     'siteSloganPlaceholder' => 'Ваш слоган здесь',
 ];

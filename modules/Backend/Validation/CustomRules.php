@@ -29,6 +29,67 @@ class CustomRules
     }
 
     /**
+     * Validates that a value is a non-empty array of permission action
+     * keywords (create/read/update/delete).
+     *
+     * Framework calls validation rules as $set->{$rule}($value, $error) with
+     * $value passed through exactly as received (CodeIgniter\Validation\
+     * Validation::run()), so a scalar POST value (e.g. 'typeOfPermissions=5')
+     * reaches this rule unmodified. The parameter is intentionally untyped:
+     * a type hint would make PHP throw a TypeError before the rule body
+     * runs, reproducing the exact crash this rule exists to prevent. Both
+     * "not an array" and "empty array" are rejected explicitly — an empty
+     * array passes is_array() but still carries no valid action, and
+     * Ci4MsAuthFilter::neededAction() would fall back to its 'read' default
+     * for it just like for a non-array value.
+     *
+     * @param mixed       $value The value to validate.
+     * @param string|null $error Error message reference.
+     * @return bool
+     */
+    public function permissionActionList($value, ?string &$error = null): bool
+    {
+        if (!is_array($value) || $value === []) {
+            $error = (string) lang('Backend.invalidPermissionTypes');
+            return false;
+        }
+
+        foreach ($value as $item) {
+            if (!in_array($item, ['create', 'read', 'update', 'delete'], true)) {
+                $error = (string) lang('Backend.invalidPermissionTypes');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Validates that a value is a bare hostname or an IPv4 address.
+     * IPv6 literals are rejected: CI4's Email passes the host to fsockopen()
+     * unbracketed, which cannot connect to a bare IPv6 address.
+     * Rejects host:port, scheme://host, whitespace/CRLF, a leading hyphen
+     * and underscores. Private/reserved ranges are intentionally allowed.
+     * The error string is used verbatim by the framework (no {field} substitution).
+     *
+     * @param mixed       $str   The value to validate.
+     * @param string|null $error Error message reference.
+     * @return bool
+     */
+    public function valid_host($str, ?string &$error = null): bool
+    {
+        if (is_string($str) && $str !== '' && (
+            filter_var($str, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false
+            || filter_var($str, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) !== false
+        )) {
+            return true;
+        }
+
+        $error = (string) lang('Backend.invalidHost');
+        return false;
+    }
+
+    /**
      * Checks if a string is valid JSON.
      *
      * @param string $string The string to validate

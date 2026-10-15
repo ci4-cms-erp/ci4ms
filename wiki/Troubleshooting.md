@@ -24,6 +24,8 @@ ci4ms's backend permission filter (`Modules\Auth\Filters\Ci4MsAuthFilter`) looks
 
 If you are logged in but redirected straight to the login page, your session may have been flagged banned/inactive, or you're simply not authenticated — `Ci4MsAuthFilter` redirects to `login` whenever `auth()->loggedIn()` is false.
 
+A related but distinct case: uploading/creating/deleting a module, and creating/updating a permission-row (`auth_permissions_pages`) from the Methods section, are hard-coded to `superadmin` only. Granting the corresponding permission to a non-superadmin group does **not** unlock these specific actions — that's by design (see [Security Hardening](Security-Hardening.md#module-and-permission-management-lockdown)), not a misconfiguration to fix.
+
 ### Migration errors
 
 - **`php spark migrate --all` aborts partway through.** Check `writable/logs/` for the specific error; the log will name the offending migration and table.
@@ -42,6 +44,12 @@ Dropping a module folder under `modules/<Name>/` is enough for it to be auto-dis
 - Confirm the module has a `Database/Migrations/` directory with correctly named/dated migration files.
 - Run a Module Scan (Methods section) so any new routes get permission records — a module with working migrations but no permission records will 403 on every screen.
 - After adding or updating a module, always run `php spark cache:clear`.
+
+### Magic link: "the link doesn't work" or no email arrives
+
+- **The link says it's invalid/expired right after the user clicks it.** Magic link tokens are single-use. Email clients and security scanners that pre-open links used to consume the token before the user did; `verify()` now returns 404 to robot user-agents, so link-preview bots no longer burn the token. This check ships in `0.36.0.0` (affected range `>= 0.31.0.0, <= 0.35.0.0`). If the user still sees "invalid/expired", have them request a fresh link and open it directly.
+- **The form always says "If an account is registered at this address, a login link has been sent."** This is intentional and is the same for registered, unregistered and SMTP-failure cases (from `0.36.0.0`, see above). It no longer tells you whether the email actually went out. To diagnose, check `writable/logs/` for the SMTP error and verify the account's email address in the Users section.
+- To turn magic link login off, set `Auth.allowMagicLinkLogins = false` — see [Security Hardening](Security-Hardening.md#login-and-account-enumeration).
 
 ### Where to look when none of the above fits
 
@@ -73,6 +81,8 @@ ci4ms'in backend izin filtresi (`Modules\Auth\Filters\Ci4MsAuthFilter`), her con
 
 Giriş yaptığınız halde doğrudan login sayfasına yönlendiriliyorsanız, oturumunuz banlı/pasif olarak işaretlenmiş olabilir veya basitçe kimliğiniz doğrulanmamıştır — `Ci4MsAuthFilter`, `auth()->loggedIn()` false olduğunda `login`'e yönlendirir.
 
+İlişkili ama farklı bir durum: Methods bölümünden modül yükleme/oluşturma/silme ve izin satırı (`auth_permissions_pages`) oluşturma/güncelleme işlemleri koda sabitlenmiş şekilde yalnızca `superadmin`e açıktır. İlgili izni superadmin olmayan bir gruba vermek bu işlemleri **açmaz** — bu bir yanlış yapılandırma değil, bilinçli bir tasarım kararıdır (bkz. [Güvenlik Sertleştirme](Security-Hardening.md#modül-ve-izin-yönetiminin-kilitlenmesi)).
+
 ### Migration hataları
 
 - **`php spark migrate --all` yarıda duruyor.** Belirli hata için `writable/logs/` dizinine bakın; log, hatalı migration'ı ve tabloyu belirtir.
@@ -91,6 +101,12 @@ Bir modül klasörünü `modules/<Name>/` altına bırakmak otomatik keşif içi
 - Modülün doğru isimlendirilmiş/tarihlendirilmiş migration dosyalarına sahip bir `Database/Migrations/` dizini olduğunu teyit edin.
 - Yeni route'ların izin kaydı alması için bir Module Scan (Methods bölümü) çalıştırın — çalışan migration'ları olan ama izin kaydı olmayan bir modül her ekranda 403 verir.
 - Bir modül ekledikten veya güncelledikten sonra her zaman `php spark cache:clear` çalıştırın.
+
+### Magic link: "bağlantı çalışmıyor" veya e-posta gelmiyor
+
+- **Kullanıcı tıkladığı anda bağlantı geçersiz/süresi dolmuş diyor.** Magic link token'ları tek kullanımlıktır. Bağlantıları önceden açan e-posta istemcileri ve güvenlik tarayıcıları token'ı kullanıcıdan önce tüketebiliyordu; `verify()` artık robot user-agent'lara 404 dönüyor, dolayısıyla link önizlemesi yapan botlar token'ı yakmıyor. Bu kontrol `0.36.0.0` sürümüyle geliyor (etkilenen aralık `>= 0.31.0.0, <= 0.35.0.0`). Kullanıcı hâlâ "geçersiz/süresi dolmuş" görüyorsa yeni bir bağlantı isteyip doğrudan açmasını söyleyin.
+- **Form her zaman "Bu adrese kayıtlı bir hesap varsa giriş bağlantısı gönderildi." diyor.** Bu bilinçli bir davranıştır; kayıtlı hesap, kayıtsız hesap ve SMTP hatası durumlarında aynıdır (`0.36.0.0` sürümünden itibaren, yukarıya bakın). Artık e-postanın gerçekten gidip gitmediğini söylemez. Teşhis için `writable/logs/` içindeki SMTP hatasına bakın ve Users bölümünden hesabın e-posta adresini doğrulayın.
+- Magic link girişini kapatmak için `Auth.allowMagicLinkLogins = false` yapın — bkz. [Güvenlik Sertleştirme](Security-Hardening.md#login-ve-hesap-numaralandırması).
 
 ### Yukarıdakilerden hiçbiri uymuyorsa nereye bakılır
 

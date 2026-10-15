@@ -229,8 +229,19 @@ final class MethodsRbacCacheInvalidationTest extends CIUnitTestCase
      */
     public function testUpdateFlushesRbacCachesOnSuccess(): void
     {
+        // Methods::update() now refuses to touch a PROTECTED_MODULES row
+        // (even for superadmin) -- see the superadmin/PROTECTED_MODULES lock
+        // on the permission-row editor. createPermissionPageRow()'s default
+        // moduleId=1 is "Backend", which is protected, so this test creates
+        // its own non-protected module row instead of relying on the default.
+        $moduleId = (int) $this->commonModel->create('modules', [
+            'name'     => 'B3UpdateFixtureModule' . bin2hex(random_bytes(4)),
+            'icon'     => 'fas fa-cogs',
+            'isActive' => true,
+        ]);
+
         $className = '-Modules-Fixture-Controllers-B3Update' . bin2hex(random_bytes(3));
-        $pk        = $this->createPermissionPageRow($className, 'show', 'B3 Update Before');
+        $pk        = $this->createPermissionPageRow($className, 'show', 'B3 Update Before', $moduleId);
 
         $pageKey = $this->primeRbacCaches();
 
@@ -441,8 +452,16 @@ final class MethodsRbacCacheInvalidationTest extends CIUnitTestCase
     }
 
     /**
-     * Creates an actor with no group membership -- none of the branches under
-     * test consult the actor's own permissions.
+     * Creates an actor with superadmin membership.
+     *
+     * create()/update()/moduleScan() do not consult the actor's own
+     * permissions or group, but moduleDelete() now gates on
+     * inGroup('superadmin') -- see B-4 module-management superadmin lock
+     * (Methods.php:465-467). Find-or-create mirrors
+     * PermgroupMalformedPermsPayloadTest::superadminActorId(): auth_groups.group
+     * carries a UNIQUE index, so a blind create() would collide with a
+     * "superadmin" row already present on the shared, non-refreshed
+     * ci4ms_test schema.
      *
      * @return int users.id
      */
@@ -461,7 +480,23 @@ final class MethodsRbacCacheInvalidationTest extends CIUnitTestCase
         ]);
         $users->save($user);
 
-        return (int) $users->getInsertID();
+        $userId = (int) $users->getInsertID();
+
+        $existingSuperadmin = $this->commonModel->selectOne('auth_groups', ['group' => 'superadmin']);
+        if ($existingSuperadmin === null) {
+            $this->commonModel->create('auth_groups', [
+                'group'       => 'superadmin',
+                'description' => 'superadmin',
+            ]);
+        }
+
+        $this->commonModel->create('auth_groups_users', [
+            'user_id'    => $userId,
+            'group'      => 'superadmin',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return $userId;
     }
 
     /**

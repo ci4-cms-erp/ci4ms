@@ -174,6 +174,11 @@
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
+            <?php if (ENVIRONMENT === 'development' && $logged_in_user && $logged_in_user->inGroup('superadmin')): ?>
+                <div class="alert alert-warning m-3 mb-0" role="alert">
+                    <i class="fas fa-exclamation-triangle mr-1"></i> <?php echo lang('Backend.developmentModeWarning') ?>
+                </div>
+            <?php endif; ?>
             <?php echo $this->renderSection('content') ?>
         </div>
         <!-- /.content-wrapper -->

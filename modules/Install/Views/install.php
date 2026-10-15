@@ -115,6 +115,26 @@ echo $this->section('content'); ?>
                   <input type="text" name="slogan" value="<?php echo old('slogan') ?>" class="form-control" placeholder="<?php echo lang('Install.siteSloganPlaceholder') ?>" required>
                 </div>
                 <div class="form-group">
+                  <label id="environmentLabel"><?php echo lang('Install.environment') ?></label>
+                  <div role="radiogroup" aria-labelledby="environmentLabel">
+                    <div class="custom-control custom-radio">
+                      <input type="radio" class="custom-control-input" id="environmentProduction" name="environment" value="production" <?php echo old('environment', 'production') === 'production' ? 'checked' : '' ?> required>
+                      <label class="custom-control-label" for="environmentProduction"><?php echo lang('Install.environmentProduction') ?></label>
+                    </div>
+                    <div class="custom-control custom-radio">
+                      <input type="radio" class="custom-control-input" id="environmentDevelopment" name="environment" value="development" <?php echo old('environment', 'production') === 'development' ? 'checked' : '' ?>>
+                      <label class="custom-control-label" for="environmentDevelopment"><?php echo lang('Install.environmentDevelopment') ?></label>
+                    </div>
+                  </div>
+                  <small class="text-muted"><?php echo lang('Install.environmentHint') ?></small>
+                </div>
+                <div class="form-group" id="environment-development-confirm-wrap">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="environmentDevelopmentConfirm" name="environmentDevelopmentConfirm" value="1" <?php echo old('environmentDevelopmentConfirm') ? 'checked' : '' ?>>
+                    <label class="custom-control-label" for="environmentDevelopmentConfirm"><?php echo lang('Install.environmentDevelopmentConfirm') ?></label>
+                  </div>
+                </div>
+                <div class="form-group">
                   <div class="custom-control custom-checkbox">
                     <input type="checkbox" class="custom-control-input" id="geoLookup" name="geoLookup" value="1" <?php echo old('geoLookup') ? 'checked' : '' ?>>
                     <label class="custom-control-label" for="geoLookup"><?php echo lang('Install.geoLookup') ?></label>
@@ -168,5 +188,23 @@ echo $this->section('javascript'); ?>
     }
     $('#password').val(password).trigger('keyup');
   }
+
+  // Environment: show + require the "public server" confirm checkbox only while Development is selected
+  jQuery(document).ready(function() {
+    "use strict";
+    function toggleEnvironmentConfirm() {
+      var isDevelopment = $('#environmentDevelopment').is(':checked');
+      var $confirm = $('#environmentDevelopmentConfirm');
+      if (isDevelopment) {
+        $('#environment-development-confirm-wrap').show();
+        $confirm.prop('required', true);
+      } else {
+        $('#environment-development-confirm-wrap').hide();
+        $confirm.prop('required', false).prop('checked', false);
+      }
+    }
+    $('input[name="environment"]').on('change', toggleEnvironmentConfirm);
+    toggleEnvironmentConfirm();
+  });
 </script>
 <?php echo $this->endSection() ?>

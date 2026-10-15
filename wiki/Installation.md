@@ -60,7 +60,7 @@ Open `/install` in your browser and follow the wizard. It will:
 5. Regenerate `app/Config/Routes.php`
 6. Create required runtime directories (`writable/backups`, `public/media/.tmb`, `public/media/.trash`)
 
-The installer writes `CI_ENVIRONMENT = production` into `.env` as part of this process, and shows a **one-time** DevGate credential disclosure page before redirecting you to the homepage — see [Security Hardening](Security-Hardening.md) for what both of these mean and why you should save that password immediately.
+The installer asks you to pick `CI_ENVIRONMENT` explicitly: `production` is the pre-selected default, and choosing `development` requires ticking an additional confirmation checkbox before the form will submit. After writing `.env`, the installer also narrows the file's permissions to `0600` (owner read/write only) as a best-effort step — a failure there only logs a warning, it doesn't block the install. It then shows a **one-time** DevGate credential disclosure page before redirecting you to the homepage — see [Security Hardening](Security-Hardening.md) for what all of this means and why you should save that password immediately.
 
 #### Option B — One-command CLI setup
 
@@ -68,7 +68,7 @@ The installer writes `CI_ENVIRONMENT = production` into `.env` as part of this p
 php spark ci4ms:setup
 ```
 
-This single command runs all migrations, seeds default data (modules, permissions, sample content), and creates the initial administrator account — no separate `migrate` or `seed` commands are needed. This is the path used in Docker/CI environments where a browser-based installer isn't practical.
+This single command runs all migrations, seeds default data (modules, permissions, sample content), and creates the initial administrator account — no separate `migrate` or `seed` commands are needed. It also prompts for the deployment environment (default `production`; typing `development` prints an explicit warning that it must never be used on a publicly reachable server) and narrows `.env` to `0640` after writing it. This is the path used in Docker/CI environments where a browser-based installer isn't practical.
 
 ### 5. Serve the application
 
@@ -155,7 +155,7 @@ Tarayıcınızda `/install` adresini açın ve sihirbazı takip edin. Sihirbaz �
 5. `app/Config/Routes.php` dosyasını yeniden üretir
 6. Gerekli çalışma zamanı dizinlerini oluşturur (`writable/backups`, `public/media/.tmb`, `public/media/.trash`)
 
-Installer bu süreçte `.env` dosyasına `CI_ENVIRONMENT = production` yazar ve anasayfaya yönlendirmeden önce **tek seferlik** bir DevGate kimlik bilgisi açıklama sayfası gösterir — bunların ne anlama geldiği ve o şifreyi neden hemen kaydetmeniz gerektiği için [Güvenlik Sertleştirme](Security-Hardening.md) sayfasına bakın.
+Installer, `CI_ENVIRONMENT` değerini size açıkça sorar: `production` önceden seçili varsayılandır, `development` seçmek ise formu göndermeden önce ek bir onay kutusunu işaretlemenizi zorunlu kılar. `.env` yazıldıktan sonra installer dosya izinlerini de `0600`'e (yalnızca sahibi okuyup yazabilir) daraltır — en iyi çaba (best-effort) esasına dayanır; bu adım başarısız olursa yalnızca log'a uyarı düşer, kurulumu durdurmaz. Ardından anasayfaya yönlendirmeden önce **tek seferlik** bir DevGate kimlik bilgisi açıklama sayfası gösterir — bunların hepsinin ne anlama geldiği ve o şifreyi neden hemen kaydetmeniz gerektiği için [Güvenlik Sertleştirme](Security-Hardening.md) sayfasına bakın.
 
 #### Seçenek B — Tek komutla CLI kurulumu
 
@@ -163,7 +163,7 @@ Installer bu süreçte `.env` dosyasına `CI_ENVIRONMENT = production` yazar ve 
 php spark ci4ms:setup
 ```
 
-Bu tek komut tüm migration'ları çalıştırır, varsayılan verileri (modüller, izinler, örnek içerik) ekler ve ilk yönetici hesabını oluşturur — ayrıca `migrate` veya `seed` komutlarına gerek yoktur. Bu yol, tarayıcı tabanlı bir installer'ın pratik olmadığı Docker/CI ortamlarında kullanılır.
+Bu tek komut tüm migration'ları çalıştırır, varsayılan verileri (modüller, izinler, örnek içerik) ekler ve ilk yönetici hesabını oluşturur — ayrıca `migrate` veya `seed` komutlarına gerek yoktur. Ayrıca deployment ortamını sorar (varsayılan `production`; `development` yazarsanız, bunun herkese açık bir sunucuda asla kullanılmaması gerektiğine dair açık bir uyarı basar) ve `.env`'i yazdıktan sonra `0640`'a daraltır. Bu yol, tarayıcı tabanlı bir installer'ın pratik olmadığı Docker/CI ortamlarında kullanılır.
 
 ### 5. Uygulamayı çalıştırın
 

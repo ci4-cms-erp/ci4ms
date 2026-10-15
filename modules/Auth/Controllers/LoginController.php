@@ -70,7 +70,9 @@ class LoginController extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $captchaCheck = ($this->request->getPost('captcha') == $this->session->getFlashdata('cap')) ? true : false;
+        $expected     = $this->session->getFlashdata('cap');
+        $given        = $this->request->getPost('captcha');
+        $captchaCheck = ($expected !== null && $expected !== '') && hash_equals((string) $expected, (string) $given);
         if (ENVIRONMENT === 'development' && setting('Auth.captchaBypassInDevelopment')) $captchaCheck = true;
         if (!$captchaCheck) return redirect()->route('login')->withInput()->with('error', lang('Auth.badCaptcha'));
 
@@ -87,7 +89,14 @@ class LoginController extends BaseController
         // Attempt to login
         $result = $authenticator->remember($remember)->attempt($credentials);
         if (! $result->isOK()) {
-            return redirect()->route('login')->withInput()->with('error', $result->reason());
+            // Only the real reason is logged for the operator; the user always gets
+            // the same generic message (login-enumeration defense, GHSA-ppvr-272j-ggvv).
+            log_message(
+                'warning',
+                'Login failed for ' . $this->maskIdentifier($credentials) . ' from ' . $this->request->getIPAddress() . ': ' . $result->reason()
+            );
+
+            return redirect()->route('login')->withInput()->with('error', lang('Auth.loginFailed'));
         }
 
         // If an action has been defined for login, start it up.
@@ -107,7 +116,41 @@ class LoginController extends BaseController
     {
         $rules = new ValidationRules();
 
-        return $rules->getLoginRules();
+        return $rules->getLoginRules() + [
+            'captcha' => [
+                'label' => lang('Auth.captchaLabel'),
+                'rules' => 'required|regex_match[/^[^<>{}]*$/u]',
+            ],
+        ];
+    }
+
+    /**
+     * Masks a failed login attempt's identifier for safe logging.
+     *
+     * Keeps a failed-login log entry useful for an operator (which account was
+     * targeted, roughly) without writing a directly reusable email/username into
+     * the log file in plaintext.
+     *
+     * @param array<string, mixed> $credentials Raw login credentials (password included).
+     *
+     * @return string Masked identifier, or '(unknown)' when no identifier field was submitted.
+     */
+    private function maskIdentifier(array $credentials): string
+    {
+        unset($credentials['password']);
+        $identifier = (string) (reset($credentials) ?: '');
+
+        if ($identifier === '') {
+            return '(unknown)';
+        }
+
+        if (str_contains($identifier, '@')) {
+            [$local, $domain] = explode('@', $identifier, 2);
+
+            return mb_substr($local, 0, 2) . '***@' . $domain;
+        }
+
+        return mb_substr($identifier, 0, 2) . '***';
     }
 
     /**

@@ -36,7 +36,13 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         $valData = ($vData);
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
+
         $path = $this->request->getVar('path') ?? '/';
+
+        // Check for null bytes in path
+        if (strpos($path, "\0") !== false) {
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
+        }
 
         $pathParts = explode('/', trim($path, '/'));
         foreach ($pathParts as $part) {
@@ -44,6 +50,12 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
                 return $this->failForbidden();
             }
         }
+
+        // Check for symlinks in the path
+        if ($this->pathContainsSymlink($path)) {
+            return $this->failForbidden();
+        }
+
         $fullPath = realpath(ROOTPATH . $path);
 
         if (!$fullPath || !$this->isInsideProject($fullPath)) {
@@ -79,6 +91,12 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+
+        // Check for null bytes in path
+        if (strpos($path, "\0") !== false) {
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
+        }
+
         if ($this->isHiddenPath($path))
             return $this->failForbidden();
         // An attacker-planted symlink under a non-hidden, non-core location
@@ -113,6 +131,12 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+
+        // Check for null bytes in path
+        if (strpos($path, "\0") !== false) {
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
+        }
+
         if ($this->isHiddenPath($path))
             return $this->failForbidden();
         if ($this->pathContainsSymlink($path))
@@ -143,6 +167,12 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+
+        // Check for null bytes in path
+        if (strpos($path, "\0") !== false) {
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
+        }
+
         // isWritableTarget() (below) scopes renames to public/templates/
         // only — theme renaming is one of Fileeditor's legitimate write use
         // cases.
@@ -202,6 +232,12 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+
+        // Check for null bytes in path
+        if (strpos($path, "\0") !== false) {
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
+        }
+
         if ($this->isHiddenPath($path))
             return $this->failForbidden();
         // Same rationale as readFile()/saveFile(): a symlinked directory under
@@ -247,6 +283,12 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+
+        // Check for null bytes in path
+        if (strpos($path, "\0") !== false) {
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
+        }
+
         // isWritableTarget() (below) scopes writes to public/templates/
         // only — theme folder creation is createFolder()'s one legitimate
         // use case.
@@ -283,6 +325,12 @@ class Fileeditor extends \Modules\Backend\Controllers\BaseController
         if ($this->validate($valData) === false)
             return $this->fail($this->validator->getErrors());
         $path = $this->request->getVar('path');
+
+        // Check for null bytes in path
+        if (strpos($path, "\0") !== false) {
+            return $this->response->setJSON(['error' => lang('Backend.invalid', [lang('Backend.path')])])->setStatusCode(400);
+        }
+
         // isWritableTarget() (below) scopes deletes to public/templates/
         // only — theme file/folder deletion is one of Fileeditor's
         // legitimate write use cases.

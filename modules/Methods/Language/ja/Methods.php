@@ -54,4 +54,7 @@ return [
     'invalidZipFile' => 'アップロードされたファイルは有効なZIPファイルではありません。',
     'invalidZipPath' => '保存先ディレクトリに書き込み権限がないか、作成できませんでした。',
     'zipExtractError' => 'ZIPファイルの展開中にエラーが発生しました: {0}',
+    'moduleManagementForbidden' => 'モジュール管理操作を実行する権限がありません。',
+    'permissionManagementForbidden' => '権限ページを管理する権限がありません。',
+    'permissionPageProtected' => 'この操作はコアシステムモジュールまたはその権限ページに対しては実行できません。',
 ];

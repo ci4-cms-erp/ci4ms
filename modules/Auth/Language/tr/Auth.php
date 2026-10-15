@@ -15,7 +15,7 @@ return [
     // Registration
     'registerDisabled' => 'Üzgünüz, şu anda yeni kayıtlara izin veremiyoruz.',
     'registerSuccess' => 'Aramıza hoşgeldin! Oluşturmuş olduğun hesabına giriş yapabilirsin.',
-    'emailActivationuccess' => 'Tekrar hoşgeldin! E-postanızı onayladınız. Hesabına giriş yapabilirsin.',
+    'emailActivationSuccess' => 'Tekrar hoşgeldin! E-postanızı onayladınız. Hesabına giriş yapabilirsin.',
     'registerCLI' => 'Yeni kullanıcı oluşturuldu: {0}, #{1}',
 
     // Activation
@@ -30,7 +30,9 @@ return [
     'badAttempt' => 'Giriş yapılamıyor. Lütfen bilgilerinizi kontrol edin.',
     'loginBlock' => '<b>Girişiniz askıya alınmıştır</b>. <br>Lütfen IT departmanına başvurun.',
     'loginSuccess' => 'Tekrar Hoşgeldiniz!',
-    'invalidPassword' => 'Giriş yapılamıyor. Lütfen bilgilerinizi kontrol edin. %s',
+    'invalidPassword' => 'Giriş yapılamıyor. Lütfen bilgilerinizi kontrol edin.',
+    'loginFailed' => 'Giriş yapılamıyor. Lütfen bilgilerinizi kontrol edin.',
+    'magicLinkSentIfRegistered' => 'Bu adrese kayıtlı bir hesap varsa giriş bağlantısı gönderildi.',
 
     // Forgotten Passwords
     'forgotDisabled' => 'Resseting password option has been disabled.', // translate
@@ -94,6 +96,7 @@ return [
     'newPasswordRepeat' => 'Yeni Parolayı Tekrarla',
     'resetPassword' => 'Parolayı Sıfırla',
     'badCaptcha' => 'Doğrulama kodu yanlış.',
+    'captchaLabel' => 'Doğrulama kodu',
     'generatePasswordMessage' => 'Yeni şifrenizden sadece bir adım uzaktasınız, şifrenizi şimdi oluşturun.',
     'forgotPasswordMessage' => 'Şifrenizi mi unuttunuz? Burada e-mail adresiniz ile kolayca yeni bir şifre alabilirsiniz.',
     'loginMessage' => 'Oturumunuzu başlatmak için giriş yapın',

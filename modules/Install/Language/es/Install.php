@@ -24,6 +24,12 @@ return [
     'siteName' => 'Nombre del sitio',
     'siteUrl' => 'URL del sitio',
     'siteSlogan' => 'Lema del sitio',
+    // Environment
+    'environment' => 'Entorno',
+    'environmentProduction' => 'Producción (recomendado)',
+    'environmentDevelopment' => 'Desarrollo',
+    'environmentHint' => 'Elija Producción para cualquier servidor que no sea su máquina local.',
+    'environmentDevelopmentConfirm' => 'Si está instalando esto en un servidor accesible públicamente, no seleccione esto.',
     'siteNamePlaceholder' => 'El nombre de tu sitio aquí',
     'siteSloganPlaceholder' => 'Tu eslogan aquí',
 ];

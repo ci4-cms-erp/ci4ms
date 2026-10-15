@@ -128,6 +128,11 @@ class Auth extends ShieldAuth
      *
      * @var array<string, class-string<ActionInterface>|null>
      */
+    // 'register' => null is deliberate: registration yields an active account without verification.
+    // Enabling EmailActivator::class switches on Shield's own code-based activation flow.
+    // Config-only key: a class name is not a scalar, so it cannot be toggled via the panel or setting().
+    // CustomActivationController is a separate, link-based mechanism (Routes.php:5, login/verify-account);
+    // EmailActivator does not trigger it.
     public array $actions = [
         'register' => null, //\CodeIgniter\Shield\Authentication\Actions\EmailActivator::class,
         'login'    => null, //\CodeIgniter\Shield\Authentication\Actions\Email2FA::class,
@@ -182,6 +187,11 @@ class Auth extends ShieldAuth
      * Allow Registration
      * --------------------------------------------------------------------
      * Determines whether users can register for the site.
+     *
+     * true is a deliberate product decision and follows Shield's own default.
+     * Disabling needs no code change: setting('Auth.allowRegistration') is read at
+     * runtime, including from the DB settings table. Details and permanent options:
+     * docs/web-server-hardening.md
      */
     public bool $allowRegistration = true;
 

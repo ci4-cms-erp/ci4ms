@@ -76,4 +76,7 @@ return [
     'moduleRequired' => 'Lütfen geçerli bir modül seçin.',
     'auditPermissionPageCreated' => '"{1}" izin sayfası {0} tarafından oluşturuldu.',
     'auditPermissionPageUpdated' => '"{1}" izin sayfası {0} tarafından güncellendi.',
+    'moduleManagementForbidden' => 'Modül yönetimi işlemlerini gerçekleştirme yetkiniz yok.',
+    'permissionManagementForbidden' => 'İzin sayfalarını yönetme izniniz yok.',
+    'permissionPageProtected' => 'Bu işlem çekirdek sistem modülleri veya bunların izin sayfaları üzerinde gerçekleştirilemez.',
 ];

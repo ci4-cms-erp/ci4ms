@@ -54,4 +54,7 @@ return [
     'invalidZipFile' => 'Le fichier téléchargé n\'est pas un fichier ZIP valide.',
     'invalidZipPath' => 'Le répertoire de destination n\'est pas accessible en écriture et n\'a pas pu être créé.',
     'zipExtractError' => 'Une erreur s\'est produite lors de l\'extraction du fichier ZIP : {0}',
+    'moduleManagementForbidden' => 'Vous n\'avez pas la permission d\'effectuer les opérations de gestion des modules.',
+    'permissionManagementForbidden' => 'Vous n\'avez pas la permission de gérer les pages de permissions.',
+    'permissionPageProtected' => 'Cette action ne peut pas être effectuée sur un module système principal ou ses pages de permissions.',
 ];

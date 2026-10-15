@@ -87,6 +87,8 @@ return [
     'ipFormatsDifferent' => 'आईपी प्रारूप समान नहीं हैं। <b>{0}</b>',
     'leftValueNotGreater' => 'बायां मान दाएं मान से बड़ा या बराबर नहीं हो सकता। <b>{0}</b>',
     'invalidPhoneNumber' => 'फ़ोन नंबर सही प्रारूप में नहीं है। कृपया इसे सही प्रारूप में लिखें।',
+    'invalidPermissionTypes' => 'अमान्य अनुमति प्रकार। एक या अधिक का चयन करें: create, read, update, delete.',
+    'invalidHost' => 'अमान्य होस्ट। पोर्ट या प्रोटोकॉल के बिना होस्टनाम (जैसे smtp.example.com) या IP पता दर्ज करें।',
     'success' => 'सफलता',
     'error' => 'त्रुटि',
     'showColumns' => 'कॉलम',
@@ -131,4 +133,6 @@ return [
     'errCdSeconds' => 'सेकंड',
     // sidebar maintenance badge
     'menuInMaintenance' => 'रखरखाव में',
+    // Development mode warning
+    'developmentModeWarning' => 'यह साइट विकास मोड में चल रही है। डेबग विवरण (डेटाबेस क्रेडेंशियल सहित) त्रुटि पृष्ठों पर उजागर हो सकते हैं। इस मोड को सार्वजनिक रूप से सुलभ सर्वर पर कभी भी उपयोग न करें।',
 ];

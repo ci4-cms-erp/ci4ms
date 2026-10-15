@@ -115,16 +115,22 @@ account in the backend user table with no email verification. The account
 lands in Shield's default group, which ships with zero permissions, so it
 cannot reach any `backend/*` screen behind the permission filter — but it is
 still an unauthenticated write to the `users`/`auth_identities` tables and a
-spam/foothold surface. Nothing in this repository implements either option
-below; this section exists so an operator who wants to close it anyway knows
-exactly what to change and what each change actually does.
+spam/foothold surface. The default deliberately follows Shield's own behavior
+(`allowRegistration = true` is a Shield default this project chooses not to
+turn off). Closing it needs no code change: `RegisterController` reads
+`setting('Auth.allowRegistration')` at runtime (`RegisterController.php:62`
+and `:88`), and `app/Config/Settings.php:18` uses the `database` handler, so a
+value stored in the `codeigniter4/settings` table takes effect without
+touching any file. The two options below are the permanent, infrastructure-level
+ways to close it; this section exists so an operator knows exactly what to
+change and what each change actually does.
 
 Two independent ways to close it, verified against source. **They solve
 different problems — read the comparison before picking one.**
 
 ### Option 1 — `Auth.allowRegistration = false` (functional kill-switch)
 
-File: `modules/Auth/Config/Auth.php:172`
+File: `modules/Auth/Config/Auth.php:186`
 
 ```php
 public bool $allowRegistration = false;
@@ -160,7 +166,7 @@ A request to `/backend/register` then hits no route at all — a plain 404,
 before the controller (and therefore before the `allowRegistration` check)
 ever runs.
 
-This is **route-table-only**: it does not touch `Auth.php:172`, so
+This is **route-table-only**: it does not touch `Auth.php:186`, so
 `allowRegistration` stays `true`. If any later change adds another route
 pointing at `RegisterController::registerView`/`registerAction`, or calls
 those methods directly (a CLI command, another controller), registration

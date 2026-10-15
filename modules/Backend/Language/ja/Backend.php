@@ -87,6 +87,8 @@ return [
     'ipFormatsDifferent' => 'IP形式が一致しません。<b>{0}</b>',
     'leftValueNotGreater' => '左の値は右の値以上にはできません。<b>{0}</b>',
     'invalidPhoneNumber' => '電話番号の形式が正しくありません。正しい形式で入力してください。',
+    'invalidPermissionTypes' => '無効なパーミッションタイプです。以下から1つ以上を選択してください: create, read, update, delete.',
+    'invalidHost' => 'ホストが無効です。ポートやプロトコルを含めず、ホスト名(例: smtp.example.com)または IP アドレスを入力してください。',
     'success' => '成功',
     'error' => 'エラー',
     'showColumns' => 'カラム表示',
@@ -131,4 +133,6 @@ return [
     'errCdSeconds' => '秒',
     // sidebar maintenance badge
     'menuInMaintenance' => 'メンテナンス中',
+    // Development mode warning
+    'developmentModeWarning' => 'このサイトは開発モードで実行されています。エラーページでデバッグの詳細（データベースの認証情報を含む）が公開される可能性があります。このモードを公開アクセス可能なサーバーで使用しないでください。',
 ];

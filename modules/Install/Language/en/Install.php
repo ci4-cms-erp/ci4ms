@@ -32,6 +32,13 @@ return [
     'siteUrl' => 'Site URL',
     'siteSlogan' => 'Site Slogan',
 
+    // Environment
+    'environment' => 'Environment',
+    'environmentProduction' => 'Production (recommended)',
+    'environmentDevelopment' => 'Development',
+    'environmentHint' => 'Choose Production for any server other than your own local machine.',
+    'environmentDevelopmentConfirm' => 'If you are installing this on a publicly accessible server, do not select this.',
+
     // Placeholders
     'siteNamePlaceholder' => 'Your site name here',
     'siteSloganPlaceholder' => 'Your slogan here',

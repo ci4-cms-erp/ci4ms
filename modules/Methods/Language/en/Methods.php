@@ -76,4 +76,7 @@ return [
     'moduleRequired' => 'Please select a valid module.',
     'auditPermissionPageCreated' => 'Permission page "{1}" was created by {0}.',
     'auditPermissionPageUpdated' => 'Permission page "{1}" was updated by {0}.',
+    'moduleManagementForbidden' => 'You do not have permission to perform module management operations.',
+    'permissionManagementForbidden' => 'You do not have permission to manage permission pages.',
+    'permissionPageProtected' => 'This action cannot be performed on a core system module or its permission pages.',
 ];
