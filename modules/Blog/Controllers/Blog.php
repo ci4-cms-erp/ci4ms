@@ -88,11 +88,6 @@ class Blog extends \Modules\Backend\Controllers\BaseController
             if ($insertID) {
                 // insert translatable fields
                 foreach ($langsPost as $lanCode => $lanData) {
-                    $seoData = clone $this->request;
-                    $seoData->setMethod('post'); // Mock a request to build seo data if needed?
-                    // Note: buildSeoData expects $_POST directly, we need to pass the isolated array or modify backend library.
-                    // simpler route: manually extract seo directly or use the whole post. Let's pass the language specific array:
-                    // we can't easily use buildSeoData if it expects global post. Let's send the merged array:
                     $langDataMerged = array_merge($this->request->getPost(), $lanData);
                     $seoData = $this->commonBackendLibrary->buildSeoData($langDataMerged);
 

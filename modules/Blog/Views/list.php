@@ -103,8 +103,9 @@ echo script_tag('be-assets/plugins/datatables-responsive/js/responsive.bootstrap
         });
     }
 
+    var table;
     $(function() {
-        var table = $("#example1").DataTable({
+        table = $("#example1").DataTable({
             processing: true,
             serverSide: true,
             ordering: false,
